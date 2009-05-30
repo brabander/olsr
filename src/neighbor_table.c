@@ -46,7 +46,6 @@
 #include "olsr.h"
 #include "scheduler.h"
 #include "link_set.h"
-#include "mpr_selector_set.h"
 #include "net_olsr.h"
 #include "olsr_logging.h"
 
@@ -454,7 +453,8 @@ olsr_print_neighbor_table(void)
                  ipwidth, olsr_ip_to_string(&buf, &nbr->nbr_addr),
                  nbr->is_sym ? "YES" : "NO",
                  nbr->is_mpr ? "YES" : "NO",
-                 olsr_lookup_mprs_set(&nbr->nbr_addr) == NULL ? "NO  " : "YES ", nbr->willingness);
+                 nbr->mprs_count == 0  ? "NO  " : "YES ",
+                 nbr->willingness);
   } OLSR_FOR_ALL_NBR_ENTRIES_END(nbr);
 
   OLSR_INFO(LOG_2NEIGH, "\n--- %s ----------------------- TWO-HOP NEIGHBORS\n\n"

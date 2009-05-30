@@ -48,7 +48,6 @@ Written by Saverio Proto <zioproto@gmail.com> and Claudio Pisa <clauz@ninux.org>
 #include "ipcalc.h"
 #include "olsr.h"               /* //OLSR_PRINTF */
 #include "mid_set.h"            /* mid_lookup_main_addr() */
-#include "mpr_selector_set.h"   /* olsr_lookup_mprs_set() */
 #include "link_set.h"           /* get_best_link_to_neighbor() */
 #include "net_olsr.h"           /* ipequal */
 #include "olsr_logging.h"

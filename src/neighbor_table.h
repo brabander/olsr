@@ -80,8 +80,8 @@ struct nbr_entry {
   unsigned int is_mpr:1;
   unsigned int was_mpr:1;              /* Used to detect changes in MPR */
   unsigned int skip:1;
-  int nbr2_nocov;
   unsigned int linkcount;
+  uint16_t mprs_count;           /* >0 if we are choosen as an MPR by this neighbor */
   struct avl_tree con_tree;      /* subtree for connectors to nbr2 */
 };
 

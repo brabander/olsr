@@ -46,7 +46,6 @@
 #include "interfaces.h"
 #include "link_set.h"
 #include "neighbor_table.h"
-#include "mpr_selector_set.h"
 #include "mid_set.h"
 #include "mantissa.h"
 #include "process_package.h"    // XXX - remove
@@ -61,6 +60,15 @@
 bool lq_tc_pending = false;
 
 static unsigned char msg_buffer[MAXMESSAGESIZE - OLSR_HEADERSIZE];
+
+static uint16_t local_ansn_number = 0;
+
+uint16_t get_local_ansn_number(bool increase) {
+  if (increase)
+    local_ansn_number++;
+  return local_ansn_number;
+}
+
 
 static void
 create_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
@@ -178,7 +186,7 @@ create_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
 
   lq_tc->from = olsr_cnf->router_id;
 
-  lq_tc->ansn = get_local_ansn();
+  lq_tc->ansn = get_local_ansn_number(false);
 
   lq_tc->neigh = NULL;
 
@@ -198,7 +206,7 @@ create_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
      *
      * Only consider MPRs and MPR selectors
      */
-    if (olsr_cnf->tc_redundancy == 1 && !walker->is_mpr && !olsr_lookup_mprs_set(&walker->nbr_addr)) {
+    if (olsr_cnf->tc_redundancy == 1 && !walker->is_mpr && walker->mprs_count == 0) {
       continue;
     }
 
@@ -207,7 +215,7 @@ create_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
      *
      * Only consider MPR selectors
      */
-    if (olsr_cnf->tc_redundancy == 0 && !olsr_lookup_mprs_set(&walker->nbr_addr)) {
+    if (olsr_cnf->tc_redundancy == 0 && walker->mprs_count == 0) {
       continue;
     }
 

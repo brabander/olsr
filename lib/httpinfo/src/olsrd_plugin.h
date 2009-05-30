@@ -61,7 +61,6 @@
 #include "tc_set.h"
 #include "hna_set.h"
 #include "mid_set.h"
-#include "mpr_selector_set.h"
 #include "routing_table.h"
 
 #define PLUGIN_NAME    "OLSRD httpinfo plugin"

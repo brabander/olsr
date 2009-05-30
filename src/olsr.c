@@ -48,7 +48,6 @@
 #include "link_set.h"
 #include "tc_set.h"
 #include "duplicate_set.h"
-#include "mpr_selector_set.h"
 #include "mid_set.h"
 #include "lq_mpr.h"
 #include "olsr_spf.h"
@@ -233,9 +232,6 @@ olsr_init_tables(void)
   /* Initialize HNA set */
   olsr_init_hna_set();
 
-  /* Initialize MPRS */
-  olsr_init_mprs();
-
   /* Start periodic SPF and RIB recalculation */
   if (olsr_cnf->lq_dinter > 0.0) {
     periodic_spf_timer_cookie = olsr_alloc_cookie("Periodic SPF", OLSR_COOKIE_TYPE_TIMER);
@@ -294,7 +290,7 @@ olsr_forward_message(union olsr_message *m, struct interface *in_if, union olsr_
   }
 
   /* Check MPR */
-  if (olsr_lookup_mprs_set(src) == NULL) {
+  if (neighbor->mprs_count == 0) {
     OLSR_DEBUG(LOG_PACKET_PARSING, "Not forwarding message type %d because we are no MPR for %s\n",
         m->v4.olsr_msgtype, olsr_ip_to_string(&buf, src));
     /* don't forward packages if not a MPR */

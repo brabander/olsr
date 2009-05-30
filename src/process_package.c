@@ -43,7 +43,6 @@
 #include "link_set.h"
 #include "hna_set.h"
 #include "neighbor_table.h"
-#include "mpr_selector_set.h"
 #include "mid_set.h"
 #include "olsr.h"
 #include "parser.h"
@@ -256,6 +255,21 @@ deserialize_hello(struct lq_hello_message *hello, const void *ser)
 }
 
 
+static void olsr_update_mprs_set(struct lq_hello_message *message, struct link_entry *link) {
+  bool new_mprs_status;
+
+  new_mprs_status = lookup_mpr_status(message, link->inter);
+
+  if (new_mprs_status && !link->is_mprs) {
+    link->neighbor->mprs_count++;
+  }
+  if (!new_mprs_status && link->is_mprs) {
+    link->neighbor->mprs_count--;
+  }
+
+  link->is_mprs = new_mprs_status;
+}
+
 static void
 hello_tap(struct lq_hello_message *message, struct interface *in_if, const union olsr_ip_addr *from_addr)
 {
@@ -274,6 +288,8 @@ hello_tap(struct lq_hello_message *message, struct interface *in_if, const union
     }
   }
 
+  olsr_update_mprs_set(message, lnk);
+
   /*
    * memorize our neighbour's idea of the link quality, so that we
    * know the link quality in both directions
@@ -285,12 +301,6 @@ hello_tap(struct lq_hello_message *message, struct interface *in_if, const union
 
   /* update packet loss for link quality calculation */
   olsr_update_packet_loss(lnk);
-
-  /* Check if we are chosen as MPR */
-  if (lookup_mpr_status(message, in_if)) {
-    /* source_addr is always the main addr of a node! */
-    olsr_update_mprs_set(&message->comm.orig, message->comm.vtime);
-  }
 
   /* Check willingness */
   if (lnk->neighbor->willingness != message->will) {

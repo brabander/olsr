@@ -289,6 +289,8 @@ pkt_put_prefixlen(uint8_t ** p, uint8_t var)
   *p += olsr_cnf->ipsize;
 }
 
+uint16_t EXPORT(get_local_ansn_number)(bool increase);
+
 void olsr_output_lq_hello(void *para);
 
 void olsr_output_lq_tc(void *para);

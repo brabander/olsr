@@ -45,7 +45,6 @@
 #include "olsr.h"
 #include "ipcalc.h"
 #include "neighbor_table.h"
-#include "mpr_selector_set.h"
 #include "tc_set.h"
 #include "hna_set.h"
 #include "mid_set.h"
@@ -190,7 +189,8 @@ txtinfo_neigh(struct comport_connection *con,  char *cmd __attribute__ ((unused)
                        olsr_ip_to_string(&buf1, &neigh->nbr_addr),
                        neigh->is_sym ? "YES" : "NO",
                        neigh->is_mpr ? "YES" : "NO",
-                       olsr_lookup_mprs_set(&neigh->nbr_addr) ? "YES" : "NO", neigh->willingness, neigh->con_tree.count) < 0) {
+                       neigh->mprs_count > 0 ? "YES" : "NO",
+                       neigh->willingness, neigh->con_tree.count) < 0) {
         return ABUF_ERROR;
     }
   } OLSR_FOR_ALL_NBR_ENTRIES_END(neigh);

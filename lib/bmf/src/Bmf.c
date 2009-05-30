@@ -63,10 +63,10 @@
 #include "ipcalc.h"
 #include "olsr.h"
 #include "mid_set.h"            /* mid_lookup_main_addr() */
-#include "mpr_selector_set.h"   /* olsr_lookup_mprs_set() */
 #include "link_set.h"           /* get_best_link_to_neighbor() */
 #include "net_olsr.h"           /* ipequal */
 #include "olsr_logging.h"
+#include "neighbor_table.h"
 
 /* BMF includes */
 #include "NetworkInterfaces.h"  /* TBmfInterface, CreateBmfNetworkInterfaces(), CloseBmfNetworkInterfaces() */
@@ -103,6 +103,16 @@ MainAddressOf(union olsr_ip_addr *ip)
   return result;
 }                               /* MainAddressOf */
 
+static bool
+isMprOfAddress(union olsr_ip_addr *ip) {
+  struct nbr_entry *nbr;
+
+  nbr = olsr_lookup_nbr_entry(ip, true);
+  if (nbr) {
+    return nbr->mprs_count > 0;
+  }
+  return false;
+}
 /* -------------------------------------------------------------------------
  * Function   : EncapsulateAndForwardPacket
  * Description: Encapsulate a captured raw IP packet and forward it
@@ -305,7 +315,7 @@ BmfPacketCaptured(struct TBmfInterface *intf, unsigned char sllPkttype, unsigned
 
   /* Check with OLSR if I am MPR for that neighbor */
   /* TODO: olsr_lookup_mprs_set() is not thread-safe! */
-  iAmMpr = olsr_lookup_mprs_set(origIp) != NULL;
+  iAmMpr = isMprOfAddress(origIp);
 
   /* Check with each network interface what needs to be done on it */
   for (walker = BmfInterfaces; walker != NULL; walker = walker->next) {
@@ -575,7 +585,7 @@ BmfEncapsulationPacketReceived(struct TBmfInterface *intf,
   /* if (EtherTunTapFd >= 0) */
   /* Check if I am MPR for the forwarder */
   /* TODO: olsr_lookup_mprs_set() is not thread-safe! */
-  iAmMpr = (olsr_lookup_mprs_set(MainAddressOf(forwardedBy)) != NULL);
+  iAmMpr = isMprOfAddress(forwardedBy);
 
   /* Compose destination address for next hop */
   memset(&forwardTo, 0, sizeof(forwardTo));

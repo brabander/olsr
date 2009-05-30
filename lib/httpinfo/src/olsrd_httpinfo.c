@@ -965,7 +965,9 @@ build_neigh_body(struct autobuf *abuf)
                  "<td>%s</td>"
                  "<td>%d</td>",
                  neigh->is_sym ? "YES" : "NO",
-                 neigh->is_mpr ? "YES" : "NO", olsr_lookup_mprs_set(&neigh->nbr_addr) ? "YES" : "NO", neigh->willingness);
+                 neigh->is_mpr ? "YES" : "NO",
+                 neigh->mprs_count > 0 ? "YES" : "NO",
+                 neigh->willingness);
 
     abuf_puts(abuf, "<td><select>\n" "<option>IP ADDRESS</option>\n");
 

@@ -42,7 +42,6 @@
 #include "scheduler.h"
 #include "log.h"
 #include "link_set.h"
-#include "mpr_selector_set.h"
 #include "olsr.h"
 #include "olsr_cookie.h"
 #include "net_os.h"
@@ -471,8 +470,7 @@ olsr_scheduler(void)
 
     /* Check for changes in topology */
     if (link_changes) {
-      OLSR_DEBUG(LOG_SCHEDULER, "ANSN UPDATED %d\n\n", get_local_ansn());
-      increase_local_ansn();
+      OLSR_DEBUG(LOG_SCHEDULER, "ANSN UPDATED %d\n\n", get_local_ansn_number(true));
       link_changes = false;
     }
 

@@ -295,6 +295,10 @@ olsr_delete_link_entry(struct link_entry *link)
     olsr_delete_nbr_entry(link->neighbor);
   } else {
     link->neighbor->linkcount--;
+
+    if (link->is_mprs) {
+      link->neighbor->mprs_count --;
+    }
   }
 
   /* Kill running timers */
@@ -490,8 +494,11 @@ add_link_entry(const union olsr_ip_addr *local,
 
   link->linkcost = LINK_COST_BROKEN;
 
+  link->is_mprs = false;
+
   /* Add to queue */
   list_add_before(&link_entry_head, &link->link_list);
+
 
   /*
    * Create the neighbor entry

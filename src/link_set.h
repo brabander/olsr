@@ -67,6 +67,8 @@ struct link_entry {
   struct nbr_entry *neighbor;
   uint8_t prev_status;
 
+  bool is_mprs;
+
   /*
    * packet loss
    */

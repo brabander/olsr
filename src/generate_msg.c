@@ -49,7 +49,6 @@
  */
 #include "mid_set.h"
 #include "tc_set.h"
-#include "mpr_selector_set.h"
 #include "neighbor_table.h"
 #include "net_olsr.h"
 
