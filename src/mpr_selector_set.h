@@ -43,30 +43,35 @@
 
 #include "mantissa.h"
 #include "defs.h"
-#include "common/list.h"
+#include "common/avl.h"
 
 #define OLSR_MPR_SEL_JITTER 5   /* percent */
 
 struct mpr_selector {
+  struct avl_node mprs_node;
   union olsr_ip_addr MS_main_addr;
   struct timer_entry *MS_timer;
-  struct list_node mprs_list;
 };
 
-/* inline to recast from link_list back to link_entry */
-LISTNODE2STRUCT(list2mpr, struct mpr_selector, mprs_list);
+/* inline to recast from avl_node back to mprs_selector */
+AVLNODE2STRUCT(mprs_sel_node_to_mpr_sel, struct mpr_selector, mprs_node);
 
-#define FOR_ALL_MPRS_ENTRIES(elem)  \
+/*
+ * macros for traversing all mpr selectors.
+ * it is recommended to use this because it hides all the internal
+ * datastructure from the callers.
+ *
+ * the loop prefetches the next node in order to not loose context if
+ * for example the caller wants to delete the current entry.
+ */
+#define OLSR_FOR_ALL_MPRS_ENTRIES(mprs) \
 { \
-  struct list_node *elem_node, *next_elem_node; \
-  for (elem_node = mprs_list_head.next;      \
-       elem_node != &mprs_list_head; /* circular list */ \
-       elem_node = next_elem_node) { \
-    next_elem_node = elem_node->next; \
-    elem = list2mpr(elem_node);
-
-#define FOR_ALL_MPRS_ENTRIES_END(elem) }}
-
+  struct avl_node *mprs_tree_node, *next_mprs_tree_node; \
+  for (mprs_tree_node = avl_walk_first(&mprs_tree); \
+    mprs_tree_node; mprs_tree_node = next_mprs_tree_node) { \
+    next_mprs_tree_node = avl_walk_next(mprs_tree_node); \
+    mprs = mprs_sel_node_to_mpr_sel(mprs_tree_node);
+#define OLSR_FOR_ALL_MPRS_ENTRIES_END(mprs) }}
 
 extern uint16_t ansn;
 

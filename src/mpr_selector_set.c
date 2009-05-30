@@ -46,9 +46,10 @@
 uint16_t ansn = 0;
 
 static struct olsr_cookie_info *mpr_sel_timer_cookie;
+static struct olsr_cookie_info *mpr_sel_mem_cookie;
 
-/* MPR selector list */
-static struct list_node mprs_list_head;
+/* Root of MPR selector tree */
+static struct avl_tree mprs_tree;
 
 
 void
@@ -56,12 +57,15 @@ olsr_init_mprs(void)
 {
   OLSR_INFO(LOG_MPRS, "Initialize MPR set...\n");
 
-  list_head_init(&mprs_list_head);
+  avl_init(&mprs_tree, avl_comp_default);
 
   /*
    * Get some cookies for getting stats to ease troubleshooting.
    */
   mpr_sel_timer_cookie = olsr_alloc_cookie("MPR Selector", OLSR_COOKIE_TYPE_TIMER);
+
+  mpr_sel_mem_cookie = olsr_alloc_cookie("MPR Selector", OLSR_COOKIE_TYPE_MEMORY);
+  olsr_cookie_set_memory_size(mpr_sel_mem_cookie, sizeof(struct mpr_selector));
 }
 
 /**
@@ -78,10 +82,10 @@ olsr_expire_mpr_sel_entry(void *context)
 
   mpr_sel->MS_timer = NULL;
 
-  list_remove(&mpr_sel->mprs_list);
+  avl_delete(&mprs_tree, &mpr_sel->mprs_node);
 
   /* Delete entry */
-  free(mpr_sel);
+  olsr_cookie_free(mpr_sel_mem_cookie, mpr_sel);
   signal_link_changes(true);
 }
 
@@ -96,17 +100,12 @@ olsr_expire_mpr_sel_entry(void *context)
 struct mpr_selector *
 olsr_lookup_mprs_set(const union olsr_ip_addr *addr)
 {
-  struct mpr_selector *mprs;
+  struct avl_node *node;
 
-  if (addr == NULL) {
-    return NULL;
+  node = avl_find(&mprs_tree, addr);
+  if (node) {
+    return mprs_sel_node_to_mpr_sel(node);
   }
-  FOR_ALL_MPRS_ENTRIES(mprs) {
-    if (olsr_ipcmp(&mprs->MS_main_addr, addr) == 0) {
-      return mprs;
-    }
-  }
-  FOR_ALL_MPRS_ENTRIES_END(mprs);
   return NULL;
 }
 
@@ -127,10 +126,11 @@ olsr_update_mprs_set(const union olsr_ip_addr *addr, olsr_reltime vtime)
 #if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
 #endif
-  struct mpr_selector *mprs = olsr_lookup_mprs_set(addr);
+  struct mpr_selector *mprs;
 
+  mprs = olsr_lookup_mprs_set(addr);
   if (mprs == NULL) {
-    mprs = olsr_malloc(sizeof(*mprs), "Add MPR selector");
+    mprs = olsr_cookie_malloc(mpr_sel_mem_cookie);
 
     OLSR_DEBUG(LOG_MPRS, "MPRS: adding %s\n", olsr_ip_to_string(&buf, addr));
 
@@ -138,7 +138,8 @@ olsr_update_mprs_set(const union olsr_ip_addr *addr, olsr_reltime vtime)
     mprs->MS_main_addr = *addr;
 
     /* Queue */
-    list_add_before(&mprs_list_head, &mprs->mprs_list);
+    mprs->mprs_node.key = &mprs->MS_main_addr;
+    avl_insert(&mprs_tree, &mprs->mprs_node, AVL_DUP_NO);
 
     signal_link_changes(true);
     rv = 1;
@@ -164,9 +165,9 @@ olsr_print_mprs_set(void)
 
   OLSR_INFO(LOG_MPRS, "MPR SELECTORS:\n");
 
-  FOR_ALL_MPRS_ENTRIES(mprs) {
+  OLSR_FOR_ALL_MPRS_ENTRIES(mprs) {
     OLSR_INFO_NH(LOG_MPRS, "\t%s\n", olsr_ip_to_string(&buf, &mprs->MS_main_addr));
-  } FOR_ALL_MPRS_ENTRIES_END(mprs);
+  } OLSR_FOR_ALL_MPRS_ENTRIES_END(mprs);
 #endif
 }
 
