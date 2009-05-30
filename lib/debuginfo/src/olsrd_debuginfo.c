@@ -299,9 +299,9 @@ update_statistics_ptr(void *data __attribute__ ((unused)))
     if (pkt->total.data[DTR_PACKETS] == 0) {
       /* no traffic left, cleanup ! */
 
-      avl_delete(&stat_msg_tree, &pkt->node);
+      avl_delete(&stat_pkt_tree, &pkt->node);
       free(pkt->int_name);
-      olsr_cookie_free(statistics_msg_mem, pkt);
+      olsr_cookie_free(statistics_pkt_mem, pkt);
     }
   } OLSR_FOR_ALL_PKTTRAFFIC_ENTRIES_END(pkt)
 }
