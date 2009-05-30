@@ -249,7 +249,7 @@ static void olsr_com_parse_request(int fd, void *data __attribute__ ((unused)), 
       sock, olsr_ip_to_string(&buf, &con->addr));
 
   con->timeout = olsr_start_timer(con->timeout_value, 0, false,
-      &olsr_com_timeout_handler, con, connection_timeout->ci_id);
+      &olsr_com_timeout_handler, con, connection_timeout);
 
   add_olsr_socket(sock, &olsr_com_parse_connection, NULL, con, SP_PR_READ
       | SP_PR_WRITE);
@@ -613,18 +613,7 @@ static void olsr_com_parse_txt(struct comport_connection *con,
   }
 
   if (old_timeout != con->timeout_value) {
-    if (con->timeout) {
-      if (con->timeout_value > 0) {
-        olsr_change_timer(con->timeout, con->timeout_value, 0, false);
-      }
-      else {
-        olsr_stop_timer(con->timeout);
-        con->timeout = NULL;
-      }
-    } else if (con->timeout_value > 0) {
-      con->timeout = olsr_start_timer(con->timeout_value, 0, false,
-          &olsr_com_timeout_handler, con, connection_timeout->ci_id);
-    }
+    olsr_set_timer(&con->timeout, con->timeout_value, 0, false, &olsr_com_timeout_handler, con, connection_timeout);
   }
 
   /* print prompt */

@@ -353,7 +353,7 @@ struct nbr_con *olsr_link_nbr_nbr2(struct nbr_entry *nbr, const union olsr_ip_ad
   connector->path_linkcost = LINK_COST_BROKEN;
 
   connector->nbr2_list_timer = olsr_start_timer(vtime, OLSR_NBR2_LIST_JITTER,
-      OLSR_TIMER_ONESHOT, &olsr_expire_nbr_con, connector, nbr_connector_timer_cookie->ci_id);
+      OLSR_TIMER_ONESHOT, &olsr_expire_nbr_con, connector, nbr_connector_timer_cookie);
 
   return connector;
 }

@@ -225,7 +225,7 @@ olsrd_plugin_init(void)
   doing_hna_timer_cookie = olsr_alloc_cookie("DynGW: Doing HNS", OLSR_COOKIE_TYPE_TIMER);
 
   /* Register the GW check */
-  olsr_start_timer(3 * MSEC_PER_SEC, 0, OLSR_TIMER_PERIODIC, &olsr_event_doing_hna, NULL, doing_hna_timer_cookie->ci_id);
+  olsr_start_timer(3 * MSEC_PER_SEC, 0, OLSR_TIMER_PERIODIC, &olsr_event_doing_hna, NULL, doing_hna_timer_cookie);
 
   return 1;
 }

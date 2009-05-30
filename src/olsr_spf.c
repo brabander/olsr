@@ -289,7 +289,7 @@ olsr_calculate_routing_table(void)
   }
   spf_backoff_timer =
     olsr_start_timer(OLSR_SPF_BACKOFF_TIME, OLSR_SPF_BACKOFF_JITTER,
-                     OLSR_TIMER_ONESHOT, &olsr_expire_spf_backoff, NULL, spf_backoff_timer_cookie->ci_id);
+                     OLSR_TIMER_ONESHOT, &olsr_expire_spf_backoff, NULL, spf_backoff_timer_cookie);
 
 #ifdef SPF_PROFILING
   gettimeofday(&t1, NULL);

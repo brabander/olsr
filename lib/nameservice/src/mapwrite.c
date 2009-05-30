@@ -242,7 +242,7 @@ mapwrite_init(const char *fifoname)
       OLSR_WARN(LOG_PLUGINS, "mkfifo(%s): %s", fifoname, strerror(errno));
       return false;
     } else {
-      olsr_start_timer(800, 5, OLSR_TIMER_PERIODIC, &mapwrite_poll, NULL, map_poll_timer_cookie->ci_id);
+      olsr_start_timer(800, 5, OLSR_TIMER_PERIODIC, &mapwrite_poll, NULL, map_poll_timer_cookie);
     }
   }
   return true;

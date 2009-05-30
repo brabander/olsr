@@ -425,7 +425,7 @@ name_init(void)
 
   /* periodic message generation */
   msg_gen_timer = olsr_start_timer(my_interval * MSEC_PER_SEC, EMISSION_JITTER,
-                                   OLSR_TIMER_PERIODIC, &olsr_namesvc_gen, NULL, msg_gen_timer_cookie->ci_id);
+                                   OLSR_TIMER_PERIODIC, &olsr_namesvc_gen, NULL, msg_gen_timer_cookie);
 
   mapwrite_init(my_latlon_file);
 
@@ -573,7 +573,7 @@ olsr_start_write_file_timer(void)
   }
 
   write_file_timer = olsr_start_timer(5 * MSEC_PER_SEC, 5, OLSR_TIMER_ONESHOT,
-                                      olsr_expire_write_file_timer, NULL, write_file_timer_cookie->ci_id);
+                                      olsr_expire_write_file_timer, NULL, write_file_timer_cookie);
 }
 
 /*
@@ -998,7 +998,7 @@ insert_new_name_in_list(union olsr_ip_addr *originator,
       decap_namemsg(from_packet, &entry->names, this_table_changed);
 
       olsr_set_timer(&entry->db_timer, vtime,
-                     OLSR_NAMESVC_DB_JITTER, OLSR_TIMER_ONESHOT, &olsr_nameservice_expire_db_timer, entry, db_timer_cookie->ci_id);
+                     OLSR_NAMESVC_DB_JITTER, OLSR_TIMER_ONESHOT, &olsr_nameservice_expire_db_timer, entry, db_timer_cookie);
 
       entry_found = true;
     }
@@ -1017,7 +1017,7 @@ insert_new_name_in_list(union olsr_ip_addr *originator,
     entry->originator = *originator;
 
     olsr_set_timer(&entry->db_timer, vtime,
-                   OLSR_LINK_LOSS_JITTER, OLSR_TIMER_ONESHOT, &olsr_nameservice_expire_db_timer, entry, db_timer_cookie->ci_id);
+                   OLSR_LINK_LOSS_JITTER, OLSR_TIMER_ONESHOT, &olsr_nameservice_expire_db_timer, entry, db_timer_cookie);
 
     entry->names = NULL;
 

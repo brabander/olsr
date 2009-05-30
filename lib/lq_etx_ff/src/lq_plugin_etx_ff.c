@@ -238,7 +238,7 @@ lq_etxff_initialize(void)
   /* Some cookies for stats keeping */
   olsr_packetparser_add_function(&lq_etxff_packet_parser);
   default_lq_ff_timer_cookie = olsr_alloc_cookie("Default Freifunk LQ", OLSR_COOKIE_TYPE_TIMER);
-  lq_etxff_timer_struct = olsr_start_timer(1000, 0, OLSR_TIMER_PERIODIC, &lq_etxff_timer, NULL, default_lq_ff_timer_cookie->ci_id);
+  lq_etxff_timer_struct = olsr_start_timer(1000, 0, OLSR_TIMER_PERIODIC, &lq_etxff_timer, NULL, default_lq_ff_timer_cookie);
 }
 
 static void

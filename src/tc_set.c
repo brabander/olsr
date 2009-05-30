@@ -895,7 +895,7 @@ olsr_input_tc(union olsr_message * msg, struct interface * input_if __attribute_
    * Set or change the expiration timer accordingly.
    */
   olsr_set_timer(&tc->validity_timer, vtime,
-                 OLSR_TC_VTIME_JITTER, OLSR_TIMER_ONESHOT, &olsr_expire_tc_entry, tc, tc_validity_timer_cookie->ci_id);
+                 OLSR_TC_VTIME_JITTER, OLSR_TIMER_ONESHOT, &olsr_expire_tc_entry, tc, tc_validity_timer_cookie);
 
   if (borderSet) {
 
@@ -910,7 +910,7 @@ olsr_input_tc(union olsr_message * msg, struct interface * input_if __attribute_
      * all edges belonging to a multipart neighbor set will arrive.
      */
     olsr_set_timer(&tc->edge_gc_timer, OLSR_TC_EDGE_GC_TIME,
-                   OLSR_TC_EDGE_GC_JITTER, OLSR_TIMER_ONESHOT, &olsr_expire_tc_edge_gc, tc, tc_edge_gc_timer_cookie->ci_id);
+                   OLSR_TC_EDGE_GC_JITTER, OLSR_TIMER_ONESHOT, &olsr_expire_tc_edge_gc, tc, tc_edge_gc_timer_cookie);
   }
 
   /* Forward the message */

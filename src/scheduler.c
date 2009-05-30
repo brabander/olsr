@@ -592,7 +592,7 @@ walk_timers(uint32_t * last_run)
 
         OLSR_DEBUG(LOG_SCHEDULER, "TIMER: fire %s timer %p, ctx %p, "
                    "at clocktick %u (%s)\n",
-                   olsr_cookie_name(timer->timer_cookie),
+                   timer->timer_cookie->ci_name,
                    timer, timer->timer_cb_context, (unsigned int)*last_run, olsr_wallclock_string());
 
         /* This timer is expired, call into the provided callback function */
@@ -753,11 +753,11 @@ olsr_clock_string(uint32_t clk)
  */
 struct timer_entry *
 olsr_start_timer(unsigned int rel_time,
-                 uint8_t jitter_pct, bool periodical, timer_cb_func cb_func, void *context, olsr_cookie_t cookie)
+                 uint8_t jitter_pct, bool periodical, timer_cb_func cb_func, void *context, struct olsr_cookie_info *ci)
 {
   struct timer_entry *timer;
 
-  assert(cookie != 0);          /* we want timer cookies everywhere */
+  assert(ci != 0);          /* we want timer cookies everywhere */
 
   timer = olsr_cookie_malloc(timer_mem_cookie);
 
@@ -776,8 +776,8 @@ olsr_start_timer(unsigned int rel_time,
   timer->timer_flags = OLSR_TIMER_RUNNING;
 
   /* The cookie is used for debugging to traceback the originator */
-  timer->timer_cookie = cookie;
-  olsr_cookie_usage_incr(cookie);
+  timer->timer_cookie = ci;
+  olsr_cookie_usage_incr(ci);
 
   /* Singleshot or periodical timer ? */
   timer->timer_period = periodical ? rel_time : 0;
@@ -788,7 +788,7 @@ olsr_start_timer(unsigned int rel_time,
   list_add_before(&timer_wheel[timer->timer_clock & TIMER_WHEEL_MASK], &timer->timer_list);
 
   OLSR_DEBUG(LOG_SCHEDULER, "TIMER: start %s timer %p firing in %s, ctx %p\n",
-             olsr_cookie_name(timer->timer_cookie), timer, olsr_clock_string(timer->timer_clock), context);
+             ci->ci_name, timer, olsr_clock_string(timer->timer_clock), context);
 
   return timer;
 }
@@ -807,10 +807,11 @@ olsr_stop_timer(struct timer_entry *timer)
     return;
   }
 
-  OLSR_DEBUG(LOG_SCHEDULER, "TIMER: stop %s timer %p, ctx %p\n",
-             olsr_cookie_name(timer->timer_cookie), timer, timer->timer_cb_context);
+  assert(timer->timer_cookie);     /* we want timer cookies everywhere */
 
-  assert(timer->timer_cookie != 0);     /* we want timer cookies everywhere */
+  OLSR_DEBUG(LOG_SCHEDULER, "TIMER: stop %s timer %p, ctx %p\n",
+             timer->timer_cookie->ci_name, timer, timer->timer_cb_context);
+
 
   /*
    * Carve out of the existing wheel_slot and free.
@@ -838,7 +839,7 @@ olsr_change_timer(struct timer_entry *timer, unsigned int rel_time, uint8_t jitt
     return;
   }
 
-  assert(timer->timer_cookie != 0);     /* we want timer cookies everywhere */
+  assert(timer->timer_cookie);     /* we want timer cookies everywhere */
 
   /* Singleshot or periodical timer ? */
   timer->timer_period = periodical ? rel_time : 0;
@@ -854,7 +855,7 @@ olsr_change_timer(struct timer_entry *timer, unsigned int rel_time, uint8_t jitt
   list_add_before(&timer_wheel[timer->timer_clock & TIMER_WHEEL_MASK], &timer->timer_list);
 
   OLSR_DEBUG(LOG_SCHEDULER, "TIMER: change %s timer %p, firing to %s, ctx %p\n",
-             olsr_cookie_name(timer->timer_cookie), timer, olsr_clock_string(timer->timer_clock), timer->timer_cb_context);
+             timer->timer_cookie->ci_name, timer, olsr_clock_string(timer->timer_clock), timer->timer_cb_context);
 }
 
 /*
@@ -866,9 +867,9 @@ olsr_change_timer(struct timer_entry *timer, unsigned int rel_time, uint8_t jitt
 void
 olsr_set_timer(struct timer_entry **timer_ptr,
                unsigned int rel_time,
-               uint8_t jitter_pct, bool periodical, timer_cb_func cb_func, void *context, olsr_cookie_t cookie)
+               uint8_t jitter_pct, bool periodical, timer_cb_func cb_func, void *context, struct olsr_cookie_info *cookie)
 {
-  assert(cookie != 0);          /* we want timer cookies everywhere */
+  assert(cookie);          /* we want timer cookies everywhere */
   if (!*timer_ptr) {
     /* No timer running, kick it. */
     *timer_ptr = olsr_start_timer(rel_time, jitter_pct, periodical, cb_func, context, cookie);

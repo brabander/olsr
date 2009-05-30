@@ -313,7 +313,7 @@ olsr_txtcmd_repeat(struct comport_connection *con, char *cmd __attribute__ ((unu
 
   interval = atoi(param);
 
-  timer = olsr_start_timer(interval * 1000, 0, true, &olsr_txt_repeat_timer, con, txt_repeattimer_cookie->ci_id);
+  timer = olsr_start_timer(interval * 1000, 0, true, &olsr_txt_repeat_timer, con, txt_repeattimer_cookie);
   con->stop_handler = olsr_txt_repeat_stophandler;
   con->stop_data[0] = timer;
   con->stop_data[1] = strdup(ptr);

@@ -409,7 +409,7 @@ static void
 olsr_set_link_timer(struct link_entry *link, unsigned int rel_timer)
 {
   olsr_set_timer(&link->link_timer, rel_timer, OLSR_LINK_JITTER,
-                 OLSR_TIMER_ONESHOT, &olsr_expire_link_entry, link, link_dead_timer_cookie->ci_id);
+                 OLSR_TIMER_ONESHOT, &olsr_expire_link_entry, link, link_dead_timer_cookie);
 }
 
 /**
@@ -484,7 +484,7 @@ add_link_entry(const union olsr_ip_addr *local,
   link->loss_helloint = htime;
 
   olsr_set_timer(&link->link_loss_timer, htime + htime / 2,
-                 OLSR_LINK_LOSS_JITTER, OLSR_TIMER_PERIODIC, &olsr_expire_link_loss_timer, link, link_loss_timer_cookie->ci_id);
+                 OLSR_LINK_LOSS_JITTER, OLSR_TIMER_PERIODIC, &olsr_expire_link_loss_timer, link, link_loss_timer_cookie);
 
   set_loss_link_multiplier(link);
 
@@ -624,7 +624,7 @@ update_link_entry(const union olsr_ip_addr *local,
 
     /* L_SYM_time = current time + validity time */
     olsr_set_timer(&entry->link_sym_timer, message->comm.vtime,
-                   OLSR_LINK_SYM_JITTER, OLSR_TIMER_ONESHOT, &olsr_expire_link_sym_timer, entry, link_sym_timer_cookie->ci_id);
+                   OLSR_LINK_SYM_JITTER, OLSR_TIMER_ONESHOT, &olsr_expire_link_sym_timer, entry, link_sym_timer_cookie);
 
     /* L_time = L_SYM_time + NEIGHB_HOLD_TIME */
     olsr_set_link_timer(entry, message->comm.vtime + NEIGHB_HOLD_TIME * MSEC_PER_SEC);
@@ -749,7 +749,7 @@ olsr_update_packet_loss(struct link_entry *entry)
 
   /* timeout for the first lost packet is 1.5 x htime */
   olsr_set_timer(&entry->link_loss_timer, entry->loss_helloint + entry->loss_helloint / 2,
-                 OLSR_LINK_LOSS_JITTER, OLSR_TIMER_PERIODIC, &olsr_expire_link_loss_timer, entry, link_loss_timer_cookie->ci_id);
+                 OLSR_LINK_LOSS_JITTER, OLSR_TIMER_PERIODIC, &olsr_expire_link_loss_timer, entry, link_loss_timer_cookie);
 }
 
 /*

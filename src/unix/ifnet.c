@@ -410,16 +410,16 @@ add_hemu_if(struct olsr_if_config *iface)
 
   ifp->hello_gen_timer =
     olsr_start_timer(iface->cnf->hello_params.emission_interval * MSEC_PER_SEC,
-                     HELLO_JITTER, OLSR_TIMER_PERIODIC, &olsr_output_lq_hello, ifp, hello_gen_timer_cookie->ci_id);
+                     HELLO_JITTER, OLSR_TIMER_PERIODIC, &olsr_output_lq_hello, ifp, hello_gen_timer_cookie);
   ifp->tc_gen_timer =
     olsr_start_timer(iface->cnf->tc_params.emission_interval * MSEC_PER_SEC,
-                     TC_JITTER, OLSR_TIMER_PERIODIC, &olsr_output_lq_tc, ifp, tc_gen_timer_cookie->ci_id);
+                     TC_JITTER, OLSR_TIMER_PERIODIC, &olsr_output_lq_tc, ifp, tc_gen_timer_cookie);
   ifp->mid_gen_timer =
     olsr_start_timer(iface->cnf->mid_params.emission_interval * MSEC_PER_SEC,
-                     MID_JITTER, OLSR_TIMER_PERIODIC, &generate_mid, ifp, mid_gen_timer_cookie->ci_id);
+                     MID_JITTER, OLSR_TIMER_PERIODIC, &generate_mid, ifp, mid_gen_timer_cookie);
   ifp->hna_gen_timer =
     olsr_start_timer(iface->cnf->hna_params.emission_interval * MSEC_PER_SEC,
-                     HNA_JITTER, OLSR_TIMER_PERIODIC, &generate_hna, ifp, hna_gen_timer_cookie->ci_id);
+                     HNA_JITTER, OLSR_TIMER_PERIODIC, &generate_hna, ifp, hna_gen_timer_cookie);
 
   ifp->hello_etime = (olsr_reltime) (iface->cnf->hello_params.emission_interval * MSEC_PER_SEC);
   ifp->valtimes.hello = reltime_to_me(iface->cnf->hello_params.validity_time * MSEC_PER_SEC);
@@ -715,16 +715,16 @@ chk_if_up(struct olsr_if_config *iface)
    */
   ifp->hello_gen_timer =
     olsr_start_timer(iface->cnf->hello_params.emission_interval * MSEC_PER_SEC,
-                     HELLO_JITTER, OLSR_TIMER_PERIODIC, &olsr_output_lq_hello, ifp, hello_gen_timer_cookie->ci_id);
+                     HELLO_JITTER, OLSR_TIMER_PERIODIC, &olsr_output_lq_hello, ifp, hello_gen_timer_cookie);
   ifp->tc_gen_timer =
     olsr_start_timer(iface->cnf->tc_params.emission_interval * MSEC_PER_SEC,
-                     TC_JITTER, OLSR_TIMER_PERIODIC, &olsr_output_lq_tc, ifp, tc_gen_timer_cookie->ci_id);
+                     TC_JITTER, OLSR_TIMER_PERIODIC, &olsr_output_lq_tc, ifp, tc_gen_timer_cookie);
   ifp->mid_gen_timer =
     olsr_start_timer(iface->cnf->mid_params.emission_interval * MSEC_PER_SEC,
-                     MID_JITTER, OLSR_TIMER_PERIODIC, &generate_mid, ifp, mid_gen_timer_cookie->ci_id);
+                     MID_JITTER, OLSR_TIMER_PERIODIC, &generate_mid, ifp, mid_gen_timer_cookie);
   ifp->hna_gen_timer =
     olsr_start_timer(iface->cnf->hna_params.emission_interval * MSEC_PER_SEC,
-                     HNA_JITTER, OLSR_TIMER_PERIODIC, &generate_hna, ifp, hna_gen_timer_cookie->ci_id);
+                     HNA_JITTER, OLSR_TIMER_PERIODIC, &generate_hna, ifp, hna_gen_timer_cookie);
 
   ifp->hello_etime = (olsr_reltime) (iface->cnf->hello_params.emission_interval * MSEC_PER_SEC);
   ifp->valtimes.hello = reltime_to_me(iface->cnf->hello_params.validity_time * MSEC_PER_SEC);

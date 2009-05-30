@@ -209,7 +209,7 @@ olsr_update_hna_entry(const union olsr_ip_addr *gw, const struct olsr_ip_prefix 
    * Start, or refresh the timer, whatever is appropriate.
    */
   olsr_set_timer(&net_entry->hna_net_timer, vtime,
-                 OLSR_HNA_NET_JITTER, OLSR_TIMER_ONESHOT, &olsr_expire_hna_net_entry, net_entry, hna_net_timer_cookie->ci_id);
+                 OLSR_HNA_NET_JITTER, OLSR_TIMER_ONESHOT, &olsr_expire_hna_net_entry, net_entry, hna_net_timer_cookie);
 }
 
 /**

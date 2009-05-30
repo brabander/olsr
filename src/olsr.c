@@ -240,7 +240,7 @@ olsr_init_tables(void)
   if (olsr_cnf->lq_dinter > 0.0) {
     periodic_spf_timer_cookie = olsr_alloc_cookie("Periodic SPF", OLSR_COOKIE_TYPE_TIMER);
     olsr_start_timer((unsigned int)(olsr_cnf->lq_dinter * MSEC_PER_SEC), 5,
-                     OLSR_TIMER_PERIODIC, &olsr_trigger_forced_update, NULL, periodic_spf_timer_cookie->ci_id);
+                     OLSR_TIMER_PERIODIC, &olsr_trigger_forced_update, NULL, periodic_spf_timer_cookie);
   }
 }
 
@@ -411,7 +411,7 @@ set_buffer_timer(struct interface *ifn)
    */
   ifn->buffer_hold_timer =
     olsr_start_timer(OLSR_BUFFER_HOLD_TIME, OLSR_BUFFER_HOLD_JITTER,
-                     OLSR_TIMER_ONESHOT, &olsr_expire_buffer_timer, ifn, buffer_hold_timer_cookie->ci_id);
+                     OLSR_TIMER_ONESHOT, &olsr_expire_buffer_timer, ifn, buffer_hold_timer_cookie);
 }
 
 void
@@ -427,7 +427,7 @@ olsr_init_willingness(void)
 
     willingness_timer_cookie = olsr_alloc_cookie("Update Willingness", OLSR_COOKIE_TYPE_TIMER);
     olsr_start_timer((unsigned int)olsr_cnf->will_int * MSEC_PER_SEC, 5,
-                     OLSR_TIMER_PERIODIC, &olsr_update_willingness, NULL, willingness_timer_cookie->ci_id);
+                     OLSR_TIMER_PERIODIC, &olsr_update_willingness, NULL, willingness_timer_cookie);
   }
 }
 

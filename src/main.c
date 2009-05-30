@@ -197,6 +197,9 @@ main(int argc, char *argv[])
   /* initialize logging */
   olsr_log_init();
 
+  /* initialize cookie system */
+  olsr_cookie_init();
+
   /* Initialize timers and scheduler part */
   olsr_init_timers();
 
@@ -307,7 +310,7 @@ main(int argc, char *argv[])
 #if !defined WINCE
   if (olsr_cnf->log_target_stderr > 0 && isatty(STDOUT_FILENO)) {
     pulse_timer_cookie = olsr_alloc_cookie("Pulse", OLSR_COOKIE_TYPE_TIMER);
-    olsr_start_timer(STDOUT_PULSE_INT, 0, OLSR_TIMER_PERIODIC, &generate_stdout_pulse, NULL, pulse_timer_cookie->ci_id);
+    olsr_start_timer(STDOUT_PULSE_INT, 0, OLSR_TIMER_PERIODIC, &generate_stdout_pulse, NULL, pulse_timer_cookie);
   }
 #endif
 

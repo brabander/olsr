@@ -206,7 +206,7 @@ secure_plugin_init(void)
   timeout_timestamps_timer_cookie = olsr_alloc_cookie("Secure: Timeout Timestamps", OLSR_COOKIE_TYPE_TIMER);
 
   /* Register timeout - poll every 2 seconds */
-  olsr_start_timer(2 * MSEC_PER_SEC, 0, OLSR_TIMER_PERIODIC, &timeout_timestamps, NULL, timeout_timestamps_timer_cookie->ci_id);
+  olsr_start_timer(2 * MSEC_PER_SEC, 0, OLSR_TIMER_PERIODIC, &timeout_timestamps, NULL, timeout_timestamps_timer_cookie);
 
   return 1;
 }

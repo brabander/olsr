@@ -109,7 +109,7 @@ static void
 olsr_set_mid_timer(struct tc_entry *tc, olsr_reltime rel_timer)
 {
   olsr_set_timer(&tc->mid_timer, rel_timer, OLSR_MID_JITTER,
-                 OLSR_TIMER_ONESHOT, &olsr_expire_mid_entries, tc, mid_validity_timer_cookie->ci_id);
+                 OLSR_TIMER_ONESHOT, &olsr_expire_mid_entries, tc, mid_validity_timer_cookie);
 }
 
 /**

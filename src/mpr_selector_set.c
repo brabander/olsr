@@ -148,7 +148,7 @@ olsr_update_mprs_set(const union olsr_ip_addr *addr, olsr_reltime vtime)
     rv = 0;
   }
   olsr_set_timer(&mprs->MS_timer,
-                 vtime, OLSR_MPR_SEL_JITTER, OLSR_TIMER_ONESHOT, &olsr_expire_mpr_sel_entry, mprs, mpr_sel_timer_cookie->ci_id);
+                 vtime, OLSR_MPR_SEL_JITTER, OLSR_TIMER_ONESHOT, &olsr_expire_mpr_sel_entry, mprs, mpr_sel_timer_cookie);
   return rv;
 }
 

@@ -140,7 +140,7 @@ olsrd_plugin_init(void)
 
   event_timer_cookie = olsr_alloc_cookie("Quagga: Event", OLSR_COOKIE_TYPE_TIMER);
 
-  olsr_start_timer(1 * MSEC_PER_SEC, 0, OLSR_TIMER_PERIODIC, &zebra_parse, NULL, event_timer_cookie->ci_id);
+  olsr_start_timer(1 * MSEC_PER_SEC, 0, OLSR_TIMER_PERIODIC, &zebra_parse, NULL, event_timer_cookie);
 
   return 0;
 }

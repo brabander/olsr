@@ -83,9 +83,6 @@ typedef signed int int32_t;
 #endif
 #endif
 
-/* user defined cookies */
-typedef uint16_t olsr_cookie_t;
-
 /* OpenBSD wants this here */
 #include <sys/types.h>
 

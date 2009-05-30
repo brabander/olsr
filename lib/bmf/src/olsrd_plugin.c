@@ -108,7 +108,7 @@ olsrd_plugin_init(void)
   prune_packet_history_timer_cookie = olsr_alloc_cookie("BMF: Prune Packet History", OLSR_COOKIE_TYPE_TIMER);
 
   /* Register the duplicate registration pruning process */
-  olsr_start_timer(3 * MSEC_PER_SEC, 0, OLSR_TIMER_PERIODIC, &PrunePacketHistory, NULL, prune_packet_history_timer_cookie->ci_id);
+  olsr_start_timer(3 * MSEC_PER_SEC, 0, OLSR_TIMER_PERIODIC, &PrunePacketHistory, NULL, prune_packet_history_timer_cookie);
 
 
   return InitBmf(NULL);

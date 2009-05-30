@@ -190,14 +190,14 @@ olsrd_plugin_init(void)
     commands[i].csv->acl = &allowed_nets;
   }
 
-  statistics_timer = olsr_alloc_cookie("debuginfo statistics timer", OLSR_COOKIE_TYPE_TIMER);
-  olsr_start_timer(traffic_interval * 1000, 0, true, &update_statistics_ptr, NULL, statistics_timer->ci_id);
+  statistics_timer = olsr_alloc_cookie("debuginfo timer", OLSR_COOKIE_TYPE_TIMER);
+  olsr_start_timer(traffic_interval * 1000, 0, true, &update_statistics_ptr, NULL, statistics_timer);
 
-  statistics_msg_mem = olsr_alloc_cookie("debuginfo msg statistics memory", OLSR_COOKIE_TYPE_MEMORY);
+  statistics_msg_mem = olsr_alloc_cookie("debuginfo msgstat", OLSR_COOKIE_TYPE_MEMORY);
   olsr_cookie_set_memory_size(statistics_msg_mem,
       sizeof(struct debug_msgtraffic) + sizeof(struct debug_msgtraffic_count) * traffic_slots);
 
-  statistics_pkt_mem = olsr_alloc_cookie("debuginfo pkt statistics memory", OLSR_COOKIE_TYPE_MEMORY);
+  statistics_pkt_mem = olsr_alloc_cookie("debuginfo pktstat", OLSR_COOKIE_TYPE_MEMORY);
   olsr_cookie_set_memory_size(statistics_pkt_mem,
       sizeof(struct debug_pkttraffic) + sizeof(struct debug_pkttraffic_count) * traffic_slots);
 
@@ -572,9 +572,9 @@ debuginfo_pktstat(struct comport_connection *con,  char *cmd __attribute__ ((unu
 }
 
 static INLINE bool debuginfo_print_cookies_mem(struct autobuf *buf, const char *format) {
-  int i;
-  for (i = 1; i < COOKIE_ID_MAX; i++) {
-    struct olsr_cookie_info *c = olsr_cookie_get(i);
+  struct olsr_cookie_info *c;
+
+  OLSR_FOR_ALL_COOKIES(c) {
     if (c == NULL || c->ci_type != OLSR_COOKIE_TYPE_MEMORY) {
       continue;
     }
@@ -583,13 +583,14 @@ static INLINE bool debuginfo_print_cookies_mem(struct autobuf *buf, const char *
         (unsigned long)c->ci_size, c->ci_usage, c->ci_free_list_usage) < 0) {
       return true;
     }
-  }
+  } OLSR_FOR_ALL_COOKIES_END(c)
   return false;
 }
+
 static INLINE bool debuginfo_print_cookies_timer(struct autobuf *buf, const char *format) {
-  int i;
-  for (i = 1; i < COOKIE_ID_MAX; i++) {
-    struct olsr_cookie_info *c = olsr_cookie_get(i);
+  struct olsr_cookie_info *c;
+
+  OLSR_FOR_ALL_COOKIES(c) {
     if (c == NULL || c->ci_type != OLSR_COOKIE_TYPE_TIMER) {
       continue;
     }
@@ -597,7 +598,7 @@ static INLINE bool debuginfo_print_cookies_timer(struct autobuf *buf, const char
                        c->ci_usage, c->ci_changes) < 0) {
       return true;
     }
-  }
+  } OLSR_FOR_ALL_COOKIES_END(c)
   return false;
 }
 

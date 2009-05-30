@@ -50,9 +50,11 @@
 #include <errno.h>
 #include <stdlib.h>
 
+struct avl_tree olsr_cookie_tree;
 
-/* Root directory of the cookies we have in the system */
-static struct olsr_cookie_info *cookies[COOKIE_ID_MAX] = { 0 };
+void olsr_cookie_init(void) {
+  avl_init(&olsr_cookie_tree, &avl_comp_strcasecmp);
+}
 
 /*
  * Allocate a cookie for the next available cookie id.
@@ -60,37 +62,32 @@ static struct olsr_cookie_info *cookies[COOKIE_ID_MAX] = { 0 };
 struct olsr_cookie_info *
 olsr_alloc_cookie(const char *cookie_name, olsr_cookie_type cookie_type)
 {
+  static uint16_t next_brand_id = 1;
+
   struct olsr_cookie_info *ci;
-  int ci_index;
 
-  /*
-   * Look for an unused index.
-   * For ease of troubleshooting (non-zero patterns) we start at index 1.
-   */
-  for (ci_index = 1; ci_index < COOKIE_ID_MAX; ci_index++) {
-    if (!cookies[ci_index]) {
-      break;
-    }
-  }
-
-  assert(ci_index < COOKIE_ID_MAX);     /* increase COOKIE_ID_MAX */
+  assert (cookie_name);
 
   ci = olsr_malloc(sizeof(struct olsr_cookie_info), "new cookie");
-  cookies[ci_index] = ci;
 
   /* Now populate the cookie info */
-  ci->ci_id = ci_index;
   ci->ci_type = cookie_type;
-  if (cookie_name) {
-    ci->ci_name = olsr_strdup(cookie_name);
-  }
+  ci->ci_name = olsr_strdup(cookie_name);
+
+  ci->node.key = ci->ci_name;
 
   /* Init the free list */
   if (cookie_type == OLSR_COOKIE_TYPE_MEMORY) {
     list_head_init(&ci->ci_free_list);
     VALGRIND_CREATE_MEMPOOL(ci, 0, 1);
+
+    ci->ci_membrand = next_brand_id++;
+  }
+  else {
+    ci->ci_membrand = 0;
   }
 
+  avl_insert(&olsr_cookie_tree, &ci->node, AVL_DUP_NO);
   return ci;
 }
 
@@ -102,8 +99,8 @@ olsr_free_cookie(struct olsr_cookie_info *ci)
 {
   struct list_node *memory_list;
 
-  /* Mark the cookie as unused */
-  cookies[ci->ci_id] = NULL;
+  /* remove from tree */
+  avl_delete(&olsr_cookie_tree, &ci->node);
 
   /* Free name */
   free(ci->ci_name);
@@ -138,17 +135,14 @@ olsr_free_cookie(struct olsr_cookie_info *ci)
 void
 olsr_delete_all_cookies(void)
 {
-  int ci_index;
+  struct olsr_cookie_info *info;
 
   /*
    * Walk the full index range and kill 'em all.
    */
-  for (ci_index = 1; ci_index < COOKIE_ID_MAX; ci_index++) {
-    if (!cookies[ci_index]) {
-      continue;
-    }
-    olsr_free_cookie(cookies[ci_index]);
-  }
+  OLSR_FOR_ALL_COOKIES(info) {
+    olsr_free_cookie(info);
+  } OLSR_FOR_ALL_COOKIES_END(info)
 }
 
 /*
@@ -208,55 +202,23 @@ olsr_cookie_set_memory_poison(struct olsr_cookie_info *ci, bool poison)
 }
 
 /*
- * Basic sanity checking for a passed-in cookie-id.
- */
-static bool
-olsr_cookie_valid(olsr_cookie_t cookie_id)
-{
-  if ((cookie_id < COOKIE_ID_MAX) && cookies[cookie_id]) {
-    return true;
-  }
-  return false;
-}
-
-/*
  * Increment usage state for a given cookie.
  */
 void
-olsr_cookie_usage_incr(olsr_cookie_t cookie_id)
+olsr_cookie_usage_incr(struct olsr_cookie_info *ci)
 {
-  if (olsr_cookie_valid(cookie_id)) {
-    cookies[cookie_id]->ci_usage++;
-    cookies[cookie_id]->ci_changes++;
-  }
+  ci->ci_usage++;
+  ci->ci_changes++;
 }
 
 /*
  * Decrement usage state for a given cookie.
  */
 void
-olsr_cookie_usage_decr(olsr_cookie_t cookie_id)
+olsr_cookie_usage_decr(struct olsr_cookie_info *ci)
 {
-  if (olsr_cookie_valid(cookie_id)) {
-    cookies[cookie_id]->ci_usage--;
-    cookies[cookie_id]->ci_changes++;
-  }
-}
-
-/*
- * Return a cookie name.
- * Mostly used for logging purposes.
- */
-char *
-olsr_cookie_name(olsr_cookie_t cookie_id)
-{
-  static char unknown[] = "unknown";
-
-  if (olsr_cookie_valid(cookie_id)) {
-    return (cookies[cookie_id])->ci_name;
-  }
-
-  return unknown;
+  ci->ci_usage--;
+  ci->ci_changes++;
 }
 
 /*
@@ -349,10 +311,10 @@ olsr_cookie_malloc(struct olsr_cookie_info *ci)
   branding = (struct olsr_cookie_mem_brand *)
     ((unsigned char *)ptr + ci->ci_size);
   memcpy(&branding->cmb_sig, "cookie", 6);
-  branding->cmb_id = ci->ci_id;
+  branding->id = ci->ci_membrand;
 
   /* Stats keeping */
-  olsr_cookie_usage_incr(ci->ci_id);
+  olsr_cookie_usage_incr(ci);
 
   OLSR_DEBUG(LOG_COOKIE, "MEMORY: alloc %s, %p, %lu bytes%s\n",
              ci->ci_name, ptr, (unsigned long)ci->ci_size, reuse ? ", reuse" : "");
@@ -379,7 +341,7 @@ olsr_cookie_free(struct olsr_cookie_info *ci, void *ptr)
    * Verify if there has been a memory overrun, or
    * the wrong owner is trying to free this.
    */
-  assert(!memcmp(&branding->cmb_sig, "cookie", 6) && branding->cmb_id == ci->ci_id);
+  assert(!memcmp(&branding->cmb_sig, "cookie", 6) && branding->id == ci->ci_membrand);
 
   /* Kill the brand */
   memset(branding, 0, sizeof(*branding));
@@ -426,19 +388,13 @@ olsr_cookie_free(struct olsr_cookie_info *ci, void *ptr)
   }
 
   /* Stats keeping */
-  olsr_cookie_usage_decr(ci->ci_id);
+  olsr_cookie_usage_decr(ci);
 
   OLSR_DEBUG(LOG_COOKIE, "MEMORY: free %s, %p, %lu bytes%s\n",
              ci->ci_name, ptr, (unsigned long)ci->ci_size, reuse ? ", reuse" : "");
 
   VALGRIND_MEMPOOL_FREE(ci, ptr);
   VALGRIND_MAKE_MEM_NOACCESS(ptr, ci->ci_size);
-}
-
-struct olsr_cookie_info *
-olsr_cookie_get(int i)
-{
-  return cookies[i];
 }
 
 /*

@@ -133,7 +133,7 @@ olsrd_plugin_init(void)
 
   /* Register the GW check */
   olsr_start_timer(watchdog_interval * MSEC_PER_SEC, 0, OLSR_TIMER_PERIODIC,
-                   &olsr_watchdog_write_alivefile, NULL, watchdog_timer_cookie->ci_id);
+                   &olsr_watchdog_write_alivefile, NULL, watchdog_timer_cookie);
 
   return 1;
 }
