@@ -50,6 +50,7 @@ enum log_source {
   LOG_LOGGING,                         //!< LOG_LOGGING
   LOG_IPC,                             //!< LOG_IPC
   LOG_MAIN,                            //!< LOG_MAIN
+  LOG_INTERFACE,                       //!< LOG_INTERFACE
   LOG_NETWORKING,                      //!< LOG_NETWORKING
   LOG_PACKET_CREATION,                 //!< LOG_PACKET_CREATION
   LOG_PACKET_PARSING,                  //!< LOG_PACKET_PARSING

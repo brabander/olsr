@@ -328,13 +328,14 @@ void
 olsr_delete_link_entry_by_if(const struct interface *ifp)
 {
   struct link_entry *link;
-
-  if (list_is_empty(&link_entry_head)) {
-    return;
-  }
+#if !defined REMOVE_LOG_DEBUG
+  struct ipaddr_str buf;
+#endif
 
   OLSR_FOR_ALL_LINK_ENTRIES(link) {
     if (ifp == link->inter) {
+      OLSR_DEBUG(LOG_LINKS, "Removing link %s of interface %s\n",
+          olsr_ip_to_string(&buf, &link->neighbor_iface_addr), ifp->int_name);
       olsr_delete_link_entry(link);
     }
   }

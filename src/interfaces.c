@@ -106,7 +106,7 @@ ifinit(void)
   mid_gen_timer_cookie = olsr_alloc_cookie("MID Generation", OLSR_COOKIE_TYPE_TIMER);
   hna_gen_timer_cookie = olsr_alloc_cookie("HNA Generation", OLSR_COOKIE_TYPE_TIMER);
 
-  OLSR_INFO(LOG_NETWORKING, "\n ---- Interface configuration ---- \n\n");
+  OLSR_INFO(LOG_INTERFACE, "\n ---- Interface configuration ---- \n\n");
 
   /* Run trough all interfaces immediately */
   for (tmp_if = olsr_cnf->if_configs; tmp_if != NULL; tmp_if = tmp_if->next) {
@@ -128,13 +128,13 @@ check_interface_updates(void *foo __attribute__ ((unused)))
 {
   struct olsr_if_config *tmp_if;
 
-  OLSR_DEBUG(LOG_NETWORKING, "Checking for updates in the interface set\n");
+  OLSR_DEBUG(LOG_INTERFACE, "Checking for updates in the interface set\n");
 
   for (tmp_if = olsr_cnf->if_configs; tmp_if != NULL; tmp_if = tmp_if->next) {
 
     if (!tmp_if->cnf->autodetect_chg) {
       /* Don't check this interface */
-      OLSR_DEBUG(LOG_NETWORKING, "Not checking interface %s\n", tmp_if->name);
+      OLSR_DEBUG(LOG_INTERFACE, "Not checking interface %s\n", tmp_if->name);
       continue;
     }
 
@@ -159,7 +159,7 @@ remove_interface(struct interface **pinterf)
     return;
   }
 
-  OLSR_INFO(LOG_NETWORKING, "Removing interface %s\n", ifp->int_name);
+  OLSR_INFO(LOG_INTERFACE, "Removing interface %s\n", ifp->int_name);
 
   olsr_delete_link_entry_by_if(ifp);
 
@@ -179,13 +179,13 @@ remove_interface(struct interface **pinterf)
     if (list_is_empty(&interface_head)) {
       /* No more interfaces */
       memset(&olsr_cnf->router_id, 0, olsr_cnf->ipsize);
-      OLSR_INFO(LOG_NETWORKING, "Removed last interface. Cleared main address.\n");
+      OLSR_INFO(LOG_INTERFACE, "Removed last interface. Cleared main address.\n");
     } else {
 
       /* Grab the first interface in the list. */
       olsr_cnf->router_id = list2interface(interface_head.next)->ip_addr;
       olsr_ip_to_string(&buf, &olsr_cnf->router_id);
-      OLSR_INFO(LOG_NETWORKING, "New main address: %s\n", buf.buf);
+      OLSR_INFO(LOG_INTERFACE, "New main address: %s\n", buf.buf);
     }
   }
 
@@ -221,7 +221,7 @@ remove_interface(struct interface **pinterf)
   unlock_interface(ifp);
 
   if (list_is_empty(&interface_head) && !olsr_cnf->allow_no_interfaces) {
-    OLSR_ERROR(LOG_NETWORKING, "No more active interfaces - exiting.\n");
+    OLSR_ERROR(LOG_INTERFACE, "No more active interfaces - exiting.\n");
     olsr_exit(EXIT_FAILURE);
   }
 }
