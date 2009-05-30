@@ -42,7 +42,9 @@
 #ifndef _OLSR_MID
 #define _OLSR_MID
 
+#include "defs.h"
 #include "olsr_types.h"
+#include "olsr_protocol.h"
 #include "common/avl.h"
 
 struct mid_entry {

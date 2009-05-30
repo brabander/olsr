@@ -46,12 +46,10 @@
 #include "defs.h"
 #include "olsr.h"
 #include "link_set.h"
-#include "two_hop_neighbor_table.h"
 #include "tc_set.h"
 #include "duplicate_set.h"
 #include "mpr_selector_set.h"
 #include "mid_set.h"
-#include "mpr.h"
 #include "lq_mpr.h"
 #include "olsr_spf.h"
 #include "scheduler.h"
@@ -169,7 +167,6 @@ olsr_process_changes(void)
 
   olsr_print_link_set();
   olsr_print_neighbor_table();
-  olsr_print_two_hop_neighbor_table();
   olsr_print_tc_table();
   olsr_print_mid_set();
   olsr_print_duplicate_table();
@@ -227,9 +224,6 @@ olsr_init_tables(void)
   /* Initialize routing table */
   olsr_init_routing_table();
 
-  /* Initialize two hop table */
-  olsr_init_two_hop_table();
-
   /* Initialize topology */
   olsr_init_tc();
 
@@ -265,6 +259,9 @@ olsr_forward_message(union olsr_message *m, struct interface *in_if, union olsr_
   struct nbr_entry *neighbor;
   int msgsize;
   struct interface *ifn;
+#if !defined REMOVE_LOG_DEBUG
+  struct ipaddr_str buf;
+#endif
 
   /*
    * Sven-Ola: We should not flood the mesh with overdue messages. Because
@@ -284,21 +281,30 @@ olsr_forward_message(union olsr_message *m, struct interface *in_if, union olsr_
   if (!src)
     src = from_addr;
 
-  neighbor = olsr_lookup_nbr_entry(src);
-  if (!neighbor)
+  neighbor = olsr_lookup_nbr_entry(src, true);
+  if (!neighbor) {
+    OLSR_DEBUG(LOG_PACKET_PARSING, "Not forwarding message type %d because no nbr entry found for %s\n",
+        m->v4.olsr_msgtype, olsr_ip_to_string(&buf, src));
     return 0;
-
-  if (neighbor->status != SYM)
+  }
+  if (!neighbor->is_sym) {
+    OLSR_DEBUG(LOG_PACKET_PARSING, "Not forwarding message type %d because received by non-symmetric neighbor %s\n",
+        m->v4.olsr_msgtype, olsr_ip_to_string(&buf, src));
     return 0;
+  }
 
   /* Check MPR */
   if (olsr_lookup_mprs_set(src) == NULL) {
+    OLSR_DEBUG(LOG_PACKET_PARSING, "Not forwarding message type %d because we are no MPR for %s\n",
+        m->v4.olsr_msgtype, olsr_ip_to_string(&buf, src));
     /* don't forward packages if not a MPR */
     return 0;
   }
 
   /* check if we already forwarded this message */
   if (olsr_message_is_duplicate(m, true)) {
+    OLSR_DEBUG(LOG_PACKET_PARSING, "Not forwarding message type %d from %s because we already forwarded it.\n",
+        m->v4.olsr_msgtype, olsr_ip_to_string(&buf, src));
     return 0;                   /* it's a duplicate, forget about it */
   }
 
@@ -315,6 +321,9 @@ olsr_forward_message(union olsr_message *m, struct interface *in_if, union olsr_
 
   /* Update packet data */
   msgsize = ntohs(m->v4.olsr_msgsize);
+
+  OLSR_DEBUG(LOG_PACKET_PARSING, "Forwarding message type %d from %s.\n",
+      m->v4.olsr_msgtype, olsr_ip_to_string(&buf, src));
 
   /* looping trough interfaces */
   OLSR_FOR_ALL_INTERFACES(ifn) {

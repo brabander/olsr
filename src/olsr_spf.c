@@ -342,7 +342,7 @@ olsr_calculate_routing_table(void)
     neigh = link->neighbor;
     tc_edge = link->link_tc_edge;
 
-    if (neigh->status == SYM) {
+    if (neigh->is_sym) {
       if (tc_edge->edge_inv) {
         tc_edge->edge_inv->tc->next_hop = link;
       }

@@ -955,7 +955,7 @@ build_neigh_body(struct autobuf *abuf)
                colspan);
   /* Neighbors */
   OLSR_FOR_ALL_NBR_ENTRIES(neigh) {
-    struct nbr2_list_entry *list_2;
+    struct nbr_con *connector;
     int thop_cnt;
     abuf_puts(abuf, "<tr>");
     build_ipaddr_with_link(abuf, &neigh->nbr_addr, -1);
@@ -964,17 +964,17 @@ build_neigh_body(struct autobuf *abuf)
                  "<td>%s</td>"
                  "<td>%s</td>"
                  "<td>%d</td>",
-                 (neigh->status == SYM) ? "YES" : "NO",
+                 neigh->is_sym ? "YES" : "NO",
                  neigh->is_mpr ? "YES" : "NO", olsr_lookup_mprs_set(&neigh->nbr_addr) ? "YES" : "NO", neigh->willingness);
 
     abuf_puts(abuf, "<td><select>\n" "<option>IP ADDRESS</option>\n");
 
     thop_cnt = 0;
-    OLSR_FOR_ALL_NBR2_LIST_ENTRIES(neigh, list_2) {
+    OLSR_FOR_ALL_NBR_CON_ENTRIES(neigh, connector) {
       struct ipaddr_str strbuf;
-      abuf_appendf(abuf, "<option>%s</option>\n", olsr_ip_to_string(&strbuf, &list_2->nbr2->nbr2_addr));
+      abuf_appendf(abuf, "<option>%s</option>\n", olsr_ip_to_string(&strbuf, &connector->nbr2->nbr2_addr));
       thop_cnt++;
-    } OLSR_FOR_ALL_NBR2_LIST_ENTRIES_END(neigh, list_2);
+    } OLSR_FOR_ALL_NBR_CON_ENTRIES_END(neigh, connector);
     abuf_appendf(abuf, "</select> (%d)</td></tr>\n", thop_cnt);
   } OLSR_FOR_ALL_NBR_ENTRIES_END(neigh);
 

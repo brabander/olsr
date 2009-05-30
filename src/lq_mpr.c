@@ -41,7 +41,6 @@
 
 #include "defs.h"
 #include "neighbor_table.h"
-#include "two_hop_neighbor_table.h"
 #include "link_set.h"
 #include "lq_mpr.h"
 #include "scheduler.h"
@@ -51,11 +50,12 @@ void
 olsr_calculate_lq_mpr(void)
 {
   struct nbr2_entry *nbr2;
-  struct nbr_list_entry *walker;
+  struct nbr_con *walker;
   int k;
   struct nbr_entry *neigh;
   olsr_linkcost best, best_1hop;
   bool mpr_changes = false;
+  bool found_better_path;
 
   OLSR_FOR_ALL_NBR_ENTRIES(neigh) {
 
@@ -66,7 +66,7 @@ olsr_calculate_lq_mpr(void)
     neigh->is_mpr = false;
 
     /* In this pass we are only interested in WILL_ALWAYS neighbours */
-    if (neigh->status == NOT_SYM || neigh->willingness != WILL_ALWAYS) {
+    if (!neigh->is_sym || neigh->willingness != WILL_ALWAYS) {
       continue;
     }
 
@@ -84,11 +84,9 @@ olsr_calculate_lq_mpr(void)
     best_1hop = LINK_COST_BROKEN;
 
     /* check whether this 2-hop neighbour is also a neighbour */
-    neigh = olsr_lookup_nbr_entry(&nbr2->nbr2_addr);
+    neigh = olsr_lookup_nbr_entry(&nbr2->nbr2_addr, false);
 
-    /* if it's a neighbour and also symmetric, then examine the link quality */
-    if (neigh != NULL && neigh->status == SYM) {
-
+    if (neigh != NULL && neigh->is_sym) {
       /*
        * if the direct link is better than the best route via
        * an MPR, then prefer the direct link and do not select
@@ -102,20 +100,22 @@ olsr_calculate_lq_mpr(void)
       }
 
       best_1hop = lnk->linkcost;
-
+    }
       /* see wether we find a better route via an MPR */
       walker = NULL;
-      OLSR_FOR_ALL_NBR_LIST_ENTRIES(nbr2, walker) {
+      found_better_path = false;
+      OLSR_FOR_ALL_NBR2_CON_ENTRIES(nbr2, walker) {
         if (walker->path_linkcost < best_1hop) {
+          found_better_path = true;
           break;
         }
-      } OLSR_FOR_ALL_NBR_LIST_ENTRIES_END(nbr2, walker);
+      } OLSR_FOR_ALL_NBR_CON_ENTRIES_END(nbr2, walker);
 
       /* we've reached the end of the list, so we haven't found
        * a better route via an MPR - so, skip MPR selection for
        * this 1-hop neighbor */
 
-      if (!walker) {
+      if (!found_better_path) {
         continue;
       }
 
@@ -124,9 +124,9 @@ olsr_calculate_lq_mpr(void)
        */
 
       /* mark all 1-hop neighbours as not selected */
-      OLSR_FOR_ALL_NBR_LIST_ENTRIES(nbr2, walker) {
-        walker->neighbor->skip = false;
-      } OLSR_FOR_ALL_NBR_LIST_ENTRIES_END(nbr2, walker);
+      OLSR_FOR_ALL_NBR2_CON_ENTRIES(nbr2, walker) {
+        walker->nbr->skip = false;
+      } OLSR_FOR_ALL_NBR_CON_ENTRIES_END(nbr2, walker);
 
       for (k = 0; k < olsr_cnf->mpr_coverage; k++) {
 
@@ -134,12 +134,12 @@ olsr_calculate_lq_mpr(void)
         neigh = NULL;
         best = LINK_COST_BROKEN;
 
-        OLSR_FOR_ALL_NBR_LIST_ENTRIES(nbr2, walker) {
-          if (walker->neighbor->status == SYM && !walker->neighbor->skip && walker->path_linkcost < best) {
-            neigh = walker->neighbor;
+        OLSR_FOR_ALL_NBR2_CON_ENTRIES(nbr2, walker) {
+          if (walker->nbr->is_sym && !walker->nbr->skip && walker->path_linkcost < best) {
+            neigh = walker->nbr;
             best = walker->path_linkcost;
           }
-        } OLSR_FOR_ALL_NBR_LIST_ENTRIES_END(nbr2, walker);
+        } OLSR_FOR_ALL_NBR2_CON_ENTRIES_END(nbr2, walker);
 
         /*
          * Found a 1-hop neighbor that we haven't previously selected.
@@ -161,11 +161,10 @@ olsr_calculate_lq_mpr(void)
           break;
         }
       }
-    } OLSR_FOR_ALL_NBR2_ENTRIES_END(NEIGH2);
+  } OLSR_FOR_ALL_NBR2_ENTRIES_END(nbr2);
 
-    if (mpr_changes && olsr_cnf->tc_redundancy > 0)
-      signal_link_changes(true);
-  }
+  if (mpr_changes && olsr_cnf->tc_redundancy > 0)
+    signal_link_changes(true);
 }
 
 /*

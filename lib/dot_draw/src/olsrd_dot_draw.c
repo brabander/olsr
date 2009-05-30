@@ -149,7 +149,7 @@ ipc_print_neigh_link(int ipc_connection, const struct nbr_entry *neighbor)
   const char *adr = olsr_ip_to_string(&mainaddrstrbuf, &olsr_cnf->router_id);
   struct lqtextbuffer lqbuffer;
 
-  if (neighbor->status == 0) {  /* non SYM */
+  if (neighbor->is_sym == 0) {  /* non SYM */
     style = "dashed";
   } else {
     const struct link_entry *lnk = get_best_link_to_neighbor(&neighbor->nbr_addr);

@@ -58,7 +58,6 @@
 #include "olsr_types.h"
 #include "plugin.h"
 #include "neighbor_table.h"
-#include "two_hop_neighbor_table.h"
 #include "tc_set.h"
 #include "hna_set.h"
 #include "mid_set.h"

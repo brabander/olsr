@@ -41,7 +41,6 @@
 
 #include "ipcalc.h"
 #include "defs.h"
-#include "two_hop_neighbor_table.h"
 #include "mid_set.h"
 #include "olsr.h"
 #include "scheduler.h"
@@ -51,6 +50,7 @@
 #include "net_olsr.h"
 #include "olsr_cookie.h"
 #include "olsr_logging.h"
+#include "olsr_protocol.h"
 
 #include <stdlib.h>
 
@@ -128,7 +128,7 @@ olsr_flush_nbr2_duplicates(struct mid_entry *alias)
 
   OLSR_FOR_ALL_TC_MID_ENTRIES(tc, alias) {
     struct nbr_entry *nbr;
-    struct nbr2_entry *nbr2 = olsr_lookup_nbr2_entry_alias(&alias->mid_alias_addr);
+    struct nbr2_entry *nbr2 = olsr_lookup_nbr2_entry(&alias->mid_alias_addr, false);
 
     /* Delete possible 2 hop neighbor */
     if (nbr2) {
@@ -140,9 +140,9 @@ olsr_flush_nbr2_duplicates(struct mid_entry *alias)
     }
 
     /* Delete a possible neighbor entry */
-    nbr = olsr_lookup_nbr_entry_alias(&alias->mid_alias_addr);
+    nbr = olsr_lookup_nbr_entry(&alias->mid_alias_addr, false);
     if (nbr) {
-      struct nbr_entry *real_nbr = olsr_lookup_nbr_entry_alias(&tc->addr);
+      struct nbr_entry *real_nbr = olsr_lookup_nbr_entry(&tc->addr, false);
       if (real_nbr) {
 
         OLSR_DEBUG(LOG_MID, "Delete bogus neighbor entry %s (real %s)\n",
@@ -150,7 +150,7 @@ olsr_flush_nbr2_duplicates(struct mid_entry *alias)
 
         replace_neighbor_link_set(nbr, real_nbr);
 
-        olsr_delete_nbr_entry(&alias->mid_alias_addr);
+        olsr_delete_nbr_entry(nbr);
 
         changes_neighborhood = true;
       }
@@ -167,13 +167,14 @@ olsr_flush_nbr2_duplicates(struct mid_entry *alias)
 static void
 olsr_fixup_mid_main_addr(const union olsr_ip_addr *main_addr, const union olsr_ip_addr *alias_addr)
 {
-  struct nbr_entry *nbr_new, *nbr_old = olsr_lookup_nbr_entry_alias(alias_addr);
+  struct nbr_entry *nbr_new, *nbr_old;
   struct mid_entry *mid_old;
   int ne_ref_rp_count;
 #if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf1, buf2;
 #endif
 
+  nbr_old = olsr_lookup_nbr_entry(alias_addr, false);
   if (!nbr_old) {
     return;
   }
@@ -181,7 +182,7 @@ olsr_fixup_mid_main_addr(const union olsr_ip_addr *main_addr, const union olsr_i
   OLSR_DEBUG(LOG_MID, "Main address change %s -> %s detected.\n",
              olsr_ip_to_string(&buf1, alias_addr), olsr_ip_to_string(&buf2, main_addr));
 
-  olsr_delete_nbr_entry(alias_addr);
+  olsr_delete_nbr_entry(nbr_old);
   nbr_new = olsr_add_nbr_entry(main_addr);
 
   /* Adjust pointers to neighbortable-entry in link_set */

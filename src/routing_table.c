@@ -42,7 +42,6 @@
 #include "routing_table.h"
 #include "ipcalc.h"
 #include "defs.h"
-#include "two_hop_neighbor_table.h"
 #include "tc_set.h"
 #include "mid_set.h"
 #include "neighbor_table.h"

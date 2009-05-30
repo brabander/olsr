@@ -45,7 +45,6 @@
 #include "olsr.h"
 #include "ipcalc.h"
 #include "neighbor_table.h"
-#include "two_hop_neighbor_table.h"
 #include "mpr_selector_set.h"
 #include "tc_set.h"
 #include "hna_set.h"

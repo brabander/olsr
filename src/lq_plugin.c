@@ -46,7 +46,6 @@
 #include "lq_packet.h"
 #include "olsr.h"
 #include "olsr_cookie.h"
-#include "two_hop_neighbor_table.h"
 #include "common/avl.h"
 #include "common/string.h"
 #include "olsr_logging.h"

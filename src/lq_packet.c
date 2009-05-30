@@ -50,7 +50,6 @@
 #include "mid_set.h"
 #include "mantissa.h"
 #include "process_package.h"    // XXX - remove
-#include "two_hop_neighbor_table.h"
 #include "olsr.h"
 #include "build_msg.h"
 #include "net_olsr.h"
@@ -67,9 +66,6 @@ static void
 create_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
 {
   struct link_entry *walker;
-#if !defined REMOVE_LOG_WARN
-  struct ipaddr_str buf;
-#endif
 
   // initialize the static fields
 
@@ -111,17 +107,11 @@ create_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
     if (walker->neighbor->is_mpr)
       neigh->neigh_type = MPR_NEIGH;
 
-    else if (walker->neighbor->status == SYM)
+    else if (walker->neighbor->is_sym)
       neigh->neigh_type = SYM_NEIGH;
 
-    else if (walker->neighbor->status == NOT_SYM)
+    else
       neigh->neigh_type = NOT_NEIGH;
-
-    else {
-      OLSR_WARN(LOG_PACKET_CREATION, "Error: neigh_type %d in link %s undefined\n",
-                walker->neighbor->status, olsr_ip_to_string(&buf, &walker->neighbor->nbr_addr));
-      neigh->neigh_type = NOT_NEIGH;
-    }
 
     // set the entry's neighbour interface address
 
@@ -199,7 +189,7 @@ create_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
      *
      * Only consider symmetric neighbours.
      */
-    if (walker->status != SYM) {
+    if (!walker->is_sym) {
       continue;
     }
 

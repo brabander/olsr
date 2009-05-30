@@ -46,7 +46,6 @@
 #include "defs.h"
 #include "link_set.h"
 #include "mid_set.h"
-#include "mpr.h"
 #include "neighbor_table.h"
 #include "olsr.h"
 #include "scheduler.h"
@@ -77,7 +76,7 @@ static int check_link_status(const struct lq_hello_message *message, const struc
 static struct link_entry *add_link_entry(const union olsr_ip_addr *,
                                          const union olsr_ip_addr *,
                                          union olsr_ip_addr *, olsr_reltime, olsr_reltime, struct interface *);
-static int get_neighbor_status(const union olsr_ip_addr *);
+static bool get_neighbor_status(const union olsr_ip_addr *);
 
 void
 olsr_init_link_set(void)
@@ -128,9 +127,9 @@ lookup_link_status(const struct link_entry *entry)
  * Find the "best" link status to a neighbor
  *
  * @param address the address to check for
- * @return SYM_LINK if a symmetric link exists 0 if not
+ * @return true if a symmetric link exists false if not
  */
-static int
+static bool
 get_neighbor_status(const union olsr_ip_addr *address)
 {
   const union olsr_ip_addr *main_addr;
@@ -154,7 +153,7 @@ get_neighbor_status(const union olsr_ip_addr *address)
 
     if (lnk != NULL) {
       if (lookup_link_status(lnk) == SYM_LINK)
-        return SYM_LINK;
+        return true;
     }
 
     /* Walk the aliases */
@@ -162,14 +161,14 @@ get_neighbor_status(const union olsr_ip_addr *address)
 
       lnk = lookup_link_entry(&aliases->mid_alias_addr, NULL, ifs);
       if (lnk && (lookup_link_status(lnk) == SYM_LINK)) {
-        return SYM_LINK;
+        return true;
       }
     }
     OLSR_FOR_ALL_TC_MID_ENTRIES_END(tc, aliases);
   }
   OLSR_FOR_ALL_INTERFACES_END(ifs);
 
-  return 0;
+  return false;
 }
 
 /**
@@ -293,7 +292,7 @@ olsr_delete_link_entry(struct link_entry *link)
 
   /* Delete neighbor entry */
   if (link->neighbor->linkcount == 1) {
-    olsr_delete_nbr_entry(&link->neighbor->nbr_addr);
+    olsr_delete_nbr_entry(link->neighbor);
   } else {
     link->neighbor->linkcount--;
   }
@@ -499,7 +498,7 @@ add_link_entry(const union olsr_ip_addr *local,
    */
 
   /* Neighbor MUST exist! */
-  neighbor = olsr_lookup_nbr_entry(remote_main);
+  neighbor = olsr_lookup_nbr_entry(remote_main, true);
   if (!neighbor) {
     OLSR_DEBUG(LOG_LINKS, "ADDING NEW NEIGHBOR ENTRY %s FROM LINK SET\n", olsr_ip_to_string(&rembuf, remote_main));
     neighbor = olsr_add_nbr_entry(remote_main);

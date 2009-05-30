@@ -124,13 +124,6 @@
 #define MAX_NEIGH             2
 
 /*
- *Neighbor status
- */
-
-#define NOT_SYM               0
-#define SYM                   1
-
-/*
  *Willingness
  */
 

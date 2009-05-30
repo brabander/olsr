@@ -76,7 +76,6 @@ olsr_init_duplicate_set(void)
   duplicate_mem_cookie = olsr_alloc_cookie("dup_entry", OLSR_COOKIE_TYPE_MEMORY);
   olsr_cookie_set_memory_size(duplicate_mem_cookie, sizeof(struct dup_entry));
 
-
   olsr_set_timer(&duplicate_cleanup_timer, DUPLICATE_CLEANUP_INTERVAL,
                  DUPLICATE_CLEANUP_JITTER, OLSR_TIMER_PERIODIC, &olsr_cleanup_duplicate_entry, NULL, duplicate_timer_cookie->ci_id);
 }
