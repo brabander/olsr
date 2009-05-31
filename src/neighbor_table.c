@@ -51,7 +51,7 @@
 
 #include <stdlib.h>
 
-/* Root of the one hop neighbor database */
+/* Root of the one hop and two hop neighbor trees */
 struct avl_tree nbr_tree;
 struct avl_tree nbr2_tree;
 
@@ -116,7 +116,7 @@ olsr_add_nbr_entry(const union olsr_ip_addr *addr)
   nbr->willingness = WILL_NEVER;
   nbr->is_sym = false;
 
-  /* Init subtree for nbr2 pointers */
+  /* Init subtree for nbr2 connectors */
   avl_init(&nbr->con_tree, avl_comp_default);
 
   nbr->linkcount = 0;
@@ -148,6 +148,9 @@ olsr_delete_nbr_entry(struct nbr_entry *nbr)
 
   OLSR_DEBUG(LOG_NEIGHTABLE, "Delete 1-hop neighbor: %s\n", olsr_ip_to_string(&buf, &nbr->nbr_addr));
 
+  /*
+   * Remove all references pointing to this neighbor.
+   */
   OLSR_FOR_ALL_NBR_CON_ENTRIES(nbr, connector) {
     nbr2 = connector->nbr2;
 
@@ -244,7 +247,8 @@ int olsr_update_nbr_status(struct nbr_entry *entry, bool sym) {
  * @param addr the entry to insert
  * @return nada
  */
-struct nbr2_entry *olsr_add_nbr2_entry(const union olsr_ip_addr *addr) {
+struct nbr2_entry *
+olsr_add_nbr2_entry(const union olsr_ip_addr *addr) {
 #if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
 #endif
@@ -262,7 +266,7 @@ struct nbr2_entry *olsr_add_nbr2_entry(const union olsr_ip_addr *addr) {
 
   nbr2 = olsr_cookie_malloc(nbr2_mem_cookie);
 
-  /* Init neighbor reference subtree */
+  /* Init neighbor connector subtree */
   avl_init(&nbr2->con_tree, avl_comp_default);
 
   nbr2->nbr2_addr = *addr;
@@ -279,7 +283,8 @@ struct nbr2_entry *olsr_add_nbr2_entry(const union olsr_ip_addr *addr) {
  *
  * @param nbr2 the two hop neighbor to delete.
  */
-void olsr_delete_nbr2_entry(struct nbr2_entry *nbr2) {
+void
+olsr_delete_nbr2_entry(struct nbr2_entry *nbr2) {
   struct nbr_con *connector;
 
 #if !defined REMOVE_LOG_DEBUG
@@ -288,6 +293,9 @@ void olsr_delete_nbr2_entry(struct nbr2_entry *nbr2) {
 
   OLSR_DEBUG(LOG_NEIGHTABLE, "Delete 2-hop neighbor: %s\n", olsr_ip_to_string(&buf, &nbr2->nbr2_addr));
 
+  /*
+   * Remove all references pointing to this two hop neighbor.
+   */
   OLSR_FOR_ALL_NBR2_CON_ENTRIES(nbr2, connector) {
     olsr_delete_nbr_con(connector);
   } OLSR_FOR_ALL_NBR2_CON_ENTRIES_END(nbr2, connector);
@@ -299,7 +307,8 @@ void olsr_delete_nbr2_entry(struct nbr2_entry *nbr2) {
   changes_neighborhood = true;
 }
 
-struct nbr2_entry *olsr_lookup_nbr2_entry(const union olsr_ip_addr *addr, bool lookupalias) {
+struct nbr2_entry *
+olsr_lookup_nbr2_entry(const union olsr_ip_addr *addr, bool lookupalias) {
   const union olsr_ip_addr *main_addr = NULL;
   struct avl_node *node;
 
@@ -327,16 +336,23 @@ struct nbr2_entry *olsr_lookup_nbr2_entry(const union olsr_ip_addr *addr, bool l
  * @param nbr2 the 2-hop neighbor
  * @param vtime validity time of the 2hop neighbor
  */
-struct nbr_con *olsr_link_nbr_nbr2(struct nbr_entry *nbr, const union olsr_ip_addr *nbr2_addr, olsr_reltime vtime) {
+struct nbr_con *
+olsr_link_nbr_nbr2(struct nbr_entry *nbr, const union olsr_ip_addr *nbr2_addr, olsr_reltime vtime) {
   struct nbr_con *connector;
   struct nbr2_entry *nbr2;
 
+  /*
+   * Check if connector entry exists.
+   */
   connector = olsr_lookup_nbr_con_entry(nbr, nbr2_addr);
   if (connector) {
-    olsr_change_timer(connector->nbr2_list_timer, vtime, OLSR_NBR2_LIST_JITTER, OLSR_TIMER_ONESHOT);
+    olsr_change_timer(connector->nbr2_con_timer, vtime, OLSR_NBR2_LIST_JITTER, OLSR_TIMER_ONESHOT);
     return connector;
   }
 
+  /*
+   * Generate a fresh one.
+   */
   nbr2 = olsr_add_nbr2_entry(nbr2_addr);
 
   connector = olsr_cookie_malloc(nbr_connector_mem_cookie);
@@ -351,7 +367,7 @@ struct nbr_con *olsr_link_nbr_nbr2(struct nbr_entry *nbr, const union olsr_ip_ad
 
   connector->path_linkcost = LINK_COST_BROKEN;
 
-  connector->nbr2_list_timer = olsr_start_timer(vtime, OLSR_NBR2_LIST_JITTER,
+  connector->nbr2_con_timer = olsr_start_timer(vtime, OLSR_NBR2_LIST_JITTER,
       OLSR_TIMER_ONESHOT, &olsr_expire_nbr_con, connector, nbr_connector_timer_cookie);
 
   return connector;
@@ -363,9 +379,10 @@ struct nbr_con *olsr_link_nbr_nbr2(struct nbr_entry *nbr, const union olsr_ip_ad
  *
  * @param connector the connector between the neighbors
  */
-void olsr_delete_nbr_con(struct nbr_con *connector) {
-  olsr_stop_timer(connector->nbr2_list_timer);
-  connector->nbr2_list_timer = NULL;
+void
+olsr_delete_nbr_con(struct nbr_con *connector) {
+  olsr_stop_timer(connector->nbr2_con_timer);
+  connector->nbr2_con_timer = NULL;
 
   avl_delete(&connector->nbr->con_tree, &connector->nbr_tree_node);
   avl_delete(&connector->nbr2->con_tree, &connector->nbr2_tree_node);
@@ -381,7 +398,8 @@ void olsr_delete_nbr_con(struct nbr_con *connector) {
  * @param nbr2_addr the ip of the 2-hop neighbor
  * @return nbr_con, or NULL if not found
  */
-struct nbr_con *olsr_lookup_nbr_con_entry(struct nbr_entry *nbr, const union olsr_ip_addr *nbr2_addr) {
+struct nbr_con *
+olsr_lookup_nbr_con_entry(struct nbr_entry *nbr, const union olsr_ip_addr *nbr2_addr) {
   struct avl_node *node;
 
   node = avl_find(&nbr->con_tree, nbr2_addr);
@@ -399,7 +417,8 @@ struct nbr_con *olsr_lookup_nbr_con_entry(struct nbr_entry *nbr, const union ols
  * @param nbr_addr the ip of the one-hop neighbor
  * @return nbr_con, or NULL if not found
  */
-struct nbr_con *olsr_lookup_nbr2_con_entry(struct nbr2_entry *nbr2, const union olsr_ip_addr *nbr_addr) {
+struct nbr_con *
+olsr_lookup_nbr2_con_entry(struct nbr2_entry *nbr2, const union olsr_ip_addr *nbr_addr) {
   struct avl_node *node;
 
   node = avl_find(&nbr2->con_tree, nbr_addr);
@@ -409,11 +428,15 @@ struct nbr_con *olsr_lookup_nbr2_con_entry(struct nbr2_entry *nbr2, const union 
   return NULL;
 }
 
-static void olsr_expire_nbr_con(void *context) {
+/*
+ * Wrapper for the timer callback.
+ */
+static void
+olsr_expire_nbr_con(void *context) {
   struct nbr_con *connector;
 
   connector = context;
-  connector->nbr2_list_timer = NULL;
+  connector->nbr2_con_timer = NULL;
 
   olsr_delete_nbr_con(connector);
 }

@@ -60,7 +60,7 @@ struct nbr_con {
   struct nbr_entry *nbr;
   struct nbr2_entry *nbr2;
 
-  struct timer_entry *nbr2_list_timer;
+  struct timer_entry *nbr2_con_timer;
 
   olsr_linkcost second_hop_linkcost;
   olsr_linkcost path_linkcost;
@@ -79,10 +79,10 @@ struct nbr_entry {
   unsigned int is_sym:1;
   unsigned int is_mpr:1;
   unsigned int was_mpr:1;              /* Used to detect changes in MPR */
-  unsigned int skip:1;
+  unsigned int skip:1; 
+  unsigned int mprs_count:16;          /* >0 if we are choosen as an MPR by this neighbor */
   unsigned int linkcount;
-  uint16_t mprs_count;           /* >0 if we are choosen as an MPR by this neighbor */
-  struct avl_tree con_tree;      /* subtree for connectors to nbr2 */
+  struct avl_tree con_tree;            /* subtree for connectors to nbr2 */
 };
 
 AVLNODE2STRUCT(nbr_node_to_nbr, struct nbr_entry, nbr_node);
@@ -92,13 +92,13 @@ struct nbr2_entry {
   union olsr_ip_addr nbr2_addr;
   unsigned int mpr_covered_count;      /* Used in mpr calculation */
   unsigned int processed:1;            /* Used in mpr calculation */
-  struct avl_tree con_tree;  /* subtree for connectors to nbr */
+  struct avl_tree con_tree;            /* subtree for connectors to nbr */
 };
 
 AVLNODE2STRUCT(nbr2_node_to_nbr2, struct nbr2_entry, nbr2_node);
 
 /*
- * macros for traversing neighbors and neighbor2 ref lists.
+ * macros for traversing neighbors, neighbor2 and connectors.
  * it is recommended to use this because it hides all the internal
  * datastructure from the callers.
  *
@@ -150,7 +150,7 @@ AVLNODE2STRUCT(nbr2_node_to_nbr2, struct nbr2_entry, nbr2_node);
 #define OLSR_FOR_ALL_NBR2_CON_ENTRIES_END(nbr2, nbr_con) }}
 
 /*
- * The one hop neighbor tree
+ * The one hop neighbor and two hop neighbor trees.
  */
 extern struct avl_tree EXPORT(nbr_tree);
 extern struct avl_tree EXPORT(nbr2_tree);
