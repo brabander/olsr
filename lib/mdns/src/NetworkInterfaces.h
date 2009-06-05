@@ -86,6 +86,8 @@ struct TBmfInterface {
 
 extern struct TBmfInterface *BmfInterfaces;
 
+extern int my_MDNS_TTL;
+
 extern int HighestSkfd;
 extern fd_set InputSet;
 
@@ -126,6 +128,7 @@ int CreateBmfNetworkInterfaces(struct interface *skipThisIntf);
 void AddInterface(struct interface *newIntf);
 void CloseBmfNetworkInterfaces(void);
 int AddNonOlsrBmfIf(const char *ifName, void *data, set_plugin_parameter_addon addon);
+int set_MDNS_TTL(const char *MDNS_TTL, void *data, set_plugin_parameter_addon addon);
 int IsNonOlsrBmfIf(const char *ifName);
 void CheckAndUpdateLocalBroadcast(unsigned char *ipPacket, union olsr_ip_addr *broadAddr);
 void AddMulticastRoute(void);

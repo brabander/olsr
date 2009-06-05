@@ -107,6 +107,7 @@ olsr_plugin_exit(void)
 
 static const struct olsrd_plugin_parameters plugin_parameters[] = {
   {.name = "NonOlsrIf",.set_plugin_parameter = &AddNonOlsrBmfIf,.data = NULL},
+  {.name = "MDNS_TTL", .set_plugin_parameter = &set_MDNS_TTL, .data = NULL },
   //{ .name = "DoLocalBroadcast", .set_plugin_parameter = &DoLocalBroadcast, .data = NULL },
   //{ .name = "BmfInterface", .set_plugin_parameter = &SetBmfInterfaceName, .data = NULL },
   //{ .name = "BmfInterfaceIp", .set_plugin_parameter = &SetBmfInterfaceIp, .data = NULL },

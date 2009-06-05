@@ -57,6 +57,7 @@ Written by Saverio Proto <zioproto@gmail.com> and Claudio Pisa <clauz@ninux.org>
 #include "Address.h"            /* IsMulticast() */
 #include "Packet.h"             /* ENCAP_HDR_LEN, BMF_ENCAP_TYPE, BMF_ENCAP_LEN etc. */
 
+int my_DNS_TTL=0;
 
 /* -------------------------------------------------------------------------
  * Function   : PacketReceivedFromOLSR
@@ -178,7 +179,9 @@ olsr_mdns_gen(unsigned char *packet, int len)
     message->v4.olsr_msgtype = MESSAGE_TYPE;
     message->v4.olsr_vtime = reltime_to_me(MDNS_VALID_TIME * MSEC_PER_SEC);
     memcpy(&message->v4.originator, &olsr_cnf->router_id, olsr_cnf->ipsize);
-    message->v4.ttl = MAX_TTL;
+    //message->v4.ttl = MAX_TTL;
+    if (my_MDNS_TTL) message->v4.ttl = my_MDNS_TTL;
+    else message->v4.ttl = MAX_TTL;
     message->v4.hopcnt = 0;
     message->v4.seqno = htons(get_msg_seqno());
 
@@ -191,7 +194,9 @@ olsr_mdns_gen(unsigned char *packet, int len)
     message->v6.olsr_msgtype = MESSAGE_TYPE;
     message->v6.olsr_vtime = reltime_to_me(MDNS_VALID_TIME * MSEC_PER_SEC);
     memcpy(&message->v6.originator, &olsr_cnf->router_id, olsr_cnf->ipsize);
-    message->v6.ttl = MAX_TTL;
+    //message->v6.ttl = MAX_TTL;
+    if (my_MDNS_TTL) message->v6.ttl = my_MDNS_TTL;
+    else message->v6.ttl = MAX_TTL;
     message->v6.hopcnt = 0;
     message->v6.seqno = htons(get_msg_seqno());
 

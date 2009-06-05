@@ -57,6 +57,8 @@ Written by Saverio Proto <zioproto@gmail.com> and Claudio Pisa <clauz@ninux.org>
 #include "mdns.h"               /* PLUGIN_NAME, MainAddressOf() */
 #include "Address.h"            /* IsMulticast() */
 
+int my_MDNS_TTL = 0;
+
 /* List of network interface objects used by BMF plugin */
 struct TBmfInterface *BmfInterfaces = NULL;
 struct TBmfInterface *LastBmfInterface = NULL;
@@ -489,7 +491,6 @@ CloseBmfNetworkInterfaces(void)
 #define MAX_NON_OLSR_IFS 32
 static char NonOlsrIfNames[MAX_NON_OLSR_IFS][IFNAMSIZ];
 static int nNonOlsrIfs = 0;
-
 /* -------------------------------------------------------------------------
  * Function   : AddNonOlsrBmfIf
  * Description: Add an non-OLSR enabled network interface to the list of BMF-enabled
@@ -521,6 +522,14 @@ AddNonOlsrBmfIf(const char *ifName, void *data __attribute__ ((unused)), set_plu
   return 0;
 }                               /* AddNonOlsrBmfIf */
 
+
+int
+set_MDNS_TTL(const char *MDNS_TTL, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused)))
+{
+  assert(MDNS_TTL!= NULL);
+  my_MDNS_TTL = atoi(MDNS_TTL);
+  return 0;
+}                               /* set_MDNS_TTL */
 /* -------------------------------------------------------------------------
  * Function   : IsNonOlsrBmfIf
  * Description: Checks if a network interface is OLSR-enabled
