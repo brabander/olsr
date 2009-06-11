@@ -475,16 +475,12 @@ signal_shutdown(int signo __attribute__ ((unused)))
 static void
 olsr_shutdown(void)
 {
-  struct tc_entry *tc;
   struct mid_entry *mid;
   struct olsr_if_config *iface;
 
   olsr_delete_all_kernel_routes();
 
-  /* Flush link state database */
-  OLSR_FOR_ALL_TC_ENTRIES(tc) {
-    olsr_delete_tc_entry(tc);
-  } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
+  olsr_delete_all_tc_entries();
   olsr_unlock_tc_entry(tc_myself);
 
   /* Flush MID database */

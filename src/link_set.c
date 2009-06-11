@@ -527,7 +527,7 @@ add_link_entry(const union olsr_ip_addr *local,
    * Mark the edge local such that it does not get deleted
    * during cleanup functions.
    */
-  link->link_tc_edge->flags |= TC_EDGE_FLAG_LOCAL;
+  link->link_tc_edge->is_local = 1;
 
   /*
    * Add the rt_path for the link-end. This is an optimization

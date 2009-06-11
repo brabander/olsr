@@ -61,15 +61,14 @@ struct tc_edge_entry {
   union olsr_ip_addr T_dest_addr;      /* edge_node key */
   struct tc_edge_entry *edge_inv;      /* shortcut, used during SPF calculation */
   struct tc_entry *tc;                 /* backpointer to owning tc entry */
-  olsr_linkcost cost;                  /* metric used for SPF calculation */
+  olsr_linkcost cost;                  /* metric for tc received by this tc */
+  olsr_linkcost common_cost;           /* common metric of both edges used for SPF calculation */
+  unsigned int is_local:1;             /* 1 if this is a local edge */
+  unsigned int is_virtual:1;           /* 1 if this is a virtual edge created by the neighbors TC ? */
   uint16_t ansn;                       /* ansn of this edge, used for multipart msgs */
-  uint8_t flags;                       /* flags */
-  uint32_t linkquality[0];
 };
 
 AVLNODE2STRUCT(edge_tree2tc_edge, struct tc_edge_entry, edge_node);
-
-#define TC_EDGE_FLAG_LOCAL		(1 << 0)        /* local generated edge */
 
 struct tc_entry {
   struct avl_node vertex_node;         /* node keyed by ip address */
@@ -86,6 +85,7 @@ struct tc_entry {
   struct timer_entry *edge_gc_timer;   /* used for edge garbage collection */
   struct timer_entry *validity_timer;  /* tc validity time */
   uint32_t refcount;                   /* reference counter */
+  bool is_virtual;                     /* true if tc is already timed out */
   uint16_t msg_seq;                    /* sequence number of the tc message */
   uint8_t msg_hops;                    /* hopcount as per the tc message */
   uint8_t hops;                        /* SPF calculated hopcount */
@@ -189,7 +189,7 @@ void olsr_delete_tc_entry(struct tc_entry *);
 void olsr_delete_tc_edge_entry(struct tc_edge_entry *);
 bool olsr_calc_tc_edge_entry_etx(struct tc_edge_entry *);
 void olsr_set_tc_edge_timer(struct tc_edge_entry *, unsigned int);
-
+void olsr_delete_all_tc_entries(void);
 uint32_t EXPORT(getRelevantTcCount) (void);
 #endif
 
