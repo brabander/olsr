@@ -488,13 +488,13 @@ olsr_add_tc_edge_entry(struct tc_entry *tc, union olsr_ip_addr *addr, uint16_t a
       tc_edge_inv = olsr_add_tc_edge_entry(tc_neighbor, &tc->addr, 0);
 
       tc_edge_inv->is_virtual = 1;
-
-      /*
-       * Connect the edges mutually.
-       */
-      tc_edge_inv->edge_inv = tc_edge;
-      tc_edge->edge_inv = tc_edge_inv;
     }
+
+    /*
+     * Connect the edges mutually.
+     */
+    tc_edge_inv->edge_inv = tc_edge;
+    tc_edge->edge_inv = tc_edge_inv;
   }
 
   /*
