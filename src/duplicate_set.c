@@ -96,9 +96,9 @@ olsr_create_duplicate_entry(union olsr_ip_addr *ip, uint16_t seqnr)
 }
 
 static void
-olsr_delete_duplicate_entry(struct dup_entry *entry)
+olsr_delete_duplicate_entry(struct dup_entry *entry, bool forward)
 {
-  avl_delete(&forward_set, &entry->avl);
+  avl_delete(forward ? &forward_set : &processing_set, &entry->avl);
   olsr_cookie_free(duplicate_mem_cookie, entry);
 }
 
@@ -107,15 +107,15 @@ olsr_cleanup_duplicate_entry(void __attribute__ ((unused)) * unused)
 {
   struct dup_entry *entry;
 
-  OLSR_FOR_ALL_DUP_ENTRIES(&forward_set, entry) {
+  OLSR_FOR_ALL_DUP_ENTRIES(entry, true) {
     if (TIMED_OUT(entry->valid_until)) {
-      olsr_delete_duplicate_entry(entry);
+      olsr_delete_duplicate_entry(entry, true);
     }
   }
   OLSR_FOR_ALL_DUP_ENTRIES_END(entry);
-  OLSR_FOR_ALL_DUP_ENTRIES(&processing_set, entry) {
+  OLSR_FOR_ALL_DUP_ENTRIES(entry, false) {
     if (TIMED_OUT(entry->valid_until)) {
-      olsr_delete_duplicate_entry(entry);
+      olsr_delete_duplicate_entry(entry, false);
     }
   }
   OLSR_FOR_ALL_DUP_ENTRIES_END(entry);
@@ -132,11 +132,11 @@ olsr_flush_duplicate_entries(void)
   olsr_stop_timer(duplicate_cleanup_timer);
   duplicate_cleanup_timer = NULL;
 
-  OLSR_FOR_ALL_DUP_ENTRIES(&forward_set, entry) {
-    olsr_delete_duplicate_entry(entry);
+  OLSR_FOR_ALL_DUP_ENTRIES(entry, true) {
+    olsr_delete_duplicate_entry(entry, true);
   } OLSR_FOR_ALL_DUP_ENTRIES_END(entry);
-  OLSR_FOR_ALL_DUP_ENTRIES(&processing_set, entry) {
-    olsr_delete_duplicate_entry(entry);
+  OLSR_FOR_ALL_DUP_ENTRIES(entry, false) {
+    olsr_delete_duplicate_entry(entry, false);
   } OLSR_FOR_ALL_DUP_ENTRIES_END(entry);
 }
 
@@ -242,7 +242,7 @@ olsr_print_duplicate_table(void)
             olsr_wallclock_string());
   OLSR_INFO_NH(LOG_DUPLICATE_SET, "%-*s %8s %s\n", ipwidth, "Node IP", "DupArray", "VTime");
 
-  OLSR_FOR_ALL_DUP_ENTRIES(&forward_set, entry) {
+  OLSR_FOR_ALL_DUP_ENTRIES(entry, true) {
     struct ipaddr_str addrbuf;
     OLSR_INFO_NH(LOG_DUPLICATE_SET, "%-*s %08x %s\n",
                  ipwidth, olsr_ip_to_string(&addrbuf, entry->avl.key), entry->array, olsr_clock_string(entry->valid_until));
@@ -252,7 +252,7 @@ olsr_print_duplicate_table(void)
             olsr_wallclock_string());
   OLSR_INFO_NH(LOG_DUPLICATE_SET, "%-*s %8s %s\n", ipwidth, "Node IP", "DupArray", "VTime");
 
-  OLSR_FOR_ALL_DUP_ENTRIES(&processing_set, entry) {
+  OLSR_FOR_ALL_DUP_ENTRIES(entry, false) {
     struct ipaddr_str addrbuf;
     OLSR_INFO_NH(LOG_DUPLICATE_SET, "%-*s %08x %s\n",
                  ipwidth, olsr_ip_to_string(&addrbuf, entry->avl.key), entry->array, olsr_clock_string(entry->valid_until));

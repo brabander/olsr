@@ -67,10 +67,10 @@ int olsr_message_is_duplicate(union olsr_message *m, bool forward_set);
 void olsr_print_duplicate_table(void);
 void olsr_flush_duplicate_entries(void);
 
-#define OLSR_FOR_ALL_DUP_ENTRIES(avltree, dup) \
+#define OLSR_FOR_ALL_DUP_ENTRIES(dup, forward) \
 { \
   struct avl_node *dup_tree_node, *next_dup_tree_node; \
-  for (dup_tree_node = avl_walk_first(avltree); \
+  for (dup_tree_node = avl_walk_first(forward ? &forward_set : &processing_set); \
     dup_tree_node; dup_tree_node = next_dup_tree_node) { \
     next_dup_tree_node = avl_walk_next(dup_tree_node); \
     dup = duptree2dupentry(dup_tree_node);
