@@ -49,7 +49,9 @@
 #include "net_olsr.h"
 #include "ipcalc.h"
 #include "common/string.h"
+#include "common/avl.h"
 #include "olsr_logging.h"
+#include "valgrind/valgrind.h"
 
 #include <signal.h>
 #include <unistd.h>
@@ -57,6 +59,9 @@
 
 /* The interface list head */
 struct list_node interface_head;
+
+/* tree of lost interface IPs */
+struct avl_tree interface_lost_tree;
 
 /* Ifchange functions */
 struct ifchgf {
@@ -70,6 +75,8 @@ static struct ifchgf *ifchgf_list = NULL;
 /* Some cookies for stats keeping */
 struct olsr_cookie_info *interface_mem_cookie = NULL;
 struct olsr_cookie_info *interface_poll_timer_cookie = NULL;
+struct olsr_cookie_info *interface_lost_mem_cookie = NULL;
+
 struct olsr_cookie_info *hello_gen_timer_cookie = NULL;
 struct olsr_cookie_info *tc_gen_timer_cookie = NULL;
 struct olsr_cookie_info *mid_gen_timer_cookie = NULL;
@@ -91,12 +98,16 @@ ifinit(void)
 
   /* Initial values */
   list_head_init(&interface_head);
+  avl_init(&interface_lost_tree, avl_comp_default);
 
   /*
    * Get some cookies for getting stats to ease troubleshooting.
    */
   interface_mem_cookie = olsr_alloc_cookie("Interface", OLSR_COOKIE_TYPE_MEMORY);
   olsr_cookie_set_memory_size(interface_mem_cookie, sizeof(struct interface));
+
+  interface_lost_mem_cookie = olsr_alloc_cookie("Interface lost", OLSR_COOKIE_TYPE_MEMORY);
+  olsr_cookie_set_memory_size(interface_lost_mem_cookie, sizeof(struct interface_lost));
 
   interface_poll_timer_cookie = olsr_alloc_cookie("Interface Polling", OLSR_COOKIE_TYPE_TIMER);
   buffer_hold_timer_cookie = olsr_alloc_cookie("Buffer Hold", OLSR_COOKIE_TYPE_TIMER);
@@ -120,6 +131,45 @@ ifinit(void)
   return (!list_is_empty(&interface_head));
 }
 
+static void remove_lost_interface_ip(struct interface_lost *lost) {
+  struct ipaddr_str buf;
+
+  OLSR_DEBUG(LOG_INTERFACE, "Remove %s from lost interface list\n",
+      olsr_ip_to_string(&buf, &lost->ip));
+  avl_delete(&interface_lost_tree, &lost->node);
+  olsr_cookie_free(interface_lost_mem_cookie, lost);
+}
+
+static void add_lost_interface_ip(union olsr_ip_addr *ip, olsr_reltime hello_timeout) {
+  struct interface_lost *lost;
+  struct ipaddr_str buf;
+
+  lost = olsr_cookie_malloc(interface_lost_mem_cookie);
+  lost->node.key = &lost->ip;
+  lost->ip = *ip;
+  lost->valid_until = olsr_getTimestamp(hello_timeout * 2);
+  avl_insert(&interface_lost_tree, &lost->node, AVL_DUP_NO);
+
+  OLSR_DEBUG(LOG_INTERFACE, "Added %s to lost interface list for %d ms\n",
+      olsr_ip_to_string(&buf, ip), hello_timeout*2);
+}
+
+static struct interface_lost *get_lost_interface_ip(union olsr_ip_addr *ip) {
+  struct avl_node *node;
+  assert(ip);
+  node = avl_find(&interface_lost_tree, ip);
+  if (node) {
+    return node_tree2lostif(node);
+  }
+  return NULL;
+}
+
+bool
+is_lost_interface_ip(union olsr_ip_addr *ip) {
+  assert(ip);
+  return get_lost_interface_ip(ip) != NULL;
+}
+
 /**
  * Callback function for periodic check of interface parameters.
  */
@@ -127,6 +177,7 @@ static void
 check_interface_updates(void *foo __attribute__ ((unused)))
 {
   struct olsr_if_config *tmp_if;
+  struct interface_lost *lost;
 
   OLSR_DEBUG(LOG_INTERFACE, "Checking for updates in the interface set\n");
 
@@ -141,9 +192,21 @@ check_interface_updates(void *foo __attribute__ ((unused)))
     if (tmp_if->interf) {
       chk_if_changed(tmp_if);
     } else {
-      chk_if_up(tmp_if);
+      if (chk_if_up(tmp_if) == 1) {
+        lost = get_lost_interface_ip(&tmp_if->interf->ip_addr);
+        if (lost) {
+          remove_lost_interface_ip(lost);
+        }
+      }
     }
   }
+
+  /* clean up lost interface tree */
+  OLSR_FOR_ALL_LOSTIF_ENTRIES(lost) {
+    if (olsr_isTimedOut(lost->valid_until)) {
+      remove_lost_interface_ip(lost);
+    }
+  } OLSR_FOR_ALL_LOSTIF_ENTRIES_END(lost)
 }
 
 /**
@@ -206,6 +269,11 @@ remove_interface(struct interface **pinterf)
    */
   olsr_stop_timer(ifp->buffer_hold_timer);
   ifp->buffer_hold_timer = NULL;
+
+  /*
+   * remember the IP for some time
+   */
+  add_lost_interface_ip(&ifp->ip_addr, me_to_reltime(ifp->valtimes.hello));
 
   /*
    * Unlink from config.

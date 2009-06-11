@@ -56,6 +56,7 @@
 #include "olsr_cfg_data.h"
 #include "mantissa.h"
 #include "common/list.h"
+#include "common/avl.h"
 
 #define _PATH_PROCNET_IFINET6           "/proc/net/if_inet6"
 
@@ -196,6 +197,23 @@ LISTNODE2STRUCT(list2interface, struct interface, int_node);
 #define OLSR_FOR_ALL_INTERFACES_END(interface) }}
 
 
+struct interface_lost {
+  struct avl_node node;
+  union olsr_ip_addr ip;
+  uint32_t valid_until;
+};
+
+AVLNODE2STRUCT(node_tree2lostif, struct interface_lost, node);
+
+#define OLSR_FOR_ALL_LOSTIF_ENTRIES(lostif) \
+{ \
+  struct avl_node *lostif_tree_node, *next_lostif_tree_node; \
+  for (lostif_tree_node = avl_walk_first(&interface_lost_tree); \
+    lostif_tree_node; lostif_tree_node = next_lostif_tree_node) { \
+    next_lostif_tree_node = avl_walk_next(lostif_tree_node); \
+    lostif = node_tree2lostif(lostif_tree_node);
+#define OLSR_FOR_ALL_LOSTIF_ENTRIES_END(lostif) }}
+
 #define OLSR_BUFFER_HOLD_JITTER 25      /* percent */
 #define OLSR_BUFFER_HOLD_TIME 1000      /* milliseconds */
 
@@ -214,6 +232,7 @@ typedef int (*ifchg_cb_func) (struct interface *, int);
 
 
 bool ifinit(void);
+bool EXPORT(is_lost_interface_ip)(union olsr_ip_addr *ip);
 void remove_interface(struct interface **);
 void run_ifchg_cbs(struct interface *, int);
 struct interface *if_ifwithsock(int);

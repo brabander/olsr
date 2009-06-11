@@ -244,6 +244,12 @@ deserialize_hello(struct lq_hello_message *hello, const void *ser)
       pkt_get_ipaddress(&curr, &neigh->addr);
 
       olsr_deserialize_hello_lq_pair(&curr, neigh);
+      if (is_lost_interface_ip(&neigh->addr)) {
+        /* this is a lost interface IP of this node... ignore it */
+        olsr_free_lq_hello_neighbor(neigh);
+        continue;
+      }
+
       neigh->link_type = EXTRACT_LINK(info_head->link_code);
       neigh->neigh_type = EXTRACT_STATUS(info_head->link_code);
 
