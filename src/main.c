@@ -56,11 +56,11 @@
 #include "net_os.h"
 #include "build_msg.h"
 #include "net_olsr.h"
+#include <fcntl.h>
 
 #if LINUX_POLICY_ROUTING
 #include <linux/types.h>
 #include <linux/rtnetlink.h>
-#include <fcntl.h>
 #include "kernel_routes.h"
 #endif
 
