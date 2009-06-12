@@ -425,6 +425,11 @@ IPV6ADDR {IP6PAT1}|{IP6PAT2}|{IP6PAT3}|{IP6PAT4}|{IP6PAT5}|{IP6PAT6}|{IP6PAT7}|{
     return TOK_MIN_TC_VTIME;
 }
 
+"LockFile" {
+    yylval = NULL;
+    return TOK_LOCK_FILE;
+}
+
 "ClearScreen" {
     yylval = NULL;
     return TOK_CLEAR_SCREEN;

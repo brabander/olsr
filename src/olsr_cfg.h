@@ -234,6 +234,8 @@ struct olsrd_config {
   int exit_value;                      /* Global return value for process termination */
   float max_tc_vtime;
 
+  char *lock_file;
+
   int ioctl_s;                         /* Socket used for ioctl calls */
 #if LINUX_POLICY_ROUTING
   int rtnl_s;                          /* Socket used for rtnetlink messages */

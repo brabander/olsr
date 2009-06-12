@@ -1,4 +1,3 @@
-
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
@@ -85,22 +84,66 @@ static void print_usage(void);
 
 static int set_default_ifcnfs(struct olsr_if *, struct if_config_options *);
 
-static int olsr_process_arguments(int, char *[], struct olsrd_config *, struct if_config_options *);
+static int olsr_process_arguments(int, char *[], struct olsrd_config *,
+    struct if_config_options *);
 
 #ifndef WIN32
 static char **olsr_argv;
 #endif
 
-static char copyright_string[] __attribute__ ((unused)) =
-  "The olsr.org Optimized Link-State Routing daemon(olsrd) Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org) All rights reserved.";
+static char
+    copyright_string[] __attribute__ ((unused)) =
+        "The olsr.org Optimized Link-State Routing daemon(olsrd) Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org) All rights reserved.";
+
+/* Data for OLSR locking */
+static int lock_fd = 0;
+static char lock_file_name[FILENAME_MAX];
+
+/*
+ * Creates a zero-length locking file and use fcntl to
+ * place an exclusive lock over it. The lock will be
+ * automatically erased when the olsrd process ends,
+ * so it will even work well with a SIGKILL.
+ *
+ * Additionally the lock can be killed by removing the
+ * locking file.
+ */
+static void olsr_create_lock_file(void) {
+  struct flock lck;
+
+  /* create file for lock */
+  lock_fd = open(lock_file_name, O_WRONLY | O_CREAT);
+  if (lock_fd == 0) {
+    close(lock_fd);
+    fprintf(stderr,
+        "Error, cannot create OLSR lock '%s'.\n",
+        lock_file_name);
+    olsr_exit("", EXIT_FAILURE);
+  }
+
+  /* create exclusive lock for the whole file */
+  lck.l_type = F_WRLCK;
+  lck.l_whence = SEEK_SET;
+  lck.l_start = 0;
+  lck.l_len = 0;
+  lck.l_pid = 0;
+
+  if (fcntl(lock_fd, F_SETLK, &lck) == -1) {
+    close(lock_fd);
+    fprintf(stderr,
+        "Error, cannot aquire OLSR lock '%s'.\n"
+        "Another OLSR instance might be running.\n",
+        lock_file_name);
+    olsr_exit("", EXIT_FAILURE);
+  }
+  return;
+}
 
 /**
  * Main entrypoint
  */
 
-int
-main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
   struct if_config_options *default_ifcnf;
   char conf_file_name[FILENAME_MAX];
   struct ipaddr_str buf;
@@ -144,20 +187,22 @@ main(int argc, char *argv[])
 
   /* Grab initial timestamp */
   now_times = olsr_times();
-  if ((clock_t)-1 == now_times) {
+  if ((clock_t) - 1 == now_times) {
     const char * const err_msg = strerror(errno);
-    olsr_syslog(OLSR_LOG_ERR, "Error in times(): %s, sleeping for a second", err_msg);
+    olsr_syslog(OLSR_LOG_ERR, "Error in times(): %s, sleeping for a second",
+        err_msg);
     OLSR_PRINTF(1, "Error in times(): %s, sleeping for a second", err_msg);
     sleep(1);
     now_times = olsr_times();
-    if ((clock_t)-1 == now_times) {
+    if ((clock_t) - 1 == now_times) {
       olsr_syslog(OLSR_LOG_ERR, "Shutting down because times() does not work");
       fprintf(stderr, "Shutting down because times() does not work\n");
       exit(EXIT_FAILURE);
     }
   }
 
-  printf("\n *** %s ***\n Build date: %s on %s\n http://www.olsr.org\n\n", olsrd_version, build_date, build_host);
+  printf("\n *** %s ***\n Build date: %s on %s\n http://www.olsr.org\n\n",
+      olsrd_version, build_date, build_host);
 
   /* Using PID as random seed */
   srandom(getpid());
@@ -179,7 +224,7 @@ main(int argc, char *argv[])
   len = strlen(conf_file_name);
 
   if (len == 0 || conf_file_name[len - 1] != '\\')
-    conf_file_name[len++] = '\\';
+  conf_file_name[len++] = '\\';
 
   strscpy(conf_file_name + len, "olsrd.conf", sizeof(conf_file_name) - len);
 #else
@@ -197,7 +242,8 @@ main(int argc, char *argv[])
     }
 
     if (stat(argv[1], &statbuf) < 0) {
-      fprintf(stderr, "Could not find specified config file %s!\n%s\n\n", argv[1], strerror(errno));
+      fprintf(stderr, "Could not find specified config file %s!\n%s\n\n",
+          argv[1], strerror(errno));
       exit(EXIT_FAILURE);
     }
 
@@ -254,6 +300,21 @@ main(int argc, char *argv[])
   }
 
   /*
+   * Establish file lock to prevent multiple instances
+   */
+  if (olsr_cnf->lock_file) {
+    strscpy(lock_file_name, olsr_cnf->lock_file, sizeof(lock_file_name));
+  } else {
+    strscpy(lock_file_name, conf_file_name, sizeof(lock_file_name));
+    strscat(lock_file_name, ".lock", sizeof(lock_file_name));
+  }
+
+  /*
+   * Create locking file for olsrd, will be cleared after olsrd exits
+   */
+  olsr_create_lock_file();
+
+  /*
    * Print configuration
    */
   if (olsr_cnf->debug_level > 1) {
@@ -281,9 +342,9 @@ main(int argc, char *argv[])
   fcntl(olsr_cnf->rtnl_s, F_SETFL, O_NONBLOCK);
 #endif
 
-/*
- * create routing socket
- */
+  /*
+   * create routing socket
+   */
 #if defined __FreeBSD__ || defined __MacOSX__ || defined __NetBSD__ || defined __OpenBSD__
   olsr_cnf->rts = socket(PF_ROUTE, SOCK_RAW, 0);
   if (olsr_cnf->rts < 0) {
@@ -319,7 +380,9 @@ main(int argc, char *argv[])
     if (apm_init() < 0) {
       OLSR_PRINTF(1, "Could not read APM info - setting default willingness(%d)\n", WILL_DEFAULT);
 
-      olsr_syslog(OLSR_LOG_ERR, "Could not read APM info - setting default willingness(%d)\n", WILL_DEFAULT);
+      olsr_syslog(OLSR_LOG_ERR,
+          "Could not read APM info - setting default willingness(%d)\n",
+          WILL_DEFAULT);
 
       olsr_cnf->willingness_auto = 0;
       olsr_cnf->willingness = WILL_DEFAULT;
@@ -336,8 +399,9 @@ main(int argc, char *argv[])
   /* Initializing networkinterfaces */
   if (!ifinit()) {
     if (olsr_cnf->allow_no_interfaces) {
-      fprintf(stderr,
-              "No interfaces detected! This might be intentional, but it also might mean that your configuration is fubar.\nI will continue after 5 seconds...\n");
+      fprintf(
+          stderr,
+          "No interfaces detected! This might be intentional, but it also might mean that your configuration is fubar.\nI will continue after 5 seconds...\n");
       sleep(5);
     } else {
       fprintf(stderr, "No interfaces detected!\nBailing out!\n");
@@ -349,7 +413,8 @@ main(int argc, char *argv[])
 
 #if !defined WINCE
   if (olsr_cnf->debug_level > 0 && isatty(STDOUT_FILENO)) {
-    olsr_start_timer(STDOUT_PULSE_INT, 0, OLSR_TIMER_PERIODIC, &generate_stdout_pulse, NULL, 0);
+    olsr_start_timer(STDOUT_PULSE_INT, 0, OLSR_TIMER_PERIODIC,
+        &generate_stdout_pulse, NULL, 0);
   }
 #endif
 
@@ -379,7 +444,7 @@ main(int argc, char *argv[])
 
 #if LINUX_POLICY_ROUTING
   /* Create rule for RtTable to resolve route insertion problems*/
-  if ( ( olsr_cnf->rttable < 253) & ( olsr_cnf->rttable > 0 ) ) {
+  if ((olsr_cnf->rttable < 253) & (olsr_cnf->rttable > 0)) {
     olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable, RTM_NEWRULE);
   }
 #endif
@@ -402,7 +467,7 @@ main(int argc, char *argv[])
   signal(SIGQUIT, olsr_shutdown);
   signal(SIGILL, olsr_shutdown);
   signal(SIGABRT, olsr_shutdown);
-//  signal(SIGSEGV, olsr_shutdown);
+  //  signal(SIGSEGV, olsr_shutdown);
   signal(SIGTERM, olsr_shutdown);
   signal(SIGPIPE, SIG_IGN);
 #endif
@@ -414,7 +479,7 @@ main(int argc, char *argv[])
 
   /* Like we're ever going to reach this ;-) */
   return 1;
-}                               /* main */
+} /* main */
 
 /**
  * Reconfigure olsrd. Currently kind of a hack...
@@ -422,9 +487,7 @@ main(int argc, char *argv[])
  *@param signal the signal that triggered this callback
  */
 #ifndef WIN32
-void
-olsr_reconfigure(int signal __attribute__ ((unused)))
-{
+void olsr_reconfigure(int signal __attribute__ ((unused))) {
   /* if we are started with -nofork, we do not weant to go into the
    * background here. So we can simply stop on -HUP
    */
@@ -438,15 +501,15 @@ olsr_reconfigure(int signal __attribute__ ((unused)))
       sigemptyset(&sigs);
       sigaddset(&sigs, SIGHUP);
       sigprocmask(SIG_UNBLOCK, &sigs, NULL);
-      for (i = sysconf(_SC_OPEN_MAX); --i > STDERR_FILENO; ) {
+      for (i = sysconf(_SC_OPEN_MAX); --i > STDERR_FILENO;) {
         close(i);
       }
       printf("Restarting %s\n", olsr_argv[0]);
       olsr_syslog(OLSR_LOG_INFO, "Restarting %s\n", olsr_argv[0]);
       execv(olsr_argv[0], olsr_argv);
-      olsr_syslog(OLSR_LOG_ERR, "execv(%s) fails: %s!\n", olsr_argv[0], strerror(errno));
-    }
-    else {
+      olsr_syslog(OLSR_LOG_ERR, "execv(%s) fails: %s!\n", olsr_argv[0],
+          strerror(errno));
+    } else {
       olsr_syslog(OLSR_LOG_INFO, "RECONFIGURING!\n");
     }
   }
@@ -463,8 +526,7 @@ olsr_reconfigure(int signal __attribute__ ((unused)))
 int __stdcall
 SignalHandler(unsigned long signal)
 #else
-static void
-olsr_shutdown(int signal __attribute__ ((unused)))
+static void olsr_shutdown(int signal __attribute__ ((unused)))
 #endif
 {
   struct interface *ifn;
@@ -477,7 +539,7 @@ olsr_shutdown(int signal __attribute__ ((unused)))
   olsr_win32_end_request = TRUE;
 
   while (!olsr_win32_end_flag)
-    Sleep(100);
+  Sleep(100);
 
   OLSR_PRINTF(1, "Scheduler stopped.\n");
 #endif
@@ -506,7 +568,7 @@ olsr_shutdown(int signal __attribute__ ((unused)))
 
 #if LINUX_POLICY_ROUTING
   /* RtTable (linux only!!) */
-  if ( ( olsr_cnf->rttable < 253) & ( olsr_cnf->rttable > 0 ) ) {
+  if ((olsr_cnf->rttable < 253) & (olsr_cnf->rttable > 0)) {
     olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable, RTM_DELRULE);
   }
 
@@ -531,19 +593,18 @@ olsr_shutdown(int signal __attribute__ ((unused)))
 /**
  * Print the command line usage
  */
-static void
-print_usage(void)
-{
+static void print_usage(void) {
 
-  fprintf(stderr,
-          "An error occured somwhere between your keyboard and your chair!\n"
-          "usage: olsrd [-f <configfile>] [ -i interface1 interface2 ... ]\n"
-          "  [-d <debug_level>] [-ipv6] [-multi <IPv6 multicast address>]\n"
-          "  [-lql <LQ level>] [-lqw <LQ winsize>] [-lqnt <nat threshold>]\n"
-          "  [-bcast <broadcastaddr>] [-ipc] [-dispin] [-dispout] [-delgw]\n"
-          "  [-hint <hello interval (secs)>] [-tcint <tc interval (secs)>]\n"
-          "  [-midint <mid interval (secs)>] [-hnaint <hna interval (secs)>]\n"
-          "  [-T <Polling Rate (secs)>] [-nofork] [-hemu <ip_address>]\n" "  [-lql <LQ level>] [-lqa <LQ aging factor>]\n");
+  fprintf(
+      stderr,
+      "An error occured somwhere between your keyboard and your chair!\n"
+        "usage: olsrd [-f <configfile>] [ -i interface1 interface2 ... ]\n"
+        "  [-d <debug_level>] [-ipv6] [-multi <IPv6 multicast address>]\n"
+        "  [-lql <LQ level>] [-lqw <LQ winsize>] [-lqnt <nat threshold>]\n"
+        "  [-bcast <broadcastaddr>] [-ipc] [-dispin] [-dispout] [-delgw]\n"
+        "  [-hint <hello interval (secs)>] [-tcint <tc interval (secs)>]\n"
+        "  [-midint <mid interval (secs)>] [-hnaint <hna interval (secs)>]\n"
+        "  [-T <Polling Rate (secs)>] [-nofork] [-hemu <ip_address>]\n" "  [-lql <LQ level>] [-lqa <LQ aging factor>]\n");
 }
 
 /**
@@ -553,14 +614,13 @@ print_usage(void)
  * @param ifs a linked list of interfaces to check and possible update
  * @param cnf the default configuration to set on unconfigured interfaces
  */
-int
-set_default_ifcnfs(struct olsr_if *ifs, struct if_config_options *cnf)
-{
+int set_default_ifcnfs(struct olsr_if *ifs, struct if_config_options *cnf) {
   int changes = 0;
 
   while (ifs) {
     if (ifs->cnf == NULL) {
-      ifs->cnf = olsr_malloc(sizeof(struct if_config_options), "Set default config");
+      ifs->cnf = olsr_malloc(sizeof(struct if_config_options),
+          "Set default config");
       *ifs->cnf = *cnf;
       changes++;
     }
@@ -584,9 +644,8 @@ set_default_ifcnfs(struct olsr_if *ifs, struct if_config_options *cnf)
  * Process command line arguments passed to olsrd
  *
  */
-static int
-olsr_process_arguments(int argc, char *argv[], struct olsrd_config *cnf, struct if_config_options *ifcnf)
-{
+static int olsr_process_arguments(int argc, char *argv[],
+    struct olsrd_config *cnf, struct if_config_options *ifcnf) {
   while (argc > 1) {
     NEXT_ARG;
 #ifdef WIN32
@@ -656,7 +715,8 @@ olsr_process_arguments(int argc, char *argv[], struct olsrd_config *cnf, struct 
       sscanf(*argv, "%f", &tmp_lq_aging);
 
       if (tmp_lq_aging < MIN_LQ_AGING || tmp_lq_aging > MAX_LQ_AGING) {
-        printf("LQ aging factor %f not allowed. Range [%f-%f]\n", tmp_lq_aging, MIN_LQ_AGING, MAX_LQ_AGING);
+        printf("LQ aging factor %f not allowed. Range [%f-%f]\n", tmp_lq_aging,
+            MIN_LQ_AGING, MAX_LQ_AGING);
         olsr_exit(__func__, EXIT_FAILURE);
       }
       olsr_cnf->lq_aging = tmp_lq_aging;
@@ -674,7 +734,8 @@ olsr_process_arguments(int argc, char *argv[], struct olsrd_config *cnf, struct 
       sscanf(*argv, "%f", &tmp_lq_nat_thresh);
 
       if (tmp_lq_nat_thresh < 0.1 || tmp_lq_nat_thresh > 1.0) {
-        printf("NAT threshold %f not allowed. Range [%f-%f]\n", tmp_lq_nat_thresh, 0.1, 1.0);
+        printf("NAT threshold %f not allowed. Range [%f-%f]\n",
+            tmp_lq_nat_thresh, 0.1, 1.0);
         olsr_exit(__func__, EXIT_FAILURE);
       }
       olsr_cnf->lq_nat_thresh = tmp_lq_nat_thresh;
@@ -722,7 +783,8 @@ olsr_process_arguments(int argc, char *argv[], struct olsrd_config *cnf, struct 
       NEXT_ARG;
       CHECK_ARGC;
       sscanf(*argv, "%f", &ifcnf->hello_params.emission_interval);
-      ifcnf->hello_params.validity_time = ifcnf->hello_params.emission_interval * 3;
+      ifcnf->hello_params.validity_time = ifcnf->hello_params.emission_interval
+          * 3;
       continue;
     }
 
@@ -868,34 +930,32 @@ olsr_process_arguments(int argc, char *argv[], struct olsrd_config *cnf, struct 
  * use this function. On the other hand, this function has
  * proved it's functions but some olsrd implementations does
  * error handling in a clumsy way - thus inducing bugs...
- * 
+ *
  * Analysis of times() in different OSes:
- * Linux: 
- *   times() returns the number of clock ticks that have 
- *   elapsed since an arbitrary point in the past.  The return 
+ * Linux:
+ *   times() returns the number of clock ticks that have
+ *   elapsed since an arbitrary point in the past.  The return
  *   value may overflow the possible range of type clock_t.   On
  *     error, (clock_t) -1 is returned, and errno is set appropriately.
- * 
- * BSDs:  
- *  The times() function returns the value of time in CLK_TCK's 
- *  of a second since 0 hours, 0 minutes, 0 seconds, January 1, 
+ *
+ * BSDs:
+ *  The times() function returns the value of time in CLK_TCK's
+ *  of a second since 0 hours, 0 minutes, 0 seconds, January 1,
  *  1970, Coordinated Universal Time.
- * 
+ *
  * Values for clock_t in different OSes:
  *  OSX ............ unsigned long
- *  linux .......... long int (signed !) 
+ *  linux .......... long int (signed !)
  *  win32 cygwin.... unsigned long
  *  openBSD ........ int
- * 
+ *
  * We therefore need to be very very careful how to (portably)
  * handle overflows!!
- * This current commit does not solve the problem yet. 
+ * This current commit does not solve the problem yet.
  * it merely documents the problems with times()
- * 
+ *
  */
-clock_t
-olsr_times(void)
-{
+clock_t olsr_times(void) {
   struct tms tms_buf;
   return times(&tms_buf);
 }
