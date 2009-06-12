@@ -310,11 +310,6 @@ int main(int argc, char *argv[]) {
   }
 
   /*
-   * Create locking file for olsrd, will be cleared after olsrd exits
-   */
-  olsr_create_lock_file();
-
-  /*
    * Print configuration
    */
   if (olsr_cnf->debug_level > 1) {
@@ -436,6 +431,11 @@ int main(int argc, char *argv[]) {
     }
   }
 #endif
+
+  /*
+   * Create locking file for olsrd, will be cleared after olsrd exits
+   */
+  olsr_create_lock_file();
 
   /* Load plugins */
   olsr_load_plugins();
