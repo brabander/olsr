@@ -56,6 +56,10 @@ int olsr_delete_lo_interface(union olsr_ip_addr *ip);
 
 #endif
 
+#if defined linux
+ int olsr_netlink_rule(uint8_t, uint8_t, uint16_t);
+#endif
+
 /*
  * Local Variables:
  * c-basic-offset: 2
