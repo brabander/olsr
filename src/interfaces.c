@@ -132,7 +132,9 @@ ifinit(void)
 }
 
 static void remove_lost_interface_ip(struct interface_lost *lost) {
+#if !defined(REMOVE_LOG_DEBUG)
   struct ipaddr_str buf;
+#endif
 
   OLSR_DEBUG(LOG_INTERFACE, "Remove %s from lost interface list\n",
       olsr_ip_to_string(&buf, &lost->ip));
@@ -142,7 +144,9 @@ static void remove_lost_interface_ip(struct interface_lost *lost) {
 
 static void add_lost_interface_ip(union olsr_ip_addr *ip, olsr_reltime hello_timeout) {
   struct interface_lost *lost;
+#if !defined(REMOVE_LOG_DEBUG)
   struct ipaddr_str buf;
+#endif
 
   lost = olsr_cookie_malloc(interface_lost_mem_cookie);
   lost->node.key = &lost->ip;

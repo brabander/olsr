@@ -315,7 +315,7 @@ olsr_msg_statistics(union olsr_message *msg,
   union olsr_ip_addr origaddr;
   enum debug_msgtraffic_type type;
   struct debug_msgtraffic *tr;
-#if !defined REMOVE_DEBUG
+#if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
 #endif
 
