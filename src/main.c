@@ -70,6 +70,7 @@
 #include <linux/types.h>
 #include <linux/rtnetlink.h>
 #include <fcntl.h>
+#include "kernel_routes.h"
 #endif
 
 #ifdef WIN32
@@ -239,6 +240,11 @@ main(int argc, char *argv[])
     olsr_exit(EXIT_FAILURE);
   }
   set_nonblocking(olsr_cnf->rts_linux);
+
+  /* Create rule for RtTable to resolve route insertion problems*/
+  if ( ( olsr_cnf->rttable < 253) & ( olsr_cnf->rttable > 0 ) ) {
+    olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable, RTM_NEWRULE);
+  }
 #endif
 
 /*

@@ -254,14 +254,13 @@ olsr_netlink_send(struct nlmsghdr *n, char *buf, size_t bufSize, uint8_t flag, c
     return ret;
 }
 
-/*external wrapper function for above patched multi purpose rtnetlink function
- * int
- * olsr_netlink_rule(uint8_t family, uint8_t rttable, uint16_t cmd)
- * {
- *   struct rt_entry rt;
- *     return olsr_netlink_route_int(&rt, family, rttable, cmd, RT_ORIG_REQUEST);
- *     }
- *     */
+//external wrapper function for above patched multi purpose rtnetlink function
+int
+olsr_netlink_rule(uint8_t family, uint8_t rttable, uint16_t cmd)
+{
+  struct rt_entry rt;
+  return olsr_netlink_route_int(&rt, family, rttable, cmd, RT_ORIG_REQUEST);
+}
 
 /*internal wrapper function for above patched function*/
 static int
@@ -314,12 +313,12 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
         /*add interface */
         olsr_netlink_addreq(&req.n, sizeof(req), RTA_OIF, &nexthop->interface->if_index, sizeof(nexthop->interface->if_index));
 
-#if SOURCE_IP_ROUTES
-        if (AF_INET == family)
-          olsr_netlink_addreq(&req.n, sizeof(req), RTA_PREFSRC, &olsr_cnf->router_id.v4, sizeof(olsr_cnf->router_id.v4));
-        else
-          olsr_netlink_addreq(&req.n, sizeof(req), RTA_PREFSRC, &olsr_cnf->router_id.v6, sizeof(&olsr_cnf->router_id.v6));
-#endif
+        if (olsr_cnf->source_ip_mode) {
+          if (AF_INET == family)
+            olsr_netlink_addreq(&req.n, sizeof(req), RTA_PREFSRC, &olsr_cnf->router_id.v4, sizeof(olsr_cnf->router_id.v4));
+          else
+            olsr_netlink_addreq(&req.n, sizeof(req), RTA_PREFSRC, &olsr_cnf->router_id.v6, sizeof(&olsr_cnf->router_id.v6));
+	}
       }
 
       /* metric is specified always as we can only delete one route per iteration, and wanna hit the correct one first */
