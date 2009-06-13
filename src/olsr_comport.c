@@ -523,7 +523,7 @@ static void olsr_com_parse_txt(struct comport_connection *con,
   enum olsr_txtcommand_result res;
   char *eol;
   int len;
-  bool processedCommand = false;
+  bool processedCommand = false, chainCommands = false;
   uint32_t old_timeout;
 
   old_timeout = con->timeout_value;
@@ -550,18 +550,20 @@ static void olsr_com_parse_txt(struct comport_connection *con,
     cmd = &con->in.buf[0];
     processedCommand = true;
 
+    if (cmd[0] == '/') {
+      cmd++;
+      chainCommands = true;
+    }
     while (cmd) {
       len = con->out.len;
 
       /* handle difference between multicommand and singlecommand mode */
-      if (cmd[0] != '/') {
+      if (!chainCommands) {
         para = strchr(cmd, ' ');
         if (para != NULL) {
           *para++ = 0;
         }
       } else {
-        cmd++; /* skip first '/' */
-
         next = strchr(cmd, '/');
         if (next) {
           *next++ = 0;
@@ -588,8 +590,7 @@ static void olsr_com_parse_txt(struct comport_connection *con,
             break;
           case UNKNOWN:
             con->out.len = len;
-            abuf_appendf(&con->out, "Error, unknown command '%s'\n",
-                con->in.buf);
+            abuf_appendf(&con->out, "Error, unknown command '%s'\n", cmd);
             break;
           case QUIT:
             con->state = SEND_AND_QUIT;
