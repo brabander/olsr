@@ -60,6 +60,7 @@ static int olsr_netlink_route_int(const struct rt_entry *, uint8_t, uint8_t, __u
 #define RT_DELETE_SIMILAR_ROUTE 4
 #define RT_AUTO_ADD_GATEWAY_ROUTE 5
 #define RT_DELETE_SIMILAR_AUTO_ROUTE 6
+#define RT_LO_IP 7
 
 struct olsr_rtreq {
   struct nlmsghdr n;
@@ -86,7 +87,7 @@ olsr_netlink_addreq(struct nlmsghdr *n, size_t reqSize __attribute__ ((unused)),
   memcpy(RTA_DATA(rta), data, len);
 }
 
-/*rt_entry and nexthop  and family an d tble must only be specified with an flag != RT_NONE*/
+/*rt_entry and nexthop and family and table must only be specified with an flag != RT_NONE*/
 static int
 olsr_netlink_send(struct nlmsghdr *n, char *buf, size_t bufSize, uint8_t flag, const struct rt_entry *rt,
                   const struct rt_nexthop *nexthop, uint8_t family, uint8_t rttable)
@@ -134,6 +135,7 @@ olsr_netlink_send(struct nlmsghdr *n, char *buf, size_t bufSize, uint8_t flag, c
 #endif
               ret = -1;
               rt_ret = -1;
+#ifndef REMOVE_LOG_DEBUG
               if (flag != RT_NONE) {
                 /* debug output for various situations */
                 if (n->nlmsg_type == RTM_NEWRULE) {
@@ -164,10 +166,19 @@ olsr_netlink_send(struct nlmsghdr *n, char *buf, size_t bufSize, uint8_t flag, c
                   OLSR_DEBUG(LOG_ROUTING, "# invalid internal route delete/add flag (%d) used!", flag);
                 }
               }
+              else { /*at least give some information*/
+                OLSR_DEBUG(LOG_NETWORKING,"rtnetlink returned: %s (%d)",err_msg,errno);
+              }
+#endif /*REMOVE_LOG_DEBUG*/
             } else {            /* netlink acks requests with an errno=0 NLMSG_ERROR response! */
               rt_ret = 1;
             }
             if (flag != RT_NONE) {
+              /* ignore file exist when inserting Addr to lo:olsr*/
+              if ((errno == 17) & (flag == RT_LO_IP)) {
+               OLSR_DEBUG(LOG_ROUTING, "ignoring 'File exists' (17) while adding addr to lo!");      
+               rt_ret = 1;
+              }
               /* resolve "File exist" (17) propblems (on orig and autogen routes) */
               if ((errno == 17) & ((flag == RT_ORIG_REQUEST) | (flag == RT_AUTO_ADD_GATEWAY_ROUTE)) & (n->nlmsg_type ==
                                                                                                        RTM_NEWROUTE)) {
@@ -248,10 +259,9 @@ olsr_netlink_send(struct nlmsghdr *n, char *buf, size_t bufSize, uint8_t flag, c
        if_ifwithindex_name(nexthop->iif_index));
        } */
     if (rt_ret == -2)
-      OLSR_DEBUG(LOG_ROUTING, "no rtnetlink response! (no system ressources left?, everything may happen now ...)");
+      OLSR_ERROR(LOG_ROUTING, "no rtnetlink response! (no system ressources left?, everything may happen now ...)");
     return rt_ret;
-  } else
-    return ret;
+  } else return ret; 
 }
 
 //external wrapper function for above patched multi purpose rtnetlink function
@@ -441,7 +451,7 @@ olsr_kernel_del_route(const struct rt_entry *rt, int ip_version)
 
 
 int
-olsr_create_lo_interface(union olsr_ip_addr *ip)
+olsr_lo_interface(union olsr_ip_addr *ip, bool create)
 {
   struct olsr_ipadd_req req;
   static char l[] = "lo:olsr";
@@ -449,8 +459,13 @@ olsr_create_lo_interface(union olsr_ip_addr *ip)
   memset(&req, 0, sizeof(req));
 
   req.n.nlmsg_len = NLMSG_LENGTH(sizeof(struct ifaddrmsg));
-  req.n.nlmsg_flags = NLM_F_REQUEST | NLM_F_CREATE | NLM_F_REPLACE;
-  req.n.nlmsg_type = RTM_NEWADDR;
+  if (create) {
+   req.n.nlmsg_flags = NLM_F_REQUEST | NLM_F_CREATE | NLM_F_REPLACE | NLM_F_ACK;
+   req.n.nlmsg_type = RTM_NEWADDR;
+  } else {
+   req.n.nlmsg_flags = NLM_F_REQUEST | NLM_F_ACK;
+   req.n.nlmsg_type = RTM_DELADDR;
+  }
   req.ifa.ifa_family = olsr_cnf->ip_version;
 
   olsr_netlink_addreq(&req.n, sizeof(req), IFA_LABEL, l, strlen(l) + 1);
@@ -460,32 +475,8 @@ olsr_create_lo_interface(union olsr_ip_addr *ip)
 
   req.ifa.ifa_index = if_nametoindex("lo");
 
-  return olsr_netlink_send(&req.n, req.buf, sizeof(req.buf), RT_NONE, NULL, NULL, 0, 0);
+  return olsr_netlink_send(&req.n, req.buf, sizeof(req.buf), RT_LO_IP, NULL, NULL, 0, 0);
 }
-
-int
-olsr_delete_lo_interface(union olsr_ip_addr *ip)
-{
-  struct olsr_ipadd_req req;
-  static char l[] = "lo:olsr";
-
-  memset(&req, 0, sizeof(req));
-
-  req.n.nlmsg_len = NLMSG_LENGTH(sizeof(struct ifaddrmsg));
-  req.n.nlmsg_flags = NLM_F_REQUEST;
-  req.n.nlmsg_type = RTM_DELADDR;
-  req.ifa.ifa_family = olsr_cnf->ip_version;
-
-  olsr_netlink_addreq(&req.n, sizeof(req), IFA_LABEL, l, strlen(l) + 1);
-  olsr_netlink_addreq(&req.n, sizeof(req), IFA_LOCAL, ip, olsr_cnf->ipsize);
-
-  req.ifa.ifa_prefixlen = olsr_cnf->ipsize * 8;
-
-  req.ifa.ifa_index = if_nametoindex("lo");
-
-  return olsr_netlink_send(&req.n, req.buf, sizeof(req.buf), RT_NONE, NULL, NULL, 0, 0);
-}
-
 /*
  * Local Variables:
  * c-basic-offset: 2

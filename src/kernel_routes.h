@@ -51,8 +51,7 @@ int
 int
   olsr_kernel_del_route(const struct rt_entry *, int);
 
-int olsr_create_lo_interface(union olsr_ip_addr *ip);
-int olsr_delete_lo_interface(union olsr_ip_addr *ip);
+int olsr_lo_interface(union olsr_ip_addr *ip, bool create);
 
 #endif
 

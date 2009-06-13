@@ -201,13 +201,7 @@ olsr_kernel_del_route(const struct rt_entry *rt, int ip_version)
 }
 
 int
-olsr_create_lo_interface(union olsr_ip_addr *ip __attribute__ ((unused)))
-{
-  return 0;
-}
-
-int
-olsr_delete_lo_interface(union olsr_ip_addr *ip __attribute__ ((unused)))
+olsr_lo_interface(union olsr_ip_addr *ip __attribute__ ((unused)), bool create __attribute__ ((unused)))
 {
   return 0;
 }

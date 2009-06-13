@@ -294,7 +294,7 @@ main(int argc, char *argv[])
   /* Initializing lo:olsr if necessary */
   if (olsr_cnf->source_ip_mode) {
     OLSR_INFO(LOG_NETWORKING, "Initializing lo:olsr interface for source ip mode...\n");
-    if (olsr_create_lo_interface(&olsr_cnf->router_id) <= 0) {
+    if (olsr_lo_interface(&olsr_cnf->router_id, true) <= 0) {
       OLSR_ERROR(LOG_NETWORKING, "Cannot create lo:olsr interface for ip '%s'\n", olsr_ip_to_string(&buf, &olsr_cnf->router_id));
       olsr_exit(EXIT_FAILURE);
     }
@@ -517,7 +517,7 @@ olsr_shutdown(void)
 
   /* delete lo:olsr if neccesarry */
   if (olsr_cnf->source_ip_mode) {
-    olsr_delete_lo_interface(&olsr_cnf->router_id);
+    olsr_lo_interface(&olsr_cnf->router_id, false);
   }
 
   /* Reset network settings */
