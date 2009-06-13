@@ -527,6 +527,10 @@ olsr_shutdown(void)
   CLOSESOCKET(olsr_cnf->ioctl_s);
 
 #if defined linux
+  if ((olsr_cnf->rttable < 253) & (olsr_cnf->rttable > 0)) {
+    olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable, RTM_DELRULE);
+  }
+
   CLOSESOCKET(olsr_cnf->rts_linux);
 #endif
 
