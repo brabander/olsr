@@ -123,55 +123,53 @@ olsr_netlink_send(struct nlmsghdr *n, char *buf, size_t bufSize, uint8_t flag, c
         }
         if (NLMSG_ERROR == h->nlmsg_type) {
           if (NLMSG_LENGTH(sizeof(struct nlmsgerr) <= h->nlmsg_len)) {
-#ifndef REMOVE_LOG_DEBUG
+#ifndef REMOVE_LOG_WARN
             struct ipaddr_str ibuf;
             struct ipaddr_str gbuf;
 #endif
             const struct nlmsgerr *l_err = (struct nlmsgerr *)NLMSG_DATA(h);
             errno = -l_err->error;
             if (0 != errno) {
-#ifndef REMOVE_LOG_DEBUG
+#if (!defined REMOVE_LOG_DEBUG) || (!defined REMOVE_LOG_ERROR) || (!defined REMOVE_LOG_WARN)
               const char *const err_msg = strerror(errno);
 #endif
               ret = -1;
               rt_ret = -1;
-#ifndef REMOVE_LOG_DEBUG
               if (flag != RT_NONE) {
                 /* debug output for various situations */
                 if (n->nlmsg_type == RTM_NEWRULE) {
-                  OLSR_DEBUG(LOG_ROUTING, "Error '%s' (%d) on inserting empty policy rule aimed to activate RtTable %u!", err_msg,
+                  OLSR_ERROR(LOG_ROUTING, "Error '%s' (%d) on inserting empty policy rule aimed to activate RtTable %u!", err_msg,
                              errno, rttable);
                 } else if (n->nlmsg_type == RTM_DELRULE) {
-                  OLSR_DEBUG(LOG_ROUTING, "Error '%s' (%d) on deleting empty policy rule aimed to activate rtTable %u!", err_msg,
+                  OLSR_ERROR(LOG_ROUTING, "Error '%s' (%d) on deleting empty policy rule aimed to activate rtTable %u!", err_msg,
                              errno, rttable);
                 } else if (flag <= RT_RETRY_AFTER_DELETE_SIMILAR) {
                   if (rt->rt_dst.prefix.v4.s_addr != nexthop->gateway.v4.s_addr)
-                    OLSR_DEBUG(LOG_ROUTING, "error '%s' (%d) %s route to %s/%d via %s dev %s", err_msg, errno,
+                    OLSR_WARN(LOG_ROUTING, "error '%s' (%d) %s route to %s/%d via %s dev %s", err_msg, errno,
                                (n->nlmsg_type == RTM_NEWROUTE) ? "add" : "del", olsr_ip_to_string(&ibuf, &rt->rt_dst.prefix),
                                rt->rt_dst.prefix_len, olsr_ip_to_string(&gbuf, &nexthop->gateway), nexthop->interface->int_name);
                   else
-                    OLSR_DEBUG(LOG_ROUTING, "error '%s' (%d) %s route to %s/%d dev %s", err_msg, errno,
+                    OLSR_WARN(LOG_ROUTING, "error '%s' (%d) %s route to %s/%d dev %s", err_msg, errno,
                                (n->nlmsg_type == RTM_NEWROUTE) ? "add" : "del", olsr_ip_to_string(&ibuf, &rt->rt_dst.prefix),
                                rt->rt_dst.prefix_len, nexthop->interface->int_name);
                 } else if (flag == RT_AUTO_ADD_GATEWAY_ROUTE)
-                  OLSR_DEBUG(LOG_ROUTING, ". error '%s' (%d) auto-add route to %s dev %s", err_msg, errno,
+                  OLSR_WARN(LOG_ROUTING, ". error '%s' (%d) auto-add route to %s dev %s", err_msg, errno,
                              olsr_ip_to_string(&ibuf, &nexthop->gateway), nexthop->interface->int_name);
                 else if (flag == RT_DELETE_SIMILAR_ROUTE)
-                  OLSR_DEBUG(LOG_ROUTING, ". error '%s' (%d) auto-delete route to %s gw %s", err_msg, errno,
+                  OLSR_WARN(LOG_ROUTING, ". error '%s' (%d) auto-delete route to %s gw %s", err_msg, errno,
                              olsr_ip_to_string(&ibuf, &rt->rt_dst.prefix), olsr_ip_to_string(&gbuf, &nexthop->gateway));
                 else if (flag == RT_DELETE_SIMILAR_AUTO_ROUTE)
-                  OLSR_DEBUG(LOG_ROUTING, ". . error '%s' (%d) auto-delete similar route to %s gw %s", err_msg, errno,
+                  OLSR_WARN(LOG_ROUTING, ". . error '%s' (%d) auto-delete similar route to %s gw %s", err_msg, errno,
                              olsr_ip_to_string(&ibuf, &nexthop->gateway), olsr_ip_to_string(&gbuf, &nexthop->gateway));
                 else if (flag == RT_LO_IP)
                   OLSR_DEBUG(LOG_ROUTING, "error '%s' (%d) while %s lo:olsr", err_msg, errno, n->nlmsg_type == RTM_NEWADDR ? "adding":"deleting");
                 else {          /* should never happen */
-                  OLSR_DEBUG(LOG_ROUTING, "# invalid internal route delete/add flag (%d) used!", flag);
+                  OLSR_ERROR(LOG_ROUTING, "# invalid internal route delete/add flag (%d) used!", flag);
                 }
               }
               else { /*at least give some information*/
                 OLSR_DEBUG(LOG_NETWORKING,"rtnetlink returned: %s (%d)",err_msg,errno);
               }
-#endif /*REMOVE_LOG_DEBUG*/
             } else {            /* netlink acks requests with an errno=0 NLMSG_ERROR response! */
               rt_ret = 1;
             }
@@ -185,14 +183,14 @@ olsr_netlink_send(struct nlmsghdr *n, char *buf, size_t bufSize, uint8_t flag, c
               else if ((errno == 17) && ((flag == RT_ORIG_REQUEST) || (flag == RT_AUTO_ADD_GATEWAY_ROUTE)) && (n->nlmsg_type ==
                                                                                                        RTM_NEWROUTE)) {
                 /* a similar route going over another gateway may be present, which has to be deleted! */
-                OLSR_DEBUG(LOG_ROUTING, ". auto-deleting similar routes to resolve 'File exists' (17) while adding route!");
+                OLSR_WARN(LOG_ROUTING, ". auto-deleting similar routes to resolve 'File exists' (17) while adding route!");
                 rt_ret = RT_DELETE_SIMILAR_ROUTE;       /* processing will contiune after this loop */
               }
               /* report success on "No such process" (3) */
               else if ((errno == 3) && (n->nlmsg_type == RTM_DELROUTE) && (flag == RT_ORIG_REQUEST)) {
                 /* another similar (but slightly different) route may be present at this point
                  * , if so this will get solved when adding new route to this destination */
-                OLSR_DEBUG(LOG_ROUTING, ". ignoring 'No such process' (3) while deleting route!");
+                OLSR_INFO(LOG_ROUTING, ". ignoring 'No such process' (3) while deleting route!");
                 rt_ret = 0;
               }
               /* insert route to gateway on the fly if "Network unreachable" (128) on 2.4 kernels
@@ -205,9 +203,9 @@ olsr_netlink_send(struct nlmsghdr *n, char *buf, size_t bufSize, uint8_t flag, c
               else if (((errno == 3) || (errno == 128)) && (flag == RT_ORIG_REQUEST) && (FIBM_FLAT == olsr_cnf->fib_metric)
                        && (n->nlmsg_type == RTM_NEWROUTE) && (rt->rt_dst.prefix.v4.s_addr != nexthop->gateway.v4.s_addr)) {
                 if (errno == 128)
-                  OLSR_DEBUG(LOG_ROUTING, ". autogenerating route to handle 'Network unreachable' (128) while adding route!");
+                  OLSR_WARN(LOG_ROUTING, ". autogenerating route to handle 'Network unreachable' (128) while adding route!");
                 else
-                  OLSR_DEBUG(LOG_ROUTING, ". autogenerating route to handle 'No such process' (3) while adding route!");
+                  OLSR_WARN(LOG_ROUTING, ". autogenerating route to handle 'No such process' (3) while adding route!");
 
                 rt_ret = RT_AUTO_ADD_GATEWAY_ROUTE;     /* processing will contiune after this loop */
               }
@@ -229,7 +227,7 @@ olsr_netlink_send(struct nlmsghdr *n, char *buf, size_t bufSize, uint8_t flag, c
       if (rt_ret > 0)
         rt_ret = olsr_netlink_route_int(rt, family, rttable, RTM_NEWROUTE, RT_RETRY_AFTER_DELETE_SIMILAR);
       else
-        OLSR_DEBUG(LOG_ROUTING, ". failed on auto-deleting similar route conflicting with above route!");
+        OLSR_WARN(LOG_ROUTING, ". failed on auto-deleting similar route conflicting with above route!");
 
       /* set appropriate return code for original request, while returning simple -1/1 if called recursive */
       if (flag != RT_AUTO_ADD_GATEWAY_ROUTE) {
@@ -247,7 +245,7 @@ olsr_netlink_send(struct nlmsghdr *n, char *buf, size_t bufSize, uint8_t flag, c
       if (rt_ret > 0)
         rt_ret = olsr_netlink_route_int(rt, family, rttable, RTM_NEWROUTE, RT_RETRY_AFTER_ADD_GATEWAY);
       else
-        OLSR_DEBUG(LOG_ROUTING, ". failed on inserting auto-generated route to gateway of above route!");
+        OLSR_WARN(LOG_ROUTING, ". failed on inserting auto-generated route to gateway of above route!");
 
       /* set appropriate return code for original request */
       if (rt_ret > 0)
