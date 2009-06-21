@@ -55,8 +55,6 @@ struct lq_handler lq_etx_fpm_handler = {
   &default_lq_calc_cost_fpm,
   &default_lq_calc_cost_fpm,
 
-  &default_lq_is_relevant_costchange_fpm,
-
   &default_lq_packet_loss_worker_fpm,
   &default_lq_memorize_foreign_hello_fpm,
   &default_lq_copy_link2tc_fpm,
@@ -131,15 +129,6 @@ default_lq_deserialize_hello_lq_pair_fpm(const uint8_t ** curr, void *ptr)
   pkt_ignore_u16(curr);
 }
 
-bool
-default_lq_is_relevant_costchange_fpm(olsr_linkcost c1, olsr_linkcost c2)
-{
-  if (c1 > c2) {
-    return c2 - c1 > LQ_PLUGIN_RELEVANT_COSTCHANGE_FPM;
-  }
-  return c1 - c2 > LQ_PLUGIN_RELEVANT_COSTCHANGE_FPM;
-}
-
 int
 default_lq_serialize_tc_lq_pair_fpm(unsigned char *buff, void *ptr)
 {
@@ -164,15 +153,28 @@ default_lq_deserialize_tc_lq_pair_fpm(const uint8_t ** curr, void *ptr)
 }
 
 olsr_linkcost
-default_lq_packet_loss_worker_fpm(struct link_entry *link, void *ptr, bool lost)
+default_lq_packet_loss_worker_fpm(struct link_entry *link __attribute__ ((unused)), void *ptr, bool lost)
 {
   struct default_lq_fpm *tlq = ptr;
-  uint32_t alpha_old = aging_factor_old;
-  uint32_t alpha_new = aging_factor_new;
+//  uint32_t alpha_old = aging_factor_old;
+//  uint32_t alpha_new = aging_factor_new;
 
-  uint32_t value;
+//  uint32_t value;
   // fpm link_loss_factor = fpmidiv(itofpm(link->loss_link_multiplier), 65536);
 
+  if (lost) {
+    if (tlq->valueLq > 4) {
+      tlq->valueLq-=4;
+    }
+  }
+  else {
+    if (tlq->valueLq < 255-4) {
+      tlq->valueLq+=4;
+    }
+  }
+
+  return default_lq_calc_cost_fpm(ptr);
+#if 0
   if (tlq->quickstart < LQ_QUICKSTART_STEPS) {
     alpha_new = aging_quickstart_new;
     alpha_old = aging_quickstart_old;
@@ -192,6 +194,7 @@ default_lq_packet_loss_worker_fpm(struct link_entry *link, void *ptr, bool lost)
   tlq->valueLq = (value * 255 + LQ_FPM_INTERNAL_MULTIPLIER - 1) / LQ_FPM_INTERNAL_MULTIPLIER;
 
   return default_lq_calc_cost_fpm(ptr);
+#endif
 }
 
 void

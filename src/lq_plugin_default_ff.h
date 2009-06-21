@@ -69,8 +69,6 @@ void default_lq_initialize_ff(void);
 
 olsr_linkcost default_lq_calc_cost_ff(const void *lq);
 
-bool default_lq_is_relevant_costchange_ff(olsr_linkcost c1, olsr_linkcost c2);
-
 olsr_linkcost default_lq_packet_loss_worker_ff(struct link_entry *link, void *lq, bool lost);
 void default_lq_memorize_foreign_hello_ff(void *local, void *foreign);
 

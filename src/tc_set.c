@@ -410,13 +410,12 @@ olsr_calc_tc_edge_entry_etx(struct tc_edge_entry *tc_edge)
    * Some sanity check before recalculating the etx.
    */
   if (olsr_cnf->lq_level < 1) {
-    return 0;
+    return false;
   }
 
   old = tc_edge->cost;
   tc_edge->cost = olsr_calc_tc_cost(tc_edge);
-
-  return olsr_is_relevant_costchange(old, tc_edge->cost);
+  return true;
 }
 
 /**

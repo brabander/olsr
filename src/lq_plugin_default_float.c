@@ -54,8 +54,6 @@ struct lq_handler lq_etx_float_handler = {
   &default_lq_calc_cost_float,
   &default_lq_calc_cost_float,
 
-  &default_lq_is_relevant_costchange_float,
-
   &default_lq_packet_loss_worker_float,
   &default_lq_memorize_foreign_hello_float,
   &default_lq_copy_link2tc_float,
@@ -126,15 +124,6 @@ default_lq_deserialize_hello_lq_pair_float(const uint8_t ** curr, void *ptr)
 
   lq->lq = (float)lq_value / 255.0;
   lq->nlq = (float)nlq_value / 255.0;
-}
-
-bool
-default_lq_is_relevant_costchange_float(olsr_linkcost c1, olsr_linkcost c2)
-{
-  if (c1 > c2) {
-    return c2 - c1 > LQ_PLUGIN_RELEVANT_COSTCHANGE;
-  }
-  return c1 - c2 > LQ_PLUGIN_RELEVANT_COSTCHANGE;
 }
 
 int

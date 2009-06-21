@@ -104,7 +104,6 @@ struct lq_hello_message {
 };
 
 /* serialized LQ_HELLO */
-
 struct lq_hello_info_header {
   uint8_t link_code;
   uint8_t reserved;

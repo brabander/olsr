@@ -59,7 +59,6 @@ struct lq_handler lq_etx_ff_handler = {
   &default_lq_calc_cost_ff,
   &default_lq_calc_cost_ff,
 
-  &default_lq_is_relevant_costchange_ff,
   &default_lq_packet_loss_worker_ff,
 
   &default_lq_memorize_foreign_hello_ff,
@@ -215,15 +214,6 @@ default_lq_deserialize_hello_lq_pair_ff(const uint8_t ** curr, void *ptr)
   pkt_get_u8(curr, &lq->valueLq);
   pkt_get_u8(curr, &lq->valueNlq);
   pkt_ignore_u16(curr);
-}
-
-bool
-default_lq_is_relevant_costchange_ff(olsr_linkcost c1, olsr_linkcost c2)
-{
-  if (c1 > c2) {
-    return c2 - c1 > LQ_PLUGIN_RELEVANT_COSTCHANGE_FF;
-  }
-  return c1 - c2 > LQ_PLUGIN_RELEVANT_COSTCHANGE_FF;
 }
 
 int

@@ -69,8 +69,6 @@ struct lq_handler {
     olsr_linkcost(*calc_hello_cost) (const void *lq);
     olsr_linkcost(*calc_tc_cost) (const void *lq);
 
-    bool(*is_relevant_costchange) (olsr_linkcost c1, olsr_linkcost c2);
-
     olsr_linkcost(*packet_loss_handler) (struct link_entry * entry, void *lq, bool lost);
 
   void (*memorize_foreign_hello) (void *local, void *foreign);
@@ -115,7 +113,6 @@ void register_lq_handler(struct lq_handler *handler, const char *name);
 int activate_lq_handler(const char *name);
 
 olsr_linkcost olsr_calc_tc_cost(const struct tc_edge_entry *);
-bool olsr_is_relevant_costchange(olsr_linkcost c1, olsr_linkcost c2);
 
 int olsr_serialize_hello_lq_pair(unsigned char *buff, struct lq_hello_neighbor *neigh);
 void olsr_deserialize_hello_lq_pair(const uint8_t ** curr, struct hello_neighbor *neigh);

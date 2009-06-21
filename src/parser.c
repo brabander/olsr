@@ -305,13 +305,37 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
   for (; count > 0; m = (union olsr_message *)((char *)m + (msgsize))) {
     bool forward = true;
 
-    if (count < MIN_PACKET_SIZE(olsr_cnf->ip_version))
+    if (count < MIN_PACKET_SIZE(olsr_cnf->ip_version) + 8)
       break;
 
     if (olsr_cnf->ip_version == AF_INET)
       msgsize = ntohs(m->v4.olsr_msgsize);
     else
       msgsize = ntohs(m->v6.olsr_msgsize);
+
+    if ((msgsize % 4) != 0) {
+      struct ipaddr_str buf;
+      union olsr_ip_addr *msgorig = (union olsr_ip_addr *) &m->v4.originator;
+      OLSR_PRINTF(1, "Error, OLSR message from %s (type %d) must be"
+          " longword aligned, but has a length of %d bytes\n",
+          olsr_ip_to_string(&buf, msgorig), m->v4.olsr_msgtype, msgsize);
+      olsr_syslog(OLSR_LOG_ERR, "Error, OLSR message from %s (type %d) must be"
+          " longword aligned, but has a length of %d bytes",
+          olsr_ip_to_string(&buf, msgorig), m->v4.olsr_msgtype, msgsize);
+      break;
+    }
+
+    if (msgsize > count) {
+      struct ipaddr_str buf;
+      union olsr_ip_addr *msgorig = (union olsr_ip_addr *) &m->v4.originator;
+      OLSR_PRINTF(1, "Error, OLSR message from %s (type %d) says"
+          " length=%d, but only %d bytes left\n",
+          olsr_ip_to_string(&buf, msgorig), m->v4.olsr_msgtype, msgsize, count);
+      olsr_syslog(OLSR_LOG_ERR, "Error, OLSR message from %s (type %d) says"
+          " length=%d, but only %d bytes left",
+          olsr_ip_to_string(&buf, msgorig), m->v4.olsr_msgtype, msgsize, count);
+      break;
+    }
 
     count -= msgsize;
 
