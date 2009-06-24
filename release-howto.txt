@@ -11,10 +11,7 @@ cheat sheet for making a (stable) release tarball.
 2. check if the DEBUG settings in Makefile.inc are correct:
 
    DEBUG ?= 0
-   REMOVE_LOG_DEBUG ?= 0
-   REMOVE_LOG_INFO  ?= 0
-   REMOVE_LOG_WARN  ?= 0
-   REMOVE_LOG_ERROR ?= 0
+   NO_DEBUG_MESSAGES ?= 1
 
    now check if it builds correct:
 
