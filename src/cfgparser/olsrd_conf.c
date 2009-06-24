@@ -232,10 +232,14 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
   }
 
   /* TC redundancy */
-
-  if (                          //cnf->tc_redundancy < MIN_TC_REDUNDANCY ||
-       cnf->tc_redundancy > MAX_TC_REDUNDANCY) {
-    fprintf(stderr, "TC redundancy %d is not allowed\n", cnf->tc_redundancy);
+  if (cnf->tc_redundancy != 2) {
+    fprintf(stderr, "Sorry, tc-redundancy 0/1 are not working on 0.5.6. "
+        "It was discovered late in the stable tree development and cannot "
+        "be solved without a difficult change in the dijkstra code. "
+        "Feel free to contact the olsr-user mailinglist "
+        "(http://www.olsr.org/?q=mailing-lists) to learn more "
+        "about the problem. The next version of OLSR will have working "
+        "tc-redundancy again.\n");
     return -1;
   }
 
