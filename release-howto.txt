@@ -5,39 +5,36 @@ cheat sheet for making a (stable) release tarball.
 
 1. clone a fresh tree:
 
-   $ hg clone http://gredler.at/hg/olsrd-0.5.6
-   $ hg update -C OLSRD_0_5_6_BRANCH
+   $ hg clone http://gredler.at/hg/olsrd-0.5.7
+   $ hg update -C OLSRD_0_5_7_BRANCH
 
 2. check if the DEBUG settings in Makefile.inc are correct:
 
    DEBUG ?= 0
-   NO_DEBUG_MESSAGES ?= 1
+   REMOVE_LOG_DEBUG ?= 0
+   REMOVE_LOG_INFO  ?= 0
+   REMOVE_LOG_WARN  ?= 0
+   REMOVE_LOG_ERROR ?= 0
 
    now check if it builds correct:
 
    $ make build_all
 
 3. Change VERS in Makefile.inc to your target release.
-   in this example the target release is 0.5.6-r4
+   in this example the target release is 0.5.6-r5
 
    most likely this is carrying some pre-XXX-release tag.
    
    $ grep -E "^VERS" Makefile
-   VERS =          pre-0.5.6-r4
+   VERS =          pre-0.5.6-r5
 
    change it to
 
-   VERS =          0.5.6-r4
+   VERS =          0.5.6-r5
 
-4. Change Version strings in
-   gui/win32/Main/Frontend.rc (line 71, around "CAPTION [...]")
-   gui/win32/Inst/installer.nsi (line 57, around "MessageBox MB_YESNO [...]")
+4. commit & push
 
-5. Update changelog
-
-6. commit & push
-
-7. display the used tags: 
+5. display the used tags: 
    
    $ hg tags
    tip                             1757:77e1ccb98227
@@ -64,35 +61,35 @@ cheat sheet for making a (stable) release tarball.
 
    now tag the tree (please stick to the tagging scheme).
 
-   $ hg tag OLSRD_0_5_6_R4
+   $ hg tag OLSRD_0_5_6_R5
 
-8. make the release tarball
+6. make the release tarball
 
    $ cd scripts/
    $ ./mk-tarball.sh
    [ ... ]
-   ### creating /tmp/olsrd-0.5.6-r4.tar.gz
-   6c996e94de06115d19dbbcaf6847051a  /tmp/olsrd-0.5.6-r4.tar.gz
-   ### creating /tmp/olsrd-0.5.6-r4.tar.bz2
-   e476819be5747758e3d6f579e4096bce  /tmp/olsrd-0.5.6-r4.tar.bz2
+   ### creating /tmp/olsrd-0.5.6-r5.tar.gz
+   6c996e94de06115d19dbbcaf6847051a  /tmp/olsrd-0.5.6-r5.tar.gz
+   ### creating /tmp/olsrd-0.5.6-r5.tar.bz2
+   e476819be5747758e3d6f579e4096bce  /tmp/olsrd-0.5.6-r5.tar.bz2
 
-9. check if everything is in the release tarball (ideally on a a
+7. check if everything is in the release tarball (ideally on a a
    differnt machine) and try to build from the tarball.
 
-10. upload the the .tgz and .bz2 tarballs to the http://www.olsr.org/downaload/0.5/
+8. upload the the .tgz and .bz2 tarballs to the http://www.olsr.org/downaload/0.5/
    sectaion and add a release articel on the web.
 
-11. Change VERS in Makefile.inc to your *next* target release.
-   in this example the next target release is pre-0.5.6-r5
+9. Change VERS in Makefile.inc to your *next* target release.
+   in this example the next target release is pre-0.5.6-r6
 
    change it from:
    
    $ grep -E "^VERS" Makefile
-   VERS =          0.5.6-r4
+   VERS =          0.5.6-r5
 
    to
 
-   VERS =          pre-0.5.6-r5
+   VERS =          pre-0.5.6-r6
 
    commit & push
 
