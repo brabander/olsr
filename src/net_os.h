@@ -82,9 +82,6 @@ int
   enable_ip_forwarding(int);
 
 int
-  gethemusocket(struct sockaddr_in *);
-
-int
   getsocket(int, char *);
 
 int

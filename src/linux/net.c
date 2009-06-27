@@ -313,10 +313,6 @@ restore_settings(int version)
   OLSR_FOR_ALL_INTERFACES(ifs) {
     char procfile[FILENAME_MAX];
     FILE *proc_fd;
-    /* Ignore host-emulation interfaces */
-    if (ifs->is_hcif) {
-      continue;
-    }
     /* ICMP redirects */
 
     /* Generate the procfile name */
@@ -345,41 +341,6 @@ restore_settings(int version)
 
   return 1;
 }
-
-/**
- *Creates a blocking tcp socket for communication with switch daemon.
- *@param sa sockaddr struct. Used for bind(2).
- *@return the FD of the socket or -1 on error.
- */
-int
-gethemusocket(struct sockaddr_in *pin)
-{
-  int sock, on;
-
-  OLSR_INFO(LOG_NETWORKING, "       Connecting to switch daemon port %d\n", pin->sin_port);
-  if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-    OLSR_ERROR(LOG_NETWORKING, "Cannot open socket for emulation (%s)\n", strerror(errno));
-    olsr_exit(EXIT_FAILURE);
-  }
-
-  on = 1;
-  if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0) {
-    OLSR_ERROR(LOG_NETWORKING, "Cannot reuse address for socket for emulation (%s)\n", strerror(errno));
-    close(sock);
-    olsr_exit(EXIT_FAILURE);
-  }
-
-  /* connect to PORT on HOST */
-  if (connect(sock, (struct sockaddr *)pin, sizeof(*pin)) < 0) {
-    OLSR_ERROR(LOG_NETWORKING, "Cannot connect socket for emulation (%s)\n", strerror(errno));
-    close(sock);
-    olsr_exit(EXIT_FAILURE);
-  }
-
-  /* Keep TCP socket blocking */
-  return sock;
-}
-
 
 /**
  *Creates a nonblocking broadcast socket.

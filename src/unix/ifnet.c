@@ -164,8 +164,6 @@ chk_if_changed(struct olsr_if_config *iface)
     return 0;
   }
 
-  ifp->is_hcif = false;
-
   /* trying to detect if interface is wireless. */
   ifp->is_wireless = check_wireless_interface(ifr.ifr_name);
 
@@ -310,126 +308,6 @@ chk_if_changed(struct olsr_if_config *iface)
   return if_changes;
 }
 
-/**
- * Initializes the special interface used in
- * host-client emulation
- */
-int
-add_hemu_if(struct olsr_if_config *iface)
-{
-  struct interface *ifp;
-  uint32_t addr[4];
-#if !defined REMOVE_LOG_INFO
-  struct ipaddr_str buf;
-#endif
-  size_t name_size;
-
-  ifp = olsr_cookie_malloc(interface_mem_cookie);
-
-  iface->interf = ifp;
-  lock_interface(iface->interf);
-
-  name_size = strlen("hcif01") + 1;
-  ifp->is_hcif = true;
-  ifp->int_name = olsr_malloc(name_size, "Interface update 3");
-  ifp->int_metric = 0;
-
-  strscpy(ifp->int_name, "hcif01", name_size);
-
-  OLSR_INFO(LOG_INTERFACE, "Adding %s (host emulation) with address %s\n",
-            ifp->int_name, olsr_ip_to_string(&buf, &iface->hemu_ip));
-
-  /* Queue */
-  list_add_before(&interface_head, &ifp->int_node);
-
-  if (!olsr_cnf->fixed_origaddr && olsr_ipcmp(&all_zero, &olsr_cnf->router_id) == 0) {
-    olsr_cnf->router_id = iface->hemu_ip;
-    OLSR_INFO(LOG_INTERFACE, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->router_id));
-  }
-
-  ifp->int_mtu = OLSR_DEFAULT_MTU - (olsr_cnf->ip_version == AF_INET6 ? UDP_IPV6_HDRSIZE : UDP_IPV4_HDRSIZE);
-
-  /* Set up buffer */
-  net_add_buffer(ifp);
-
-  if (olsr_cnf->ip_version == AF_INET) {
-    struct sockaddr_in sin4;
-
-    memset(&sin4, 0, sizeof(sin4));
-    sin4.sin_family = AF_INET;
-    sin4.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-    sin4.sin_port = htons(10150);
-
-    /* IP version 4 */
-    ifp->ip_addr.v4 = iface->hemu_ip.v4;
-    memcpy(&ifp->int_addr.sin_addr, &iface->hemu_ip, olsr_cnf->ipsize);
-
-    /*
-     * We create one socket for each interface and bind
-     * the socket to it. This to ensure that we can control
-     * on what interface the message is transmitted
-     */
-
-    ifp->olsr_socket = gethemusocket(&sin4);
-  } else {
-    /* IP version 6 */
-    memcpy(&ifp->ip_addr, &iface->hemu_ip, olsr_cnf->ipsize);
-
-#if 0
-    /*
-     * We create one socket for each interface and bind
-     * the socket to it. This to ensure that we can control
-     * on what interface the message is transmitted
-     */
-
-    ifp->olsr_socket = gethcsocket6(&addrsock6, BUFSPACE, ifp->int_name);
-    if (ifp->olsr_socket < 0) {
-      olsr_exit(EXIT_FAULURE);
-    }
-    join_mcast(ifp, ifp->olsr_socket);
-#endif
-  }
-
-  /* Send IP as first 4/16 bytes on socket */
-  memcpy(addr, iface->hemu_ip.v6.s6_addr, olsr_cnf->ipsize);
-  addr[0] = htonl(addr[0]);
-  addr[1] = htonl(addr[1]);
-  addr[2] = htonl(addr[2]);
-  addr[3] = htonl(addr[3]);
-
-  if (send(ifp->olsr_socket, addr, olsr_cnf->ipsize, 0) != (int)olsr_cnf->ipsize) {
-    OLSR_WARN(LOG_INTERFACE, "Error sending IP.\n");
-  }
-
-  /* Register socket */
-  add_olsr_socket(ifp->olsr_socket, &olsr_input_hostemu, NULL, NULL, SP_PR_READ);
-
-  /*
-   * Register functions for periodic message generation
-   */
-
-  ifp->hello_gen_timer =
-    olsr_start_timer(iface->cnf->hello_params.emission_interval * MSEC_PER_SEC,
-                     HELLO_JITTER, OLSR_TIMER_PERIODIC, &olsr_output_lq_hello, ifp, hello_gen_timer_cookie);
-  ifp->tc_gen_timer =
-    olsr_start_timer(iface->cnf->tc_params.emission_interval * MSEC_PER_SEC,
-                     TC_JITTER, OLSR_TIMER_PERIODIC, &olsr_output_lq_tc, ifp, tc_gen_timer_cookie);
-  ifp->mid_gen_timer =
-    olsr_start_timer(iface->cnf->mid_params.emission_interval * MSEC_PER_SEC,
-                     MID_JITTER, OLSR_TIMER_PERIODIC, &generate_mid, ifp, mid_gen_timer_cookie);
-  ifp->hna_gen_timer =
-    olsr_start_timer(iface->cnf->hna_params.emission_interval * MSEC_PER_SEC,
-                     HNA_JITTER, OLSR_TIMER_PERIODIC, &generate_hna, ifp, hna_gen_timer_cookie);
-
-  ifp->hello_etime = (olsr_reltime) (iface->cnf->hello_params.emission_interval * MSEC_PER_SEC);
-  ifp->valtimes.hello = reltime_to_me(iface->cnf->hello_params.validity_time * MSEC_PER_SEC);
-  ifp->valtimes.tc = reltime_to_me(iface->cnf->tc_params.validity_time * MSEC_PER_SEC);
-  ifp->valtimes.mid = reltime_to_me(iface->cnf->mid_params.validity_time * MSEC_PER_SEC);
-  ifp->valtimes.hna = reltime_to_me(iface->cnf->hna_params.validity_time * MSEC_PER_SEC);
-
-  return 1;
-}
-
 static char basenamestr[32];
 static const char *if_basename(const char *name);
 static const char *
@@ -501,8 +379,6 @@ chk_if_up(struct olsr_if_config *iface)
     OLSR_DEBUG(LOG_INTERFACE, "\tThis is a loopback interface - skipping it...\n");
     goto cleanup;
   }
-
-  ifp->is_hcif = false;
 
   /* trying to detect if interface is wireless. */
   ifp->is_wireless = check_wireless_interface(ifr.ifr_name);

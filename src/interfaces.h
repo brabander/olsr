@@ -142,7 +142,6 @@ struct interface {
   struct sockaddr_in6 int6_multaddr;   /* Multicast */
   /* IP independent */
   union olsr_ip_addr ip_addr;
-  int is_hcif;                         /* Is this a emulated host-client if? */
   int olsr_socket;                     /* The broadcast socket for this interface */
   int int_metric;                      /* metric of interface */
   int int_mtu;                         /* MTU of interface */

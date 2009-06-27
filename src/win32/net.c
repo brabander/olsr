@@ -74,29 +74,6 @@ int disable_ip_forwarding(int Ver);
 
 
 int
-gethemusocket(struct sockaddr_in *pin)
-{
-  int sock;
-
-  OLSR_INFO(LOG_NETWORKING, "       Connecting to switch daemon port %d\n", pin->sin_port);
-
-  if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-    OLSR_ERROR(LOG_NETWORKING, "Cannot open socket for emulation (%s)\n", strerror(errno));
-    olsr_exit(EXIT_FAILURE);
-  }
-
-  /* connect to PORT on HOST */
-  if (connect(sock, (struct sockaddr *)pin, sizeof(*pin)) < 0) {
-    OLSR_ERROR(LOG_NETWORKING, "Cannot reuse address for socket for emulation (%s)\n", strerror(errno));
-    CLOSESOCKET(sock);
-    olsr_exit(EXIT_FAILURE);
-  }
-
-  /* Keep TCP socket blocking */
-  return (sock);
-}
-
-int
 getsocket(int BuffSize, char *Int __attribute__ ((unused)))
 {
   struct sockaddr_in Addr;

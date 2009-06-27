@@ -146,7 +146,6 @@ struct olsr_if_options {
 struct olsr_if_config {
   char *name;
   char *config;
-  union olsr_ip_addr hemu_ip;
   struct interface *interf;
   struct olsr_if_options *cnf;
   struct olsr_if_config *next;

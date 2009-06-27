@@ -293,41 +293,6 @@ restore_settings(int version)
 }
 
 
-/**
- *Creates a nonblocking broadcast socket.
- *@param sa sockaddr struct. Used for bind(2).
- *@return the FD of the socket or -1 on error.
- */
-int
-gethemusocket(struct sockaddr_in *pin)
-{
-  int sock, on = 1;
-
-  OLSR_INFO(LOG_NETWORKING, "       Connecting to switch daemon port %d...", pin->sin_port);
-
-
-  if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-    OLSR_ERROR(LOG_NETWORKING, "Cannot open socket for emulation (%s)\n", strerror(errno));
-    olsr_exit(EXIT_FAILURE);
-  }
-
-  if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on)) < 0) {
-    OLSR_ERROR(LOG_NETWORKING, "Cannot set socket options for emulation (%s)\n", strerror(errno));
-    close(sock);
-    olsr_exit(EXIT_FAILURE);
-  }
-  /* connect to PORT on HOST */
-  if (connect(sock, (struct sockaddr *)pin, sizeof(*pin)) < 0) {
-    OLSR_ERROR(LOG_NETWORKING, "Cannot connect socket for emulation (%s)\n", strerror(errno));
-    close(sock);
-    olsr_exit(EXIT_FAILURE);
-  }
-
-  /* Keep TCP socket blocking */
-  return (sock);
-}
-
-
 int
 getsocket(int bufspace, char *int_name __attribute__ ((unused)))
 {
