@@ -57,7 +57,6 @@
 #include "net_os.h"
 #include "build_msg.h"
 #include "net_olsr.h"
-#include "ipc_frontend.h"
 #include "misc.h"
 #include "olsr_cfg_gen.h"
 #include "common/string.h"
@@ -320,11 +319,6 @@ main(int argc, char *argv[])
   }
 #endif
 
-  /* Initialize the IPC socket */
-
-  if (olsr_cnf->ipc_connections > 0) {
-    ipc_init();
-  }
   /* Initialisation of different tables to be used. */
   olsr_init_tables();
 
@@ -498,11 +492,6 @@ olsr_shutdown(void)
 
   /* Flush duplicate set */
   olsr_flush_duplicate_entries();
-
-  /* front-end IPC socket */
-  if (olsr_cnf->ipc_connections > 0) {
-    shutdown_ipc();
-  }
 
   /* Shut down LQ plugin */
   deinit_lq_handler();

@@ -112,10 +112,6 @@ olsr_write_cnf_buf(struct autobuf *abuf, struct olsr_config *cnf, bool write_mor
                "# dynammically based on battery/power status\n"
                "%sWillingness\t%d\n\n", cnf->willingness_auto ? "#" : "", cnf->willingness_auto ? 4 : cnf->willingness);
 
-  /* IPC */
-  abuf_appendf(abuf, "# Allow processes like the GUI front-end\n"
-               "# to connect to the daemon.\n" "IpcConnect {\n" "    MaxConnections\t%d\n", cnf->ipc_connections);
-
   if (list_is_empty(&cnf->ipc_nets.accept)) {
     struct ip_prefix_entry *ie;
     OLSR_FOR_ALL_IPPREFIX_ENTRIES(&cnf->ipc_nets.accept, ie) {

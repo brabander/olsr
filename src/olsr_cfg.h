@@ -191,7 +191,6 @@ struct olsr_config {
   uint8_t rttable;                     /* Policy routing table, 254(main) is default */
   uint8_t rttable_default;             /* Polroute table for default route, 0==use rttable */
   olsr_fib_metric_options fib_metric;  /* Determines route metrics update mode */
-  uint8_t ipc_connections;             /* Number of allowed IPC connections */
 
   /* logging information */
   bool log_event[LOG_SEVERITY_COUNT][LOG_SOURCE_COUNT]; /* New style */

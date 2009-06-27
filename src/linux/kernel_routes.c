@@ -40,7 +40,6 @@
  */
 
 #include "kernel_routes.h"
-#include "ipc_frontend.h"
 #include <assert.h>
 #include <errno.h>
 #include <linux/types.h>
@@ -373,9 +372,6 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
     req.r.rtm_scope = RT_SCOPE_NOWHERE;
   }
   ret = olsr_netlink_send(&req.n, req.buf, sizeof(req.buf), flag, rt, nexthop, family, rttable);
-  if (0 <= ret && olsr_cnf->ipc_connections > 0) {
-    ipc_route_send_rtentry(&rt->rt_dst.prefix, &nexthop->gateway, metric, RTM_NEWROUTE == cmd, nexthop->interface->int_name);
-  }
   return ret;
 }
 
@@ -387,7 +383,6 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
 int
 olsr_kernel_add_route(const struct rt_entry *rt, int ip_version)
 {
-  int rslt;
   int rttable;
 
   OLSR_DEBUG(LOG_ROUTING, "KERN: Adding %s\n", olsr_rtp_to_string(rt->rt_best));
@@ -401,16 +396,7 @@ olsr_kernel_add_route(const struct rt_entry *rt, int ip_version)
     olsr_netlink_route(rt, AF_INET, 253, RTM_NEWROUTE);
   }
   rttable = 0 == rt->rt_dst.prefix_len && olsr_cnf->rttable_default != 0 ? olsr_cnf->rttable_default : olsr_cnf->rttable;
-  rslt = olsr_netlink_route(rt, ip_version, rttable, RTM_NEWROUTE);
-
-  if (rslt >= 0) {
-    /*
-     * Send IPC route update message
-     */
-    ipc_route_send_rtentry(&rt->rt_dst.prefix, &rt->rt_best->rtp_nexthop.gateway,
-                           rt->rt_best->rtp_metric.hops, 1, rt->rt_best->rtp_nexthop.interface->int_name);
-  }
-  return rslt;
+  return olsr_netlink_route(rt, ip_version, rttable, RTM_NEWROUTE);
 }
 
 
@@ -422,7 +408,6 @@ olsr_kernel_add_route(const struct rt_entry *rt, int ip_version)
 int
 olsr_kernel_del_route(const struct rt_entry *rt, int ip_version)
 {
-  int rslt;
   int rttable;
 
   OLSR_DEBUG(LOG_ROUTING, "KERN: Deleting %s\n", olsr_rt_to_string(rt));
@@ -434,15 +419,7 @@ olsr_kernel_del_route(const struct rt_entry *rt, int ip_version)
     olsr_netlink_route(rt, AF_INET, 253, RTM_DELROUTE);
   }
   rttable = 0 == rt->rt_dst.prefix_len && olsr_cnf->rttable_default != 0 ? olsr_cnf->rttable_default : olsr_cnf->rttable;
-  rslt = olsr_netlink_route(rt, ip_version, rttable, RTM_DELROUTE);
-  if (rslt >= 0) {
-    /*
-     * Send IPC route update message
-     */
-    ipc_route_send_rtentry(&rt->rt_dst.prefix, NULL, 0, 0, NULL);
-  }
-
-  return rslt;
+  return olsr_netlink_route(rt, ip_version, rttable, RTM_DELROUTE);
 }
 
 

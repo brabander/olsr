@@ -607,13 +607,7 @@ parse_cfg_ipc(char *argstr, struct olsr_config *rcfg, char *rmsg)
         parse_tok_free(tok);
         return CFG_ERROR;
       }
-      if (0 == strcmp("MaxConnections", p[0])) {
-        int arg = -1;
-        sscanf(argstr, "%d", &arg);
-        if (0 <= arg && arg < 1 << (8 * sizeof(rcfg->ipc_connections)))
-          rcfg->ipc_connections = arg;
-        PARSER_DEBUG_PRINTF("\tIPC connections: %d\n", rcfg->ipc_connections);
-      } else if (0 == strcmp("Host", p[0])) {
+      if (0 == strcmp("Host", p[0])) {
         union olsr_ip_addr ipaddr;
         if (inet_pton(rcfg->ip_version, p[1], &ipaddr) <= 0) {
           sprintf(rmsg, "Failed converting IP address %s\n", p[0]);
@@ -866,10 +860,6 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
     break;
   case 'i':                    /* iface */
     /* Ignored */
-    break;
-  case 'P':                    /* ipc */
-    rcfg->ipc_connections = 1;
-    PARSER_DEBUG_PRINTF("IPC connections: %d\n", rcfg->ipc_connections);
     break;
   case 'n':                    /* nofork */
     rcfg->no_fork = true;
@@ -1207,7 +1197,6 @@ olsr_parse_cfg(int argc, char *argv[], const char *file, char *rmsg, struct olsr
     {"Hna4",                     required_argument, 0, '4'}, /* (4body) */
     {"Hna6",                     required_argument, 0, '6'}, /* (6body) */
     {"Interface",                required_argument, 0, 'I'}, /* (if1 if2 {ifbody}) */
-    {"IpcConnect",               required_argument, 0, 'Q'}, /* (Host,Net,MaxConnections) */
     {"IpVersion",                required_argument, 0, 'V'}, /* (i) */
     {"LinkQualityDijkstraLimit", required_argument, 0, 'J'}, /* (i,f) */
     {"LinkQualityFishEye",       required_argument, 0, 'E'}, /* (i) */
@@ -1231,6 +1220,7 @@ olsr_parse_cfg(int argc, char *argv[], const char *file, char *rmsg, struct olsr
     {"TxtPort",                  required_argument, 0, CFG_TXTPORT},   /* (i) */
     {"TxtLimit",                 required_argument, 0, CFG_TXTLIMIT},  /* (i) */
 
+    {"IpcConnect",               required_argument, 0,  0 }, /* ignored */
     {"UseHysteresis",            required_argument, 0,  0 }, /* ignored */
     {"HystScaling",              required_argument, 0,  0 }, /* ignored */
     {"HystThrHigh",              required_argument, 0,  0 }, /* ignored */
@@ -1634,7 +1624,6 @@ olsr_get_default_cfg(void)
   assert(cfg->rtproto == 0);
   cfg->rttable = 254;
   assert(cfg->rttable_default == 0);
-  cfg->ipc_connections = DEF_IPC_CONNECTIONS;
   cfg->fib_metric = DEF_FIB_METRIC;
 
   for (i = 0; i < LOG_SOURCE_COUNT; i++) {
