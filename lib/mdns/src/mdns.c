@@ -71,14 +71,16 @@ static void
 PacketReceivedFromOLSR(unsigned char *encapsulationUdpData, int len)
 {
   struct ip *ipHeader;                 /* IP header inside the encapsulated IP packet */
-  union olsr_ip_addr mcSrc;            /* Original source of the encapsulated multicast packet */
-  union olsr_ip_addr mcDst;            /* Multicast destination of the encapsulated packet */
+  struct ip6_hdr *ip6Header;                 /* IP header inside the encapsulated IP packet */
+  //union olsr_ip_addr mcSrc;            /* Original source of the encapsulated multicast packet */
+  //union olsr_ip_addr mcDst;            /* Multicast destination of the encapsulated packet */
   struct TBmfInterface *walker;
+  int stripped_len;
   ipHeader = (struct ip *)encapsulationUdpData;
-  mcSrc.v4 = ipHeader->ip_src;
-  mcDst.v4 = ipHeader->ip_dst;
-
-  //OLSR_PRINTF(3, "MDNS PLUGIN got packet from OLSR message\n");
+  ip6Header = (struct ip6_hdr *)encapsulationUdpData;
+  //mcSrc.v4 = ipHeader->ip_src;
+  //mcDst.v4 = ipHeader->ip_dst;
+  OLSR_DEBUG(LOG_PLUGINS, "MDNS PLUGIN got packet from OLSR message\n");
 
 
   /* Check with each network interface what needs to be done on it */
@@ -90,11 +92,19 @@ PacketReceivedFromOLSR(unsigned char *encapsulationUdpData, int len)
 
       memset(&dest, 0, sizeof(dest));
       dest.sll_family = AF_PACKET;
-      if ((encapsulationUdpData[0] & 0xf0) == 0x40)
+      if ((encapsulationUdpData[0] & 0xf0) == 0x40) {
         dest.sll_protocol = htons(ETH_P_IP);
-      if ((encapsulationUdpData[0] & 0xf0) == 0x60)
+	stripped_len = ntohs(ipHeader->ip_len);
+	}
+      if ((encapsulationUdpData[0] & 0xf0) == 0x60) {
         dest.sll_protocol = htons(ETH_P_IPV6);
+        stripped_len = 40 + ntohs(ip6Header->ip6_plen); //IPv6 Header size (40) + payload_len 
+        }
       //TODO: if packet is not IP die here
+      
+      if (stripped_len > len) {
+	OLSR_DEBUG(LOG_PLUGINS, "MDNS: Stripped len bigger than len ??\n");
+	}
       dest.sll_ifindex = if_nametoindex(walker->ifName);
       dest.sll_halen = IFHWADDRLEN;
 
@@ -106,8 +116,8 @@ PacketReceivedFromOLSR(unsigned char *encapsulationUdpData, int len)
        * in that case. */
       memset(dest.sll_addr, 0xFF, IFHWADDRLEN);
 
-      nBytesWritten = sendto(walker->capturingSkfd, encapsulationUdpData, len, 0, (struct sockaddr *)&dest, sizeof(dest));
-      if (nBytesWritten != len) {
+      nBytesWritten = sendto(walker->capturingSkfd, encapsulationUdpData, stripped_len, 0, (struct sockaddr *)&dest, sizeof(dest));
+      if (nBytesWritten != stripped_len) {
         BmfPError("sendto() error forwarding unpacked encapsulated pkt on \"%s\"", walker->ifName);
       } else {
 
@@ -129,7 +139,7 @@ olsr_parser(union olsr_message *m, struct interface *in_if __attribute__ ((unuse
   union olsr_ip_addr originator;
   int size;
   olsr_reltime vtime;
-  //OLSR_PRINTF(2, "MDNS PLUGIN: Received msg in parser\n");
+  OLSR_DEBUG(LOG_PLUGINS, "MDNS PLUGIN: Received msg in parser\n");
   /* Fetch the originator of the messsage */
   if (olsr_cnf->ip_version == AF_INET) {
     memcpy(&originator, &m->v4.originator, olsr_cnf->ipsize);
@@ -169,9 +179,15 @@ olsr_mdns_gen(unsigned char *packet, int len)
 {
   /* send buffer: huge */
   char buffer[10240];
+  int aligned_size;
   union olsr_message *message = (union olsr_message *)buffer;
   struct interface *ifn;
-  //int namesize;
+  
+  aligned_size=len;
+
+if ((aligned_size % 4) != 0) {
+    aligned_size = (aligned_size - (aligned_size % 4)) + 4;
+  }
 
   /* fill message */
   if (olsr_cnf->ip_version == AF_INET) {
@@ -185,10 +201,11 @@ olsr_mdns_gen(unsigned char *packet, int len)
     message->v4.hopcnt = 0;
     message->v4.seqno = htons(get_msg_seqno());
 
-    message->v4.olsr_msgsize = htons(len + 12);
+    message->v4.olsr_msgsize = htons(aligned_size + 12);
 
+    memset(&message->v4.message, 0, aligned_size);
     memcpy(&message->v4.message, packet, len);
-    len = len + 12;
+    aligned_size = aligned_size + 12;
   } else {
     /* IPv6 */
     message->v6.olsr_msgtype = MESSAGE_TYPE;
@@ -200,19 +217,20 @@ olsr_mdns_gen(unsigned char *packet, int len)
     message->v6.hopcnt = 0;
     message->v6.seqno = htons(get_msg_seqno());
 
-    message->v6.olsr_msgsize = htons(len + 12 + 96);
+    message->v6.olsr_msgsize = htons(aligned_size + 12 + 96);
+    memset(&message->v6.message, 0, aligned_size);
     memcpy(&message->v6.message, packet, len);
-    len = len + 12 + 96;
+    aligned_size = aligned_size + 12 + 96;
   }
 
   /* looping trough interfaces */
   OLSR_FOR_ALL_INTERFACES(ifn) {
     //OLSR_PRINTF(1, "MDNS PLUGIN: Generating packet - [%s]\n", ifn->int_name);
 
-    if (net_outbuffer_push(ifn, message, len) != len) {
+    if (net_outbuffer_push(ifn, message, aligned_size) != aligned_size) {
       /* send data and try again */
       net_output(ifn);
-      if (net_outbuffer_push(ifn, message, len) != len) {
+      if (net_outbuffer_push(ifn, message, aligned_size) != aligned_size) {
         //OLSR_PRINTF(1, "MDNS PLUGIN: could not send on interface: %s\n", ifn->int_name);
       }
     }
