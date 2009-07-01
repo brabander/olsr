@@ -18,6 +18,8 @@ REMOVE_LOG_ERROR ?= 0
 # you need a recent enough gcc and the libmudflap installed
 MUDFLAP ?= 0
 
+# enable static linking of plugins (list of plugin directory names) 
+STATIC_PLUGINS ?= txtinfo
 
 ######################
 #
@@ -96,7 +98,7 @@ ifndef CFLAGS
     ALL_WARNINGS +=	-Wwrite-strings
     ALL_WARNINGS +=	-Wbad-function-cast
     ALL_WARNINGS +=	-Wpointer-arith
-    ALL_WARNINGS +=	-Wcast-qual
+    # ALL_WARNINGS +=	-Wcast-qual
     ALL_WARNINGS +=	-Wshadow
     ALL_WARNINGS +=	-Wformat-2
     ALL_WARNINGS +=	-Wsequence-point
@@ -200,6 +202,10 @@ LDFLAGS +=	$(EXTRA_LDFLAGS)
 SRCS +=		$(wildcard src/common/*.c src/*.c)
 HDRS +=		$(wildcard src/common/*.h src/*.h)
 
+#get headers and object files for static plugins
+STATIC_PLUGIN_SRCS += $(foreach dir,$(STATIC_PLUGINS),$(wildcard lib/$(dir)/src/*.c))
+STATIC_PLUGIN_OBJS += $(STATIC_PLUGIN_SRCS:%.c=%.o)
+
 # OS detection
 ifeq ($(OS),Windows_NT)
   OS := win32
@@ -213,6 +219,11 @@ else
 # include OS specifics
 all: default_target
 include $(TOPDIR)/make/Makefile.$(OS)
+endif
+
+ifdef OLSRD_PLUGIN
+  # this must be run after the OS-specific makefile
+  CPPFLAGS +=  -DPLUGIN_FULLNAME="\"$(PLUGIN_FULLNAME)\""
 endif
 
 # one object for each source file

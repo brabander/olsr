@@ -61,16 +61,9 @@
 
 static void parse_packet(struct olsr *, int, struct interface *, union olsr_ip_addr *);
 
-
-/* Sven-Ola: On very slow devices used in huge networks
- * the amount of lq_tc messages is so high, that the
- * recv() loop never ends. This is a small hack to end
- * the loop in this cases
- */
-
-static struct parse_function_entry *parse_functions;
-static struct preprocessor_function_entry *preprocessor_functions;
-static struct packetparser_function_entry *packetparser_functions;
+static struct parse_function_entry *parse_functions = NULL;
+static struct preprocessor_function_entry *preprocessor_functions = NULL;
+static struct packetparser_function_entry *packetparser_functions = NULL;
 
 /**
  *Initialize the parser.

@@ -45,34 +45,81 @@
 #include "plugin.h"
 #include "olsr_types.h"
 
-/* all */
-typedef int (*plugin_init_func) (void);
-typedef int (*get_interface_version_func) (void);
+#include "common/avl.h"
+#include "common/list.h"
+
+#define DEFINE_PLUGIN6(descr, author, pre_init, post_init, pre_cleanup, post_cleanup, deactivate, parameter) \
+static struct olsr_plugin olsr_internal_plugin_definition = { \
+  .p_name = (char*) PLUGIN_FULLNAME , .p_descr = (char*)descr, .p_author = (char*)author, \
+  .p_pre_init = pre_init, .p_post_init = post_init, .p_pre_cleanup = pre_cleanup, .p_post_cleanup = post_cleanup, \
+  .p_deactivate = deactivate, .p_version = 6, .p_param = parameter, .p_param_cnt = ARRAYSIZE(parameter) \
+}; \
+static void hookup_plugin_definition (void) __attribute__ ((constructor)); \
+static void hookup_plugin_definition (void) { \
+  olsr_hookup_plugin(&olsr_internal_plugin_definition); \
+}
 
 /* version 5 */
+typedef int (*plugin_init_func) (void);
+typedef int (*get_interface_version_func) (void);
 typedef void (*get_plugin_parameters_func) (const struct olsrd_plugin_parameters ** params, unsigned int *size);
 
 struct olsr_plugin {
-  /* The handle */
+  struct avl_node p_node;
+
+  /* plugin information */
+  char *p_name;
+  char *p_descr;
+  char *p_author;
+  bool p_deactivate;    /* plugin can be deactivated */
+
+  /* function pointers */
+  int (*p_pre_init) (void);
+  int (*p_post_init) (void);
+  int (*p_pre_cleanup) (void);
+  void (*p_post_cleanup) (void);
+
+  /* plugin interface version */
+  int p_version;
+
+  /* plugin list of possible arguments */
+  const struct olsrd_plugin_parameters *p_param;
+
+  /* number of arguments */
+  unsigned int p_param_cnt;
+
+  /* internal olsr data */
   void *dlhandle;
-
   struct plugin_param *params;
-  int plugin_interface_version;
-
-  plugin_init_func plugin_init;
-
-  /* version 5 */
-  const struct olsrd_plugin_parameters *plugin_parameters;
-  unsigned int plugin_parameters_size;
-
-  struct olsr_plugin *next;
+  bool active;
 };
 
-void olsr_load_plugins(void);
+AVLNODE2STRUCT(plugin_node2tree, struct olsr_plugin, p_node)
 
-void olsr_close_plugins(void);
+#define OLSR_FOR_ALL_PLUGIN_ENTRIES(plugin) \
+{ \
+  struct avl_node *plugin_node, *next_plugin_node; \
+  for (plugin_node = avl_walk_first(&plugin_tree); \
+    plugin_node; plugin_node = next_plugin_node) { \
+    next_plugin_node = avl_walk_next(plugin_node); \
+    plugin = plugin_node2tree(plugin_node);
+#define OLSR_FOR_ALL_PLUGIN_ENTRIES_END(plugin) }}
 
-int olsr_plugin_io(int, void *, size_t);
+struct olsr_plugin *EXPORT(olsr_get_plugin)(char *libname);
+
+void EXPORT(olsr_hookup_plugin) (struct olsr_plugin *plugin);
+void EXPORT(olsr_unhookup_plugin) (struct olsr_plugin *plugin);
+
+void EXPORT(olsr_init_pluginsystem)(bool);
+void EXPORT(olsr_destroy_pluginsystem)(void);
+
+struct olsr_plugin *EXPORT(olsr_load_plugin)(char *);
+bool EXPORT(olsr_unload_plugin)(struct olsr_plugin *);
+
+bool EXPORT(olsr_activate_plugin)(struct olsr_plugin *);
+bool EXPORT(olsr_deactivate_plugin)(struct olsr_plugin *);
+
+extern struct avl_tree EXPORT(plugin_tree);
 
 #endif
 

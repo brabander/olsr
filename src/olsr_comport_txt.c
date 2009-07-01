@@ -48,6 +48,7 @@
 #include "scheduler.h"
 #include "olsr_comport.h"
 #include "olsr_comport_txt.h"
+#include "plugin_loader.h"
 
 struct txt_repeat_data {
   struct timer_entry *timer;
@@ -74,7 +75,8 @@ static enum olsr_txtcommand_result olsr_txtcmd_timeout(
     struct comport_connection *con, char *cmd, char *param);
 static enum olsr_txtcommand_result olsr_txtcmd_version(
     struct comport_connection *con, char *cmd, char *param);
-
+static enum olsr_txtcommand_result olsr_txtcmd_plugin(
+    struct comport_connection *con, char *cmd, char *param);
 static enum olsr_txtcommand_result olsr_txtcmd_displayhelp(
     struct comport_connection *con, char *cmd, char *param);
 
@@ -87,7 +89,8 @@ static const char *txt_internal_names[] = {
   "csvoff",
   "repeat",
   "timeout",
-  "version"
+  "version",
+  "plugin"
 };
 
 static const char *txt_internal_help[] = {
@@ -99,6 +102,8 @@ static const char *txt_internal_help[] = {
   "repeat <interval> <command>: repeats a command every <interval> seconds\n",
   "timeout <interval>: set the timeout interval to <interval> seconds, 0 means no timeout\n"
   "displays the version of the olsrd\n"
+  "control olsr plugins dynamically, parameters are 'list', 'activate <plugin>', 'deactivate <plugin>', "
+    "'load <plugin>' and 'unload <plugin>'"
 };
 
 static olsr_txthandler txt_internal_handlers[] = {
@@ -109,7 +114,8 @@ static olsr_txthandler txt_internal_handlers[] = {
   olsr_txtcmd_csvoff,
   olsr_txtcmd_repeat,
   olsr_txtcmd_timeout,
-  olsr_txtcmd_version
+  olsr_txtcmd_version,
+  olsr_txtcmd_plugin
 };
 
 void olsr_com_init_txt(void) {
@@ -339,5 +345,92 @@ olsr_txtcmd_version(struct comport_connection *con, char *cmd __attribute__ ((un
   abuf_appendf(&con->out,
       con->is_csv ? "version,%s,%s,%s\n" : " *** %s ***\n Build date: %s on %s\n http://www.olsr.org\n\n",
       olsrd_version, build_date, build_host);
+  return CONTINUE;
+}
+
+static enum olsr_txtcommand_result
+olsr_txtcmd_plugin(struct comport_connection *con, char *cmd, char *param) {
+  struct olsr_plugin *plugin;
+  char *para2 = NULL;
+  if (param == NULL || strcasecmp(param, "list") == 0) {
+    if (!con->is_csv && abuf_puts(&con->out, "Table:\n") < 0) {
+      return ABUF_ERROR;
+    }
+    OLSR_FOR_ALL_PLUGIN_ENTRIES(plugin) {
+      if (abuf_appendf(&con->out, con->is_csv ? "%s,%s,%s": " %-30s\t%s\t%s\n",
+          plugin->p_name, plugin->active ? "active" : "", plugin->dlhandle == NULL ? "static" : "") < 0) {
+        return ABUF_ERROR;
+      }
+    } OLSR_FOR_ALL_PLUGIN_ENTRIES_END(plugin)
+    return CONTINUE;
+  }
+
+  para2 = strchr(param, ' ');
+  if (para2 == NULL) {
+    if (con->is_csv) {
+      abuf_appendf(&con->out, "Error, missing or unknown parameter\n");
+    }
+    return CONTINUE;
+  }
+  *para2++ = 0;
+
+  plugin = olsr_get_plugin(para2);
+  if (strcasecmp(param, "load") == 0) {
+    if (plugin != NULL) {
+      abuf_appendf(&con->out, "Plugin %s already loaded\n", para2);
+      return CONTINUE;
+    }
+    plugin = olsr_load_plugin(para2);
+    if (plugin != NULL) {
+      abuf_appendf(&con->out, "Plugin %s successfully loaded\n", para2);
+    }
+    else {
+      abuf_appendf(&con->out, "Could not load plugin %s\n", para2);
+    }
+    return CONTINUE;
+  }
+
+  if (plugin == NULL) {
+    if (con->is_csv) {
+      abuf_appendf(&con->out, "Error, could not find plugin '%s'.\n", para2);
+    }
+    return CONTINUE;
+  }
+  if (strcasecmp(param, "activate") == 0) {
+    if (plugin->active) {
+      abuf_appendf(&con->out, "Plugin %s already active\n", para2);
+    }
+    else if (olsr_activate_plugin(plugin)) {
+      abuf_appendf(&con->out, "Could not activate plugin %s\n", para2);
+    }
+    else {
+      abuf_appendf(&con->out, "Plugin %s successfully activated\n", para2);
+    }
+  }
+  else if (strcasecmp(param, "deactivate") == 0) {
+    if (!plugin->active) {
+      abuf_appendf(&con->out, "Plugin %s is not active\n", para2);
+    }
+    else if (olsr_deactivate_plugin(plugin)) {
+      abuf_appendf(&con->out, "Could not deactivate plugin %s\n", para2);
+    }
+    else {
+      abuf_appendf(&con->out, "Plugin %s successfully deactivated\n", para2);
+    }
+  }
+  else if (strcasecmp(param, "unload") == 0) {
+    if (plugin->dlhandle == NULL) {
+      abuf_appendf(&con->out, "Plugin %s is static and cannot be unloaded\n", para2);
+    }
+    else if (olsr_unload_plugin(plugin)) {
+      abuf_appendf(&con->out, "Could not unload plugin %s\n", para2);
+    }
+    else {
+      abuf_appendf(&con->out, "Plugin %s successfully unloaded\n", para2);
+    }
+  }
+  else {
+    abuf_appendf(&con->out, "Unknown command '%s %s %s'.\n", cmd, param, para2);
+  }
   return CONTINUE;
 }

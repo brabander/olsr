@@ -48,16 +48,19 @@
 #ifndef _PLUGIN_H
 #define _PLUGIN_H
 
+struct olsrd_plugin_parameters;
+
+#include "plugin_loader.h"
 
 /* Define the most recent version */
-#define MOST_RECENT_PLUGIN_INTERFACE_VERSION		5
-#define LAST_SUPPORTED_PLUGIN_INTERFACE_VERSION		4
+#define MOST_RECENT_PLUGIN_INTERFACE_VERSION		6
+#define LAST_SUPPORTED_PLUGIN_INTERFACE_VERSION		5
 
 
 /****************************************************************************
  *                Functions that the plugin MUST provide                    *
  ****************************************************************************/
-#if 1
+#if OLSR_PLUGIN
 
 /* We hide them from the compiler here to allow the plugins itself to declare them
  * as they also implement them if we activate -Wredundant-decls.
@@ -89,6 +92,13 @@ int olsrd_plugin_register_param(char *key, char *value);
 
 /* Interface version 5 */
 
+/**
+ * Delivers the (address of the) table and the size of the parameter description
+ */
+void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size);
+
+#endif
+
 typedef union {
   unsigned int ui;
   char *pc;
@@ -103,12 +113,6 @@ struct olsrd_plugin_parameters {
   set_plugin_parameter_addon addon;
 };
 
-/**
- * Delivers the (address of the) table and the size of the parameter description
- */
-void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size);
-
-#endif
 
 #endif /* _PLUGIN_H */
 

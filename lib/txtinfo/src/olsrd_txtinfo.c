@@ -55,14 +55,12 @@
 #include "parser.h"
 #include "olsr_comport_txt.h"
 #include "common/autobuf.h"
+#include "plugin_loader.h"
+#include "plugin_util.h"
 
-#include "olsrd_txtinfo.h"
-
-#define PLUGIN_NAME    "OLSRD txtinfo plugin"
-#define PLUGIN_VERSION "0.2"
+#define PLUGIN_DESCR    "OLSRD txtinfo plugin"
 #define PLUGIN_AUTHOR   "Henning Rogge"
-#define MOD_DESC PLUGIN_NAME " " PLUGIN_VERSION " by " PLUGIN_AUTHOR
-#define PLUGIN_INTERFACE_VERSION 5
+
 
 struct debuginfo_cmd {
   const char *name;
@@ -70,8 +68,9 @@ struct debuginfo_cmd {
   struct olsr_txtcommand *normal, *csv;
 };
 
-static void txtinfo_new(void) __attribute__ ((constructor));
-static void txtinfo_delete(void) __attribute__ ((destructor));
+static int txtinfo_pre_init(void);
+int txtinfo_post_init(void);
+static int txtinfo_pre_cleanup(void);
 
 static enum olsr_txtcommand_result txtinfo_neigh(struct comport_connection *con, char *cmd, char *param);
 static enum olsr_txtcommand_result txtinfo_link(struct comport_connection *con,  char *cmd, char *param);
@@ -92,6 +91,8 @@ static const struct olsrd_plugin_parameters plugin_parameters[] = {
   {.name = IP_ACL_DEFAULTPOLICY_PARAM,.set_plugin_parameter = &ip_acl_add_plugin_defaultPolicy,.data = &allowed_nets}
 };
 
+DEFINE_PLUGIN6(PLUGIN_DESCR, PLUGIN_AUTHOR, txtinfo_pre_init, txtinfo_post_init, txtinfo_pre_cleanup, NULL, true, plugin_parameters)
+
 /* command callbacks and names */
 static struct debuginfo_cmd commands[] = {
     {"neigh", &txtinfo_neigh, NULL, NULL},
@@ -102,29 +103,12 @@ static struct debuginfo_cmd commands[] = {
     {"mid", &txtinfo_mid, NULL, NULL},
 };
 
-int
-olsrd_plugin_interface_version(void)
-{
-  return PLUGIN_INTERFACE_VERSION;
-}
-
-void
-olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size)
-{
-  *params = plugin_parameters;
-  *size = ARRAYSIZE(plugin_parameters);
-}
-
-
 /**
  * Constructor of plugin, called before parameters are initialized
  */
-static void
-txtinfo_new(void)
+static int
+txtinfo_pre_init(void)
 {
-  /* Print plugin info to stdout */
-  OLSR_INFO(LOG_PLUGINS, "%s\n", MOD_DESC);
-
   ip_acl_init(&allowed_nets);
 
   /* always allow localhost */
@@ -137,13 +121,14 @@ txtinfo_new(void)
     ip_acl_add(&allowed_nets, (const union olsr_ip_addr *)&in6addr_loopback, 128, false);
     ip_acl_add(&allowed_nets, (const union olsr_ip_addr *)&in6addr_v4mapped_loopback, 128, false);
   }
+  return 0;
 }
 
 /**
  * Destructor of plugin
  */
-static void
-txtinfo_delete(void)
+static int
+txtinfo_pre_cleanup(void)
 {
   size_t i;
 
@@ -152,13 +137,14 @@ txtinfo_delete(void)
     olsr_com_remove_csv_txtcommand(commands[i].csv);
   }
   ip_acl_flush(&allowed_nets);
+  return 0;
 }
 
 /*
  * Initialization of plugin AFTER parameters have been read
  */
 int
-olsrd_plugin_init(void)
+txtinfo_post_init(void)
 {
   size_t i;
 
@@ -168,7 +154,7 @@ olsrd_plugin_init(void)
     commands[i].normal->acl = &allowed_nets;
     commands[i].csv->acl = &allowed_nets;
   }
-  return 1;
+  return 0;
 }
 
 /**

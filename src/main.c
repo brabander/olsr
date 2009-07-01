@@ -194,15 +194,6 @@ main(int argc, char *argv[])
   }
 #endif
 
-  /* initialize logging */
-  olsr_log_init();
-
-  /* initialize cookie system */
-  olsr_cookie_init();
-
-  /* Initialize timers and scheduler part */
-  olsr_init_timers();
-
   /* Set avl tree comparator */
   if (olsr_cnf->ipsize == 4) {
     avl_comp_default = avl_comp_ipv4;
@@ -215,6 +206,24 @@ main(int argc, char *argv[])
     avl_comp_prefix_default = avl_comp_ipv6_prefix;
     avl_comp_prefix_origin_default = avl_comp_ipv6_prefix_origin;
   }
+
+  /* initialize logging */
+  olsr_log_init();
+
+  /* initialize cookie system */
+  olsr_cookie_init();
+
+  /* Initialize timers and scheduler part */
+  olsr_init_timers();
+
+  /* Initialisation of different tables to be used. */
+  olsr_init_tables();
+
+  /* initialize built in server services */
+  olsr_com_init();
+
+  /* Load plugins */
+  olsr_init_pluginsystem(true);
 
   /* Initialize net */
   init_net();
@@ -319,12 +328,6 @@ main(int argc, char *argv[])
   }
 #endif
 
-  /* Initialisation of different tables to be used. */
-  olsr_init_tables();
-
-  /* initialize built in server services */
-  olsr_com_init();
-
   /* daemon mode */
 #ifndef WIN32
   if (!olsr_cnf->no_fork) {
@@ -335,9 +338,6 @@ main(int argc, char *argv[])
     }
   }
 #endif
-
-  /* Load plugins */
-  olsr_load_plugins();
 
   /* activate LQ algorithm */
   init_lq_handler();
@@ -497,7 +497,7 @@ olsr_shutdown(void)
   deinit_lq_handler();
 
   /* Closing plug-ins */
-  olsr_close_plugins();
+  olsr_destroy_pluginsystem();
 
   /* Remove active interfaces */
   for (iface = olsr_cnf->if_configs; iface != NULL; iface = iface->next) {

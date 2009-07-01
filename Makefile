@@ -63,7 +63,9 @@ $(EXENAME):	$(OBJS) src/builddata.o
 ifeq ($(LD_HAS_DYN), yes)
 		$(SHELL) olsrd-exports.sh $$(find src -name "*.h") > $(EXENAME).exports
 endif
-		$(CC) $(LDFLAGS) $(LDFLAGS_EXE) -o $@ $^ $(LIBS)
+# precompile plugins for static linking
+		set -e;for dir in $(STATIC_PLUGINS);do $(MAKECMD) -C lib/$$dir LIBDIR=$(LIBDIR);done
+		$(CC) $(LDFLAGS) $(LDFLAGS_EXE) -o $@ $^ $(STATIC_PLUGIN_OBJS) $(LIBS)
 
 CONFDIR = src/config
 include $(CONFDIR)/local.mk
