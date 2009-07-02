@@ -54,7 +54,7 @@
 
 #include "olsr_types.h"
 #include "olsr_cfg_data.h"
-#include "mantissa.h"
+#include "olsr_time.h"
 #include "common/list.h"
 #include "common/avl.h"
 

@@ -43,7 +43,7 @@
 #include "ipcalc.h"
 #include "defs.h"
 #include "process_package.h"
-#include "mantissa.h"
+#include "olsr_time.h"
 #include "duplicate_set.h"
 #include "mid_set.h"
 #include "olsr.h"

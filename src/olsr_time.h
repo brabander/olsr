@@ -39,25 +39,49 @@
  *
  */
 
-#ifndef _OLSR_CFG_LIB_H
-#define _OLSR_CFG_LIB_H
 
-#if defined __cplusplus
-extern "C" {
+#ifndef _OLSR_MANTISSA
+#define _OLSR_MANTISSA
+
+#include "defs.h"
+#include "olsr_types.h"
+
+/* Some defs for juggling with timers */
+#define MSEC_PER_SEC 1000
+#define USEC_PER_SEC 1000000
+#define NSEC_PER_USEC 1000
+#define USEC_PER_MSEC 1000
+
+/* olsr_reltime is a relative timestamp measured in microseconds */
+typedef uint32_t olsr_reltime;
+
+struct time_txt {
+  char buf[16];
+};
+
+/**
+ * Macro for converting a mantissa/exponent 8bit value back
+ * to an integer (measured in microseconds) as described in RFC3626:
+ *
+ * value = C*(1+a/16)*2^b [in seconds]
+ *
+ *  where a is the integer represented by the four highest bits of the
+ *  field and b the integer represented by the four lowest bits of the
+ *  field.
+ *
+ * me is the 8 bit mantissa/exponent value
+ *
+ */
+olsr_reltime EXPORT(me_to_reltime) (const uint8_t);
+
+uint8_t EXPORT(reltime_to_me) (const olsr_reltime);
+
+char *EXPORT(reltime_to_txt)(struct time_txt *buffer, olsr_reltime t);
+
+olsr_reltime EXPORT(txt_to_reltime)(char *txt);
+
+
 #endif
-
-  int cfgparser_olsrd_write_cnf(const struct olsr_config *cnf, const char *fname);
-
-#ifdef WIN32
-  void win32_stdio_hack(unsigned int);
-  void *win32_olsrd_malloc(size_t size);
-  void win32_olsrd_free(void *ptr);
-#endif
-
-#if defined __cplusplus
-}
-#endif
-#endif                                 /* _OLSR_CFG_LIB_H */
 
 /*
  * Local Variables:

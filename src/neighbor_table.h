@@ -44,7 +44,7 @@
 #define _OLSR_NEIGH_TBL
 
 #include "defs.h"
-#include "mantissa.h"
+#include "olsr_time.h"
 #include "olsr_types.h"
 #include "common/avl.h"
 

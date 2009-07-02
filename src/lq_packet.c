@@ -47,7 +47,7 @@
 #include "link_set.h"
 #include "neighbor_table.h"
 #include "mid_set.h"
-#include "mantissa.h"
+#include "olsr_time.h"
 #include "process_package.h"    // XXX - remove
 #include "olsr.h"
 #include "build_msg.h"

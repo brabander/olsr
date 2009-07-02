@@ -43,16 +43,19 @@
 #include "olsr_protocol.h"
 #include "ipcalc.h"
 #include "olsr_ip_prefix_list.h"
+#include "olsr_time.h"
 
 #include <errno.h>
 
 static INLINE void
-append_float(struct autobuf *abuf, const char *name, float val, float deflt, bool first)
+append_reltime(struct autobuf *abuf, const char *name, olsr_reltime val, olsr_reltime deflt, bool first)
 {
+  struct time_txt buf;
+
   if (val != deflt) {
-    abuf_appendf(abuf, "    %s\t%0.2f\n", name, val);
+    abuf_appendf(abuf, "    %s\t%s\n", name, reltime_to_txt(&buf, val));
   } else if (first) {
-    abuf_appendf(abuf, "    #%s\t%0.2f\n", name, val);
+    abuf_appendf(abuf, "    #%s\t%s\n", name, reltime_to_txt(&buf, val));
   }
 }
 
@@ -60,6 +63,7 @@ void
 olsr_write_cnf_buf(struct autobuf *abuf, struct olsr_config *cnf, bool write_more_comments)
 {
   char ipv6_buf[INET6_ADDRSTRLEN];     /* buffer for IPv6 inet_ntop */
+  struct time_txt tbuf;
   const char *s;
 
   abuf_appendf(abuf, "#\n" "# Generated config file for %s\n" "#\n\n", olsrd_version);
@@ -129,11 +133,13 @@ olsr_write_cnf_buf(struct autobuf *abuf, struct olsr_config *cnf, bool write_mor
 
   /* Pollrate */
   abuf_appendf(abuf, "# Polling rate in seconds(float).\n"
-               "# Auto uses default value 0.05 sec\n" "Pollrate\t%0.2f\n", conv_pollrate_to_secs(cnf->pollrate));
+               "# Auto uses default value 0.05 sec\n" "Pollrate\t%s\n",
+               reltime_to_txt(&tbuf, cnf->pollrate));
 
   /* NIC Changes Pollrate */
   abuf_appendf(abuf, "# Interval to poll network interfaces for configuration\n"
-               "# changes. Defaults to 2.5 seconds\n" "NicChgsPollInt\t%0.2f\n", cnf->nic_chgs_pollrate);
+               "# changes. Defaults to 2.5 seconds\n" "NicChgsPollInt\t%s\n",
+               reltime_to_txt(&tbuf, cnf->nic_chgs_pollrate));
 
   /* TC redundancy */
   abuf_appendf(abuf, "# TC redundancy\n"
@@ -153,7 +159,7 @@ olsr_write_cnf_buf(struct autobuf *abuf, struct olsr_config *cnf, bool write_mor
   abuf_appendf(abuf, "# Fish Eye algorithm\n"
                "# 0 = do not use fish eye\n" "# 1 = use fish eye\n" "LinkQualityFishEye\t%d\n\n", cnf->lq_fish);
 
-  abuf_appendf(abuf, "# NAT threshold\n" "NatThreshold\t%f\n\n", cnf->lq_nat_thresh);
+  abuf_appendf(abuf, "# NAT threshold\n" "NatThreshold\t%s\n\n", reltime_to_txt(&tbuf, cnf->lq_nat_thresh));
 
   abuf_appendf(abuf, "# Clear screen when printing debug output?\n" "ClearScreen\t%s\n\n", cnf->clear_screen ? "yes" : "no");
 
@@ -238,13 +244,13 @@ olsr_write_cnf_buf(struct autobuf *abuf, struct olsr_config *cnf, bool write_mor
         abuf_appendf(abuf, "    # Emission and validity intervals.\n"
                      "    # If not defined, RFC proposed values will\n" "    # in most cases be used.\n");
       }
-      append_float(abuf, "HelloInterval", in->cnf->hello_params.emission_interval, HELLO_INTERVAL, first);
-      append_float(abuf, "HelloValidityTime", in->cnf->hello_params.validity_time, NEIGHB_HOLD_TIME, first);
-      append_float(abuf, "TcInterval", in->cnf->tc_params.emission_interval, TC_INTERVAL, first);
-      append_float(abuf, "TcValidityTime", in->cnf->tc_params.validity_time, TOP_HOLD_TIME, first);
-      append_float(abuf, "MidValidityTime", in->cnf->mid_params.validity_time, MID_HOLD_TIME, first);
-      append_float(abuf, "HnaInterval", in->cnf->hna_params.emission_interval, HNA_INTERVAL, first);
-      append_float(abuf, "HnaValidityTime", in->cnf->hna_params.validity_time, HNA_HOLD_TIME, first);
+      append_reltime(abuf, "HelloInterval", in->cnf->hello_params.emission_interval, HELLO_INTERVAL, first);
+      append_reltime(abuf, "HelloValidityTime", in->cnf->hello_params.validity_time, NEIGHB_HOLD_TIME, first);
+      append_reltime(abuf, "TcInterval", in->cnf->tc_params.emission_interval, TC_INTERVAL, first);
+      append_reltime(abuf, "TcValidityTime", in->cnf->tc_params.validity_time, TOP_HOLD_TIME, first);
+      append_reltime(abuf, "MidValidityTime", in->cnf->mid_params.validity_time, MID_HOLD_TIME, first);
+      append_reltime(abuf, "HnaInterval", in->cnf->hna_params.emission_interval, HNA_INTERVAL, first);
+      append_reltime(abuf, "HnaValidityTime", in->cnf->hna_params.validity_time, HNA_HOLD_TIME, first);
       if (in->cnf->lq_mult == NULL) {
         if (first) {
           abuf_appendf(abuf, "    #LinkQualityMult\tdefault 1.0\n");

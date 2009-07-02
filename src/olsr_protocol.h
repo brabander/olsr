@@ -70,9 +70,9 @@
  *Emission Intervals
  */
 
-#define HELLO_INTERVAL        2
-#define REFRESH_INTERVAL      2
-#define TC_INTERVAL           5
+#define HELLO_INTERVAL        2000
+#define REFRESH_INTERVAL      2000
+#define TC_INTERVAL           5000
 #define MID_INTERVAL          TC_INTERVAL
 #define HNA_INTERVAL          TC_INTERVAL
 
@@ -89,7 +89,7 @@
 
 #define NEIGHB_HOLD_TIME      3 * REFRESH_INTERVAL
 #define TOP_HOLD_TIME         3 * TC_INTERVAL
-#define DUP_HOLD_TIME         30
+#define DUP_HOLD_TIME         30000
 #define MID_HOLD_TIME         3 * MID_INTERVAL
 #define HNA_HOLD_TIME         3 * HNA_INTERVAL
 

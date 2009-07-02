@@ -43,8 +43,8 @@
 #define _OLSRD_CFG_H
 
 /* Default values not declared in olsr_protocol.h */
-#define DEF_POLLRATE           0.05
-#define DEF_NICCHGPOLLRT       2.5
+#define DEF_POLLRATE           50
+#define DEF_NICCHGPOLLRT       2500
 #define DEF_WILL_AUTO          true
 #define DEF_ALLOW_NO_INTS      true
 #define DEF_TOS                16
@@ -55,8 +55,8 @@
 #define DEF_LQ_ALWAYS_SEND_TC  true
 #define DEF_LQ_FISH            0
 #define DEF_LQ_DIJK_LIMIT      255
-#define DEF_LQ_DIJK_INTER      0.0
-#define DEF_LQ_NAT_THRESH      1.0
+#define DEF_LQ_DIJK_INTER      0
+#define DEF_LQ_NAT_THRESH      1000
 #define DEF_LQ_AGING           0.1
 #define DEF_CLEAR_SCREEN       false
 #define DEF_HTTPPORT           8080
@@ -68,10 +68,10 @@
 
 #define MIN_INTERVAL        0.01
 
-#define MAX_POLLRATE        10.0
-#define MIN_POLLRATE        0.01
-#define MAX_NICCHGPOLLRT    100.0
-#define MIN_NICCHGPOLLRT    1.0
+#define MAX_POLLRATE        10000
+#define MIN_POLLRATE        10
+#define MAX_NICCHGPOLLRT    100000
+#define MIN_NICCHGPOLLRT    1000
 #define MAX_DEBUGLVL        3
 #define MIN_DEBUGLVL        -2
 #define MAX_TOS             16
@@ -113,8 +113,8 @@
 #include "olsr_cfg_data.h"
 
 struct olsr_msg_params {
-  float emission_interval;
-  float validity_time;
+  olsr_reltime emission_interval;
+  olsr_reltime validity_time;
 };
 
 struct olsr_lq_mult {
@@ -202,13 +202,13 @@ struct olsr_config {
   struct ip_acl ipc_nets;              /* List of allowed IPC peer IPs */
   struct olsr_if_config *if_configs;   /* List of devices to be used by olsrd */
 
-  uint32_t pollrate;                   /* Main loop poll rate, in microseconds */
-  float nic_chgs_pollrate;             /* Interface poll rate */
-  float lq_nat_thresh;                 /* Link quality NAT threshold, 1.0 == unused */
+  olsr_reltime pollrate;               /* Main loop poll rate, in milliseconds */
+  olsr_reltime nic_chgs_pollrate;      /* Interface poll rate */
+  uint32_t lq_nat_thresh;              /* Link quality NAT threshold, 1000 == unused */
   uint8_t tc_redundancy;               /* TC anncoument mode, 0=only MPR, 1=MPR+MPRS, 2=All sym neighs */
   uint8_t mpr_coverage;                /* How many additional MPRs should be selected */
   uint8_t lq_fish;                     /* 0==Fisheye off, 1=Fisheye on */
-  float lq_dinter;                     /* Dijkstra Calculation interval */
+  olsr_reltime lq_dinter;              /* Dijkstra Calculation interval */
   uint8_t lq_dlimit;                   /* Dijkstra Calculation limit */
   uint8_t willingness;                 /* Manual Configured Willingness value */
 
@@ -227,7 +227,7 @@ struct olsr_config {
    */
 
   union olsr_ip_addr router_id;        /* Main address of this node */
-  float will_int;                      /* Willingness update interval if willingness_auto */
+  olsr_reltime will_int;                      /* Willingness update interval if willingness_auto */
   int exit_value;                      /* Global return value for process termination */
 
   int ioctl_s;                         /* Socket used for ioctl calls */
@@ -260,20 +260,6 @@ struct olsr_if_options *olsr_get_default_if_options(void);
 struct olsr_config *olsr_get_default_cfg(void);
 int olsr_sanity_check_cfg(struct olsr_config *cfg);
 void olsr_free_cfg(struct olsr_config *cfg);
-
-/*
- * Check pollrate function
- */
-static inline float
-conv_pollrate_to_secs(uint32_t p)
-{
-  return p / (float)1000000.0;
-}
-static inline uint32_t
-conv_pollrate_to_microsecs(float p)
-{
-  return (uint32_t) (p * 1000000);
-}
 
 #endif /* _OLSRD_CFG_H */
 

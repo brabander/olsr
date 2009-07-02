@@ -44,7 +44,7 @@
 
 #include "defs.h"
 #include "olsr.h"
-#include "mantissa.h"
+#include "olsr_time.h"
 #include "common/avl.h"
 
 #define DUPLICATE_CLEANUP_INTERVAL 30000

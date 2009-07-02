@@ -45,7 +45,7 @@
 #include "olsr.h"
 #include "mid_set.h"
 #include "scheduler.h"
-#include "mantissa.h"
+#include "olsr_time.h"
 #include "olsr_cookie.h"
 #include "olsr_logging.h"
 

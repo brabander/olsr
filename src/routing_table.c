@@ -52,6 +52,7 @@
 #include "net_olsr.h"
 #include "olsr_logging.h"
 
+#include <limits.h>
 #include <assert.h>
 
 /* Cookies */
@@ -493,10 +494,22 @@ olsr_cmp_rtp(const struct rt_path *rtp1, const struct rt_path *rtp2, const struc
 {
   olsr_linkcost etx1 = rtp1->rtp_metric.cost;
   olsr_linkcost etx2 = rtp2->rtp_metric.cost;
-  if (inetgw == rtp1)
-    etx1 *= olsr_cnf->lq_nat_thresh;
-  if (inetgw == rtp2)
-    etx2 *= olsr_cnf->lq_nat_thresh;
+  if (inetgw == rtp1) {
+    if (etx1 < INT32_MAX/1000) {
+      etx1 = (etx1 * olsr_cnf->lq_nat_thresh) / 1000;
+    }
+    else {
+      etx1 = (etx1 / 1000) * olsr_cnf->lq_nat_thresh;
+    }
+  }
+  if (inetgw == rtp2) {
+    if (etx2 < INT32_MAX/1000) {
+      etx2 = (etx2 * olsr_cnf->lq_nat_thresh) / 1000;
+    }
+    else {
+      etx2 = (etx2 / 1000) * olsr_cnf->lq_nat_thresh;
+    }
+  }
 
   /* etx comes first */
   if (etx1 < etx2) {

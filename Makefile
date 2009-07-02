@@ -67,9 +67,6 @@ endif
 		set -e;for dir in $(STATIC_PLUGINS);do $(MAKECMD) -C lib/$$dir LIBDIR=$(LIBDIR);done
 		$(CC) $(LDFLAGS) $(LDFLAGS_EXE) -o $@ $^ $(STATIC_PLUGIN_OBJS) $(LIBS)
 
-CONFDIR = src/config
-include $(CONFDIR)/local.mk
-
 show-ignored-warnings:
 	CC="$(CC)" $(TOPDIR)/gcc-warnings $(ALL_WARNINGS) > /dev/null
 
@@ -186,9 +183,9 @@ $(foreach subdir,$(SUBDIRS), $(subdir)_install):
 txtinfoshell:
 	$(MAKECMD) -C contrib/txtinfoshell
 
-build_all:	all libs txtinfoshell config-verify
-install_all:	install install_libs config-verify_install
-clean_all:	clean clean_libs config-verify_clean
+build_all:	all libs txtinfoshell
+install_all:	install install_libs
+clean_all:	clean clean_libs
 
 uberclean: clean_all
 	-rm -f $(TAGFILE)

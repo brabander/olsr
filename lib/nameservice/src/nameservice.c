@@ -60,7 +60,7 @@
 #include "ipcalc.h"
 #include "net_olsr.h"
 #include "routing_table.h"
-#include "mantissa.h"
+#include "olsr_time.h"
 #include "scheduler.h"
 #include "parser.h"
 #include "duplicate_set.h"

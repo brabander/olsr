@@ -293,9 +293,11 @@ main(int argc, char *argv[])
       olsr_cnf->willingness_auto = 0;
       olsr_cnf->willingness = WILL_DEFAULT;
     } else {
+      struct time_txt tbuf;
       olsr_cnf->willingness = olsr_calculate_willingness();
 
-      OLSR_INFO(LOG_MAIN, "Willingness set to %d - next update in %.1f secs\n", olsr_cnf->willingness, olsr_cnf->will_int);
+      OLSR_INFO(LOG_MAIN, "Willingness set to %d - next update in %s secs\n",
+          olsr_cnf->willingness, reltime_to_txt(&tbuf, olsr_cnf->will_int));
     }
   }
 

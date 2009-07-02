@@ -43,7 +43,7 @@
 #define _OLSR_LQ_PACKET_H
 
 #include "olsr_types.h"
-#include "mantissa.h"
+#include "olsr_time.h"
 #include "ipcalc.h"
 
 #define LQ_HELLO_MESSAGE      201

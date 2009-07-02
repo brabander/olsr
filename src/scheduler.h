@@ -43,6 +43,7 @@
 #ifndef _OLSR_SCHEDULER
 #define _OLSR_SCHEDULER
 
+#include "olsr_time.h"
 #include "common/list.h"
 
 #include "olsr_types.h"
@@ -51,12 +52,6 @@
 
 #define TIMER_WHEEL_SLOTS 1024
 #define TIMER_WHEEL_MASK (TIMER_WHEEL_SLOTS - 1)
-
-/* Some defs for juggling with timers */
-#define MSEC_PER_SEC 1000
-#define USEC_PER_SEC 1000000
-#define NSEC_PER_USEC 1000
-#define USEC_PER_MSEC 1000
 
 typedef void (*timer_cb_func) (void *); /* callback function */
 

@@ -49,7 +49,7 @@
 #include "ifnet.h"
 #include "generate_msg.h"
 #include "scheduler.h"
-#include "mantissa.h"
+#include "olsr_time.h"
 #include "lq_packet.h"
 #include "net_olsr.h"
 #include "common/string.h"
@@ -738,23 +738,23 @@ chk_if_up(struct olsr_if_config *IntConf)
    * Register functions for periodic message generation
    */
   New->hello_gen_timer =
-    olsr_start_timer(IntConf->cnf->hello_params.emission_interval * MSEC_PER_SEC,
+    olsr_start_timer(IntConf->cnf->hello_params.emission_interval,
                      HELLO_JITTER, OLSR_TIMER_PERIODIC, &olsr_output_lq_hello, New, hello_gen_timer_cookie->ci_id);
   New->tc_gen_timer =
-    olsr_start_timer(IntConf->cnf->tc_params.emission_interval * MSEC_PER_SEC,
+    olsr_start_timer(IntConf->cnf->tc_params.emission_interval,
                      TC_JITTER, OLSR_TIMER_PERIODIC, &olsr_output_lq_tc, New, tc_gen_timer_cookie->ci_id);
   New->mid_gen_timer =
-    olsr_start_timer(IntConf->cnf->mid_params.emission_interval * MSEC_PER_SEC,
+    olsr_start_timer(IntConf->cnf->mid_params.emission_interval,
                      MID_JITTER, OLSR_TIMER_PERIODIC, &generate_mid, New, mid_gen_timer_cookie->ci_id);
   New->hna_gen_timer =
-    olsr_start_timer(IntConf->cnf->hna_params.emission_interval * MSEC_PER_SEC,
+    olsr_start_timer(IntConf->cnf->hna_params.emission_interval,
                      HNA_JITTER, OLSR_TIMER_PERIODIC, &generate_hna, New, hna_gen_timer_cookie->ci_id);
 
-  New->hello_etime = (olsr_reltime) (IntConf->cnf->hello_params.emission_interval * MSEC_PER_SEC);
-  New->valtimes.hello = reltime_to_me(IntConf->cnf->hello_params.validity_time * MSEC_PER_SEC);
-  New->valtimes.tc = reltime_to_me(IntConf->cnf->tc_params.validity_time * MSEC_PER_SEC);
-  New->valtimes.mid = reltime_to_me(IntConf->cnf->mid_params.validity_time * MSEC_PER_SEC);
-  New->valtimes.hna = reltime_to_me(IntConf->cnf->hna_params.validity_time * MSEC_PER_SEC);
+  New->hello_etime = (olsr_reltime) (IntConf->cnf->hello_params.emission_interval);
+  New->valtimes.hello = reltime_to_me(IntConf->cnf->hello_params.validity_time);
+  New->valtimes.tc = reltime_to_me(IntConf->cnf->tc_params.validity_time);
+  New->valtimes.mid = reltime_to_me(IntConf->cnf->mid_params.validity_time);
+  New->valtimes.hna = reltime_to_me(IntConf->cnf->hna_params.validity_time);
 
   New->mode = IntConf->cnf->mode;
 

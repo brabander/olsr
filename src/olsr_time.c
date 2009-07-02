@@ -39,8 +39,12 @@
  *
  */
 
-#include "mantissa.h"
 #include <assert.h>
+#include <limits.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "olsr_time.h"
 
 /**
  *Function that converts a double to a mantissa/exponent
@@ -137,6 +141,34 @@ me_to_reltime(const uint8_t me)
   }
   assert(me == reltime_to_me(((16 + a) * 1000) >> (8 - b)));
   return ((16 + a) * 1000) >> (8 - b);
+}
+
+char *
+reltime_to_txt(struct time_txt *buffer, olsr_reltime t) {
+  sprintf(buffer->buf, "%u.%03u", t/1000, t%1000);
+  return buffer->buf;
+}
+
+uint32_t
+txt_to_reltime(char *txt) {
+  uint32_t t1 = 0,t2 = 0;
+  char *fraction;
+
+  fraction = strchr(txt, '.');
+  if (fraction != NULL) {
+    *fraction++ = 0;
+
+    if (strlen(fraction) > 3) {
+      fraction[3] = 0;
+    }
+
+    t2 = strtoul(fraction, NULL, 10);
+  }
+  t1 = strtoul(txt, NULL, 10);
+  if (t1 > UINT32_MAX / MSEC_PER_SEC) {
+    t1 = UINT32_MAX / MSEC_PER_SEC;
+  }
+  return t1*MSEC_PER_SEC + t2;
 }
 
 /*

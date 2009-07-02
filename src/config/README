@@ -1,9 +1,0 @@
-The config-verify program has the following purpose:
-
-* Verify, that a stand-alone parser compiles
-* The program can be used for config-laundering
-* Compiles a DLL for loading with Win32-GUI (Switch)
-
-Please note, that you should not execute the compiled
-program as part of the makefiles, because this compilcates
-adaptions for cross-compiling very much.

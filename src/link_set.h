@@ -49,7 +49,7 @@
 #include "lq_packet.h"
 #include "lq_plugin.h"
 #include "common/list.h"
-#include "mantissa.h"
+#include "olsr_time.h"
 
 #define MID_ALIAS_HACK_VTIME  10.0
 

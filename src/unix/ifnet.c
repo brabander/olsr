@@ -54,7 +54,7 @@
 #include "parser.h"
 #include "scheduler.h"
 #include "generate_msg.h"
-#include "mantissa.h"
+#include "olsr_time.h"
 #include "lq_packet.h"
 #include "log.h"
 #include "link_set.h"
@@ -590,23 +590,23 @@ chk_if_up(struct olsr_if_config *iface)
    * Register functions for periodic message generation
    */
   ifp->hello_gen_timer =
-    olsr_start_timer(iface->cnf->hello_params.emission_interval * MSEC_PER_SEC,
+    olsr_start_timer(iface->cnf->hello_params.emission_interval,
                      HELLO_JITTER, OLSR_TIMER_PERIODIC, &olsr_output_lq_hello, ifp, hello_gen_timer_cookie);
   ifp->tc_gen_timer =
-    olsr_start_timer(iface->cnf->tc_params.emission_interval * MSEC_PER_SEC,
+    olsr_start_timer(iface->cnf->tc_params.emission_interval,
                      TC_JITTER, OLSR_TIMER_PERIODIC, &olsr_output_lq_tc, ifp, tc_gen_timer_cookie);
   ifp->mid_gen_timer =
-    olsr_start_timer(iface->cnf->mid_params.emission_interval * MSEC_PER_SEC,
+    olsr_start_timer(iface->cnf->mid_params.emission_interval,
                      MID_JITTER, OLSR_TIMER_PERIODIC, &generate_mid, ifp, mid_gen_timer_cookie);
   ifp->hna_gen_timer =
-    olsr_start_timer(iface->cnf->hna_params.emission_interval * MSEC_PER_SEC,
+    olsr_start_timer(iface->cnf->hna_params.emission_interval,
                      HNA_JITTER, OLSR_TIMER_PERIODIC, &generate_hna, ifp, hna_gen_timer_cookie);
 
-  ifp->hello_etime = (olsr_reltime) (iface->cnf->hello_params.emission_interval * MSEC_PER_SEC);
-  ifp->valtimes.hello = reltime_to_me(iface->cnf->hello_params.validity_time * MSEC_PER_SEC);
-  ifp->valtimes.tc = reltime_to_me(iface->cnf->tc_params.validity_time * MSEC_PER_SEC);
-  ifp->valtimes.mid = reltime_to_me(iface->cnf->mid_params.validity_time * MSEC_PER_SEC);
-  ifp->valtimes.hna = reltime_to_me(iface->cnf->hna_params.validity_time * MSEC_PER_SEC);
+  ifp->hello_etime = iface->cnf->hello_params.emission_interval;
+  ifp->valtimes.hello = reltime_to_me(iface->cnf->hello_params.validity_time);
+  ifp->valtimes.tc = reltime_to_me(iface->cnf->tc_params.validity_time);
+  ifp->valtimes.mid = reltime_to_me(iface->cnf->mid_params.validity_time);
+  ifp->valtimes.hna = reltime_to_me(iface->cnf->hna_params.validity_time);
 
   ifp->mode = iface->cnf->mode;
 

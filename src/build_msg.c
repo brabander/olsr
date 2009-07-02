@@ -43,7 +43,7 @@
 #include "ipcalc.h"
 #include "olsr.h"
 #include "log.h"
-#include "mantissa.h"
+#include "olsr_time.h"
 #include "net_olsr.h"
 #include "olsr_ip_prefix_list.h"
 
