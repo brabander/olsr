@@ -19,7 +19,7 @@ REMOVE_LOG_ERROR ?= 0
 MUDFLAP ?= 0
 
 # enable static linking of plugins (list of plugin directory names) 
-STATIC_PLUGINS ?=
+STATIC_PLUGINS ?= lq_etx_ff
 
 ######################
 #

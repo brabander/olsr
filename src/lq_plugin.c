@@ -50,8 +50,6 @@
 #include "common/string.h"
 #include "olsr_logging.h"
 
-#include "lq_plugin_etx_ff.h"
-
 struct lq_handler *active_lq_handler = NULL;
 
 static struct olsr_cookie_info *tc_mpr_addr_mem_cookie = NULL;
@@ -63,8 +61,8 @@ void
 init_lq_handler(void)
 {
   if (NULL == active_lq_handler) {
-    /* No LQ plugin loaded, use build in default */
-    active_lq_handler = &lq_etxff_handler;
+    OLSR_ERROR(LOG_LQ_PLUGINS, "You removed the static linked LQ plugin and don't provide another one.\n");
+    olsr_exit(1);
   }
 
   OLSR_INFO(LOG_LQ_PLUGINS, "Initializing LQ handler %s...\n", active_lq_handler->name);
