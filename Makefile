@@ -174,69 +174,14 @@ endif
 libs_install install_libs:
 		set -e;for dir in $(SUBDIRS);do $(MAKECMD) -C lib/$$dir LIBDIR=$(LIBDIR) install;done
 
-httpinfo:
-		$(MAKECMD) -C lib/httpinfo clean
-		$(MAKECMD) -C lib/httpinfo
-		$(MAKECMD) -C lib/httpinfo DESTDIR=$(DESTDIR) install
-
-dot_draw:
-		$(MAKECMD) -C lib/dot_draw clean
-		$(MAKECMD) -C lib/dot_draw
-		$(MAKECMD) -C lib/dot_draw DESTDIR=$(DESTDIR) install
-
-nameservice:
-		$(MAKECMD) -C lib/nameservice clean
-		$(MAKECMD) -C lib/nameservice
-		$(MAKECMD) -C lib/nameservice DESTDIR=$(DESTDIR) install
-
-dyn_gw:
-		$(MAKECMD) -C lib/dyn_gw clean
-		$(MAKECMD) -C lib/dyn_gw
-		$(MAKECMD) -C lib/dyn_gw DESTDIR=$(DESTDIR) install
-
-dyn_gw_plain:
-		$(MAKECMD) -C lib/dyn_gw_plain clean
-		$(MAKECMD) -C lib/dyn_gw_plain
-		$(MAKECMD) -C lib/dyn_gw_plain DESTDIR=$(DESTDIR) install
-
-secure:
-		$(MAKECMD) -C lib/secure clean
-		$(MAKECMD) -C lib/secure
-		$(MAKECMD) -C lib/secure DESTDIR=$(DESTDIR) install
-
-bmf:
-		$(MAKECMD) -C lib/bmf clean
-		$(MAKECMD) -C lib/bmf
-		$(MAKECMD) -C lib/bmf DESTDIR=$(DESTDIR) install
-
-mdns:
-		$(MAKECMD) -C lib/mdns clean
-		$(MAKECMD) -C lib/mdns
-		$(MAKECMD) -C lib/mdns DESTDIR=$(DESTDIR) install
-quagga:
-		$(MAKECMD) -C lib/quagga clean
-		$(MAKECMD) -C lib/quagga
-		$(MAKECMD) -C lib/quagga DESTDIR=$(DESTDIR) install
-
-txtinfo:
-		$(MAKECMD) -C lib/txtinfo clean
-		$(MAKECMD) -C lib/txtinfo
-		$(MAKECMD) -C lib/txtinfo DESTDIR=$(DESTDIR) install
-
-arprefresh:
-		$(MAKECMD) -C lib/arprefresh clean
-		$(MAKECMD) -C lib/arprefresh
-		$(MAKECMD) -C lib/arprefresh DESTDIR=$(DESTDIR) install
-
-watchdog:
-		$(MAKECMD) -C lib/watchdog clean
-		$(MAKECMD) -C lib/watchdog
-		$(MAKECMD) -C lib/watchdog DESTDIR=$(DESTDIR) install
-
-debuginfo:
-		$(MAKECMD) -C lib/debuginfo clean
-		$(MAKECMD) -C lib/debuginfo
-		$(MAKECMD) -C lib/debuginfo DESTDIR=$(DESTDIR) install
+# targets for making a plugin
+$(SUBDIRS):
+		$(MAKECMD) -C lib/$@ clean
+		$(MAKECMD) -C lib/$@
+		
+# targets for installing a plugin (<plugindir>_install)
+$(foreach subdir,$(SUBDIRS), $(subdir)_install):
+		$(MAKECMD) -C lib/$(subst _install,,$@) DESTDIR=$(DESTDIR) install
 
 txtinfoshell:
 	$(MAKECMD) -C contrib/txtinfoshell
