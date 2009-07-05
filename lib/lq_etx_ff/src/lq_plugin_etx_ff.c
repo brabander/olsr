@@ -53,6 +53,8 @@
 
 #define LQ_PLUGIN_RELEVANT_COSTCHANGE_FF 16
 
+static int lq_etxff_post_init(void);
+
 static void lq_etxff_initialize(void);
 static void lq_etxff_deinitialize(void);
 
@@ -82,6 +84,8 @@ static char *lq_etxff_print_tc_edge_entry_lq(struct tc_edge_entry *ptr, char sep
 static char *lq_etxff_print_cost(olsr_linkcost cost, struct lqtextbuffer *buffer);
 
 static struct olsr_cookie_info *default_lq_ff_timer_cookie = NULL;
+
+DEFINE_PLUGIN6_NP(PLUGIN_DESCR, PLUGIN_AUTHOR, NULL, lq_etxff_post_init, NULL, NULL, true)
 
 /* etx lq plugin (freifunk fpm version) settings */
 struct lq_handler lq_etxff_handler = {
@@ -126,6 +130,11 @@ struct lq_handler lq_etxff_handler = {
   LQ_HELLO_MESSAGE,
   LQ_TC_MESSAGE
 };
+
+static int lq_etxff_post_init(void) {
+  active_lq_handler = &lq_etxff_handler;
+  return 0;
+}
 
 static void
 lq_etxff_packet_parser(struct olsr *olsr, struct interface *in_if, union olsr_ip_addr *from_addr)

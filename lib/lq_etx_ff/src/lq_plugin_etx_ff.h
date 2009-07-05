@@ -48,6 +48,9 @@
 #include "lq_packet.h"
 #include "lq_plugin.h"
 
+#define PLUGIN_DESCR "Freifunk ETX metric based on the original design of Elektra and Thomas Lopatic"
+#define PLUGIN_AUTHOR "Henning Rogge"
+
 #define LQ_ALGORITHM_ETX_FF_NAME "etx_ff"
 
 /* 16,32,64 and max. 128 */

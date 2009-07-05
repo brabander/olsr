@@ -59,6 +59,17 @@ static void hookup_plugin_definition (void) { \
   olsr_hookup_plugin(&olsr_internal_plugin_definition); \
 }
 
+#define DEFINE_PLUGIN6_NP(descr, author, pre_init, post_init, pre_cleanup, post_cleanup, deactivate) \
+static struct olsr_plugin olsr_internal_plugin_definition = { \
+  .p_name = (char*) PLUGIN_FULLNAME , .p_descr = (char*)descr, .p_author = (char*)author, \
+  .p_pre_init = pre_init, .p_post_init = post_init, .p_pre_cleanup = pre_cleanup, .p_post_cleanup = post_cleanup, \
+  .p_deactivate = deactivate, .p_version = 6, .p_param = NULL, .p_param_cnt = 0 \
+}; \
+static void hookup_plugin_definition (void) __attribute__ ((constructor)); \
+static void hookup_plugin_definition (void) { \
+  olsr_hookup_plugin(&olsr_internal_plugin_definition); \
+}
+
 /* version 5 */
 typedef int (*plugin_init_func) (void);
 typedef int (*get_interface_version_func) (void);
