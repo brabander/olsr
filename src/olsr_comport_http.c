@@ -50,8 +50,8 @@
 
 #define HTTP_VERSION "HTTP/1.1"
 
-static struct avl_tree http_handler_tree;
 static struct olsr_cookie_info *htmlsite_cookie;
+struct avl_tree http_handler_tree;
 
 /**Response types */
 static char http_200_response[] = "OK";
@@ -83,6 +83,13 @@ olsr_com_init_http(void) {
   olsr_cookie_set_memory_size(htmlsite_cookie, sizeof(struct olsr_html_site));
 
   init_test();
+}
+
+void olsr_com_destroy_http(void) {
+  struct olsr_html_site *site;
+  OLSR_FOR_ALL_HTML_ENTRIES(site) {
+    olsr_com_remove_htmlsite(site);
+  } OLSR_FOR_ALL_HTML_ENTRIES_END(site)
 }
 
 struct olsr_html_site *

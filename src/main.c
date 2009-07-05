@@ -492,6 +492,9 @@ olsr_shutdown(void)
 
   OLSR_INFO(LOG_MAIN, "Closing sockets...\n");
 
+  /* kill http/telnet server */
+  olsr_com_destroy();
+
   /* Flush duplicate set */
   olsr_flush_duplicate_entries();
 

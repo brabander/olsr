@@ -43,6 +43,7 @@
 
 #include "defs.h"
 #include "common/autobuf.h"
+#include "common/list.h"
 
 enum http_header_type {
   PLAIN,
@@ -92,6 +93,7 @@ struct comport_connection {
   /*
    * internal part of the server
    */
+  struct list_node node;
   int fd;
   enum connection_state state;
   enum http_header_type send_as;
@@ -100,7 +102,11 @@ struct comport_connection {
   struct autobuf in;
 };
 
+LISTNODE2STRUCT(comport_node2con, struct comport_connection, node);
+
 void olsr_com_init(void);
+void olsr_com_destroy(void);
+
 void EXPORT(olsr_com_activate_output) (struct comport_connection *con);
 
 #endif /* OLSR_COMPORT_H_ */

@@ -118,7 +118,8 @@ static olsr_txthandler txt_internal_handlers[] = {
   olsr_txtcmd_plugin
 };
 
-void olsr_com_init_txt(void) {
+void
+olsr_com_init_txt(void) {
   size_t i;
 
   avl_init(&txt_normal_tree, &avl_comp_strcasecmp);
@@ -137,6 +138,24 @@ void olsr_com_init_txt(void) {
   }
 }
 
+void
+olsr_com_destroy_txt(void) {
+  struct olsr_txtcommand *cmd;
+  struct avl_node *node;
+
+  while ((node = avl_walk_first(&txt_normal_tree)) != NULL) {
+    cmd = txt_tree2cmd(node);
+    olsr_com_remove_normal_txtcommand(cmd);
+  }
+  while ((node = avl_walk_first(&txt_csv_tree)) != NULL) {
+    cmd = txt_tree2cmd(node);
+    olsr_com_remove_csv_txtcommand(cmd);
+  }
+  while ((node = avl_walk_first(&txt_help_tree)) != NULL) {
+    cmd = txt_tree2cmd(node);
+    olsr_com_remove_help_txtcommand(cmd);
+  }
+}
 struct olsr_txtcommand *
 olsr_com_add_normal_txtcommand (const char *command, olsr_txthandler handler) {
   struct olsr_txtcommand *txt;

@@ -56,6 +56,7 @@
 #include "olsr_cookie.h"
 #include "common/autobuf.h"
 #include "common/avl.h"
+#include "common/list.h"
 #include "ipcalc.h"
 #include "olsr.h"
 #include "olsr_comport_http.h"
@@ -67,6 +68,8 @@
 
 #define MAX_HTTP_PARA 10
 #define COMPORT_MAX_INPUTBUFFER 65536
+
+struct list_node olsr_comport_head;
 
 /* server socket */
 static int comsocket_http = 0;
@@ -120,8 +123,22 @@ void olsr_com_init(void) {
   connection_http_count = 0;
   connection_txt_count = 0;
 
+  list_head_init(&olsr_comport_head);
+
   olsr_com_init_http();
   olsr_com_init_txt();
+}
+
+void olsr_com_destroy(void) {
+  while (!list_is_empty(&olsr_comport_head)) {
+    struct comport_connection *con;
+
+    con = comport_node2con(olsr_comport_head.next);
+    olsr_com_cleanup_session(con);
+  }
+
+  olsr_com_destroy_http();
+  olsr_com_destroy_txt();
 }
 
 void olsr_com_activate_output(struct comport_connection *con) {
@@ -253,6 +270,8 @@ static void olsr_com_parse_request(int fd, void *data __attribute__ ((unused)), 
 
   add_olsr_socket(sock, &olsr_com_parse_connection, NULL, con, SP_PR_READ
       | SP_PR_WRITE);
+
+  list_add_after(&olsr_comport_head, &con->node);
 }
 
 static void olsr_com_cleanup_session(struct comport_connection *con) {
@@ -261,6 +280,8 @@ static void olsr_com_cleanup_session(struct comport_connection *con) {
   } else {
     connection_txt_count--;
   }
+
+  list_remove(&con->node);
 
   if (con->stop_handler) {
     con->stop_handler(con);
