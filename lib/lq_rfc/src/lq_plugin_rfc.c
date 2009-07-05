@@ -44,12 +44,21 @@
 #include "olsr_spf.h"
 #include "lq_packet.h"
 #include "olsr.h"
+#include "plugin_util.h"
+#include "olsr_logging.h"
 #include "lq_plugin_rfc.h"
+
+#define PLUGIN_DESCR      "RFC 3626 based hopcount metric. Does not work well, use ETX !"
+#define PLUGIN_AUTHOR     "Henning Rogge"
+
+#define DEF_USE_HYST            false
+#define HYST_THRESHOLD_HIGH     0.8
+#define HYST_THRESHOLD_LOW      0.3
+#define HYST_SCALING            0.5
 
 #define LQ_PLUGIN_LC_MULTIPLIER 1024
 
-static void lq_rfc_initialize(void);
-static void lq_rfc_deinitialize(void);
+static int set_plugin_float(const char *, void *, set_plugin_parameter_addon);
 
 static olsr_linkcost lq_rfc_calc_link_entry_cost(struct link_entry *);
 static olsr_linkcost lq_rfc_calc_lq_hello_neighbor_cost(struct lq_hello_neighbor *);
@@ -74,12 +83,12 @@ static char *lq_rfc_print_link_entry_lq(struct link_entry *entry, char separator
 static char *lq_rfc_print_tc_edge_entry_lq(struct tc_edge_entry *ptr, char separator, struct lqtextbuffer *buffer);
 static char *lq_rfc_print_cost(olsr_linkcost cost, struct lqtextbuffer *buffer);
 
-/* etx lq plugin (freifunk fpm version) settings */
+/* RFC "lq" handler (hopcount metric with hysteresis) */
 struct lq_handler lq_rfc_handler = {
   "rfc",
 
-  &lq_rfc_initialize,
-  &lq_rfc_deinitialize,
+  NULL,
+  NULL,
 
   &lq_rfc_calc_link_entry_cost,
   &lq_rfc_calc_lq_hello_neighbor_cost,
@@ -118,14 +127,30 @@ struct lq_handler lq_rfc_handler = {
   TC_MESSAGE
 };
 
-static void
-lq_rfc_initialize(void)
-{
-}
+static bool use_hysteresis = DEF_USE_HYST;
+static float scaling = HYST_SCALING;
+static float thr_high = HYST_THRESHOLD_HIGH;
+static float thr_low = HYST_THRESHOLD_LOW;
 
-static void
-lq_rfc_deinitialize(void)
+static const struct olsrd_plugin_parameters plugin_parameters[] = {
+  {.name = "UseHysteresis",.set_plugin_parameter = &set_plugin_boolean,.data = &use_hysteresis},
+  {.name = "HystScaling",.set_plugin_parameter = &set_plugin_float,.data = &scaling},
+  {.name = "HystThrHigh",.set_plugin_parameter = &set_plugin_float,.data = &thr_high},
+  {.name = "HystThrLow",.set_plugin_parameter = &set_plugin_float,.data = &thr_low},
+};
+
+DEFINE_PLUGIN6(PLUGIN_DESCR, PLUGIN_AUTHOR, NULL, NULL, NULL, NULL, false, plugin_parameters)
+
+static int
+set_plugin_float(const char *value, void *data, set_plugin_parameter_addon addon __attribute__ ((unused)))
 {
+  if (data != NULL) {
+    sscanf(value, "%f", (float *)data);
+    OLSR_INFO(LOG_LQ_PLUGINS, "%s float %f\n", "Got", *(float *)data);
+  } else {
+    OLSR_INFO(LOG_LQ_PLUGINS, "%s float %s\n", "Ignored", value);
+  }
+  return 0;
 }
 
 static olsr_linkcost

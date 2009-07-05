@@ -47,21 +47,6 @@
 
 #define LQ_ALGORITHM_RFC_NAME "rfc"
 
-extern struct lq_handler lq_rfc_handler;
-
-/*
- * Link Hysteresis Constants
- */
-
-#define HYST_THRESHOLD_HIGH   0.8
-#define HYST_THRESHOLD_LOW    0.3
-#define HYST_SCALING          0.5
-
-extern bool use_hysteresis;            /* Plugin PlParam */
-extern float scaling;                  /* Plugin PlParam */
-extern float thr_high;                 /* Plugin PlParam */
-extern float thr_low;                  /* Plugin PlParam */
-
 struct lq_rfc_link_entry {
   struct link_entry core;
   float hysteresis;

@@ -50,7 +50,6 @@
 #define DEF_TOS                16
 #define DEF_DEBUGLVL           "0"
 #define DEF_IPC_CONNECTIONS    0
-#define DEF_USE_HYST           false
 #define DEF_FIB_METRIC         FIBM_FLAT
 #define DEF_LQ_ALWAYS_SEND_TC  true
 #define DEF_LQ_FISH            0
