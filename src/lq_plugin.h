@@ -100,6 +100,9 @@ struct lq_handler {
 
   uint8_t messageid_hello;
   uint8_t messageid_tc;
+
+  size_t serialized_lqhello_size;
+  size_t serialized_lqtc_size;
 };
 
 void init_lq_handler(void);
@@ -139,6 +142,9 @@ void olsr_free_tc_mpr_addr(struct tc_mpr_addr *);
 
 uint8_t olsr_get_Hello_MessageId(void);
 uint8_t olsr_get_TC_MessageId(void);
+
+size_t olsr_sizeof_HelloLQ(void);
+size_t olsr_sizeof_TCLQ(void);
 
 /* Externals. */
 extern struct lq_handler *EXPORT(active_lq_handler);

@@ -124,7 +124,9 @@ struct lq_handler lq_rfc_handler = {
   sizeof(struct lq_rfc_link_entry),
 
   HELLO_MESSAGE,
-  TC_MESSAGE
+  TC_MESSAGE,
+
+  0,0
 };
 
 static bool use_hysteresis = DEF_USE_HYST;

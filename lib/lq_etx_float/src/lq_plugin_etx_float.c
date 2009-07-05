@@ -123,7 +123,9 @@ struct lq_handler lq_etxfloat_handler = {
   sizeof(struct lq_etxfloat_link_entry),
 
   LQ_HELLO_MESSAGE,
-  LQ_TC_MESSAGE
+  LQ_TC_MESSAGE,
+
+  4,4
 };
 
 static float lq_aging = LQ_FLOAT_DEFAULT_AGING;

@@ -123,7 +123,9 @@ struct lq_handler lq_etxfpm_handler = {
   sizeof(struct lq_etxfpm_link_entry),
 
   LQ_HELLO_MESSAGE,
-  LQ_TC_MESSAGE
+  LQ_TC_MESSAGE,
+
+  4,4
 };
 
 static uint32_t aging_factor_new = LQ_FPM_DEFAULT_AGING;

@@ -498,6 +498,26 @@ olsr_get_TC_MessageId(void)
   return active_lq_handler->messageid_tc;
 }
 
+/**
+ * olsr_sizeof_HelloLQ
+ *
+ * @return number of bytes necessary to store HelloLQ data
+ */
+size_t
+olsr_sizeof_HelloLQ(void) {
+  return active_lq_handler->serialized_lqhello_size;
+}
+
+/**
+ * olsr_sizeof_TCLQ
+ *
+ * @return number of bytes necessary to store TCLQ data
+ */
+size_t
+olsr_sizeof_TCLQ(void) {
+  return active_lq_handler->serialized_lqtc_size;
+}
+
 /*
  * Local Variables:
  * c-basic-offset: 2

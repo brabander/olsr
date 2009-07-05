@@ -369,7 +369,7 @@ serialize_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
         is_first = true;
         for (neigh = lq_hello->neigh; neigh != NULL; neigh = neigh->next) {
           if (0 == i && 0 == j)
-            expected_size += olsr_cnf->ipsize + 4;
+            expected_size += olsr_cnf->ipsize + olsr_sizeof_TCLQ();
           if (neigh->neigh_type == i && neigh->link_type == LINK_ORDER[j]) {
             if (is_first) {
               expected_size += sizeof(struct lq_hello_info_header);
@@ -555,8 +555,7 @@ serialize_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
    */
   if (0 < net_output_pending(outif)) {
     for (neigh = lq_tc->neigh; neigh != NULL; neigh = neigh->next) {
-      // TODO sizeof_tc_lq function required
-      expected_size += olsr_cnf->ipsize + 4;
+      expected_size += olsr_cnf->ipsize + olsr_sizeof_TCLQ();
     }
   }
 

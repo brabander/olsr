@@ -135,7 +135,9 @@ struct lq_handler lq_etxff_handler = {
   sizeof(struct lq_etxff_link_entry),
 
   LQ_HELLO_MESSAGE,
-  LQ_TC_MESSAGE
+  LQ_TC_MESSAGE,
+
+  4,4
 };
 
 static int lq_etxff_post_init(void) {
