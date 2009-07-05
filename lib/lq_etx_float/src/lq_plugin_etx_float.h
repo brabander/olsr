@@ -72,11 +72,6 @@ struct lq_etxfloat_link_entry {
   struct lq_etxfloat_linkquality lq;
   uint16_t quickstart;
 };
-
-extern struct lq_handler lq_etxfloat_handler;
-
-extern float lq_aging;                 /* Plugin PlParam */
-
 #endif /*LQ_PLUGIN_ETX_FLOAT_H_ */
 
 /*

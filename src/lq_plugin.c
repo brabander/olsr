@@ -79,14 +79,18 @@ init_lq_handler(void)
   link_entry_mem_cookie = olsr_alloc_cookie("link_entry", OLSR_COOKIE_TYPE_MEMORY);
   olsr_cookie_set_memory_size(link_entry_mem_cookie, active_lq_handler->size_link_entry);
 
-  active_lq_handler->initialize();
+  if (active_lq_handler->initialize) {
+    active_lq_handler->initialize();
+  }
 }
 
 void
 deinit_lq_handler(void)
 {
   if (NULL != active_lq_handler) {
-    active_lq_handler->deinitialize();
+    if (active_lq_handler->deinitialize) {
+      active_lq_handler->deinitialize();
+    }
     active_lq_handler = NULL;
   }
 }

@@ -44,12 +44,16 @@
 #include "olsr_spf.h"
 #include "lq_packet.h"
 #include "olsr.h"
+#include "olsr_logging.h"
 #include "lq_plugin_etx_float.h"
+
+#define PLUGIN_DESCR    "Floating point based ETX metric with exponential aging"
+#define PLUGIN_AUTHOR   "Henning Rogge and others"
 
 #define LQ_PLUGIN_LC_MULTIPLIER 1024
 
-static void lq_etxfloat_initialize(void);
-static void lq_etxfloat_deinitialize(void);
+static int set_plugin_float(const char *, void *, set_plugin_parameter_addon);
+static int lq_etxfloat_post_init(void);
 
 static olsr_linkcost lq_etxfloat_calc_link_entry_cost(struct link_entry *);
 static olsr_linkcost lq_etxfloat_calc_lq_hello_neighbor_cost(struct lq_hello_neighbor *);
@@ -78,8 +82,8 @@ static char *lq_etxfloat_print_cost(olsr_linkcost cost, struct lqtextbuffer *buf
 struct lq_handler lq_etxfloat_handler = {
   "etx (float)",
 
-  &lq_etxfloat_initialize,
-  &lq_etxfloat_deinitialize,
+  NULL,
+  NULL,
 
   &lq_etxfloat_calc_link_entry_cost,
   &lq_etxfloat_calc_lq_hello_neighbor_cost,
@@ -118,14 +122,29 @@ struct lq_handler lq_etxfloat_handler = {
   LQ_TC_MESSAGE
 };
 
-static void
-lq_etxfloat_initialize(void)
+static float lq_aging = DEF_LQ_AGING;
+
+static const struct olsrd_plugin_parameters plugin_parameters[] = {
+  {.name = "LinkQualityAging",.set_plugin_parameter = &set_plugin_float,.data = &lq_aging},
+};
+
+DEFINE_PLUGIN6(PLUGIN_DESCR, PLUGIN_AUTHOR, NULL, lq_etxfloat_post_init, NULL, NULL, false, plugin_parameters)
+
+static int
+set_plugin_float(const char *value, void *data, set_plugin_parameter_addon addon __attribute__ ((unused)))
 {
+  if (data != NULL) {
+    sscanf(value, "%f", (float *)data);
+    OLSR_INFO(LOG_LQ_PLUGINS, "%s float %f\n", "Got", *(float *)data);
+  } else {
+    OLSR_INFO(LOG_LQ_PLUGINS, "%s float %s\n", "Ignored", value);
+  }
+  return 0;
 }
 
-static void
-lq_etxfloat_deinitialize(void)
-{
+static int lq_etxfloat_post_init(void) {
+  active_lq_handler = &lq_etxfloat_handler;
+  return 0;
 }
 
 static olsr_linkcost
