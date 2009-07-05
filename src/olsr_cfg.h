@@ -57,7 +57,6 @@
 #define DEF_LQ_DIJK_LIMIT      255
 #define DEF_LQ_DIJK_INTER      0
 #define DEF_LQ_NAT_THRESH      1000
-#define DEF_LQ_AGING           0.1
 #define DEF_CLEAR_SCREEN       false
 #define DEF_HTTPPORT           8080
 #define DEF_HTTPLIMIT          3

@@ -45,12 +45,19 @@
 #include "lq_packet.h"
 #include "olsr.h"
 #include "lq_plugin_etx_fpm.h"
+#include "olsr_logging.h"
+
+#define PLUGIN_DESCR    "Integer arithmetic based ETX metric with exponential aging"
+#define PLUGIN_AUTHOR   "Sven-Ola Tücke and Henning Rogge"
 
 #define LQ_FPM_INTERNAL_MULTIPLIER 65535
 #define LQ_FPM_LINKCOST_MULTIPLIER 65535
 
-static void lq_etxfpm_initialize(void);
-static void lq_etxfpm_deinitialize(void);
+#define LQ_FPM_DEFAULT_AGING       3276        /* 65536 * 0.05 */
+#define LQ_FPM_QUICKSTART_AGING    16384       /* 65536 * 0.25 */
+#define LQ_QUICKSTART_STEPS        12
+
+static int set_plugin_aging(const char *, void *, set_plugin_parameter_addon);
 
 static olsr_linkcost lq_etxfpm_calc_link_entry_cost(struct link_entry *);
 static olsr_linkcost lq_etxfpm_calc_lq_hello_neighbor_cost(struct lq_hello_neighbor *);
@@ -79,8 +86,8 @@ static char *lq_etxfpm_print_cost(olsr_linkcost cost, struct lqtextbuffer *buffe
 struct lq_handler lq_etxfpm_handler = {
   "etx (fpm)",
 
-  &lq_etxfpm_initialize,
-  &lq_etxfpm_deinitialize,
+  NULL,
+  NULL,
 
   &lq_etxfpm_calc_link_entry_cost,
   &lq_etxfpm_calc_lq_hello_neighbor_cost,
@@ -119,22 +126,43 @@ struct lq_handler lq_etxfpm_handler = {
   LQ_TC_MESSAGE
 };
 
-static uint32_t aging_factor_new, aging_factor_old;
-static uint32_t aging_quickstart_new, aging_quickstart_old;
+static uint32_t aging_factor_new = LQ_FPM_DEFAULT_AGING;
+static uint32_t aging_factor_old = LQ_FPM_INTERNAL_MULTIPLIER - LQ_FPM_DEFAULT_AGING;
+static uint32_t aging_quickstart_new = LQ_FPM_QUICKSTART_AGING;
+static uint32_t aging_quickstart_old = LQ_FPM_INTERNAL_MULTIPLIER - LQ_FPM_QUICKSTART_AGING;
 
-static void
-lq_etxfpm_initialize(void)
+static const struct olsrd_plugin_parameters plugin_parameters[] = {
+  {.name = "LinkQualityAging",.set_plugin_parameter = &set_plugin_aging,.data = NULL}
+};
+
+DEFINE_PLUGIN6(PLUGIN_DESCR, PLUGIN_AUTHOR, NULL, NULL, NULL, NULL, false, plugin_parameters)
+
+static int
+set_plugin_aging(const char *value, void *data  __attribute__ ((unused)),
+    set_plugin_parameter_addon addon __attribute__ ((unused)))
 {
-  aging_factor_new = (uint32_t) (lq_aging * LQ_FPM_INTERNAL_MULTIPLIER);
+  uint32_t aging;
+
+  if (value[0] != '0' || value[1] != '.') {
+    OLSR_ERROR(LOG_PLUGINS, "LQ aging value must be between 0 and 1.\n");
+    return 1;
+  }
+
+  aging = strtoul(&value[2], NULL, 10);
+  /* support only 4 digits after . */
+  while (aging >= 10000) {
+    aging /= 10;
+  }
+
+  aging_factor_new = aging * LQ_FPM_INTERNAL_MULTIPLIER;
+
+  while (aging > 0) {
+    aging /= 10;
+    aging_factor_new /= 10;
+  }
+
   aging_factor_old = LQ_FPM_INTERNAL_MULTIPLIER - aging_factor_new;
-
-  aging_quickstart_new = (uint32_t) (LQ_QUICKSTART_AGING * LQ_FPM_INTERNAL_MULTIPLIER);
-  aging_quickstart_old = LQ_FPM_INTERNAL_MULTIPLIER - aging_quickstart_new;
-}
-
-static void
-lq_etxfpm_deinitialize(void)
-{
+  return 0;
 }
 
 static olsr_linkcost

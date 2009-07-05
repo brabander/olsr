@@ -55,9 +55,6 @@
 #define MINIMAL_USEFUL_LQ 0.1
 #define LQ_PLUGIN_RELEVANT_COSTCHANGE 16
 
-#define LQ_QUICKSTART_STEPS 12
-#define LQ_QUICKSTART_AGING 0.25
-
 struct lqtextbuffer {
   char buf[16];
 };

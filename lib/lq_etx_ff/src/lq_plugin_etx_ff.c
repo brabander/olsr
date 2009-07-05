@@ -51,6 +51,13 @@
 #include "scheduler.h"
 #include "olsr_logging.h"
 
+#define PLUGIN_DESCR "Freifunk ETX metric based on the original design of Elektra and Thomas Lopatic"
+#define PLUGIN_AUTHOR "Henning Rogge"
+
+#define LQ_ALGORITHM_ETX_FF_NAME "etx_ff"
+
+#define LQ_FF_QUICKSTART_INIT 4
+
 #define LQ_PLUGIN_RELEVANT_COSTCHANGE_FF 16
 
 static int lq_etxff_post_init(void);
@@ -85,7 +92,7 @@ static char *lq_etxff_print_cost(olsr_linkcost cost, struct lqtextbuffer *buffer
 
 static struct olsr_cookie_info *default_lq_ff_timer_cookie = NULL;
 
-DEFINE_PLUGIN6_NP(PLUGIN_DESCR, PLUGIN_AUTHOR, NULL, lq_etxff_post_init, NULL, NULL, true)
+DEFINE_PLUGIN6_NP(PLUGIN_DESCR, PLUGIN_AUTHOR, NULL, lq_etxff_post_init, NULL, NULL, false)
 
 /* etx lq plugin (freifunk fpm version) settings */
 struct lq_handler lq_etxff_handler = {

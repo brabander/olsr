@@ -52,6 +52,10 @@
 
 #define LQ_PLUGIN_LC_MULTIPLIER 1024
 
+#define LQ_FLOAT_DEFAULT_AGING       0.05        /* 65536 * 0.05 */
+#define LQ_FLOAT_QUICKSTART_AGING    0.25       /* 65536 * 0.25 */
+#define LQ_QUICKSTART_STEPS        12
+
 static int set_plugin_float(const char *, void *, set_plugin_parameter_addon);
 static int lq_etxfloat_post_init(void);
 
@@ -122,7 +126,7 @@ struct lq_handler lq_etxfloat_handler = {
   LQ_TC_MESSAGE
 };
 
-static float lq_aging = DEF_LQ_AGING;
+static float lq_aging = LQ_FLOAT_DEFAULT_AGING;
 
 static const struct olsrd_plugin_parameters plugin_parameters[] = {
   {.name = "LinkQualityAging",.set_plugin_parameter = &set_plugin_float,.data = &lq_aging},
@@ -215,7 +219,8 @@ lq_etxfloat_packet_loss_handler(struct link_entry *link, bool loss)
   float alpha = lq_aging;
 
   if (lq_link->quickstart < LQ_QUICKSTART_STEPS) {
-    alpha = LQ_QUICKSTART_AGING;        /* fast enough to get the LQ value within 6 Hellos up to 0.9 */
+    /* fast enough to get the LQ value within 6 Hellos up to 0.9 */
+    alpha = LQ_FLOAT_QUICKSTART_AGING;
     lq_link->quickstart++;
   }
   // exponential moving average
