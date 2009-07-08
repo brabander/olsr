@@ -172,7 +172,7 @@ struct interface {
   } nic_state;
 #endif
 
-  olsr_reltime hello_etime;
+  uint32_t hello_etime;
   struct vtimes valtimes;
 #if 0
   struct if_gen_property *gen_properties;       /* Generic interface properties */

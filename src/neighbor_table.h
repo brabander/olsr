@@ -171,7 +171,7 @@ void olsr_delete_nbr2_entry(struct nbr2_entry *);
 struct nbr2_entry *EXPORT(olsr_lookup_nbr2_entry)(const union olsr_ip_addr *, bool aliaslookup);
 
 /* work with connectors */
-struct nbr_con *olsr_link_nbr_nbr2(struct nbr_entry *, const union olsr_ip_addr *, olsr_reltime);
+struct nbr_con *olsr_link_nbr_nbr2(struct nbr_entry *, const union olsr_ip_addr *, uint32_t);
 void olsr_delete_nbr_con(struct nbr_con *);
 struct nbr_con *EXPORT(olsr_lookup_nbr_con_entry)(struct nbr_entry *, const union olsr_ip_addr *);
 struct nbr_con *EXPORT(olsr_lookup_nbr2_con_entry)(struct nbr2_entry *, const union olsr_ip_addr *);

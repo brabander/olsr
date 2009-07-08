@@ -52,10 +52,7 @@
 #define NSEC_PER_USEC 1000
 #define USEC_PER_MSEC 1000
 
-/* olsr_reltime is a relative timestamp measured in microseconds */
-typedef uint32_t olsr_reltime;
-
-struct time_txt {
+struct millitxt_buf {
   char buf[16];
 };
 
@@ -72,13 +69,13 @@ struct time_txt {
  * me is the 8 bit mantissa/exponent value
  *
  */
-olsr_reltime EXPORT(me_to_reltime) (const uint8_t);
+uint32_t EXPORT(me_to_reltime) (const uint8_t);
 
-uint8_t EXPORT(reltime_to_me) (const olsr_reltime);
+uint8_t EXPORT(reltime_to_me) (const uint32_t);
 
-char *EXPORT(reltime_to_txt)(struct time_txt *buffer, olsr_reltime t);
+char *EXPORT(olsr_milli_to_txt)(struct millitxt_buf *buffer, uint32_t t);
 
-olsr_reltime EXPORT(txt_to_reltime)(char *txt);
+uint32_t EXPORT(olsr_txt_to_milli)(char *txt);
 
 
 #endif

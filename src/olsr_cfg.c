@@ -501,28 +501,28 @@ parse_cfg_interface(char *argstr, struct olsr_config *rcfg, char *rmsg)
             new_if->cnf->ipv6_multi_glbl = ipaddr;
             PARSER_DEBUG_PRINTF("\tIPv6 global multicast: %s\n", ip6_to_string(&buf, &new_if->cnf->ipv6_multi_glbl.v6));
           } else if (0 == strcasecmp("HelloInterval", p_next[0])) {
-            new_if->cnf->hello_params.emission_interval = txt_to_reltime(p_next[1]);
+            new_if->cnf->hello_params.emission_interval = olsr_txt_to_milli(p_next[1]);
             PARSER_DEBUG_PRINTF("\tHELLO interval1: %u ms\n", new_if->cnf->hello_params.emission_interval);
           } else if (0 == strcasecmp("HelloValidityTime", p_next[0])) {
-            new_if->cnf->hello_params.validity_time = txt_to_reltime(p_next[1]);
+            new_if->cnf->hello_params.validity_time = olsr_txt_to_milli(p_next[1]);
             PARSER_DEBUG_PRINTF("\tHELLO validity: %u ms\n", new_if->cnf->hello_params.validity_time);
           } else if (0 == strcasecmp("Tcinterval", p_next[0])) {
-            new_if->cnf->tc_params.emission_interval = txt_to_reltime(p_next[1]);
+            new_if->cnf->tc_params.emission_interval = olsr_txt_to_milli(p_next[1]);
             PARSER_DEBUG_PRINTF("\tTC interval1: %u ms\n", new_if->cnf->tc_params.emission_interval);
           } else if (0 == strcasecmp("TcValidityTime", p_next[0])) {
-            new_if->cnf->tc_params.validity_time = txt_to_reltime(p_next[1]);
+            new_if->cnf->tc_params.validity_time = olsr_txt_to_milli(p_next[1]);
             PARSER_DEBUG_PRINTF("\tTC validity: %u ms\n", new_if->cnf->tc_params.validity_time);
           } else if (0 == strcasecmp("Midinterval", p_next[0])) {
-            new_if->cnf->mid_params.emission_interval = txt_to_reltime(p_next[1]);
+            new_if->cnf->mid_params.emission_interval = olsr_txt_to_milli(p_next[1]);
             PARSER_DEBUG_PRINTF("\tMID interval1: %u ms\n", new_if->cnf->mid_params.emission_interval);
           } else if (0 == strcasecmp("MidValidityTime", p_next[0])) {
-            new_if->cnf->mid_params.validity_time = txt_to_reltime(p_next[1]);
+            new_if->cnf->mid_params.validity_time = olsr_txt_to_milli(p_next[1]);
             PARSER_DEBUG_PRINTF("\tMID validity: %u ms\n", new_if->cnf->mid_params.validity_time);
           } else if (0 == strcasecmp("Hnainterval", p_next[0])) {
-            new_if->cnf->hna_params.emission_interval = txt_to_reltime(p_next[1]);
+            new_if->cnf->hna_params.emission_interval = olsr_txt_to_milli(p_next[1]);
             PARSER_DEBUG_PRINTF("\tHNA interval1: %u ms\n", new_if->cnf->hna_params.emission_interval);
           } else if (0 == strcasecmp("HnaValidityTime", p_next[0])) {
-            new_if->cnf->hna_params.validity_time = txt_to_reltime(p_next[1]);
+            new_if->cnf->hna_params.validity_time = olsr_txt_to_milli(p_next[1]);
             PARSER_DEBUG_PRINTF("\tHNA validity: %u ms\n", new_if->cnf->hna_params.validity_time);
           } else if (0 == strcasecmp("Weight", p_next[0])) {
             new_if->cnf->weight.fixed = true;
@@ -927,7 +927,7 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
       sscanf(argstr, "%d %10s", &limit, t);
       if (0 <= limit && limit < (1 << (8 * sizeof(rcfg->lq_dlimit))))
         rcfg->lq_dlimit = limit;
-      rcfg->lq_dinter = txt_to_reltime(t);
+      rcfg->lq_dinter = olsr_txt_to_milli(t);
       PARSER_DEBUG_PRINTF("Link quality dijkstra limit %d, %u ms\n", rcfg->lq_dlimit, rcfg->lq_dinter);
     }
     break;
@@ -954,19 +954,19 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
     break;
   case 'N':                    /* NatThreshold (f) */
     {
-      struct time_txt tbuf;
+      struct millitxt_buf tbuf;
 
-      rcfg->lq_nat_thresh = txt_to_reltime(argstr);
-      PARSER_DEBUG_PRINTF("NAT threshold %s\n", reltime_to_txt(&tbuf, rcfg->lq_nat_thresh));
+      rcfg->lq_nat_thresh = olsr_txt_to_milli(argstr);
+      PARSER_DEBUG_PRINTF("NAT threshold %s\n", olsr_milli_to_txt(&tbuf, rcfg->lq_nat_thresh));
     }
     break;
   case 'Y':                    /* NicChgsPollInt (f) */
-    rcfg->nic_chgs_pollrate = txt_to_reltime(argstr);
+    rcfg->nic_chgs_pollrate = olsr_txt_to_milli(argstr);
     PARSER_DEBUG_PRINTF("NIC Changes Pollrate %u ms\n", rcfg->nic_chgs_pollrate);
     break;
   case 'T':                    /* Pollrate (f) */
     {
-      rcfg->pollrate = txt_to_reltime(argstr);
+      rcfg->pollrate = olsr_txt_to_milli(argstr);
       PARSER_DEBUG_PRINTF("Pollrate %u ms\n", rcfg->pollrate);
     }
     break;
@@ -1408,7 +1408,7 @@ olsr_sanity_check_cfg(struct olsr_config *cfg)
 {
   struct olsr_if_config *in = cfg->if_configs;
   struct olsr_if_options *io;
-  struct time_txt tbuf;
+  struct millitxt_buf tbuf;
 
   /* IP version */
   if (cfg->ip_version != AF_INET && cfg->ip_version != AF_INET6) {
@@ -1454,7 +1454,7 @@ olsr_sanity_check_cfg(struct olsr_config *cfg)
 
   /* NAT threshold value */
   if (cfg->lq_nat_thresh < 100 || cfg->lq_nat_thresh > 1000) {
-    fprintf(stderr, "NAT threshold %s is not allowed\n", reltime_to_txt(&tbuf, cfg->lq_nat_thresh));
+    fprintf(stderr, "NAT threshold %s is not allowed\n", olsr_milli_to_txt(&tbuf, cfg->lq_nat_thresh));
     return -1;
   }
 

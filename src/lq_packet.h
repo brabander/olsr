@@ -55,7 +55,7 @@
 struct olsr_common {
   uint8_t type;
   uint16_t size;
-  olsr_reltime vtime;
+  uint32_t vtime;
   union olsr_ip_addr orig;
   uint8_t ttl;
   uint8_t hops;
@@ -98,7 +98,7 @@ struct lq_hello_neighbor {
 
 struct lq_hello_message {
   struct olsr_common comm;
-  olsr_reltime htime;
+  uint32_t htime;
   uint8_t will;
   struct lq_hello_neighbor *neigh;
 };
@@ -175,7 +175,7 @@ pkt_get_s32(const uint8_t ** p, int32_t * var)
   *p += sizeof(int32_t);
 }
 static INLINE void
-pkt_get_reltime(const uint8_t ** p, olsr_reltime * var)
+pkt_get_reltime(const uint8_t ** p, uint32_t * var)
 {
   *var = me_to_reltime(**p);
   *p += sizeof(uint8_t);
@@ -271,7 +271,7 @@ pkt_put_s32(uint8_t ** p, int32_t var)
   *p += sizeof(int32_t);
 }
 static INLINE void
-pkt_put_reltime(uint8_t ** p, olsr_reltime var)
+pkt_put_reltime(uint8_t ** p, uint32_t var)
 {
   **p = reltime_to_me(var);
   *p += sizeof(uint8_t);

@@ -337,7 +337,7 @@ olsr_lookup_nbr2_entry(const union olsr_ip_addr *addr, bool lookupalias) {
  * @param vtime validity time of the 2hop neighbor
  */
 struct nbr_con *
-olsr_link_nbr_nbr2(struct nbr_entry *nbr, const union olsr_ip_addr *nbr2_addr, olsr_reltime vtime) {
+olsr_link_nbr_nbr2(struct nbr_entry *nbr, const union olsr_ip_addr *nbr2_addr, uint32_t vtime) {
   struct nbr_con *connector;
   struct nbr2_entry *nbr2;
 

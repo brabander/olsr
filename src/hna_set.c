@@ -189,7 +189,7 @@ olsr_expire_hna_net_entry(void *context)
  *@return nada
  */
 static void
-olsr_update_hna_entry(const union olsr_ip_addr *gw, const struct olsr_ip_prefix *prefix, olsr_reltime vtime)
+olsr_update_hna_entry(const union olsr_ip_addr *gw, const struct olsr_ip_prefix *prefix, uint32_t vtime)
 {
   struct tc_entry *tc = olsr_locate_tc_entry(gw);
   struct hna_net *net_entry = olsr_lookup_hna_net(tc, prefix);

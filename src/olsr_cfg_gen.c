@@ -48,14 +48,14 @@
 #include <errno.h>
 
 static INLINE void
-append_reltime(struct autobuf *abuf, const char *name, olsr_reltime val, olsr_reltime deflt, bool first)
+append_reltime(struct autobuf *abuf, const char *name, uint32_t val, uint32_t deflt, bool first)
 {
-  struct time_txt buf;
+  struct millitxt_buf buf;
 
   if (val != deflt) {
-    abuf_appendf(abuf, "    %s\t%s\n", name, reltime_to_txt(&buf, val));
+    abuf_appendf(abuf, "    %s\t%s\n", name, olsr_milli_to_txt(&buf, val));
   } else if (first) {
-    abuf_appendf(abuf, "    #%s\t%s\n", name, reltime_to_txt(&buf, val));
+    abuf_appendf(abuf, "    #%s\t%s\n", name, olsr_milli_to_txt(&buf, val));
   }
 }
 
@@ -63,7 +63,7 @@ void
 olsr_write_cnf_buf(struct autobuf *abuf, struct olsr_config *cnf, bool write_more_comments)
 {
   char ipv6_buf[INET6_ADDRSTRLEN];     /* buffer for IPv6 inet_ntop */
-  struct time_txt tbuf;
+  struct millitxt_buf tbuf;
   const char *s;
 
   abuf_appendf(abuf, "#\n" "# Generated config file for %s\n" "#\n\n", olsrd_version);
@@ -134,12 +134,12 @@ olsr_write_cnf_buf(struct autobuf *abuf, struct olsr_config *cnf, bool write_mor
   /* Pollrate */
   abuf_appendf(abuf, "# Polling rate in seconds(float).\n"
                "# Auto uses default value 0.05 sec\n" "Pollrate\t%s\n",
-               reltime_to_txt(&tbuf, cnf->pollrate));
+               olsr_milli_to_txt(&tbuf, cnf->pollrate));
 
   /* NIC Changes Pollrate */
   abuf_appendf(abuf, "# Interval to poll network interfaces for configuration\n"
                "# changes. Defaults to 2.5 seconds\n" "NicChgsPollInt\t%s\n",
-               reltime_to_txt(&tbuf, cnf->nic_chgs_pollrate));
+               olsr_milli_to_txt(&tbuf, cnf->nic_chgs_pollrate));
 
   /* TC redundancy */
   abuf_appendf(abuf, "# TC redundancy\n"
@@ -159,7 +159,7 @@ olsr_write_cnf_buf(struct autobuf *abuf, struct olsr_config *cnf, bool write_mor
   abuf_appendf(abuf, "# Fish Eye algorithm\n"
                "# 0 = do not use fish eye\n" "# 1 = use fish eye\n" "LinkQualityFishEye\t%d\n\n", cnf->lq_fish);
 
-  abuf_appendf(abuf, "# NAT threshold\n" "NatThreshold\t%s\n\n", reltime_to_txt(&tbuf, cnf->lq_nat_thresh));
+  abuf_appendf(abuf, "# NAT threshold\n" "NatThreshold\t%s\n\n", olsr_milli_to_txt(&tbuf, cnf->lq_nat_thresh));
 
   abuf_appendf(abuf, "# Clear screen when printing debug output?\n" "ClearScreen\t%s\n\n", cnf->clear_screen ? "yes" : "no");
 

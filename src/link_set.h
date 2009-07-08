@@ -63,7 +63,7 @@ struct link_entry {
   struct timer_entry *link_timer;
   struct timer_entry *link_sym_timer;
   uint32_t ASYM_time;
-  olsr_reltime vtime;
+  uint32_t vtime;
   struct nbr_entry *neighbor;
   uint8_t prev_status;
 
@@ -72,7 +72,7 @@ struct link_entry {
   /*
    * packet loss
    */
-  olsr_reltime loss_helloint;
+  uint32_t loss_helloint;
   struct timer_entry *link_loss_timer;
 
   /* user defined multiplies for link quality, multiplied with 65536 */
@@ -128,7 +128,7 @@ struct link_entry *update_link_entry(const union olsr_ip_addr *,
 int EXPORT(check_neighbor_link) (const union olsr_ip_addr *);
 int replace_neighbor_link_set(const struct nbr_entry *, struct nbr_entry *);
 int lookup_link_status(const struct link_entry *);
-void olsr_update_packet_loss_hello_int(struct link_entry *, olsr_reltime);
+void olsr_update_packet_loss_hello_int(struct link_entry *, uint32_t);
 void olsr_update_packet_loss(struct link_entry *entry);
 void olsr_print_link_set(void);
 

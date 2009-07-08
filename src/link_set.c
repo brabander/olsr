@@ -75,7 +75,7 @@ signal_link_changes(bool val)
 static int check_link_status(const struct lq_hello_message *message, const struct interface *in_if);
 static struct link_entry *add_link_entry(const union olsr_ip_addr *,
                                          const union olsr_ip_addr *,
-                                         union olsr_ip_addr *, olsr_reltime, olsr_reltime, struct interface *);
+                                         union olsr_ip_addr *, uint32_t, uint32_t, struct interface *);
 static bool get_neighbor_status(const union olsr_ip_addr *);
 
 void
@@ -432,7 +432,7 @@ olsr_set_link_timer(struct link_entry *link, unsigned int rel_timer)
 static struct link_entry *
 add_link_entry(const union olsr_ip_addr *local,
                const union olsr_ip_addr *remote,
-               union olsr_ip_addr *remote_main, olsr_reltime vtime, olsr_reltime htime, struct interface *local_if)
+               union olsr_ip_addr *remote_main, uint32_t vtime, uint32_t htime, struct interface *local_if)
 {
   struct link_entry *link;
   struct nbr_entry *neighbor;
@@ -745,7 +745,7 @@ olsr_print_link_set(void)
  * update the timeout with the htime value from the message
  */
 void
-olsr_update_packet_loss_hello_int(struct link_entry *entry, olsr_reltime loss_hello_int)
+olsr_update_packet_loss_hello_int(struct link_entry *entry, uint32_t loss_hello_int)
 {
   entry->loss_helloint = loss_hello_int;
 }

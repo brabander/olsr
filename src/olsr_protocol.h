@@ -346,7 +346,7 @@ struct olsrmsg {
  */
 struct olsrmsg_hdr {
   uint8_t type;
-  olsr_reltime vtime;
+  uint32_t vtime;
   uint16_t size;
   union olsr_ip_addr originator;
   uint8_t ttl;

@@ -106,7 +106,7 @@ olsr_expire_mid_entries(void *context)
  * The timer param is a relative timer expressed in milliseconds.
  */
 static void
-olsr_set_mid_timer(struct tc_entry *tc, olsr_reltime rel_timer)
+olsr_set_mid_timer(struct tc_entry *tc, uint32_t rel_timer)
 {
   olsr_set_timer(&tc->mid_timer, rel_timer, OLSR_MID_JITTER,
                  OLSR_TIMER_ONESHOT, &olsr_expire_mid_entries, tc, mid_validity_timer_cookie);
@@ -214,7 +214,7 @@ olsr_fixup_mid_main_addr(const union olsr_ip_addr *main_addr, const union olsr_i
  */
 static struct mid_entry *
 olsr_insert_mid_entry(const union olsr_ip_addr *main_addr,
-                      const union olsr_ip_addr *alias_addr, olsr_reltime vtime, uint16_t mid_seqno)
+                      const union olsr_ip_addr *alias_addr, uint32_t vtime, uint16_t mid_seqno)
 {
   struct tc_entry *tc;
   struct mid_entry *alias;
@@ -277,7 +277,7 @@ olsr_insert_mid_entry(const union olsr_ip_addr *main_addr,
  */
 static void
 olsr_update_mid_entry(const union olsr_ip_addr *main_addr,
-                      const union olsr_ip_addr *alias_addr, olsr_reltime vtime, uint16_t mid_seqno)
+                      const union olsr_ip_addr *alias_addr, uint32_t vtime, uint16_t mid_seqno)
 {
   struct mid_entry *alias;
 
@@ -468,7 +468,7 @@ olsr_input_mid(union olsr_message *msg, struct interface *input_if __attribute__
   uint16_t msg_size, msg_seq;
   uint8_t type, ttl, msg_hops;
   const unsigned char *curr;
-  olsr_reltime vtime;
+  uint32_t vtime;
   union olsr_ip_addr originator, alias;
   int alias_count;
 #if !defined REMOVE_LOG_DEBUG

@@ -138,7 +138,7 @@ olsr_parser(union olsr_message *m, struct interface *in_if __attribute__ ((unuse
 {
   union olsr_ip_addr originator;
   int size;
-  olsr_reltime vtime;
+  uint32_t vtime;
   OLSR_DEBUG(LOG_PLUGINS, "MDNS PLUGIN: Received msg in parser\n");
   /* Fetch the originator of the messsage */
   if (olsr_cnf->ip_version == AF_INET) {

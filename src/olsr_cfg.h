@@ -111,8 +111,8 @@
 #include "olsr_cfg_data.h"
 
 struct olsr_msg_params {
-  olsr_reltime emission_interval;
-  olsr_reltime validity_time;
+  uint32_t emission_interval;
+  uint32_t validity_time;
 };
 
 struct olsr_lq_mult {
@@ -200,13 +200,13 @@ struct olsr_config {
   struct ip_acl ipc_nets;              /* List of allowed IPC peer IPs */
   struct olsr_if_config *if_configs;   /* List of devices to be used by olsrd */
 
-  olsr_reltime pollrate;               /* Main loop poll rate, in milliseconds */
-  olsr_reltime nic_chgs_pollrate;      /* Interface poll rate */
+  uint32_t pollrate;               /* Main loop poll rate, in milliseconds */
+  uint32_t nic_chgs_pollrate;      /* Interface poll rate */
   uint32_t lq_nat_thresh;              /* Link quality NAT threshold, 1000 == unused */
   uint8_t tc_redundancy;               /* TC anncoument mode, 0=only MPR, 1=MPR+MPRS, 2=All sym neighs */
   uint8_t mpr_coverage;                /* How many additional MPRs should be selected */
   uint8_t lq_fish;                     /* 0==Fisheye off, 1=Fisheye on */
-  olsr_reltime lq_dinter;              /* Dijkstra Calculation interval */
+  uint32_t lq_dinter;              /* Dijkstra Calculation interval */
   uint8_t lq_dlimit;                   /* Dijkstra Calculation limit */
   uint8_t willingness;                 /* Manual Configured Willingness value */
 
@@ -225,7 +225,7 @@ struct olsr_config {
    */
 
   union olsr_ip_addr router_id;        /* Main address of this node */
-  olsr_reltime will_int;                      /* Willingness update interval if willingness_auto */
+  uint32_t will_int;                      /* Willingness update interval if willingness_auto */
   int exit_value;                      /* Global return value for process termination */
 
   int ioctl_s;                         /* Socket used for ioctl calls */

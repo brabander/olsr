@@ -148,12 +148,12 @@ void
   decap_namemsg(struct name *from_packet, struct name_entry **to, bool * this_table_changed);
 
 void
-  insert_new_name_in_list(union olsr_ip_addr *, struct list_node *, struct name *, bool *, olsr_reltime);
+  insert_new_name_in_list(union olsr_ip_addr *, struct list_node *, struct name *, bool *, uint32_t);
 
 bool allowed_hostname_or_ip_in_service(const char *service_line, const regmatch_t * hostname_or_ip);
 
 void
-  update_name_entry(union olsr_ip_addr *, struct namemsg *, int, olsr_reltime);
+  update_name_entry(union olsr_ip_addr *, struct namemsg *, int, uint32_t);
 
 void
   write_hosts_file(void);

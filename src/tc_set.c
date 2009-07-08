@@ -839,7 +839,7 @@ olsr_input_tc(union olsr_message * msg, struct interface * input_if __attribute_
 {
   uint16_t size, msg_seq, ansn;
   uint8_t type, ttl, msg_hops, lower_border, upper_border;
-  olsr_reltime vtime;
+  uint32_t vtime;
   union olsr_ip_addr originator;
   const unsigned char *limit, *curr;
   struct tc_entry *tc;

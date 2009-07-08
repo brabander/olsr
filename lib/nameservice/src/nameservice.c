@@ -674,7 +674,7 @@ olsr_parser(union olsr_message *m, struct interface *in_if __attribute__ ((unuse
 {
   struct namemsg *namemessage;
   union olsr_ip_addr originator;
-  olsr_reltime vtime;
+  uint32_t vtime;
   int size;
 
   /* Fetch the originator of the messsage */
@@ -911,7 +911,7 @@ decap_namemsg(struct name *from_packet, struct name_entry **to, bool * this_tabl
  * name/service/forwarder entry in the message
  */
 void
-update_name_entry(union olsr_ip_addr *originator, struct namemsg *msg, int msg_size, olsr_reltime vtime)
+update_name_entry(union olsr_ip_addr *originator, struct namemsg *msg, int msg_size, uint32_t vtime)
 {
 #if !defined REMOVE_LOG_WARN
   struct ipaddr_str strbuf;
@@ -971,7 +971,7 @@ update_name_entry(union olsr_ip_addr *originator, struct namemsg *msg, int msg_s
  */
 void
 insert_new_name_in_list(union olsr_ip_addr *originator,
-                        struct list_node *this_list, struct name *from_packet, bool * this_table_changed, olsr_reltime vtime)
+                        struct list_node *this_list, struct name *from_packet, bool * this_table_changed, uint32_t vtime)
 {
   int hash;
   struct db_entry *entry;

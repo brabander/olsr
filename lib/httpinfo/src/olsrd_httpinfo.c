@@ -792,7 +792,7 @@ build_config_body(struct autobuf *abuf)
   const struct plugin_entry *pentry;
   const struct plugin_param *pparam;
   struct ipaddr_str mainaddrbuf;
-  struct time_txt tbuf;
+  struct millitxt_buf tbuf;
 
   abuf_appendf(abuf, "Version: %s (built on %s on %s)\n<br>OS: %s\n<br>", olsrd_version, build_date, build_host, OS);
   {
@@ -840,10 +840,10 @@ build_config_body(struct autobuf *abuf)
 
   abuf_puts(abuf, "</tr>\n<tr>\n");
 
-  abuf_appendf(abuf, "<td>Pollrate: %s</td>\n", reltime_to_txt(&tbuf, olsr_cnf->pollrate));
+  abuf_appendf(abuf, "<td>Pollrate: %s</td>\n", olsr_milli_to_txt(&tbuf, olsr_cnf->pollrate));
   abuf_appendf(abuf, "<td>TC redundancy: %d</td>\n", olsr_cnf->tc_redundancy);
   abuf_appendf(abuf, "<td>MPR coverage: %d</td>\n", olsr_cnf->mpr_coverage);
-  abuf_appendf(abuf, "<td>NAT threshold: %s</td>\n", reltime_to_txt(&tbuf, olsr_cnf->lq_nat_thresh));
+  abuf_appendf(abuf, "<td>NAT threshold: %s</td>\n", olsr_milli_to_txt(&tbuf, olsr_cnf->lq_nat_thresh));
 
   abuf_puts(abuf, "</tr>\n<tr>\n");
 

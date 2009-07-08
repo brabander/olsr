@@ -142,7 +142,7 @@ static void remove_lost_interface_ip(struct interface_lost *lost) {
   olsr_cookie_free(interface_lost_mem_cookie, lost);
 }
 
-static void add_lost_interface_ip(union olsr_ip_addr *ip, olsr_reltime hello_timeout) {
+static void add_lost_interface_ip(union olsr_ip_addr *ip, uint32_t hello_timeout) {
   struct interface_lost *lost;
 #if !defined(REMOVE_LOG_DEBUG)
   struct ipaddr_str buf;

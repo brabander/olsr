@@ -61,7 +61,7 @@
  *@return a 8-bit mantissa/exponent product
  */
 uint8_t
-reltime_to_me(const olsr_reltime interval)
+reltime_to_me(const uint32_t interval)
 {
   uint8_t a = 0, b = 0;                /* Underflow defaults */
 
@@ -130,7 +130,7 @@ reltime_to_me(const olsr_reltime interval)
  * 2. case: b <= 8
  *           = ((16 + a) * 1000) >> (8-b)
  */
-olsr_reltime
+uint32_t
 me_to_reltime(const uint8_t me)
 {
   const uint8_t a = me >> 4;
@@ -143,14 +143,22 @@ me_to_reltime(const uint8_t me)
   return ((16 + a) * 1000) >> (8 - b);
 }
 
+/**
+ * converts an unsigned integer value into a string representation
+ * (divided by 1000)
+ */
 char *
-reltime_to_txt(struct time_txt *buffer, olsr_reltime t) {
+olsr_milli_to_txt(struct millitxt_buf *buffer, uint32_t t) {
   sprintf(buffer->buf, "%u.%03u", t/1000, t%1000);
   return buffer->buf;
 }
 
+/**
+ * converts a floating point text into a unsigned integer representation
+ * (multiplied by 1000)
+ */
 uint32_t
-txt_to_reltime(char *txt) {
+olsr_txt_to_milli(char *txt) {
   uint32_t t1 = 0,t2 = 0;
   char *fraction;
 
@@ -158,11 +166,13 @@ txt_to_reltime(char *txt) {
   if (fraction != NULL) {
     *fraction++ = 0;
 
-    if (strlen(fraction) > 3) {
-      fraction[3] = 0;
-    }
-
     t2 = strtoul(fraction, NULL, 10);
+    if (t2 < 100) {
+      t2 *= 100;
+    }
+    while (t2 > 999) {
+      t2 /= 10;
+    }
   }
   t1 = strtoul(txt, NULL, 10);
   if (t1 > UINT32_MAX / MSEC_PER_SEC) {
