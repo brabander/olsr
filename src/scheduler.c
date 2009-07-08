@@ -448,8 +448,6 @@ olsr_scheduler(void)
 {
   OLSR_INFO(LOG_SCHEDULER, "Scheduler started - polling every %u ms\n", olsr_cnf->pollrate);
 
-  fprintf(stderr, "Pollrate: %u\n", olsr_cnf->pollrate);
-
   /* Main scheduler loop */
   while (app_state == STATE_RUNNING) {
     uint32_t next_interval;
