@@ -173,8 +173,8 @@ read_cfg(const char *filename, int *pargc, char ***pargv, int **pline)
             while (*q && ' ' >= *p)
               p++;
 
-            line_tmp = olsr_malloc(argc_tmp * sizeof(line_tmp[0]), "config line");
-            argv_tmp = olsr_malloc(argc_tmp * sizeof(argv_tmp[0]), "config args");
+            line_tmp = olsr_malloc((argc_tmp+1) * sizeof(line_tmp[0]), "config line");
+            argv_tmp = olsr_malloc((argc_tmp+1) * sizeof(argv_tmp[0]), "config args");
             for (i = 0; i < argc_tmp; i++) {
               if (i < optind_tmp) {
                 line_tmp[i] = (*pline)[i];
