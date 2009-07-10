@@ -48,7 +48,7 @@
 #include "olsr_logging.h"
 
 #define PLUGIN_DESCR    "Integer arithmetic based ETX metric with exponential aging"
-#define PLUGIN_AUTHOR   "Sven-Ola Tücke and Henning Rogge"
+#define PLUGIN_AUTHOR   "Sven-Ola Tuecke and Henning Rogge"
 
 #define LQ_FPM_INTERNAL_MULTIPLIER 65535
 #define LQ_FPM_LINKCOST_MULTIPLIER 65535
@@ -57,6 +57,7 @@
 #define LQ_FPM_QUICKSTART_AGING    16384       /* 65536 * 0.25 */
 #define LQ_QUICKSTART_STEPS        12
 
+static int lq_etxfpm_post_init(void);
 static int set_plugin_aging(const char *, void *, set_plugin_parameter_addon);
 
 static olsr_linkcost lq_etxfpm_calc_link_entry_cost(struct link_entry *);
@@ -137,7 +138,12 @@ static const struct olsrd_plugin_parameters plugin_parameters[] = {
   {.name = "LinkQualityAging",.set_plugin_parameter = &set_plugin_aging,.data = NULL}
 };
 
-DEFINE_PLUGIN6(PLUGIN_DESCR, PLUGIN_AUTHOR, NULL, NULL, NULL, NULL, false, plugin_parameters)
+DEFINE_PLUGIN6(PLUGIN_DESCR, PLUGIN_AUTHOR, NULL, lq_etxfpm_post_init, NULL, NULL, false, plugin_parameters)
+
+static int lq_etxfpm_post_init(void) {
+  active_lq_handler = &lq_etxfpm_handler;
+  return 0;
+}
 
 static int
 set_plugin_aging(const char *value, void *data  __attribute__ ((unused)),
