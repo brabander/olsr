@@ -541,6 +541,9 @@ static void olsr_com_parse_http(struct comport_connection *con,
 
 static void olsr_com_parse_txt(struct comport_connection *con,
     unsigned int flags  __attribute__ ((unused))) {
+  static char defaultCommand[] = "/link/neigh/topology/hna/mid/routes";
+  static char tmpbuf[128];
+
   enum olsr_txtcommand_result res;
   char *eol;
   int len;
@@ -570,6 +573,12 @@ static void olsr_com_parse_txt(struct comport_connection *con,
     OLSR_DEBUG(LOG_COMPORT, "Interactive console: %s\n", con->in.buf);
     cmd = &con->in.buf[0];
     processedCommand = true;
+
+    /* apply default command */
+    if (strcmp(cmd, "/") == 0) {
+      strcpy(tmpbuf, defaultCommand);
+      cmd = tmpbuf;
+    }
 
     if (cmd[0] == '/') {
       cmd++;

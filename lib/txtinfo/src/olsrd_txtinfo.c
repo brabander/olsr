@@ -95,12 +95,12 @@ DEFINE_PLUGIN6(PLUGIN_DESCR, PLUGIN_AUTHOR, txtinfo_pre_init, txtinfo_post_init,
 
 /* command callbacks and names */
 static struct debuginfo_cmd commands[] = {
-    {"neigh", &txtinfo_neigh, NULL, NULL},
     {"link", &txtinfo_link, NULL, NULL},
-    {"routes", &txtinfo_routes, NULL, NULL},
+    {"neigh", &txtinfo_neigh, NULL, NULL},
     {"topology", &txtinfo_topology, NULL, NULL},
     {"hna", &txtinfo_hna, NULL, NULL},
     {"mid", &txtinfo_mid, NULL, NULL},
+    {"routes", &txtinfo_routes, NULL, NULL},
 };
 
 /**
