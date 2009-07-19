@@ -133,8 +133,9 @@ PacketReceivedFromOLSR(unsigned char *encapsulationUdpData, int len)
 
 
 
-bool
-olsr_parser(union olsr_message *m, struct interface *in_if __attribute__ ((unused)), union olsr_ip_addr *ipaddr)
+void
+olsr_parser(union olsr_message *m, struct interface *in_if __attribute__ ((unused)),
+    union olsr_ip_addr *ipaddr, enum duplicate_status status __attribute__ ((unused)))
 {
   union olsr_ip_addr originator;
   int size;
@@ -154,14 +155,14 @@ olsr_parser(union olsr_message *m, struct interface *in_if __attribute__ ((unuse
   /* Check if message originated from this node.
    *         If so - back off */
   if (olsr_ipcmp(&originator, &olsr_cnf->router_id) == 0)
-    return false;
+    return;
 
   /* Check that the neighbor this message was received from is symmetric.
    *         If not - back off*/
   if (check_neighbor_link(ipaddr) != SYM_LINK) {
     //struct ipaddr_str strbuf;
     //OLSR_PRINTF(3, "NAME PLUGIN: Received msg from NON SYM neighbor %s\n", olsr_ip_to_string(&strbuf, ipaddr));
-    return false;
+    return;
   }
 
   if (olsr_cnf->ip_version == AF_INET) {
@@ -169,8 +170,6 @@ olsr_parser(union olsr_message *m, struct interface *in_if __attribute__ ((unuse
   } else {
     PacketReceivedFromOLSR((unsigned char *)&m->v6.message, size - 12 - 96);
   }
-  /* Forward the message */
-  return true;
 }
 
 //Sends a packet in the OLSR network

@@ -232,12 +232,14 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
   int msgsize;
   struct parse_function_entry *entry;
   struct packetparser_function_entry *packetparser;
+  enum duplicate_status dup_status = 0;
   int count = size - ((char *)m - (char *)olsr);
 #if !defined(REMOVE_LOG_INFO) || !defined(REMOVE_LOG_WARN)
   struct ipaddr_str buf;
 #endif
 
-  if (count < MIN_PACKET_SIZE(olsr_cnf->ip_version)) {
+  /* packet smaller than minimal olsr packet ? */
+  if (count < 4) {
     return;
   }
   if (ntohs(olsr->olsr_packlen) != (size_t) size) {
@@ -256,9 +258,7 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
   msgsize = ntohs(olsr_cnf->ip_version == AF_INET ? m->v4.olsr_msgsize : m->v6.olsr_msgsize);
 
   for (; count > 0; m = (union olsr_message *)((char *)m + msgsize)) {
-    bool forward = true;
-
-    if (count < MIN_PACKET_SIZE(olsr_cnf->ip_version)) {
+    if (count < MIN_MESSAGE_SIZE()) {
       break;
     }
     msgsize = ntohs(olsr_cnf->ip_version == AF_INET ? m->v4.olsr_msgsize : m->v6.olsr_msgsize);
@@ -287,7 +287,7 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
       continue;
     }
 
-    if (olsr_message_is_duplicate(m, false)) {
+    if (olsr_is_duplicate_message(m, false, &dup_status)) {
       OLSR_INFO(LOG_PACKET_PARSING, "Not processing message duplicate from %s!\n",
           olsr_ip_to_string(&buf, (union olsr_ip_addr *)&m->v4.originator));
     }
@@ -296,14 +296,11 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
         /* Should be the same for IPv4 and IPv6 */
         /* Promiscuous or exact match */
         if ((entry->type == PROMISCUOUS) || (entry->type == m->v4.olsr_msgtype)) {
-          if (!entry->function(m, in_if, from_addr))
-            forward = false;
+          entry->function(m, in_if, from_addr, dup_status);
         }
       }
     }
-    if (forward) {
-      olsr_forward_message(m, in_if, from_addr);
-    }
+    olsr_forward_message(m, in_if, from_addr);
   }                             /* for olsr_msg */
 }
 

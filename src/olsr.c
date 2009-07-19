@@ -298,7 +298,7 @@ olsr_forward_message(union olsr_message *m, struct interface *in_if, union olsr_
   }
 
   /* check if we already forwarded this message */
-  if (olsr_message_is_duplicate(m, true)) {
+  if (olsr_is_duplicate_message(m, true, NULL)) {
     OLSR_DEBUG(LOG_PACKET_PARSING, "Not forwarding message type %d from %s because we already forwarded it.\n",
         m->v4.olsr_msgtype, olsr_ip_to_string(&buf, src));
     return 0;                   /* it's a duplicate, forget about it */

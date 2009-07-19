@@ -161,9 +161,12 @@ uint32_t
 olsr_txt_to_milli(char *txt) {
   uint32_t t1 = 0,t2 = 0;
   char *fraction;
+  char *savePtr = NULL, save = 0;
 
   fraction = strchr(txt, '.');
   if (fraction != NULL) {
+    savePtr = fraction;
+    save = *savePtr;
     *fraction++ = 0;
 
     t2 = strtoul(fraction, NULL, 10);
@@ -177,6 +180,10 @@ olsr_txt_to_milli(char *txt) {
   t1 = strtoul(txt, NULL, 10);
   if (t1 > UINT32_MAX / MSEC_PER_SEC) {
     t1 = UINT32_MAX / MSEC_PER_SEC;
+  }
+
+  if (savePtr) {
+    *savePtr = save;
   }
   return t1*MSEC_PER_SEC + t2;
 }

@@ -46,13 +46,14 @@
 #include "olsr_types.h"
 #include "olsr_protocol.h"
 #include "common/avl.h"
+#include "duplicate_set.h"
 
 struct mid_entry {
   struct avl_node mid_tc_node;         /* node in the per-tc mid tree */
   struct avl_node mid_node;            /* node in the global mid tree */
   union olsr_ip_addr mid_alias_addr;   /* key for both trees */
   struct tc_entry *mid_tc;             /* backpointer to owning tc entry */
-  uint16_t mid_seqno;                  /* msg seq number for change tracking */
+  uint16_t mid_entry_seqno;            /* msg seq number for change tracking */
 };
 
 AVLNODE2STRUCT(global_tree2mid, struct mid_entry, mid_node);
@@ -81,7 +82,7 @@ AVLNODE2STRUCT(alias_tree2mid, struct mid_entry, mid_tc_node);
 extern struct avl_tree mid_tree;
 
 /* MID msg input parser */
-bool olsr_input_mid(union olsr_message *, struct interface *, union olsr_ip_addr *);
+void olsr_input_mid(union olsr_message *, struct interface *, union olsr_ip_addr *, enum duplicate_status);
 
 void olsr_init_mid_set(void);
 void olsr_delete_mid_entry(struct mid_entry *);

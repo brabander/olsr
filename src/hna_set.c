@@ -189,7 +189,8 @@ olsr_expire_hna_net_entry(void *context)
  *@return nada
  */
 static void
-olsr_update_hna_entry(const union olsr_ip_addr *gw, const struct olsr_ip_prefix *prefix, uint32_t vtime)
+olsr_update_hna_entry(const union olsr_ip_addr *gw, const struct olsr_ip_prefix *prefix, uint32_t vtime,
+    uint16_t msg_seq)
 {
   struct tc_entry *tc = olsr_locate_tc_entry(gw);
   struct hna_net *net_entry = olsr_lookup_hna_net(tc, prefix);
@@ -199,6 +200,8 @@ olsr_update_hna_entry(const union olsr_ip_addr *gw, const struct olsr_ip_prefix 
     net_entry = olsr_add_hna_net(tc, prefix);
     changes_hna = true;
   }
+
+  net_entry->tc_entry_seqno = msg_seq;
 
   /*
    * Add the rt_path for the entry.
@@ -239,27 +242,57 @@ olsr_print_hna_set(void)
 #endif
 }
 
+static void
+olsr_prune_hna_entries(struct tc_entry *tc)
+{
+  struct hna_net *hna_net;
+
+  OLSR_FOR_ALL_TC_HNA_ENTRIES(tc, hna_net) {
+    if (hna_net->tc_entry_seqno != tc->hna_seq) {
+      olsr_delete_hna_net(hna_net);
+    }
+  } OLSR_FOR_ALL_TC_HNA_ENTRIES_END(tc, hna_net);
+}
+
 /**
  * Process incoming HNA message.
  * Forwards the message if that is to be done.
  */
-bool
-olsr_input_hna(union olsr_message *msg, struct interface *in_if __attribute__ ((unused)), union olsr_ip_addr *from_addr)
+void
+olsr_input_hna(union olsr_message *msg, struct interface *in_if __attribute__ ((unused)),
+    union olsr_ip_addr *from_addr, enum duplicate_status status)
 {
-  struct olsrmsg_hdr msg_hdr;
+  uint16_t msg_size, msg_seq;
+  uint8_t type, ttl, msg_hops;
+  uint32_t vtime;
+  union olsr_ip_addr originator;
+  struct tc_entry *tc;
   struct olsr_ip_prefix prefix;
   const uint8_t *curr, *curr_end;
 #if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
 #endif
 
-  if (!(curr = olsr_parse_msg_hdr(msg, &msg_hdr))) {
-    return false;
+  curr = (void *)msg;
+
+  /* We are only interested in MID message types. */
+  pkt_get_u8(&curr, &type);
+  if (type != HNA_MESSAGE) {
+    return;
   }
 
-  /* We are only interested in HNA message types. */
-  if (msg_hdr.type != HNA_MESSAGE) {
-    return false;
+  pkt_get_reltime(&curr, &vtime);
+  pkt_get_u16(&curr, &msg_size);
+
+  pkt_get_ipaddress(&curr, &originator);
+
+  /* Copy header values */
+  pkt_get_u8(&curr, &ttl);
+  pkt_get_u8(&curr, &msg_hops);
+  pkt_get_u16(&curr, &msg_seq);
+
+  if (!olsr_validate_address(&originator)) {
+    return;
   }
 
   /*
@@ -269,16 +302,24 @@ olsr_input_hna(union olsr_message *msg, struct interface *in_if __attribute__ ((
    */
   if (check_neighbor_link(from_addr) != SYM_LINK) {
     OLSR_DEBUG(LOG_HNA, "Received HNA from NON SYM neighbor %s\n", olsr_ip_to_string(&buf, from_addr));
-    return false;
+    return;
   }
 
-  OLSR_DEBUG(LOG_HNA, "Processing HNA from %s, seq 0x%04x\n", olsr_ip_to_string(&buf, &msg_hdr.originator), msg_hdr.seqno);
+  tc = olsr_locate_tc_entry(&originator);
+  if (status != RESET_SEQNO_OLSR_MESSAGE && olsr_seqno_diff(msg_seq, tc->mid_seq) <= 0) {
+    /* this HNA is too old, discard it */
+    return;
+  }
+  tc->hna_seq = msg_seq;
+
+  OLSR_DEBUG(LOG_HNA, "Processing HNA from %s, seq 0x%04x\n", olsr_ip_to_string(&buf, &originator), msg_seq);
 
   /*
    * Now walk the list of HNA advertisements.
    */
-  curr_end = (const uint8_t *)msg + msg_hdr.size;
-  while (curr < curr_end) {
+  curr_end = (uint8_t *)msg + msg_size;
+
+  while (curr + olsr_cnf->ipsize < curr_end) {
 
     pkt_get_ipaddress(&curr, &prefix.prefix);
     pkt_get_prefixlen(&curr, &prefix.prefix_len);
@@ -287,11 +328,15 @@ olsr_input_hna(union olsr_message *msg, struct interface *in_if __attribute__ ((
       /*
        * Only update if it's not from us.
        */
-      olsr_update_hna_entry(&msg_hdr.originator, &prefix, msg_hdr.vtime);
+      olsr_update_hna_entry(&originator, &prefix, vtime, msg_seq);
     }
   }
-  /* Forward the message */
-  return true;
+
+  /*
+   * Prune the HNAs that did not get refreshed by this advertisment.
+   */
+  olsr_prune_hna_entries(tc);
+
 }
 
 /*

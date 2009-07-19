@@ -59,6 +59,7 @@
 #include "log.h"
 #include "link_set.h"
 #include "../common/string.h"
+#include "../valgrind/valgrind.h"
 
 #include <signal.h>
 #include <sys/types.h>
@@ -348,7 +349,7 @@ chk_if_up(struct olsr_if_config *iface)
   }
   ifp = olsr_cookie_malloc(interface_mem_cookie);
 
-  /*
+   /*
    * Setup query block.
    */
   memset(&ifr, 0, sizeof(ifr));

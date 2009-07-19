@@ -48,7 +48,8 @@
 #include "parser.h"
 #include "olsr_logging.h"
 
-static bool olsr_input_hello(union olsr_message *ser, struct interface *inif, union olsr_ip_addr *from);
+static void olsr_input_hello(union olsr_message *, struct interface *, union olsr_ip_addr *,
+    enum duplicate_status);
 
 static void process_message_neighbors(struct nbr_entry *, const struct lq_hello_message *);
 
@@ -207,7 +208,7 @@ olsr_deinit_package_process(void)
   olsr_parser_remove_function(&olsr_input_hna, HNA_MESSAGE);
 }
 
-static int
+static bool
 deserialize_hello(struct lq_hello_message *hello, const void *ser)
 {
   const unsigned char *limit;
@@ -218,7 +219,7 @@ deserialize_hello(struct lq_hello_message *hello, const void *ser)
   pkt_get_u8(&curr, &type);
   if (type != HELLO_MESSAGE && type != LQ_HELLO_MESSAGE) {
     /* No need to do anything more */
-    return 1;
+    return true;
   }
   pkt_get_reltime(&curr, &hello->comm.vtime);
   pkt_get_u16(&curr, &size);
@@ -257,7 +258,7 @@ deserialize_hello(struct lq_hello_message *hello, const void *ser)
       hello->neigh = neigh;
     }
   }
-  return 0;
+  return false;
 }
 
 
@@ -334,21 +335,14 @@ hello_tap(struct lq_hello_message *message, struct interface *in_if, const union
   destroy_lq_hello(message);
 }
 
-static bool
-olsr_input_hello(union olsr_message *msg, struct interface *inif, union olsr_ip_addr *from)
+static void
+olsr_input_hello(union olsr_message *msg, struct interface *inif, union olsr_ip_addr *from,
+    enum duplicate_status status __attribute__ ((unused)))
 {
   struct lq_hello_message hello;
-
-  if (msg == NULL) {
-    return false;
+  if (!deserialize_hello(&hello, msg)) {
+    hello_tap(&hello, inif, from);
   }
-  if (deserialize_hello(&hello, msg) != 0) {
-    return false;
-  }
-  hello_tap(&hello, inif, from);
-
-  /* Do not forward hello messages */
-  return false;
 }
 
 /*

@@ -48,6 +48,7 @@
 #include "lq_packet.h"
 #include "scheduler.h"
 #include "olsr_cookie.h"
+#include "duplicate_set.h"
 
 /*
  * This file holds the definitions for the link state database.
@@ -86,7 +87,9 @@ struct tc_entry {
   struct timer_entry *validity_timer;  /* tc validity time */
   uint32_t refcount;                   /* reference counter */
   bool is_virtual;                     /* true if tc is already timed out */
-  uint16_t msg_seq;                    /* sequence number of the tc message */
+  uint16_t tc_seq;                     /* sequence number of the tc message */
+  uint16_t mid_seq;                    /* sequence number of the mid message */
+  uint16_t hna_seq;                    /* sequence number of the hna message */
   uint8_t msg_hops;                    /* hopcount as per the tc message */
   uint8_t hops;                        /* SPF calculated hopcount */
   uint16_t ansn;                       /* ANSN number of the tc message */
@@ -156,7 +159,7 @@ void olsr_print_tc_table(void);
 void olsr_time_out_tc_set(void);
 
 /* tc msg input parser */
-bool olsr_input_tc(union olsr_message *, struct interface *, union olsr_ip_addr *from);
+void olsr_input_tc(union olsr_message *, struct interface *, union olsr_ip_addr *, enum duplicate_status);
 
 /* tc_entry manipulation */
 struct tc_entry *EXPORT(olsr_lookup_tc_entry) (const union olsr_ip_addr *);

@@ -45,6 +45,7 @@
 
 #include "olsr_types.h"
 #include "olsr_protocol.h"
+#include "duplicate_set.h"
 #include "common/avl.h"
 
 struct hna_net {
@@ -52,6 +53,7 @@ struct hna_net {
   struct olsr_ip_prefix hna_prefix;    /* the prefix, key */
   struct timer_entry *hna_net_timer;   /* expiration timer */
   struct tc_entry *hna_tc;             /* backpointer to the owning tc entry */
+  uint16_t tc_entry_seqno;             /* sequence number for cleanup */
 };
 
 AVLNODE2STRUCT(hna_tc_tree2hna, struct hna_net, hna_tc_node);
@@ -68,7 +70,7 @@ AVLNODE2STRUCT(hna_tc_tree2hna, struct hna_net, hna_tc_node);
 #define OLSR_FOR_ALL_TC_HNA_ENTRIES_END(tc, hna_net) }}
 
 /* HNA msg input parser */
-bool olsr_input_hna(union olsr_message *, struct interface *, union olsr_ip_addr *);
+void olsr_input_hna(union olsr_message *, struct interface *, union olsr_ip_addr *, enum duplicate_status);
 
 void olsr_init_hna_set(void);
 void olsr_flush_hna_nets(struct tc_entry *tc);

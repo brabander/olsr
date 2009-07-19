@@ -478,12 +478,11 @@ static void
 olsr_shutdown(void)
 {
   struct mid_entry *mid;
-  struct olsr_if_config *iface;
+  struct interface *iface;
 
   olsr_delete_all_kernel_routes();
 
   olsr_delete_all_tc_entries();
-  olsr_unlock_tc_entry(tc_myself);
 
   /* Flush MID database */
   OLSR_FOR_ALL_MID_ENTRIES(mid) {
@@ -505,9 +504,10 @@ olsr_shutdown(void)
   olsr_destroy_pluginsystem();
 
   /* Remove active interfaces */
-  for (iface = olsr_cnf->if_configs; iface != NULL; iface = iface->next) {
-    remove_interface(&iface->interf);
-  }
+  OLSR_FOR_ALL_INTERFACES(iface) {
+    struct interface **ptr = &iface;
+    remove_interface(ptr);
+  } OLSR_FOR_ALL_INTERFACES_END(iface)
 
   /* delete lo:olsr if neccesarry */
   if (olsr_cnf->source_ip_mode) {
@@ -539,9 +539,6 @@ olsr_shutdown(void)
   /* Stop and delete all timers. */
   olsr_flush_timers();
 
-  /* Free cookies and memory pools attached. */
-  olsr_delete_all_cookies();
-
   /* Remove parser hooks */
   olsr_deinit_parser();
 
@@ -551,6 +548,9 @@ olsr_shutdown(void)
   OLSR_INFO(LOG_MAIN, "\n <<<< %s - terminating >>>>\n           http://www.olsr.org\n", olsrd_version);
 
   olsr_log_cleanup();
+
+  /* Free cookies and memory pools attached. */
+  olsr_delete_all_cookies();
 
   /* Flush config */
   olsr_free_cfg(olsr_cnf);

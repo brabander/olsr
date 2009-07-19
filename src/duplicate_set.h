@@ -60,10 +60,19 @@ struct dup_entry {
   uint32_t valid_until;
 };
 
+enum duplicate_status {
+  RESET_SEQNO_OLSR_MESSAGE,
+  NEW_OLSR_MESSAGE,
+  OLD_OLSR_MESSAGE,
+  DUPLICATE_OLSR_MESSAGE,
+  TOO_OLD_OLSR_MESSAGE
+};
+
 AVLNODE2STRUCT(duptree2dupentry, struct dup_entry, avl);
 
+int EXPORT(olsr_seqno_diff)(uint16_t reference, uint16_t other);
 void olsr_init_duplicate_set(void);
-int olsr_message_is_duplicate(union olsr_message *m, bool forward_set);
+bool olsr_is_duplicate_message(union olsr_message *m, bool forward_set, enum duplicate_status *status);
 void olsr_print_duplicate_table(void);
 void olsr_flush_duplicate_entries(void);
 

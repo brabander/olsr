@@ -27,7 +27,7 @@ Written by Saverio Proto <zioproto@gmail.com> and Claudio Pisa <clauz@ninux.org>
 
 
 #include "plugin.h"             /* union set_plugin_parameter_addon */
-
+#include "duplicate_set.h"
 #include "parser.h"
 
 #define MESSAGE_TYPE 132
@@ -67,7 +67,7 @@ void CloseMDNS(void);
 void olsr_mdns_gen(unsigned char *packet, int len);
 
 /* Parser function to register with the scheduler */
-bool olsr_parser(union olsr_message *, struct interface *, union olsr_ip_addr *);
+void olsr_parser(union olsr_message *, struct interface *, union olsr_ip_addr *, enum duplicate_status);
 
 #endif /* _MDNS_MDNS_H */
 

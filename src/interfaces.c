@@ -290,10 +290,8 @@ remove_interface(struct interface **pinterf)
   CLOSESOCKET(ifp->olsr_socket);
   ifp->olsr_socket = -1;
 
+//  free(ifp->int_name);
   unlock_interface(ifp);
-
-  free(ifp->int_name);
-  olsr_cookie_free(interface_mem_cookie, ifp);
 
   if (list_is_empty(&interface_head) && !olsr_cnf->allow_no_interfaces) {
     OLSR_ERROR(LOG_INTERFACE, "No more active interfaces - exiting.\n");

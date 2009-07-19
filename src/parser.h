@@ -43,15 +43,16 @@
 #ifndef _OLSR_MSG_PARSER
 #define _OLSR_MSG_PARSER
 
+#include "duplicate_set.h"
 #include "olsr_protocol.h"
 #include "lq_packet.h"
 
 #define PROMISCUOUS 0xffffffff
 
-#define MIN_PACKET_SIZE(ver)	((int)(sizeof(uint8_t) * (((ver) == AF_INET) ? 4 : 7)))
+#define MIN_MESSAGE_SIZE()	((int)(8 + olsr_cnf->ipsize))
 
 /* Function returns false if the message should not be forwarded */
-typedef bool parse_function(union olsr_message *, struct interface *, union olsr_ip_addr *);
+typedef void parse_function(union olsr_message *, struct interface *, union olsr_ip_addr *, enum duplicate_status);
 
 struct parse_function_entry {
   uint32_t type;                       /* If set to PROMISCUOUS all messages will be received */

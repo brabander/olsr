@@ -63,65 +63,7 @@ struct olsr_cookie_info *tc_mem_cookie = NULL;
 
 static uint32_t relevantTcCount = 0;
 
-/*
- * Sven-Ola 2007-Dec: These four constants include an assumption
- * on how long a typical olsrd mesh memorizes (TC) messages in the
- * RAM of all nodes and how many neighbour changes between TC msgs.
- * In Berlin, we encounter hop values up to 70 which means that
- * messages may live up to ~15 minutes cycling between nodes and
- * obviously breaking out of the timeout_dup() jail. It may be more
- * correct to dynamically adapt those constants, e.g. by using the
- * max hop number (denotes size-of-mesh) in some form or maybe
- * a factor indicating how many (old) versions of olsrd are on.
- */
-
-/* Value window for ansn, identifies old messages to be ignored */
-#define TC_ANSN_WINDOW 256
-
-/* Value window for seqno, identifies old messages to be ignored */
-#define TC_SEQNO_WINDOW 1024
-
-/* Enlarges the value window for upcoming ansn/seqno to be accepted */
-#define TC_ANSN_WINDOW_MULT 4
-
-/* Enlarges the value window for upcoming ansn/seqno to be accepted */
-#define TC_SEQNO_WINDOW_MULT 8
-
 static void olsr_cleanup_tc_entry(struct tc_entry *tc);
-
-static bool
-olsr_seq_inrange_low(int beg, int end, uint16_t seq)
-{
-  if (beg < 0) {
-    if (seq >= (uint16_t) beg || seq < end) {
-      return true;
-    }
-  } else if (end >= 0x10000) {
-    if (seq >= beg || seq < (uint16_t) end) {
-      return true;
-    }
-  } else if (seq >= beg && seq < end) {
-    return true;
-  }
-  return false;
-}
-
-static bool
-olsr_seq_inrange_high(int beg, int end, uint16_t seq)
-{
-  if (beg < 0) {
-    if (seq > (uint16_t) beg || seq <= end) {
-      return true;
-    }
-  } else if (end >= 0x10000) {
-    if (seq > beg || seq <= (uint16_t) end) {
-      return true;
-    }
-  } else if (seq > beg && seq <= end) {
-    return true;
-  }
-  return false;
-}
 
 /**
  * Add a new tc_entry to the tc tree
@@ -834,8 +776,9 @@ olsr_calculate_tc_border(uint8_t lower_border,
  * as every call to pkt_get increases the packet offset and
  * hence the spot we are looking at.
  */
-bool
-olsr_input_tc(union olsr_message * msg, struct interface * input_if __attribute__ ((unused)), union olsr_ip_addr * from_addr)
+void
+olsr_input_tc(union olsr_message * msg, struct interface * input_if __attribute__ ((unused)),
+    union olsr_ip_addr * from_addr, enum duplicate_status status)
 {
   uint16_t size, msg_seq, ansn;
   uint8_t type, ttl, msg_hops, lower_border, upper_border;
@@ -851,14 +794,11 @@ olsr_input_tc(union olsr_message * msg, struct interface * input_if __attribute_
   int borderSet = 0;
 
   curr = (void *)msg;
-  if (!msg) {
-    return false;
-  }
 
   /* We are only interested in TC message types. */
   pkt_get_u8(&curr, &type);
   if ((type != LQ_TC_MESSAGE) && (type != TC_MESSAGE)) {
-    return false;
+    return;
   }
 
   /*
@@ -868,7 +808,7 @@ olsr_input_tc(union olsr_message * msg, struct interface * input_if __attribute_
    */
   if (check_neighbor_link(from_addr) != SYM_LINK) {
     OLSR_DEBUG(LOG_TC, "Received TC from NON SYM neighbor %s\n", olsr_ip_to_string(&buf, from_addr));
-    return false;
+    return;
   }
 
   pkt_get_reltime(&curr, &vtime);
@@ -888,36 +828,10 @@ olsr_input_tc(union olsr_message * msg, struct interface * input_if __attribute_
 
   tc = olsr_lookup_tc_entry(&originator);
 
-  if (tc && 0 != tc->edge_tree.count) {
-    if (olsr_seq_inrange_high((int)tc->msg_seq - TC_SEQNO_WINDOW,
-                              tc->msg_seq, msg_seq) && olsr_seq_inrange_high((int)tc->ansn - TC_ANSN_WINDOW, tc->ansn, ansn)) {
-
-      /*
-       * Ignore already seen seq/ansn values (small window for mesh memory)
-       */
-      if ((tc->msg_seq == msg_seq) || (tc->ignored++ < 32)) {
-        return false;
-      }
-
-      OLSR_DEBUG(LOG_TC, "Ignored to much LQTC's for %s, restarting\n", olsr_ip_to_string(&buf, &originator));
-
-    } else if (!olsr_seq_inrange_high(tc->msg_seq, (int)tc->msg_seq + TC_SEQNO_WINDOW * TC_SEQNO_WINDOW_MULT, msg_seq)
-               || !olsr_seq_inrange_low(tc->ansn, (int)tc->ansn + TC_ANSN_WINDOW * TC_ANSN_WINDOW_MULT, ansn)) {
-
-      /*
-       * Only accept future seq/ansn values (large window for node reconnects).
-       * Restart in all other cases. Ignore a single stray message.
-       */
-      if (!tc->err_seq_valid) {
-        tc->err_seq = msg_seq;
-        tc->err_seq_valid = true;
-      }
-      if (tc->err_seq == msg_seq) {
-        return false;
-      }
-
-      OLSR_DEBUG(LOG_TC, "Detected node restart for %s\n", olsr_ip_to_string(&buf, &originator));
-    }
+  /* TCs can be splitted, so we are looking for ANSNs equal or higher */
+  if (tc && status != RESET_SEQNO_OLSR_MESSAGE && olsr_seqno_diff(ansn, tc->ansn) < 0) {
+    /* this TC is too old, discard it */
+    return;
   }
 
   /*
@@ -931,13 +845,13 @@ olsr_input_tc(union olsr_message * msg, struct interface * input_if __attribute_
    * Update the tc entry.
    */
   tc->msg_hops = msg_hops;
-  tc->msg_seq = msg_seq;
+  tc->tc_seq = msg_seq;
   tc->ansn = ansn;
   tc->ignored = 0;
   tc->err_seq_valid = false;
   tc->is_virtual = false;
 
-  OLSR_DEBUG(LOG_TC, "Processing TC from %s, seq 0x%04x\n", olsr_ip_to_string(&buf, &originator), tc->msg_seq);
+  OLSR_DEBUG(LOG_TC, "Processing TC from %s, seq 0x%04x\n", olsr_ip_to_string(&buf, &originator), tc->tc_seq);
 
   /*
    * Now walk the edge advertisements contained in the packet.
@@ -990,9 +904,6 @@ olsr_input_tc(union olsr_message * msg, struct interface * input_if __attribute_
     olsr_set_timer(&tc->edge_gc_timer, OLSR_TC_EDGE_GC_TIME,
                    OLSR_TC_EDGE_GC_JITTER, OLSR_TIMER_ONESHOT, &olsr_expire_tc_edge_gc, tc, tc_edge_gc_timer_cookie);
   }
-
-  /* Forward the message */
-  return true;
 }
 
 uint32_t
@@ -1007,6 +918,11 @@ olsr_delete_all_tc_entries(void) {
   struct tc_edge_entry *edge;
 
   /* first mark all nodes non-virtual and all edges virtual */
+  tc_myself->is_virtual = false;
+  OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc_myself, edge) {
+    edge->is_virtual = 1;
+  } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc_myself, edge)
+
   OLSR_FOR_ALL_TC_ENTRIES(tc) {
     tc->is_virtual = false;
     OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, edge) {
@@ -1015,6 +931,9 @@ olsr_delete_all_tc_entries(void) {
   }OLSR_FOR_ALL_TC_ENTRIES_END(tc)
 
   /* erase all edges */
+  OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc_myself, edge) {
+    olsr_delete_tc_edge_entry(edge);
+  } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc_myself, edge)
   OLSR_FOR_ALL_TC_ENTRIES(tc) {
     OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, edge) {
       olsr_delete_tc_edge_entry(edge);
@@ -1022,6 +941,9 @@ olsr_delete_all_tc_entries(void) {
   }OLSR_FOR_ALL_TC_ENTRIES_END(tc)
 
   /* then remove all tc entries */
+  tc_myself->is_virtual = true;
+  olsr_delete_tc_entry(tc_myself);
+  tc_myself = NULL;
   OLSR_FOR_ALL_TC_ENTRIES(tc) {
     tc->is_virtual = true;
     olsr_delete_tc_entry(tc);

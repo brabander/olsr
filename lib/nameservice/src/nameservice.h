@@ -54,7 +54,7 @@
 #include "interfaces.h"
 #include "olsr_protocol.h"
 #include "common/list.h"
-
+#include "duplicate_set.h"
 #include "plugin.h"
 #include "nameservice_msg.h"
 #include "hashing.h"
@@ -129,7 +129,7 @@ void olsr_expire_write_file_timer(void *);
 void olsr_namesvc_delete_db_entry(struct db_entry *);
 
 /* Parser function to register with the sceduler */
-bool olsr_parser(union olsr_message *, struct interface *, union olsr_ip_addr *);
+void olsr_parser(union olsr_message *, struct interface *, union olsr_ip_addr *, enum duplicate_status);
 
 /* callback for periodic timer */
 void olsr_namesvc_gen(void *);

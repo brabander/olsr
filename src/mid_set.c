@@ -55,7 +55,6 @@
 #include <stdlib.h>
 
 static struct mid_entry *olsr_lookup_mid_entry(const union olsr_ip_addr *);
-static void olsr_prune_mid_entries(const union olsr_ip_addr *main_addr, uint16_t mid_seqno);
 
 /* Root of the MID tree */
 struct avl_tree mid_tree;
@@ -214,7 +213,7 @@ olsr_fixup_mid_main_addr(const union olsr_ip_addr *main_addr, const union olsr_i
  */
 static struct mid_entry *
 olsr_insert_mid_entry(const union olsr_ip_addr *main_addr,
-                      const union olsr_ip_addr *alias_addr, uint32_t vtime, uint16_t mid_seqno)
+                      const union olsr_ip_addr *alias_addr, uint32_t vtime)
 {
   struct tc_entry *tc;
   struct mid_entry *alias;
@@ -259,9 +258,6 @@ olsr_insert_mid_entry(const union olsr_ip_addr *main_addr,
   olsr_set_mid_timer(alias->mid_tc, vtime);
   olsr_lock_tc_entry(tc);
 
-  /* Set sequence number for alias purging */
-  alias->mid_seqno = mid_seqno;
-
   return alias;
 }
 
@@ -277,7 +273,7 @@ olsr_insert_mid_entry(const union olsr_ip_addr *main_addr,
  */
 static void
 olsr_update_mid_entry(const union olsr_ip_addr *main_addr,
-                      const union olsr_ip_addr *alias_addr, uint32_t vtime, uint16_t mid_seqno)
+                      const union olsr_ip_addr *alias_addr, uint32_t vtime, uint16_t msg_seq)
 {
   struct mid_entry *alias;
 
@@ -290,10 +286,7 @@ olsr_update_mid_entry(const union olsr_ip_addr *main_addr,
    */
   alias = olsr_lookup_mid_entry(alias_addr);
   if (alias) {
-    /* Update sequence number for alias purging */
-    alias->mid_seqno = mid_seqno;
-
-    /* XXX handle main IP address changes */
+    alias->mid_entry_seqno = msg_seq;
 
     /* Refresh the timer. */
     olsr_set_mid_timer(alias->mid_tc, vtime);
@@ -303,7 +296,9 @@ olsr_update_mid_entry(const union olsr_ip_addr *main_addr,
   /*
    * This is a fresh alias.
    */
-  alias = olsr_insert_mid_entry(main_addr, alias_addr, vtime, mid_seqno);
+  alias = olsr_insert_mid_entry(main_addr, alias_addr, vtime);
+
+  alias->mid_entry_seqno = msg_seq;
 
   /*
    * Do the needful if one of our neighbors has changed its main address.
@@ -419,15 +414,13 @@ olsr_flush_mid_entries(struct tc_entry *tc)
  * collection of the old entries.
  *
  * @param main_addr the root of MID entries.
- * @param mid_seqno the most recent message sequence number
  */
 static void
-olsr_prune_mid_entries(const union olsr_ip_addr *main_addr, uint16_t mid_seqno)
+olsr_prune_mid_entries(struct tc_entry *tc)
 {
-  struct tc_entry *tc = olsr_locate_tc_entry(main_addr);
   struct mid_entry *alias;
   OLSR_FOR_ALL_TC_MID_ENTRIES(tc, alias) {
-    if (alias->mid_seqno != mid_seqno) {
+    if (alias->mid_entry_seqno != tc->mid_seq) {
       olsr_delete_mid_entry(alias);
     }
   }
@@ -462,28 +455,26 @@ olsr_print_mid_set(void)
 /**
  * Process an incoming MID message.
  */
-bool
-olsr_input_mid(union olsr_message *msg, struct interface *input_if __attribute__ ((unused)), union olsr_ip_addr *from_addr)
+void
+olsr_input_mid(union olsr_message *msg, struct interface *input_if __attribute__ ((unused)),
+    union olsr_ip_addr *from_addr, enum duplicate_status status)
 {
   uint16_t msg_size, msg_seq;
   uint8_t type, ttl, msg_hops;
-  const unsigned char *curr;
+  const unsigned char *curr, *end;
   uint32_t vtime;
   union olsr_ip_addr originator, alias;
-  int alias_count;
+  struct tc_entry *tc;
 #if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
 #endif
 
   curr = (void *)msg;
-  if (!msg) {
-    return false;
-  }
 
   /* We are only interested in MID message types. */
   pkt_get_u8(&curr, &type);
   if (type != MID_MESSAGE) {
-    return false;
+    return;
   }
 
   pkt_get_reltime(&curr, &vtime);
@@ -497,7 +488,7 @@ olsr_input_mid(union olsr_message *msg, struct interface *input_if __attribute__
   pkt_get_u16(&curr, &msg_seq);
 
   if (!olsr_validate_address(&originator)) {
-    return false;
+    return;
   }
 
   /*
@@ -507,33 +498,36 @@ olsr_input_mid(union olsr_message *msg, struct interface *input_if __attribute__
    */
   if (check_neighbor_link(from_addr) != SYM_LINK) {
     OLSR_DEBUG(LOG_MID, "Received MID from NON SYM neighbor %s\n", olsr_ip_to_string(&buf, from_addr));
-    return false;
+    return;
   }
 
+  tc = olsr_locate_tc_entry(&originator);
 
-  /*
-   * How many aliases ?
-   */
-  alias_count = (msg_size - 12) / olsr_cnf->ipsize;
+  if (status != RESET_SEQNO_OLSR_MESSAGE && olsr_seqno_diff(msg_seq, tc->mid_seq) <= 0) {
+    /* this MID is too old, discard it */
+    return;
+  }
+  tc->mid_seq = msg_seq;
 
   OLSR_DEBUG(LOG_MID, "Processing MID from %s with %d aliases, seq 0x%04x\n",
-             olsr_ip_to_string(&buf, &originator), alias_count, msg_seq);
+             olsr_ip_to_string(&buf, &originator), (int)((msg_size-12)/olsr_cnf->ipsize), msg_seq);
+
+
+  /* calculate end of message */
+  end = (uint8_t *)msg + msg_size;
+
   /*
    * Now walk the list of alias advertisements one by one.
    */
-  while (alias_count) {
+  while (curr + olsr_cnf->ipsize < end) {
     pkt_get_ipaddress(&curr, &alias);
     olsr_update_mid_entry(&originator, &alias, vtime, msg_seq);
-    alias_count--;
   }
 
   /*
    * Prune the aliases that did not get refreshed by this advertisment.
    */
-  olsr_prune_mid_entries(&originator, msg_seq);
-
-  /* Forward the message */
-  return true;
+  olsr_prune_mid_entries(tc);
 }
 
 /*

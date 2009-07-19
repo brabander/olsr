@@ -80,7 +80,7 @@ static enum olsr_txtcommand_result debuginfo_pktstat(struct comport_connection *
 static enum olsr_txtcommand_result debuginfo_cookies(struct comport_connection *con,  char *cmd, char *param);
 
 static void update_statistics_ptr(void *);
-static bool olsr_msg_statistics(union olsr_message *msg, struct interface *input_if, union olsr_ip_addr *from_addr);
+static void olsr_msg_statistics(union olsr_message *, struct interface *, union olsr_ip_addr *, enum duplicate_status);
 static char *olsr_packet_statistics(char *packet, struct interface *interface, union olsr_ip_addr *, int *length);
 static void update_statistics_ptr(void *data __attribute__ ((unused)));
 
@@ -307,9 +307,9 @@ update_statistics_ptr(void *data __attribute__ ((unused)))
 }
 
 /* update message statistics */
-static bool
-olsr_msg_statistics(union olsr_message *msg,
-                    struct interface *input_if __attribute__ ((unused)), union olsr_ip_addr *from_addr __attribute__ ((unused)))
+static void
+olsr_msg_statistics(union olsr_message *msg, struct interface *input_if __attribute__ ((unused)),
+    union olsr_ip_addr *from_addr __attribute__ ((unused)), enum duplicate_status status  __attribute__ ((unused)))
 {
   int msgtype, msgsize;
   union olsr_ip_addr origaddr;
@@ -368,7 +368,6 @@ olsr_msg_statistics(union olsr_message *msg,
   tr->current.data[type]++;
   tr->current.data[DTR_MESSAGES]++;
   tr->current.data[DTR_MSG_TRAFFIC] += msgsize;
-  return true;
 }
 
 /* update traffic statistics */

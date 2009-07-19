@@ -60,6 +60,21 @@ static struct timer_entry *duplicate_cleanup_timer;
 static struct olsr_cookie_info *duplicate_timer_cookie = NULL;
 static struct olsr_cookie_info *duplicate_mem_cookie = NULL;
 
+int olsr_seqno_diff(uint16_t reference, uint16_t other) {
+  int diff;
+
+  diff = (int)reference - (int)other;
+
+  // overflow ?
+  if (diff >= (1 << 15)) {
+    diff -= (1 << 16);
+  }
+  else if (diff < -(1 << 15)) {
+    diff += (1 << 16);
+  }
+  return diff;
+}
+
 void
 olsr_init_duplicate_set(void)
 {
@@ -140,8 +155,8 @@ olsr_flush_duplicate_entries(void)
   } OLSR_FOR_ALL_DUP_ENTRIES_END(entry);
 }
 
-int
-olsr_message_is_duplicate(union olsr_message *m, bool forwarding)
+bool
+olsr_is_duplicate_message(union olsr_message *m, bool forwarding, enum duplicate_status *status)
 {
   struct avl_tree *tree;
   struct dup_entry *entry;
@@ -150,10 +165,15 @@ olsr_message_is_duplicate(union olsr_message *m, bool forwarding)
   uint32_t valid_until;
   uint16_t seqnr;
   union olsr_ip_addr *ip;
+  enum duplicate_status dummy = 0;
 
 #if !defined(REMOVE_LOG_DEBUG)
   struct ipaddr_str buf;
 #endif
+
+  if (status == NULL) {
+    status = &dummy;
+  }
 
   tree = forwarding ? &forward_set : &processing_set;
   if (olsr_cnf->ip_version == AF_INET) {
@@ -179,18 +199,16 @@ olsr_message_is_duplicate(union olsr_message *m, bool forwarding)
       avl_insert(tree, &entry->avl, 0);
       entry->valid_until = valid_until;
     }
+
+    *status = NEW_OLSR_MESSAGE;
     return false;               // okay, we process this package
   }
 
-  diff = (int)seqnr - (int)(entry->seqnr);
+  diff = olsr_seqno_diff(seqnr, entry->seqnr);
 
   // update timestamp
   if (valid_until > entry->valid_until) {
     entry->valid_until = valid_until;
-  }
-  // overflow ?
-  if (diff > (1 << 15)) {
-    diff -= (1 << 16);
   }
 
   if (diff < -31) {
@@ -201,10 +219,16 @@ olsr_message_is_duplicate(union olsr_message *m, bool forwarding)
       entry->too_low_counter = 0;
       entry->seqnr = seqnr;
       entry->array = 1;
-      return false;             /* start with a new sequence number, so NO duplicate */
+
+      /* start with a new sequence number, so NO duplicate */
+      *status = RESET_SEQNO_OLSR_MESSAGE;
+      return false;
     }
     OLSR_DEBUG(LOG_DUPLICATE_SET, "blocked %x from %s\n", seqnr, olsr_ip_to_string(&buf, mainIp));
-    return true;                /* duplicate ! */
+
+    /* much too old */
+    *status = TOO_OLD_OLSR_MESSAGE;
+    return true;
   }
 
   entry->too_low_counter = 0;
@@ -214,11 +238,17 @@ olsr_message_is_duplicate(union olsr_message *m, bool forwarding)
     if ((entry->array & bitmask) != 0) {
       OLSR_DEBUG(LOG_DUPLICATE_SET, "blocked %x (diff=%d,mask=%08x) from %s\n", seqnr, diff,
                  entry->array, olsr_ip_to_string(&buf, mainIp));
-      return true;              /* duplicate ! */
+
+      /* duplicate ! */
+      *status = DUPLICATE_OLSR_MESSAGE;
+      return true;
     }
     entry->array |= bitmask;
     OLSR_DEBUG(LOG_DUPLICATE_SET, "processed %x from %s\n", seqnr, olsr_ip_to_string(&buf, mainIp));
-    return false;               /* no duplicate */
+
+    /* no duplicate */
+    *status = OLD_OLSR_MESSAGE;
+    return false;
   } else if (diff < 32) {
     entry->array <<= (uint32_t) diff;
   } else {
@@ -227,7 +257,10 @@ olsr_message_is_duplicate(union olsr_message *m, bool forwarding)
   entry->array |= 1;
   entry->seqnr = seqnr;
   OLSR_DEBUG(LOG_DUPLICATE_SET, "processed %x from %s\n", seqnr, olsr_ip_to_string(&buf, mainIp));
-  return false;                 /* no duplicate */
+
+  /* no duplicate */
+  *status = NEW_OLSR_MESSAGE;
+  return false;
 }
 
 void
