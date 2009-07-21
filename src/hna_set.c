@@ -319,7 +319,7 @@ olsr_input_hna(union olsr_message *msg, struct interface *in_if __attribute__ ((
    */
   curr_end = (uint8_t *)msg + msg_size;
 
-  while (curr + olsr_cnf->ipsize < curr_end) {
+  while (curr + 2*olsr_cnf->ipsize <= curr_end) {
 
     pkt_get_ipaddress(&curr, &prefix.prefix);
     pkt_get_prefixlen(&curr, &prefix.prefix_len);

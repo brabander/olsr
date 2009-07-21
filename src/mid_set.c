@@ -442,11 +442,8 @@ olsr_print_mid_set(void)
   OLSR_INFO(LOG_MID, "\n--- %s ------------------------------------------------- MID\n\n", olsr_wallclock_string());
 
   OLSR_FOR_ALL_TC_ENTRIES(tc) {
-    bool first = true;
     OLSR_FOR_ALL_TC_MID_ENTRIES(tc, alias) {
-      OLSR_INFO_NH(LOG_MID, "%-15s: %s\n",
-                   first ? olsr_ip_to_string(&buf1, &tc->addr) : "", olsr_ip_to_string(&buf2, &alias->mid_alias_addr));
-      first = false;
+      OLSR_INFO_NH(LOG_MID, "%-15s: %s\n", olsr_ip_to_string(&buf1, &tc->addr), olsr_ip_to_string(&buf2, &alias->mid_alias_addr));
     } OLSR_FOR_ALL_TC_MID_ENTRIES_END(tc, alias);
   } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
 #endif
@@ -519,7 +516,7 @@ olsr_input_mid(union olsr_message *msg, struct interface *input_if __attribute__
   /*
    * Now walk the list of alias advertisements one by one.
    */
-  while (curr + olsr_cnf->ipsize < end) {
+  while (curr + olsr_cnf->ipsize <= end) {
     pkt_get_ipaddress(&curr, &alias);
     olsr_update_mid_entry(&originator, &alias, vtime, msg_seq);
   }

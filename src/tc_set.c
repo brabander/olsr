@@ -860,7 +860,7 @@ olsr_input_tc(union olsr_message * msg, struct interface * input_if __attribute_
   limit = (unsigned char *)msg + size;
   borderSet = 0;
   relevantTc = false;
-  while (curr < limit) {
+  while (curr + olsr_cnf->ipsize + olsr_sizeof_TCLQ() <= limit) {
     if (olsr_tc_update_edge(tc, ansn, &curr, &upper_border_ip)) {
       relevantTc = true;
     }
