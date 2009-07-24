@@ -57,7 +57,7 @@
 #define LQ_FPM_QUICKSTART_AGING    16384       /* 65536 * 0.25 */
 #define LQ_QUICKSTART_STEPS        12
 
-static int lq_etxfpm_post_init(void);
+static bool lq_etxfpm_post_init(void);
 static int set_plugin_aging(const char *, void *, set_plugin_parameter_addon);
 
 static olsr_linkcost lq_etxfpm_calc_link_entry_cost(struct link_entry *);
@@ -140,9 +140,9 @@ static const struct olsrd_plugin_parameters plugin_parameters[] = {
 
 DEFINE_PLUGIN6(PLUGIN_DESCR, PLUGIN_AUTHOR, NULL, lq_etxfpm_post_init, NULL, NULL, false, plugin_parameters)
 
-static int lq_etxfpm_post_init(void) {
+static bool lq_etxfpm_post_init(void) {
   active_lq_handler = &lq_etxfpm_handler;
-  return 0;
+  return false;
 }
 
 static int

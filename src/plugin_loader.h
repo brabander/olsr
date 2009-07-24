@@ -52,7 +52,7 @@
 static struct olsr_plugin olsr_internal_plugin_definition = { \
   .p_name = (char*) PLUGIN_FULLNAME , .p_descr = (char*)descr, .p_author = (char*)author, \
   .p_pre_init = pre_init, .p_post_init = post_init, .p_pre_cleanup = pre_cleanup, .p_post_cleanup = post_cleanup, \
-  .p_deactivate = deactivate, .p_version = 6, .p_param = parameter, .p_param_cnt = ARRAYSIZE(parameter) \
+  .p_legacy_init = NULL, .p_deactivate = deactivate, .p_version = 6, .p_param = parameter, .p_param_cnt = ARRAYSIZE(parameter) \
 }; \
 static void hookup_plugin_definition (void) __attribute__ ((constructor)); \
 static void hookup_plugin_definition (void) { \
@@ -85,10 +85,11 @@ struct olsr_plugin {
   bool p_deactivate;    /* plugin can be deactivated */
 
   /* function pointers */
-  int (*p_pre_init) (void);
-  int (*p_post_init) (void);
-  int (*p_pre_cleanup) (void);
-  void (*p_post_cleanup) (void);
+  bool (*p_pre_init) (void);
+  bool (*p_post_init) (void);
+  bool (*p_pre_cleanup) (void);
+  bool (*p_post_cleanup) (void);
+  int  (*p_legacy_init) (void);
 
   /* plugin interface version */
   int p_version;

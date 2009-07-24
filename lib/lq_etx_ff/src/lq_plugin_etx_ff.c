@@ -60,7 +60,7 @@
 
 #define LQ_PLUGIN_RELEVANT_COSTCHANGE_FF 16
 
-static int lq_etxff_post_init(void);
+static bool lq_etxff_post_init(void);
 
 static void lq_etxff_initialize(void);
 static void lq_etxff_deinitialize(void);
@@ -140,9 +140,9 @@ struct lq_handler lq_etxff_handler = {
   4,4
 };
 
-static int lq_etxff_post_init(void) {
+static bool lq_etxff_post_init(void) {
   active_lq_handler = &lq_etxff_handler;
-  return 0;
+  return false;
 }
 
 static void

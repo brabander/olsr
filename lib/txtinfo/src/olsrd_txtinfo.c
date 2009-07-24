@@ -68,9 +68,9 @@ struct debuginfo_cmd {
   struct olsr_txtcommand *normal, *csv;
 };
 
-static int txtinfo_pre_init(void);
-int txtinfo_post_init(void);
-static int txtinfo_pre_cleanup(void);
+static bool txtinfo_pre_init(void);
+static bool txtinfo_post_init(void);
+static bool txtinfo_pre_cleanup(void);
 
 static enum olsr_txtcommand_result txtinfo_neigh(struct comport_connection *con, char *cmd, char *param);
 static enum olsr_txtcommand_result txtinfo_link(struct comport_connection *con,  char *cmd, char *param);
@@ -106,7 +106,7 @@ static struct debuginfo_cmd commands[] = {
 /**
  * Constructor of plugin, called before parameters are initialized
  */
-static int
+static bool
 txtinfo_pre_init(void)
 {
   ip_acl_init(&allowed_nets);
@@ -121,13 +121,13 @@ txtinfo_pre_init(void)
     ip_acl_add(&allowed_nets, (const union olsr_ip_addr *)&in6addr_loopback, 128, false);
     ip_acl_add(&allowed_nets, (const union olsr_ip_addr *)&in6addr_v4mapped_loopback, 128, false);
   }
-  return 0;
+  return false;
 }
 
 /**
  * Destructor of plugin
  */
-static int
+static bool
 txtinfo_pre_cleanup(void)
 {
   size_t i;
@@ -137,13 +137,13 @@ txtinfo_pre_cleanup(void)
     olsr_com_remove_csv_txtcommand(commands[i].csv);
   }
   ip_acl_flush(&allowed_nets);
-  return 0;
+  return false;
 }
 
 /*
  * Initialization of plugin AFTER parameters have been read
  */
-int
+static bool
 txtinfo_post_init(void)
 {
   size_t i;
@@ -154,7 +154,7 @@ txtinfo_post_init(void)
     commands[i].normal->acl = &allowed_nets;
     commands[i].csv->acl = &allowed_nets;
   }
-  return 0;
+  return false;
 }
 
 /**
