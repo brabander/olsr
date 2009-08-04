@@ -182,7 +182,7 @@ olsr_netlink_send(struct nlmsghdr *n, char *buf, size_t bufSize, uint8_t flag, c
               else if ((errno == 17) && ((flag == RT_ORIG_REQUEST) || (flag == RT_AUTO_ADD_GATEWAY_ROUTE)) && (n->nlmsg_type ==
                                                                                                        RTM_NEWROUTE)) {
                 /* a similar route going over another gateway may be present, which has to be deleted! */
-                OLSR_WARN(LOG_ROUTING, ". auto-deleting similar routes to resolve 'File exists' (17) while adding route!");
+                OLSR_WARN(LOG_ROUTING, ". auto-deleting similar route to resolve 'File exists' (17) while adding route!");
                 rt_ret = RT_DELETE_SIMILAR_ROUTE;       /* processing will contiune after this loop */
               }
               /* report success on "No such process" (3) */
@@ -294,7 +294,7 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
     FIBM_FLAT != olsr_cnf->fib_metric ? ((RTM_NEWROUTE == cmd) ? rt->rt_best->rtp_metric.hops : rt->rt_metric.hops)
     : RT_METRIC_DEFAULT : 65535;
   const struct rt_nexthop *nexthop = ((cmd != RTM_NEWRULE) || (cmd != RTM_DELRULE)) ?
-    (RTM_NEWROUTE == cmd) ? &rt->rt_best->rtp_nexthop : &rt->rt_nexthop : NULL;
+    ((RTM_NEWROUTE == cmd)||(( (RTM_DELROUTE == cmd) && (RT_DELETE_SIMILAR_ROUTE == flag) ))) ? &rt->rt_best->rtp_nexthop : &rt->rt_nexthop : NULL;
 
   memset(&req, 0, sizeof(req));
   req.n.nlmsg_len = NLMSG_LENGTH(sizeof(req.r));
