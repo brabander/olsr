@@ -103,15 +103,19 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
     0,
     0
   };
-  uint32_t metric = ((cmd != RTM_NEWRULE) || (cmd != RTM_DELRULE)) ?
-    FIBM_FLAT != olsr_cnf->fib_metric ? 
-      ((RTM_NEWROUTE == cmd) ? rt->rt_best->rtp_metric.hops : rt->rt_metric.hops) 
-      : RT_METRIC_DEFAULT
-      : 0;
-  const struct rt_nexthop *nexthop = ( ( cmd != RTM_NEWRULE ) || ( cmd != RTM_DELRULE ) ) ? 
-                                             ( ( ( RT_DELETE_SIMILAR_ROUTE == flag || RT_DELETE_SIMILAR_AUTO_ROUTE == flag ) && ( RTM_DELROUTE == cmd ) ) 
-                                             || ( RTM_NEWROUTE == cmd ) ) ? &rt->rt_best->rtp_nexthop : &rt->rt_nexthop 
-                                     : NULL;
+
+  uint32_t metric = 0;
+  struct rt_nexthop *nexthop = NULL;
+  if ( ( cmd != RTM_NEWRULE ) || ( cmd != RTM_DELRULE ) ) {
+
+    if (FIBM_FLAT != olsr_cnf->fib_metric) metric = RT_METRIC_DEFAULT;
+    else metric = (RTM_NEWROUTE == cmd) ? rt->rt_best->rtp_metric.hops : rt->rt_metric.hops;
+
+    if ( ( RTM_NEWROUTE == cmd ) || (( RT_DELETE_SIMILAR_ROUTE == flag || RT_DELETE_SIMILAR_AUTO_ROUTE == flag ) && ( RTM_DELROUTE == cmd )) )
+      nexthop = &rt->rt_best->rtp_nexthop;
+    else nexthop = &rt->rt_nexthop;
+  }
+
   memset(&req, 0, sizeof(req));
 
   req.n.nlmsg_len = NLMSG_LENGTH(sizeof(struct rtmsg));
@@ -256,7 +260,7 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
              * a target behind the gateway is really strange, and could lead to multiple routes!
              * anyways if invalid gateway ips may happen we are f*cked up!!
              * but if not, these on the fly generated routes are no problem, and will only get used when needed */
-            else if ( ((errno == 3)||(errno == 101)||(errno == 128)) && (flag == RT_ORIG_REQUEST) && (FIBM_FLAT == olsr_cnf->fib_metric) 
+            else if ( ( (errno == 3) || (errno == 101) || (errno == 128) ) && (flag == RT_ORIG_REQUEST) && (FIBM_FLAT == olsr_cnf->fib_metric) 
                      && (cmd == RTM_NEWROUTE) && (rt->rt_dst.prefix.v4.s_addr!=nexthop->gateway.v4.s_addr)) {
               if (errno == 128) olsr_syslog(OLSR_LOG_ERR, ". autogenerating route to handle 'Network unreachable' (128) while adding route!");
               else if (errno == 101) olsr_syslog(OLSR_LOG_ERR, ". autogenerating route to handle 'Network unreachable' (101) while adding route!");
@@ -303,7 +307,7 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
     else rt_ret = -1; /* unrecoverable error */
   }
   //send ipc update on success
-  if ( ( cmd != RTM_NEWRULE ) && ( cmd != RTM_DELRULE ) && (flag = RT_ORIG_REQUEST) && (0 <= rt_ret && olsr_cnf->ipc_connections > 0)) {
+  if ( ( cmd != RTM_NEWRULE ) && ( cmd != RTM_DELRULE ) && (flag = RT_ORIG_REQUEST) && (0 <= rt_ret && olsr_cnf->ipc_connections > 0) ) {
     ipc_route_send_rtentry(&rt->rt_dst.prefix, &nexthop->gateway, metric, RTM_NEWROUTE == cmd,
                              if_ifwithindex_name(nexthop->iif_index));
   }
