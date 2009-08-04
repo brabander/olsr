@@ -250,14 +250,15 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
               rt_ret = 0;
             }
             /* insert route to gateway on the fly if "Network unreachable" (128) on 2.4 kernels
-             * or on 2.6 kernel No such process (3) is reported in rtnetlink response
+             * or on 2.6 kernel No such process (3) or Network unreachable (101) is reported in rtnetlink response
              * do this only with flat metric, as using metric values inherited from 
              * a target behind the gateway is really strange, and could lead to multiple routes!
              * anyways if invalid gateway ips may happen we are f*cked up!!
              * but if not, these on the fly generated routes are no problem, and will only get used when needed */
-            else if ( ((errno == 3)|(errno == 128)) && (flag == RT_ORIG_REQUEST) && (FIBM_FLAT == olsr_cnf->fib_metric) 
+            else if ( ((errno == 3)||(errno == 101)||(errno == 128)) && (flag == RT_ORIG_REQUEST) && (FIBM_FLAT == olsr_cnf->fib_metric) 
                      && (cmd == RTM_NEWROUTE) && (rt->rt_dst.prefix.v4.s_addr!=nexthop->gateway.v4.s_addr)) {
               if (errno == 128) olsr_syslog(OLSR_LOG_ERR, ". autogenerating route to handle 'Network unreachable' (128) while adding route!");
+              else if (errno == 101) olsr_syslog(OLSR_LOG_ERR, ". autogenerating route to handle 'Network unreachable' (101) while adding route!");
               else olsr_syslog(OLSR_LOG_ERR, ". autogenerating route to handle 'No such process' (3) while adding route!");
 
               rt_ret = RT_AUTO_ADD_GATEWAY_ROUTE; /* processing will contiune after this loop */
