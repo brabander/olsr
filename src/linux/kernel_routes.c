@@ -294,7 +294,9 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
     FIBM_FLAT != olsr_cnf->fib_metric ? ((RTM_NEWROUTE == cmd) ? rt->rt_best->rtp_metric.hops : rt->rt_metric.hops)
     : RT_METRIC_DEFAULT : 65535;
   const struct rt_nexthop *nexthop = ((cmd != RTM_NEWRULE) || (cmd != RTM_DELRULE)) ?
-    ((RTM_NEWROUTE == cmd)||(( (RTM_DELROUTE == cmd) && (RT_DELETE_SIMILAR_ROUTE == flag) ))) ? &rt->rt_best->rtp_nexthop : &rt->rt_nexthop : NULL;
+                                           ( ( ( (RTM_DELROUTE == cmd) && ( RT_DELETE_SIMILAR_AUTO_ROUTE == flag || RT_DELETE_SIMILAR_ROUTE == flag ) ) ) 
+                                           || (RTM_NEWROUTE == cmd) ) ? &rt->rt_best->rtp_nexthop : &rt->rt_nexthop 
+                                     : NULL;
 
   memset(&req, 0, sizeof(req));
   req.n.nlmsg_len = NLMSG_LENGTH(sizeof(req.r));
