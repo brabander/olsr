@@ -106,7 +106,7 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
 
   uint32_t metric = 0;
   const struct rt_nexthop *nexthop = NULL;
-  if ( ( cmd != RTM_NEWRULE ) || ( cmd != RTM_DELRULE ) ) {
+  if ( ( cmd != RTM_NEWRULE ) && ( cmd != RTM_DELRULE ) ) {
     if (FIBM_FLAT != olsr_cnf->fib_metric) {
       metric = RT_METRIC_DEFAULT;
     }
@@ -141,7 +141,7 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
   /* as wildcard for deletion */
   req.r.rtm_scope = RT_SCOPE_NOWHERE;
 
-  if (( cmd != RTM_NEWRULE ) && ( cmd != RTM_DELRULE ) ) {
+  if ( ( cmd != RTM_NEWRULE ) && ( cmd != RTM_DELRULE ) ) {
     req.r.rtm_dst_len = rt->rt_dst.prefix_len;
 
     /* do not specify much as we wanna delete similar/conflicting routes */
@@ -391,8 +391,7 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
 int
 olsr_netlink_rule(uint8_t family, uint8_t rttable, uint16_t cmd)
 {
-  struct rt_entry rt;
-  return olsr_netlink_route_int(&rt, family, rttable, cmd, RT_ORIG_REQUEST);
+  return olsr_netlink_route_int(NULL, family, rttable, cmd, RT_ORIG_REQUEST);
 }
 
 /* internal wrapper function for above patched function */
