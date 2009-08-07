@@ -221,7 +221,7 @@ plugin_ipc_init(void)
   /* complete the socket structure */
   memset(&sin, 0, sizeof(sin));
   sin.sin_family = AF_INET;
-  sin.sin_addr.s_addr = INADDR_ANY;
+  sin.sin_addr.s_addr = ipc_listen_ip.v4.s_addr;
   sin.sin_port = htons(ipc_port);
 
   /* bind the socket to the port number */
