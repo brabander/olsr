@@ -56,16 +56,6 @@ static char pulsedata[] = "\\|/-";
 static uint8_t pulse_state = 0;
 
 void
-generate_mid(void *p)
-{
-  struct interface *ifn = p;
-
-  if (queue_mid(ifn)) {
-    set_buffer_timer(ifn);
-  }
-}
-
-void
 generate_hna(void *p)
 {
   struct interface *ifn = p;

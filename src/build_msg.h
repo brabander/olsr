@@ -44,8 +44,6 @@
 
 #include "olsr_protocol.h"
 
-bool queue_mid(struct interface *);
-
 bool queue_hna(struct interface *);
 
 #endif
