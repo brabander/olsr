@@ -63,7 +63,6 @@ static int set_plugin_float(const char *, void *, set_plugin_parameter_addon);
 
 static olsr_linkcost lq_rfc_calc_link_entry_cost(struct link_entry *);
 static olsr_linkcost lq_rfc_calc_lq_hello_neighbor_cost(struct lq_hello_neighbor *);
-static olsr_linkcost lq_rfc_calc_tc_mpr_addr_cost(struct tc_mpr_addr *);
 static olsr_linkcost lq_rfc_calc_tc_edge_entry_cost(struct tc_edge_entry *);
 
 static bool lq_rfc_is_relevant_costchange(olsr_linkcost c1, olsr_linkcost c2);
@@ -71,12 +70,11 @@ static bool lq_rfc_is_relevant_costchange(olsr_linkcost c1, olsr_linkcost c2);
 static olsr_linkcost lq_rfc_packet_loss_handler(struct link_entry *, bool);
 
 static void lq_rfc_memorize_foreign_hello(struct link_entry *, struct lq_hello_neighbor *);
-static void lq_rfc_copy_link_entry_lq_into_tc_mpr_addr(struct tc_mpr_addr *target, struct link_entry *source);
 static void lq_rfc_copy_link_entry_lq_into_tc_edge_entry(struct tc_edge_entry *target, struct link_entry *source);
 static void lq_rfc_copy_link_lq_into_neighbor(struct lq_hello_neighbor *target, struct link_entry *source);
 
 static int lq_rfc_serialize_hello_lq(unsigned char *buff, struct lq_hello_neighbor *lq);
-static int lq_rfc_serialize_tc_lq(unsigned char *buff, struct tc_mpr_addr *lq);
+static void lq_rfc_serialize_tc_lq(uint8_t **curr, struct link_entry *link);
 static void lq_rfc_deserialize_hello_lq(uint8_t const **curr, struct lq_hello_neighbor *lq);
 static void lq_rfc_deserialize_tc_lq(uint8_t const **curr, struct tc_edge_entry *lq);
 
@@ -96,7 +94,6 @@ struct lq_handler lq_rfc_handler = {
 
   &lq_rfc_calc_link_entry_cost,
   &lq_rfc_calc_lq_hello_neighbor_cost,
-  &lq_rfc_calc_tc_mpr_addr_cost,
   &lq_rfc_calc_tc_edge_entry_cost,
 
   &lq_rfc_is_relevant_costchange,
@@ -104,11 +101,9 @@ struct lq_handler lq_rfc_handler = {
   &lq_rfc_packet_loss_handler,
 
   &lq_rfc_memorize_foreign_hello,
-  &lq_rfc_copy_link_entry_lq_into_tc_mpr_addr,
   &lq_rfc_copy_link_entry_lq_into_tc_edge_entry,
   &lq_rfc_copy_link_lq_into_neighbor,
 
-  NULL,
   NULL,
   NULL,
   NULL,
@@ -126,7 +121,6 @@ struct lq_handler lq_rfc_handler = {
   ARRAYSIZE(lq_rfc_linktypes),
 
   sizeof(struct tc_edge_entry),
-  sizeof(struct tc_mpr_addr),
   sizeof(struct lq_hello_neighbor),
   sizeof(struct lq_rfc_link_entry),
 
@@ -180,12 +174,6 @@ lq_rfc_calc_lq_hello_neighbor_cost(struct lq_hello_neighbor __attribute__ ((unus
 }
 
 static olsr_linkcost
-lq_rfc_calc_tc_mpr_addr_cost(struct tc_mpr_addr __attribute__ ((unused)) * mpr)
-{
-  return 1;
-}
-
-static olsr_linkcost
 lq_rfc_calc_tc_edge_entry_cost(struct tc_edge_entry __attribute__ ((unused)) * edge)
 {
   return 1;
@@ -226,12 +214,6 @@ lq_rfc_memorize_foreign_hello(struct link_entry __attribute__ ((unused)) * targe
 }
 
 static void
-lq_rfc_copy_link_entry_lq_into_tc_mpr_addr(struct tc_mpr_addr __attribute__ ((unused)) * target, struct link_entry
-                                           __attribute__ ((unused)) * source)
-{
-}
-
-static void
 lq_rfc_copy_link_entry_lq_into_tc_edge_entry(struct tc_edge_entry __attribute__ ((unused)) * target, struct link_entry
                                              __attribute__ ((unused)) * source)
 {
@@ -248,10 +230,9 @@ lq_rfc_serialize_hello_lq(unsigned char __attribute__ ((unused)) * buff, struct 
 {
   return 0;
 }
-static int
-lq_rfc_serialize_tc_lq(unsigned char __attribute__ ((unused)) * buff, struct tc_mpr_addr __attribute__ ((unused)) * mpr)
+static void
+lq_rfc_serialize_tc_lq(uint8_t __attribute__ ((unused)) **curr, struct link_entry __attribute__ ((unused)) *link)
 {
-  return 0;
 }
 
 static void

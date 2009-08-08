@@ -306,7 +306,7 @@ olsr_input_hna(union olsr_message *msg, struct interface *in_if __attribute__ ((
   }
 
   tc = olsr_locate_tc_entry(&originator);
-  if (status != RESET_SEQNO_OLSR_MESSAGE && olsr_seqno_diff(msg_seq, tc->mid_seq) <= 0) {
+  if (status != RESET_SEQNO_OLSR_MESSAGE && tc->hna_seq != -1 && olsr_seqno_diff(msg_seq, tc->hna_seq) <= 0) {
     /* this HNA is too old, discard it */
     return;
   }

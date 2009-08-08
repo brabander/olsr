@@ -63,7 +63,6 @@ static int set_plugin_aging(const char *, void *, set_plugin_parameter_addon);
 
 static olsr_linkcost lq_etxfpm_calc_link_entry_cost(struct link_entry *);
 static olsr_linkcost lq_etxfpm_calc_lq_hello_neighbor_cost(struct lq_hello_neighbor *);
-static olsr_linkcost lq_etxfpm_calc_tc_mpr_addr_cost(struct tc_mpr_addr *);
 static olsr_linkcost lq_etxfpm_calc_tc_edge_entry_cost(struct tc_edge_entry *);
 
 static bool lq_etxfpm_is_relevant_costchange(olsr_linkcost c1, olsr_linkcost c2);
@@ -71,12 +70,11 @@ static bool lq_etxfpm_is_relevant_costchange(olsr_linkcost c1, olsr_linkcost c2)
 static olsr_linkcost lq_etxfpm_packet_loss_handler(struct link_entry *, bool);
 
 static void lq_etxfpm_memorize_foreign_hello(struct link_entry *, struct lq_hello_neighbor *);
-static void lq_etxfpm_copy_link_entry_lq_into_tc_mpr_addr(struct tc_mpr_addr *target, struct link_entry *source);
 static void lq_etxfpm_copy_link_entry_lq_into_tc_edge_entry(struct tc_edge_entry *target, struct link_entry *source);
 static void lq_etxfpm_copy_link_lq_into_neighbor(struct lq_hello_neighbor *target, struct link_entry *source);
 
 static int lq_etxfpm_serialize_hello_lq(unsigned char *buff, struct lq_hello_neighbor *lq);
-static int lq_etxfpm_serialize_tc_lq(unsigned char *buff, struct tc_mpr_addr *lq);
+static void lq_etxfpm_serialize_tc_lq(uint8_t **curr, struct link_entry *link);
 static void lq_etxfpm_deserialize_hello_lq(uint8_t const **curr, struct lq_hello_neighbor *lq);
 static void lq_etxfpm_deserialize_tc_lq(uint8_t const **curr, struct tc_edge_entry *lq);
 
@@ -99,7 +97,6 @@ struct lq_handler lq_etxfpm_handler = {
 
   &lq_etxfpm_calc_link_entry_cost,
   &lq_etxfpm_calc_lq_hello_neighbor_cost,
-  &lq_etxfpm_calc_tc_mpr_addr_cost,
   &lq_etxfpm_calc_tc_edge_entry_cost,
 
   &lq_etxfpm_is_relevant_costchange,
@@ -107,11 +104,9 @@ struct lq_handler lq_etxfpm_handler = {
   &lq_etxfpm_packet_loss_handler,
 
   &lq_etxfpm_memorize_foreign_hello,
-  &lq_etxfpm_copy_link_entry_lq_into_tc_mpr_addr,
   &lq_etxfpm_copy_link_entry_lq_into_tc_edge_entry,
   &lq_etxfpm_copy_link_lq_into_neighbor,
 
-  NULL,
   NULL,
   NULL,
   NULL,
@@ -129,7 +124,6 @@ struct lq_handler lq_etxfpm_handler = {
   ARRAYSIZE(lq_etxfpm_linktypes),
 
   sizeof(struct lq_etxfpm_tc_edge),
-  sizeof(struct lq_etxfpm_tc_mpr_addr),
   sizeof(struct lq_etxfpm_lq_hello_neighbor),
   sizeof(struct lq_etxfpm_link_entry),
 
@@ -218,14 +212,6 @@ lq_etxfpm_calc_lq_hello_neighbor_cost(struct lq_hello_neighbor *neigh)
 }
 
 static olsr_linkcost
-lq_etxfpm_calc_tc_mpr_addr_cost(struct tc_mpr_addr *mpr)
-{
-  struct lq_etxfpm_tc_mpr_addr *lq_mpr = (struct lq_etxfpm_tc_mpr_addr *)mpr;
-
-  return lq_etxfpm_calc_linkcost(&lq_mpr->lq);
-}
-
-static olsr_linkcost
 lq_etxfpm_calc_tc_edge_entry_cost(struct tc_edge_entry *edge)
 {
   struct lq_etxfpm_tc_edge *lq_edge = (struct lq_etxfpm_tc_edge *)edge;
@@ -285,16 +271,6 @@ lq_etxfpm_memorize_foreign_hello(struct link_entry *target, struct lq_hello_neig
   } else {
     lq_target->lq.valueNlq = 0;
   }
-
-}
-
-static void
-lq_etxfpm_copy_link_entry_lq_into_tc_mpr_addr(struct tc_mpr_addr *target, struct link_entry *source)
-{
-  struct lq_etxfpm_tc_mpr_addr *lq_target = (struct lq_etxfpm_tc_mpr_addr *)target;
-  struct lq_etxfpm_link_entry *lq_source = (struct lq_etxfpm_link_entry *)source;
-
-  lq_target->lq = lq_source->lq;
 }
 
 static void
@@ -327,17 +303,15 @@ lq_etxfpm_serialize_hello_lq(unsigned char *buff, struct lq_hello_neighbor *neig
 
   return 4;
 }
-static int
-lq_etxfpm_serialize_tc_lq(unsigned char *buff, struct tc_mpr_addr *mpr)
+static void
+lq_etxfpm_serialize_tc_lq(uint8_t **curr, struct link_entry *link)
 {
-  struct lq_etxfpm_tc_mpr_addr *lq_mpr = (struct lq_etxfpm_tc_mpr_addr *)mpr;
+  struct lq_etxfpm_link_entry *lq_link = (struct lq_etxfpm_link_entry *)link;
 
-  buff[0] = (unsigned char)lq_mpr->lq.valueLq;
-  buff[1] = (unsigned char)lq_mpr->lq.valueNlq;
-  buff[2] = (unsigned char)(0);
-  buff[3] = (unsigned char)(0);
-
-  return 4;
+  pkt_put_u8(curr, lq_link->lq.valueLq);
+  pkt_put_u8(curr, lq_link->lq.valueNlq);
+  pkt_put_u8(curr, 0);
+  pkt_put_u8(curr, 0);
 }
 
 static void

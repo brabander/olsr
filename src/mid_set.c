@@ -500,8 +500,10 @@ olsr_input_mid(union olsr_message *msg, struct interface *input_if __attribute__
 
   tc = olsr_locate_tc_entry(&originator);
 
-  if (status != RESET_SEQNO_OLSR_MESSAGE && olsr_seqno_diff(msg_seq, tc->mid_seq) <= 0) {
+  if (status != RESET_SEQNO_OLSR_MESSAGE && tc->mid_seq != -1 && olsr_seqno_diff(msg_seq, tc->mid_seq) <= 0) {
     /* this MID is too old, discard it */
+    OLSR_DEBUG(LOG_MID, "Received too old mid from %s: %d < %d\n",
+        olsr_ip_to_string(&buf, from_addr), msg_seq, tc->mid_seq);
     return;
   }
   tc->mid_seq = msg_seq;

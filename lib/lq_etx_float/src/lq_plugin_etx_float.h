@@ -57,11 +57,6 @@ struct lq_etxfloat_tc_edge {
   struct lq_etxfloat_linkquality lq;
 };
 
-struct lq_etxfloat_tc_mpr_addr {
-  struct tc_mpr_addr core;
-  struct lq_etxfloat_linkquality lq;
-};
-
 struct lq_etxfloat_lq_hello_neighbor {
   struct lq_hello_neighbor core;
   struct lq_etxfloat_linkquality lq;

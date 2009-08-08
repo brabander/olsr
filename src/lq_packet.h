@@ -117,27 +117,6 @@ struct lq_hello_header {
   uint8_t will;
 };
 
-/* deserialized LQ_TC */
-struct lq_tc_message {
-  struct olsr_common comm;
-  union olsr_ip_addr from;
-  uint16_t ansn;
-  struct tc_mpr_addr *neigh;
-};
-
-struct tc_mpr_addr {
-  union olsr_ip_addr address;
-  struct tc_mpr_addr *next;
-};
-
-/* serialized LQ_TC */
-
-struct lq_tc_header {
-  uint16_t ansn;
-  uint8_t lower_border;
-  uint8_t upper_border;
-};
-
 static INLINE void
 pkt_get_u8(const uint8_t ** p, uint8_t * var)
 {
@@ -292,8 +271,6 @@ pkt_put_prefixlen(uint8_t ** p, uint8_t var)
 uint16_t EXPORT(get_local_ansn_number)(bool increase);
 
 void olsr_output_lq_hello(void *para);
-
-void olsr_output_lq_tc(void *para);
 
 void destroy_lq_hello(struct lq_hello_message *lq_hello);
 

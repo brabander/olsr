@@ -54,7 +54,6 @@
 
 struct lq_handler *active_lq_handler = NULL;
 
-static struct olsr_cookie_info *tc_mpr_addr_mem_cookie = NULL;
 static struct olsr_cookie_info *tc_edge_mem_cookie = NULL;
 static struct olsr_cookie_info *lq_hello_neighbor_mem_cookie = NULL;
 static struct olsr_cookie_info *link_entry_mem_cookie = NULL;
@@ -71,9 +70,6 @@ init_lq_handler(void)
 
   tc_edge_mem_cookie = olsr_alloc_cookie("tc_edge", OLSR_COOKIE_TYPE_MEMORY);
   olsr_cookie_set_memory_size(tc_edge_mem_cookie, active_lq_handler->size_tc_edge);
-
-  tc_mpr_addr_mem_cookie = olsr_alloc_cookie("tc_mpr_addr", OLSR_COOKIE_TYPE_MEMORY);
-  olsr_cookie_set_memory_size(tc_mpr_addr_mem_cookie, active_lq_handler->size_tc_mpr_addr);
 
   lq_hello_neighbor_mem_cookie = olsr_alloc_cookie("lq_hello_neighbor", OLSR_COOKIE_TYPE_MEMORY);
   olsr_cookie_set_memory_size(lq_hello_neighbor_mem_cookie, active_lq_handler->size_lq_hello_neighbor);
@@ -160,19 +156,18 @@ olsr_deserialize_hello_lq_pair(const uint8_t ** curr, struct lq_hello_neighbor *
 }
 
 /*
- * olsr_serialize_tc_lq_pair
+ * olsr_serialize_tc_lq
  *
  * this function converts the lq information of a olsr_serialize_tc_lq_pair
  * into binary package format
  *
  * @param pointer to binary buffer to write into
- * @param pointer to olsr_serialize_tc_lq_pair
- * @return number of bytes that have been written
+ * @param pointer to link_entry
  */
-int
-olsr_serialize_tc_lq_pair(unsigned char *buff, struct tc_mpr_addr *neigh)
+void
+olsr_serialize_tc_lq(unsigned char **curr, struct link_entry *lnk)
 {
-  return active_lq_handler->serialize_tc_lq(buff, neigh);
+  active_lq_handler->serialize_tc_lq(curr, lnk);
 }
 
 /*
@@ -390,21 +385,6 @@ olsr_copy_hello_lq(struct lq_hello_neighbor *target, struct link_entry *source)
 }
 
 /*
- * olsr_copylq_link_entry_2_tc_mpr_addr
- *
- * this function copies the link quality information from a link_entry to a
- * tc_mpr_addr.
- *
- * @param pointer to tc_mpr_addr
- * @param pointer to link_entry
- */
-void
-olsr_copylq_link_entry_2_tc_mpr_addr(struct tc_mpr_addr *target, struct link_entry *source)
-{
-  active_lq_handler->copy_link_entry_lq_into_tc_mpr_addr(target, source);
-}
-
-/*
  * olsr_copylq_link_entry_2_tc_edge_entry
  *
  * this function copies the link quality information from a link_entry to a
@@ -435,25 +415,6 @@ olsr_malloc_tc_edge_entry(void)
   t = olsr_cookie_malloc(tc_edge_mem_cookie);
   if (active_lq_handler->clear_tc_edge_entry)
     active_lq_handler->clear_tc_edge_entry(t);
-  return t;
-}
-
-/*
- * olsr_malloc_tc_mpr_addr
- *
- * this function allocates memory for an tc_mpr_addr inclusive
- * linkquality data.
- *
- * @return pointer to tc_mpr_addr
- */
-struct tc_mpr_addr *
-olsr_malloc_tc_mpr_addr(void)
-{
-  struct tc_mpr_addr *t;
-
-  t = olsr_cookie_malloc(tc_mpr_addr_mem_cookie);
-  if (active_lq_handler->clear_tc_mpr_addr)
-    active_lq_handler->clear_tc_mpr_addr(t);
   return t;
 }
 
@@ -532,19 +493,6 @@ void
 olsr_free_tc_edge_entry(struct tc_edge_entry *edge)
 {
   olsr_cookie_free(tc_edge_mem_cookie, edge);
-}
-
-/**
- * olsr_free_tc_mpr_addr
- *
- * this functions free a tc_mpr_addr inclusive linkquality data
- *
- * @param pointer to tc_mpr_addr
- */
-void
-olsr_free_tc_mpr_addr(struct tc_mpr_addr *mpr)
-{
-  olsr_cookie_free(tc_mpr_addr_mem_cookie, mpr);
 }
 
 /**

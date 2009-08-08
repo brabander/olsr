@@ -79,7 +79,6 @@ struct lq_handler {
 
   olsr_linkcost(*calc_link_entry_cost) (struct link_entry *);
   olsr_linkcost(*calc_lq_hello_neighbor_cost) (struct lq_hello_neighbor *);
-  olsr_linkcost(*calc_tc_mpr_addr_cost) (struct tc_mpr_addr *);
   olsr_linkcost(*calc_tc_edge_entry_cost) (struct tc_edge_entry *);
 
   bool(*is_relevant_costchange) (olsr_linkcost c1, olsr_linkcost c2);
@@ -88,17 +87,15 @@ struct lq_handler {
 
   void (*memorize_foreign_hello) (struct link_entry *, struct lq_hello_neighbor *);
 
-  void (*copy_link_entry_lq_into_tc_mpr_addr) (struct tc_mpr_addr *, struct link_entry *);
   void (*copy_link_entry_lq_into_tc_edge_entry) (struct tc_edge_entry *, struct link_entry *);
   void (*copy_link_lq_into_neighbor) (struct lq_hello_neighbor *, struct link_entry *);
 
   void (*clear_link_entry) (struct link_entry *);
   void (*clear_lq_hello_neighbor) (struct lq_hello_neighbor *);
-  void (*clear_tc_mpr_addr) (struct tc_mpr_addr *);
   void (*clear_tc_edge_entry) (struct tc_edge_entry *);
 
   int (*serialize_hello_lq) (unsigned char *, struct lq_hello_neighbor *);
-  int (*serialize_tc_lq) (unsigned char *, struct tc_mpr_addr *);
+  void (*serialize_tc_lq) (uint8_t **, struct link_entry *);
   void (*deserialize_hello_lq) (uint8_t const **, struct lq_hello_neighbor *);
   void (*deserialize_tc_lq) (uint8_t const **, struct tc_edge_entry *);
 
@@ -111,7 +108,6 @@ struct lq_handler {
   int linkdata_hello_count;
 
   size_t size_tc_edge;
-  size_t size_tc_mpr_addr;
   size_t size_lq_hello_neighbor;
   size_t size_link_entry;
 
@@ -130,7 +126,7 @@ bool olsr_is_relevant_costchange(olsr_linkcost c1, olsr_linkcost c2);
 
 int olsr_serialize_hello_lq_pair(unsigned char *, struct lq_hello_neighbor *);
 void olsr_deserialize_hello_lq_pair(const uint8_t **, struct lq_hello_neighbor *);
-int olsr_serialize_tc_lq_pair(unsigned char *, struct tc_mpr_addr *);
+void olsr_serialize_tc_lq(unsigned char **curr, struct link_entry *lnk);
 void olsr_deserialize_tc_lq_pair(const uint8_t **, struct tc_edge_entry *);
 
 void olsr_update_packet_loss_worker(struct link_entry *, bool);
@@ -144,18 +140,15 @@ size_t EXPORT(olsr_get_linklabel_count) (void);
 enum lq_linkdata_quality EXPORT(olsr_get_linkdata_quality) (struct link_entry *, int);
 
 void olsr_copy_hello_lq(struct lq_hello_neighbor *, struct link_entry *);
-void olsr_copylq_link_entry_2_tc_mpr_addr(struct tc_mpr_addr *, struct link_entry *);
 void olsr_copylq_link_entry_2_tc_edge_entry(struct tc_edge_entry *, struct link_entry *);
 
 struct tc_edge_entry *olsr_malloc_tc_edge_entry(void);
-struct tc_mpr_addr *olsr_malloc_tc_mpr_addr(void);
 struct lq_hello_neighbor *olsr_malloc_lq_hello_neighbor(void);
 struct link_entry *olsr_malloc_link_entry(void);
 
 void olsr_free_link_entry(struct link_entry *);
 void olsr_free_lq_hello_neighbor(struct lq_hello_neighbor *);
 void olsr_free_tc_edge_entry(struct tc_edge_entry *);
-void olsr_free_tc_mpr_addr(struct tc_mpr_addr *);
 
 uint8_t olsr_get_Hello_MessageId(void);
 uint8_t olsr_get_TC_MessageId(void);

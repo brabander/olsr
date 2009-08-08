@@ -87,9 +87,9 @@ struct tc_entry {
   struct timer_entry *validity_timer;  /* tc validity time */
   uint32_t refcount;                   /* reference counter */
   bool is_virtual;                     /* true if tc is already timed out */
-  uint16_t tc_seq;                     /* sequence number of the tc message */
-  uint16_t mid_seq;                    /* sequence number of the mid message */
-  uint16_t hna_seq;                    /* sequence number of the hna message */
+  int tc_seq;                          /* sequence number of the tc message */
+  int mid_seq;                         /* sequence number of the mid message */
+  int hna_seq;                         /* sequence number of the hna message */
   uint8_t msg_hops;                    /* hopcount as per the tc message */
   uint8_t hops;                        /* SPF calculated hopcount */
   uint16_t ansn;                       /* ANSN number of the tc message */
@@ -194,6 +194,7 @@ bool olsr_calc_tc_edge_entry_etx(struct tc_edge_entry *);
 void olsr_set_tc_edge_timer(struct tc_edge_entry *, unsigned int);
 void olsr_delete_all_tc_entries(void);
 uint32_t EXPORT(getRelevantTcCount) (void);
+void olsr_output_lq_tc(void *ifp);
 #endif
 
 /*

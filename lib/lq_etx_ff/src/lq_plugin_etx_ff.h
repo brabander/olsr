@@ -61,11 +61,6 @@ struct lq_etxff_tc_edge {
   struct lq_etxff_linkquality lq;
 };
 
-struct lq_etxff_tc_mpr_addr {
-  struct tc_mpr_addr core;
-  struct lq_etxff_linkquality lq;
-};
-
 struct lq_etxff_lq_hello_neighbor {
   struct lq_hello_neighbor core;
   struct lq_etxff_linkquality lq;

@@ -97,6 +97,9 @@ olsr_add_tc_entry(const union olsr_ip_addr *adr)
   tc->addr = *adr;
   tc->vertex_node.key = &tc->addr;
 
+  tc->mid_seq = -1;
+  tc->hna_seq = -1;
+  tc->tc_seq = -1;
   /*
    * Insert into the global tc tree.
    */
@@ -828,7 +831,7 @@ olsr_input_tc(union olsr_message * msg, struct interface * input_if __attribute_
   tc = olsr_lookup_tc_entry(&originator);
 
   /* TCs can be splitted, so we are looking for ANSNs equal or higher */
-  if (tc && status != RESET_SEQNO_OLSR_MESSAGE && olsr_seqno_diff(ansn, tc->ansn) < 0) {
+  if (tc && status != RESET_SEQNO_OLSR_MESSAGE && tc->tc_seq != -1 && olsr_seqno_diff(ansn, tc->ansn) < 0) {
     /* this TC is too old, discard it */
     return;
   }
@@ -947,6 +950,136 @@ olsr_delete_all_tc_entries(void) {
     tc->is_virtual = true;
     olsr_delete_tc_entry(tc);
   }OLSR_FOR_ALL_TC_ENTRIES_END(tc)
+}
+
+#if 0
+static uint8_t
+calculate_border_flag(void *lower_border, void *higher_border)
+{
+  uint8_t *lower = lower_border;
+  uint8_t *higher = higher_border;
+  uint8_t bitmask;
+  uint8_t part, bitpos;
+
+  for (part = 0; part < olsr_cnf->ipsize; part++) {
+    if (lower[part] != higher[part]) {
+      break;
+    }
+  }
+
+  if (part == olsr_cnf->ipsize) {       // same IPs ?
+    return 0;
+  }
+  // look for first bit of difference
+  bitmask = 0xfe;
+  for (bitpos = 0; bitpos < 8; bitpos++, bitmask <<= 1) {
+    if ((lower[part] & bitmask) == (higher[part] & bitmask)) {
+      break;
+    }
+  }
+
+  bitpos += 8 * (olsr_cnf->ipsize - part - 1);
+  return bitpos + 1;
+}
+#endif
+
+void
+olsr_output_lq_tc(void *ctx)
+{
+  static int ttl_list[] = { 2, 8, 2, 16, 2, 8, 2, MAX_TTL };
+  struct interface *ifp = ctx;
+  struct nbr_entry *nbr;
+  struct link_entry *link;
+  uint8_t msg_buffer[MAXMESSAGESIZE - OLSR_HEADERSIZE];
+  uint8_t *curr = msg_buffer;
+  uint8_t *length_field, *last;
+  bool sendTC = false;
+
+  OLSR_INFO(LOG_PACKET_CREATION, "Building TC on %s\n-------------------\n", ifp->int_name);
+
+  pkt_put_u8(&curr, olsr_get_TC_MessageId());
+  pkt_put_reltime(&curr, olsr_cnf->tc_params.validity_time);
+
+  length_field = curr;
+  pkt_put_u16(&curr, 0); /* put in real messagesize later */
+
+  pkt_put_ipaddress(&curr, &olsr_cnf->router_id);
+
+  if (olsr_cnf->lq_fish > 0) {
+    pkt_put_u8(&curr, ttl_list[ifp->ttl_index]);
+    OLSR_DEBUG(LOG_PACKET_CREATION, "Creating LQ TC with TTL %d.\n", ttl_list[ifp->ttl_index]);
+
+    ifp->ttl_index++;
+    ifp->ttl_index %= ARRAYSIZE(ttl_list);
+  }
+  else {
+    pkt_put_u8(&curr, 255);
+  }
+  pkt_put_u8(&curr, 0);
+  pkt_put_u16(&curr, get_msg_seqno());
+
+  pkt_put_u16(&curr, get_local_ansn_number(false));
+  pkt_put_u16(&curr, 0xffff); /* TODO: border flags and fragmentation */
+
+  last = msg_buffer + sizeof(msg_buffer) - olsr_cnf->ipsize - olsr_sizeof_TCLQ();
+
+  OLSR_FOR_ALL_NBR_ENTRIES(nbr) {
+    /*
+     * TC redundancy 2
+     *
+     * Only consider symmetric neighbours.
+     */
+    if (!nbr->is_sym) {
+      continue;
+    }
+
+    /*
+     * TC redundancy 1
+     *
+     * Only consider MPRs and MPR selectors
+     */
+    if (olsr_cnf->tc_redundancy == 1 && !nbr->is_mpr && nbr->mprs_count == 0) {
+      continue;
+    }
+
+    /*
+     * TC redundancy 0
+     *
+     * Only consider MPR selectors
+     */
+    if (olsr_cnf->tc_redundancy == 0 && nbr->mprs_count == 0) {
+      continue;
+    }
+
+    /* Set the entry's link quality */
+    link = get_best_link_to_neighbor(&nbr->nbr_addr);
+    if (!link) {
+      /* no link ? */
+      continue;
+    }
+
+    if (link->linkcost >= LINK_COST_BROKEN) {
+      /* don't advertisebroken links */
+      continue;
+    }
+
+    pkt_put_ipaddress(&curr, &nbr->nbr_addr);
+    olsr_serialize_tc_lq(&curr, link);
+
+    sendTC = true;
+  } OLSR_FOR_ALL_NBR_ENTRIES_END(nbr)
+
+  if (!sendTC) {
+    return;
+  }
+
+  pkt_put_u16(&length_field, curr - msg_buffer);
+
+  if (net_outbuffer_bytes_left(ifp) < curr - msg_buffer) {
+    net_output(ifp);
+    set_buffer_timer(ifp);
+  }
+  net_outbuffer_push(ifp, msg_buffer, curr - msg_buffer);
 }
 
 /*
