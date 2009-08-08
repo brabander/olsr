@@ -98,6 +98,10 @@ static char copyright_string[] __attribute__ ((unused)) =
 static char pulsedata[] = "\\|/-";
 static uint8_t pulse_state = 0;
 
+static struct timer_entry *hna_gen_timer;
+static struct timer_entry *mid_gen_timer;
+static struct timer_entry *tc_gen_timer;
+
 static void
 generate_stdout_pulse(void *foo __attribute__ ((unused)))
 {
@@ -391,9 +395,23 @@ main(int argc, char *argv[])
 
   link_changes = false;
 
+  tc_gen_timer =
+    olsr_start_timer(olsr_cnf->tc_params.emission_interval,
+                     TC_JITTER, OLSR_TIMER_PERIODIC, &olsr_output_lq_tc, NULL, tc_gen_timer_cookie);
+  mid_gen_timer =
+    olsr_start_timer(olsr_cnf->mid_params.emission_interval,
+                     MID_JITTER, OLSR_TIMER_PERIODIC, &generate_mid, NULL, mid_gen_timer_cookie);
+  hna_gen_timer =
+    olsr_start_timer(olsr_cnf->hna_params.emission_interval,
+                     HNA_JITTER, OLSR_TIMER_PERIODIC, &generate_hna, NULL, hna_gen_timer_cookie);
+
   /* Starting scheduler */
   app_state = STATE_RUNNING;
   olsr_scheduler();
+
+  olsr_stop_timer(tc_gen_timer);
+  olsr_stop_timer(mid_gen_timer);
+  olsr_stop_timer(hna_gen_timer);
 
   exitcode = olsr_cnf->exit_value;
   switch (app_state) {

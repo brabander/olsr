@@ -339,15 +339,15 @@ olsr_input_hna(union olsr_message *msg, struct interface *in_if __attribute__ ((
 }
 
 void
-generate_hna(void *p) {
-  struct interface *ifp = p;
+generate_hna(void *p __attribute__ ((unused))) {
+  struct interface *ifp;
   struct ip_prefix_entry *h;
   uint8_t msg_buffer[MAXMESSAGESIZE - OLSR_HEADERSIZE];
   uint8_t *curr = msg_buffer;
   uint8_t *length_field, *last;
   bool sendHNA = false;
 
-  OLSR_INFO(LOG_PACKET_CREATION, "Building HNA on %s\n-------------------\n", ifp->int_name);
+  OLSR_INFO(LOG_PACKET_CREATION, "Building HNA\n-------------------\n");
 
   pkt_put_u8(&curr, HNA_MESSAGE);
   pkt_put_reltime(&curr, olsr_cnf->hna_params.validity_time);
@@ -377,11 +377,13 @@ generate_hna(void *p) {
 
   pkt_put_u16(&length_field, curr - msg_buffer);
 
-  if (net_outbuffer_bytes_left(ifp) < curr - msg_buffer) {
-    net_output(ifp);
-    set_buffer_timer(ifp);
-  }
-  net_outbuffer_push(ifp, msg_buffer, curr - msg_buffer);
+  OLSR_FOR_ALL_INTERFACES(ifp) {
+    if (net_outbuffer_bytes_left(ifp) < curr - msg_buffer) {
+      net_output(ifp);
+      set_buffer_timer(ifp);
+    }
+    net_outbuffer_push(ifp, msg_buffer, curr - msg_buffer);
+  } OLSR_FOR_ALL_INTERFACES_END(ifp)
 }
 
 /*

@@ -62,6 +62,7 @@ struct olsr_cookie_info *spf_backoff_timer_cookie = NULL;
 struct olsr_cookie_info *tc_mem_cookie = NULL;
 
 static uint32_t relevantTcCount = 0;
+static int ttl_index = 0;
 
 static void olsr_cleanup_tc_entry(struct tc_entry *tc);
 
@@ -952,7 +953,6 @@ olsr_delete_all_tc_entries(void) {
   }OLSR_FOR_ALL_TC_ENTRIES_END(tc)
 }
 
-#if 0
 static uint8_t
 calculate_border_flag(void *lower_border, void *higher_border)
 {
@@ -981,21 +981,20 @@ calculate_border_flag(void *lower_border, void *higher_border)
   bitpos += 8 * (olsr_cnf->ipsize - part - 1);
   return bitpos + 1;
 }
-#endif
 
-void
-olsr_output_lq_tc(void *ctx)
+static bool
+olsr_output_lq_tc_internal(void *ctx  __attribute__ ((unused)), union olsr_ip_addr *nextIp, bool skip)
 {
   static int ttl_list[] = { 2, 8, 2, 16, 2, 8, 2, MAX_TTL };
-  struct interface *ifp = ctx;
+  struct interface *ifp;
   struct nbr_entry *nbr;
   struct link_entry *link;
   uint8_t msg_buffer[MAXMESSAGESIZE - OLSR_HEADERSIZE];
   uint8_t *curr = msg_buffer;
-  uint8_t *length_field, *last;
-  bool sendTC = false;
+  uint8_t *length_field, *border_flags, *last;
+  bool sendTC = false, nextFragment = false;
 
-  OLSR_INFO(LOG_PACKET_CREATION, "Building TC on %s\n-------------------\n", ifp->int_name);
+  OLSR_INFO(LOG_PACKET_CREATION, "Building TC\n-------------------\n");
 
   pkt_put_u8(&curr, olsr_get_TC_MessageId());
   pkt_put_reltime(&curr, olsr_cnf->tc_params.validity_time);
@@ -1006,24 +1005,55 @@ olsr_output_lq_tc(void *ctx)
   pkt_put_ipaddress(&curr, &olsr_cnf->router_id);
 
   if (olsr_cnf->lq_fish > 0) {
-    pkt_put_u8(&curr, ttl_list[ifp->ttl_index]);
-    OLSR_DEBUG(LOG_PACKET_CREATION, "Creating LQ TC with TTL %d.\n", ttl_list[ifp->ttl_index]);
+    /* handle fisheye */
+    pkt_put_u8(&curr, ttl_list[ttl_index]);
+    OLSR_DEBUG(LOG_PACKET_CREATION, "Creating LQ TC with TTL %d.\n", ttl_list[ttl_index]);
 
-    ifp->ttl_index++;
-    ifp->ttl_index %= ARRAYSIZE(ttl_list);
+    ttl_index++;
+    ttl_index %= ARRAYSIZE(ttl_list);
   }
   else {
-    pkt_put_u8(&curr, 255);
+    /* normal TTL */
+    pkt_put_u8(&curr, MAX_TTL);
   }
-  pkt_put_u8(&curr, 0);
-  pkt_put_u16(&curr, get_msg_seqno());
 
+  /* hopcount */
+  pkt_put_u8(&curr, 0);
+
+  pkt_put_u16(&curr, get_msg_seqno());
   pkt_put_u16(&curr, get_local_ansn_number(false));
-  pkt_put_u16(&curr, 0xffff); /* TODO: border flags and fragmentation */
+
+  /* border flags */
+  border_flags = curr;
+  pkt_put_u16(&curr, 0xffff);
 
   last = msg_buffer + sizeof(msg_buffer) - olsr_cnf->ipsize - olsr_sizeof_TCLQ();
 
   OLSR_FOR_ALL_NBR_ENTRIES(nbr) {
+    /* allow fragmentation */
+    if (skip) {
+      struct nbr_entry *prevNbr;
+      if (olsr_ipcmp(&nbr->nbr_addr, nextIp) != 0) {
+        continue;
+      }
+      skip = false;
+
+      /* rewrite lower border flag */
+      prevNbr = nbr_node_to_nbr(nbr->nbr_node.prev);
+      *border_flags = calculate_border_flag(&prevNbr->nbr_addr, &nbr->nbr_addr);
+    }
+
+    /* too long ? */
+    if (curr > last) {
+      /* rewrite upper border flag */
+      struct nbr_entry *prevNbr = nbr_node_to_nbr(nbr->nbr_node.prev);
+
+      *(border_flags+1) = calculate_border_flag(&prevNbr->nbr_addr, &nbr->nbr_addr);
+      *nextIp = nbr->nbr_addr;
+      nextFragment = true;
+      break;
+    }
+
     /*
      * TC redundancy 2
      *
@@ -1069,17 +1099,31 @@ olsr_output_lq_tc(void *ctx)
     sendTC = true;
   } OLSR_FOR_ALL_NBR_ENTRIES_END(nbr)
 
-  if (!sendTC) {
-    return;
+  if (!sendTC && skip) {
+    OLSR_DEBUG(LOG_TC, "Nothing to send for this TC...\n");
+    return false;
   }
 
   pkt_put_u16(&length_field, curr - msg_buffer);
 
-  if (net_outbuffer_bytes_left(ifp) < curr - msg_buffer) {
-    net_output(ifp);
-    set_buffer_timer(ifp);
-  }
-  net_outbuffer_push(ifp, msg_buffer, curr - msg_buffer);
+  OLSR_FOR_ALL_INTERFACES(ifp) {
+    if (net_outbuffer_bytes_left(ifp) < curr - msg_buffer) {
+      net_output(ifp);
+      set_buffer_timer(ifp);
+    }
+    net_outbuffer_push(ifp, msg_buffer, curr - msg_buffer);
+  } OLSR_FOR_ALL_INTERFACES_END(ifp)
+  return nextFragment;
+}
+
+void
+olsr_output_lq_tc(void *ctx) {
+  union olsr_ip_addr next;
+  bool skip = false;
+
+  memset(&next, 0, sizeof(next));
+
+  while ((skip = olsr_output_lq_tc_internal(ctx, &next, skip)));
 }
 
 /*

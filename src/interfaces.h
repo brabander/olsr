@@ -146,9 +146,6 @@ struct interface {
 
   /* Periodic message generation timers */
   struct timer_entry *hello_gen_timer;
-  struct timer_entry *hna_gen_timer;
-  struct timer_entry *mid_gen_timer;
-  struct timer_entry *tc_gen_timer;
 
   /* Message build related  */
   struct timer_entry *buffer_hold_timer;        /* Timer for message batching */
