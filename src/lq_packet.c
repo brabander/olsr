@@ -78,7 +78,7 @@ create_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
   // initialize the static fields
 
   lq_hello->comm.type = olsr_get_Hello_MessageId();
-  lq_hello->comm.vtime = me_to_reltime(outif->hello_valtime);
+  lq_hello->comm.vtime = reltime_to_me(outif->hello_valtime);
   lq_hello->comm.size = 0;
 
   lq_hello->comm.orig = olsr_cnf->router_id;
@@ -164,7 +164,7 @@ create_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
   // initialize the static fields
 
   lq_tc->comm.type = olsr_get_TC_MessageId();
-  lq_tc->comm.vtime = me_to_reltime(olsr_cnf->tc_params.validity_time);
+  lq_tc->comm.vtime = reltime_to_me(olsr_cnf->tc_params.validity_time);
   lq_tc->comm.size = 0;
 
   lq_tc->comm.orig = olsr_cnf->router_id;
