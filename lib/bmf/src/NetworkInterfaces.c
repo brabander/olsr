@@ -481,12 +481,13 @@ FindNeighbors(struct TBestNeighbors *neighbors,
       } else {
 #if !defined REMOVE_LOG_DEBUG
         struct interface *bestIntf = if_ifwithaddr(&bestLinkToNeighbor->local_iface_addr);
-        struct lqtextbuffer lqbuffer;
+        char lqbuffer[LQTEXT_MAXLENGTH];
 #endif
         OLSR_DEBUG(LOG_PLUGINS,
                    "Not forwarding to %s: \"%s\" gives a better link to this neighbor, costing %s\n",
                    olsr_ip_to_string(&buf, &walker->neighbor_iface_addr),
-                   bestIntf->int_name, get_linkcost_text(bestLinkToNeighbor->linkcost, false, &lqbuffer));
+                   bestIntf->int_name,
+                   olsr_get_linkcost_text(bestLinkToNeighbor->linkcost, false, lqbuffer, sizeof(lqbuffer)));
       }
 
       continue;                 /* for */
@@ -495,13 +496,13 @@ FindNeighbors(struct TBestNeighbors *neighbors,
     if (forwardedBy != NULL) {
 #if !defined REMOVE_LOG_DEBUG
       struct ipaddr_str forwardedByBuf, niaBuf;
-      struct lqtextbuffer lqbuffer;
+      char lqbuffer[LQTEXT_MAXLENGTH];
 #endif
       OLSR_DEBUG(LOG_PLUGINS,
                  "2-hop path from %s via me to %s will cost ETX %s\n",
                  olsr_ip_to_string(&forwardedByBuf, forwardedBy),
                  olsr_ip_to_string(&niaBuf, &walker->neighbor_iface_addr),
-                 get_linkcost_text(previousLinkEtx + currEtx, true, &lqbuffer));
+                 olsr_get_linkcost_text(previousLinkEtx + currEtx, true, lqbuffer, sizeof(lqbuffer)));
     }
 
     /* Check the topology table whether the 'forwardedBy' node is itself a direct
@@ -522,14 +523,15 @@ FindNeighbors(struct TBestNeighbors *neighbors,
           if (previousLinkEtx + currEtx > tcEtx) {
 #if !defined REMOVE_LOG_DEBUG
             struct ipaddr_str neighbor_iface_buf, forw_buf;
-            struct lqtextbuffer lqbuffer;
+            char lqbuffer[LQTEXT_MAXLENGTH];
             olsr_ip_to_string(&neighbor_iface_buf, &walker->neighbor_iface_addr);
 #endif
             OLSR_DEBUG(LOG_PLUGINS,
                        "Not forwarding to %s: I am not an MPR between %s and %s, direct link costs %s\n",
                        neighbor_iface_buf.buf,
                        olsr_ip_to_string(&forw_buf, forwardedBy),
-                       neighbor_iface_buf.buf, get_linkcost_text(tcEtx, false, &lqbuffer));
+                       neighbor_iface_buf.buf,
+                       olsr_get_linkcost_text(tcEtx, false, lqbuffer, sizeof(lqbuffer)));
 
             continue;           /* for */
           }                     /* if */

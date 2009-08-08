@@ -211,6 +211,78 @@ abuf_pull(struct autobuf * autobuf, int len) {
   autobuf->size = newsize;
   return 0;
 }
+
+static int
+abuf_find_template(const char **keys, int tmplLength, const char *txt, int txtLength) {
+  int i;
+
+  for (i=0; i<tmplLength; i++) {
+    if (strncmp(keys[i], txt, txtLength) == 0 && keys[i][txtLength] == 0) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+int
+abuf_template_init (const char **keys, size_t tmplLength, const char *format, size_t *indexTable, size_t indexLength) {
+  size_t pos = 0, indexCount = 0;
+  int start = -1, i = 0;
+
+  while (format[pos]) {
+    if (format[pos] == '%') {
+      if (start == -1) {
+        start = pos++;
+        continue;
+      }
+      if (pos - start > 1) {
+        if (indexCount + 3 > indexLength) {
+          return -1;
+        }
+
+        i = abuf_find_template(keys, tmplLength, &format[start+1], pos-start-1);
+        if (i != -1) {
+          /* value index */
+          indexTable[indexCount++] = i;
+
+          /* start position (including) */
+          indexTable[indexCount++] = start;
+
+          /* end position (excluding) */
+          indexTable[indexCount++] = pos+1;
+        }
+      }
+      start = -1;
+    }
+    pos++;
+  }
+  return indexCount;
+}
+
+int abuf_templatef (struct autobuf *buf, const char *format, char **values, size_t *table, size_t indexCount) {
+  size_t i, last = 0;
+
+  for (i=0; i<indexCount; i+=3) {
+    /* copy praefix text */
+    if (last < table[i+1]) {
+      if (abuf_memcpy(buf, &format[last], table[i+1] - last) < 0) {
+        return -1;
+      }
+    }
+    if (abuf_puts(buf, values[table[i]]) < 0) {
+      return -1;
+    }
+    last = table[i+2];
+  }
+
+  if (last < strlen(format)) {
+    if (abuf_puts(buf, &format[last]) < 0) {
+      return -1;
+    }
+  }
+  return 0;
+}
+
 /*
  * Local Variables:
  * mode: c

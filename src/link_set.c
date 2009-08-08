@@ -370,11 +370,11 @@ olsr_expire_link_sym_timer(void *context)
   link = (struct link_entry *)context;
   link->link_sym_timer = NULL;  /* be pedandic */
 
-  if (link->prev_status != SYM_LINK) {
+  if (link->status != SYM_LINK) {
     return;
   }
 
-  link->prev_status = lookup_link_status(link);
+  link->status = lookup_link_status(link);
   olsr_update_nbr_status(link->neighbor, get_neighbor_status(&link->neighbor_iface_addr));
   changes_neighborhood = true;
 }
@@ -484,7 +484,7 @@ add_link_entry(const union olsr_ip_addr *local,
   /* L_time = current time + validity time */
   olsr_set_link_timer(link, vtime);
 
-  link->prev_status = ASYM_LINK;
+  link->status = ASYM_LINK;
 
   link->loss_helloint = htime;
 
@@ -620,9 +620,9 @@ update_link_entry(const union olsr_ip_addr *local,
   entry->vtime = message->comm.vtime;
   entry->ASYM_time = GET_TIMESTAMP(message->comm.vtime);
 
-  entry->prev_status = check_link_status(message, in_if);
+  entry->status = check_link_status(message, in_if);
 
-  switch (entry->prev_status) {
+  switch (entry->status) {
   case (LOST_LINK):
     olsr_stop_timer(entry->link_sym_timer);
     entry->link_sym_timer = NULL;
@@ -724,18 +724,75 @@ olsr_print_link_set(void)
 #if !defined REMOVE_LOG_INFO
   /* The whole function makes no sense without it. */
   struct link_entry *walker;
-  const int addrsize = olsr_cnf->ip_version == AF_INET ? 15 : 39;
+  char totaltxt[256];
+  const char *txt;
+  int addrsize;
+  size_t i, j, length, max, totaltxt_len;
+  addrsize = olsr_cnf->ip_version == AF_INET ? INET_ADDRSTRLEN : INET6_ADDRSTRLEN;
+
+  /* generate LQ headline */
+  totaltxt[0] = 0;
+  totaltxt_len = 0;
+  for (i=1; i<olsr_get_linklabel_count(); i++) {
+    txt = olsr_get_linklabel(i);
+    max = olsr_get_linklabel_maxlength(i);
+
+    length = strlen(txt);
+
+    /* add seperator */
+    if (i != 1) {
+      totaltxt[totaltxt_len++] = '/';
+    }
+
+    /* reserve space for label */
+    if (max > length) {
+      for (j=0; j<max; j++) {
+        totaltxt[totaltxt_len + j] = '-';
+      }
+    }
+
+    /* copy label */
+    strncpy(&totaltxt[totaltxt_len + max/2 - length/2], txt, length);
+    totaltxt_len += max;
+  }
+  totaltxt[totaltxt_len] = 0;
 
   OLSR_INFO(LOG_LINKS, "\n--- %s ---------------------------------------------------- LINKS\n\n", olsr_wallclock_string());
-  OLSR_INFO_NH(LOG_LINKS, "%-*s  %-6s %-14s %s\n", addrsize, "IP address", "hyst", "      LQ      ", "ETX");
+  OLSR_INFO_NH(LOG_LINKS, "%-*s  %-6s %s %s\n", addrsize, "IP address", "hyst", totaltxt , olsr_get_linklabel(0));
 
   OLSR_FOR_ALL_LINK_ENTRIES(walker) {
     struct ipaddr_str buf;
-    struct lqtextbuffer lqbuffer1, lqbuffer2;
+    char lqbuffer[LQTEXT_MAXLENGTH];
 
-    OLSR_INFO_NH(LOG_LINKS, "%-*s %-14s %s\n",
+    /* generate LQ headline */
+    totaltxt[0] = 0;
+    totaltxt_len = 0;
+    for (i=1; i<olsr_get_linklabel_count(); i++) {
+      txt = olsr_get_linkdata_text(walker, i, lqbuffer, sizeof(lqbuffer));
+      max = olsr_get_linklabel_maxlength(i);
+
+      length = strlen(txt);
+
+      /* add seperator */
+      if (i != 1) {
+        totaltxt[totaltxt_len++] = '/';
+      }
+
+      /* reserve space for label */
+      if (max > length) {
+        for (j=0; j<max; j++) {
+          totaltxt[totaltxt_len + j] = ' ';
+        }
+      }
+
+      /* copy label */
+      strncpy(&totaltxt[totaltxt_len + max/2 - length/2], txt, length);
+      totaltxt_len += max;
+    }
+    totaltxt[totaltxt_len] = 0;
+    OLSR_INFO_NH(LOG_LINKS, "%-*s %s %s\n",
                  addrsize, olsr_ip_to_string(&buf, &walker->neighbor_iface_addr),
-                 get_link_entry_text(walker, '/', &lqbuffer1), get_linkcost_text(walker->linkcost, false, &lqbuffer2));
+                 totaltxt, olsr_get_linkcost_text(walker->linkcost, false, lqbuffer, sizeof(lqbuffer)));
   } OLSR_FOR_ALL_LINK_ENTRIES_END(walker);
 #endif
 }

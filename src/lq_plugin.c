@@ -50,6 +50,8 @@
 #include "common/string.h"
 #include "olsr_logging.h"
 
+#include "assert.h"
+
 struct lq_handler *active_lq_handler = NULL;
 
 static struct olsr_cookie_info *tc_mpr_addr_mem_cookie = NULL;
@@ -240,42 +242,6 @@ olsr_memorize_foreign_hello_lq(struct link_entry *local, struct lq_hello_neighbo
 }
 
 /*
- * get_link_entry_text
- *
- * this function returns the text representation of a link_entry cost value.
- * It's not thread save and should not be called twice with the same println
- * value in the same context (a single printf command for example).
- *
- * @param pointer to link_entry
- * @param char separator between LQ and NLQ
- * @param buffer for output
- * @return pointer to a buffer with the text representation
- */
-const char *
-get_link_entry_text(struct link_entry *entry, char separator, struct lqtextbuffer *buffer)
-{
-  return active_lq_handler->print_link_entry_lq(entry, separator, buffer);
-}
-
-/*
- * get_tc_edge_entry_text
- *
- * this function returns the text representation of a tc_edge_entry cost value.
- * It's not thread save and should not be called twice with the same println
- * value in the same context (a single printf command for example).
- *
- * @param pointer to tc_edge_entry
- * @param char separator between LQ and NLQ
- * @param pointer to buffer
- * @return pointer to the buffer with the text representation
- */
-const char *
-get_tc_edge_entry_text(struct tc_edge_entry *entry, char separator, struct lqtextbuffer *buffer)
-{
-  return active_lq_handler->print_tc_edge_entry_lq(entry, separator, buffer);
-}
-
-/*
  * get_linkcost_text
  *
  * This function transforms an olsr_linkcost value into it's text representation and copies
@@ -284,23 +250,128 @@ get_tc_edge_entry_text(struct tc_edge_entry *entry, char separator, struct lqtex
  * @param linkcost value
  * @param true to transform the cost of a route, false for a link
  * @param pointer to buffer
+ * @param size of buffer
  * @return pointer to buffer filled with text
  */
 const char *
-get_linkcost_text(olsr_linkcost cost, bool route, struct lqtextbuffer *buffer)
+olsr_get_linkcost_text(olsr_linkcost cost, bool route, char *buffer, size_t bufsize)
 {
-  static const char *infinite = "INFINITE";
+  static const char *infinite = "INF";
 
   if (route) {
     if (cost == ROUTE_COST_BROKEN) {
-      return infinite;
+      strscpy(buffer, infinite, bufsize);
+      return buffer;
     }
   } else {
     if (cost >= LINK_COST_BROKEN) {
-      return infinite;
+      strscpy(buffer, infinite, bufsize);
+      return buffer;
     }
   }
-  return active_lq_handler->print_cost(cost, buffer);
+  return active_lq_handler->print_cost(cost, buffer, bufsize);
+}
+
+/*
+ * olsr_get_linkdata_text
+ *
+ * this function returns the text representation of one linkquality parameter.
+ *
+ * @param pointer to link_entry
+ * @param index of linkquality parameter
+ * @param buffer for output
+ * @param size of buffer
+ * @return pointer to a buffer with the text representation
+ */
+const char *
+olsr_get_linkdata_text(struct link_entry *entry, int idx, char *buffer, size_t bufsize)
+{
+  if (idx == 0) {
+    return olsr_get_linkcost_text(entry->linkcost, false, buffer, bufsize);
+  }
+  return active_lq_handler->print_link_entry_lq(entry, idx, buffer, bufsize);
+}
+
+/*
+ * olsr_get_linklabel
+ *
+ * this function returns the label of a linkquality parameter
+ *
+ * @param index of lq parameter (0 is always "linkcost")
+ * @return pointer to static string with label
+ */
+const char *
+olsr_get_linklabel (int idx) {
+  assert (idx >= 0 && idx < active_lq_handler->linkdata_hello_count);
+  return active_lq_handler->linkdata_hello[idx].name;
+}
+
+/*
+ * olsr_get_linklabel_maxlength
+ *
+ * this function returns the maximum length (in characters)
+ * of a linkquality parameter value
+ *
+ * @param index of lq parameter (0 is always "linkcost")
+ * @return number of bytes necessary to store a lq value string
+ */
+size_t
+olsr_get_linklabel_maxlength (int idx) {
+  assert (idx >= 0 && idx < active_lq_handler->linkdata_hello_count);
+  return active_lq_handler->linkdata_hello[idx].name_maxlen;
+}
+
+/*
+ * olsr_get_linklabel_count
+ *
+ * @return number of linkquality parameters including linkcost
+ */
+size_t olsr_get_linklabel_count (void) {
+  return active_lq_handler->linkdata_hello_count;
+}
+
+/*
+ * olsr_get_linkdata_quality
+ *
+ * This function allows you to judge the quality of a certain linkquality parameter
+ * (in the categories BEST, GOOD, AVERAGE, BAD and WORST)
+ *
+ * @param link entry
+ * @param index of linkquality parameter
+ * @return enum with linkquality estinate
+ */
+enum lq_linkdata_quality olsr_get_linkdata_quality (struct link_entry *link, int idx) {
+  struct lq_linkdata_type *linkdata;
+  int value;
+
+  assert (idx >= 0 && idx < active_lq_handler->linkdata_hello_count);
+  linkdata = &active_lq_handler->linkdata_hello[idx];
+  value = active_lq_handler->get_link_entry_data(link, idx);
+
+  if (value == linkdata->best) {
+    return LQ_QUALITY_BEST;
+  }
+  if (value == linkdata->worst) {
+    return LQ_QUALITY_WORST;
+  }
+
+  if (linkdata->best < linkdata->worst) {
+    if (value > linkdata->good) {
+      return LQ_QUALITY_GOOD;
+    }
+    if (value > linkdata->average) {
+      return LQ_QUALITY_AVERAGE;
+    }
+  }
+  else {
+    if (value < linkdata->good) {
+      return LQ_QUALITY_GOOD;
+    }
+    if (value < linkdata->average) {
+      return LQ_QUALITY_AVERAGE;
+    }
+  }
+  return LQ_QUALITY_BAD;
 }
 
 /*

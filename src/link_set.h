@@ -65,9 +65,9 @@ struct link_entry {
   uint32_t ASYM_time;
   uint32_t vtime;
   struct nbr_entry *neighbor;
-  uint8_t prev_status;
+  uint8_t status;
 
-  bool is_mprs;
+  bool is_mpr, is_mprs;
 
   /*
    * packet loss

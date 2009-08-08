@@ -69,7 +69,7 @@
 struct debuginfo_cmd {
   const char *name;
   olsr_txthandler handler;
-  struct olsr_txtcommand *normal, *csv;
+  struct olsr_txtcommand *cmd;
 };
 
 static void debuginfo_new(void) __attribute__ ((constructor));
@@ -100,9 +100,9 @@ static const struct olsrd_plugin_parameters plugin_parameters[] = {
 
 /* command callbacks and names */
 static struct debuginfo_cmd commands[] = {
-    {"msgstat", &debuginfo_msgstat, NULL, NULL},
-    {"pktstat", &debuginfo_pktstat, NULL, NULL},
-    {"cookies", &debuginfo_cookies, NULL, NULL}
+    {"msgstat", &debuginfo_msgstat, NULL},
+    {"pktstat", &debuginfo_pktstat, NULL},
+    {"cookies", &debuginfo_cookies, NULL}
 };
 
 /* variables for statistics */
@@ -169,8 +169,7 @@ debuginfo_delete(void)
   size_t i;
 
   for (i=0; i<ARRAYSIZE(commands); i++) {
-    olsr_com_remove_normal_txtcommand(commands[i].normal);
-    olsr_com_remove_csv_txtcommand(commands[i].csv);
+    olsr_com_remove_normal_txtcommand(commands[i].cmd);
   }
   olsr_parser_remove_function(&olsr_msg_statistics, PROMISCUOUS);
   olsr_preprocessor_remove_function(&olsr_packet_statistics);
@@ -183,10 +182,8 @@ olsrd_plugin_init(void)
   size_t i;
 
   for (i=0; i<ARRAYSIZE(commands); i++) {
-    commands[i].normal = olsr_com_add_normal_txtcommand(commands[i].name, commands[i].handler);
-    commands[i].csv = olsr_com_add_csv_txtcommand(commands[i].name, commands[i].handler);
-    commands[i].normal->acl = &allowed_nets;
-    commands[i].csv->acl = &allowed_nets;
+    commands[i].cmd = olsr_com_add_normal_txtcommand(commands[i].name, commands[i].handler);
+    commands[i].cmd->acl = &allowed_nets;
   }
 
   statistics_timer = olsr_alloc_cookie("debuginfo timer", OLSR_COOKIE_TYPE_TIMER);
@@ -395,21 +392,8 @@ static const char *debuginfo_print_trafficip(struct ipaddr_str *buf, union olsr_
   return olsr_ip_to_string(buf, ip);
 }
 
-static bool debuginfo_print_msgstat(struct autobuf *buf, bool csv, union olsr_ip_addr *ip, struct debug_msgtraffic_count *cnt) {
+static bool debuginfo_print_msgstat(struct autobuf *buf, union olsr_ip_addr *ip, struct debug_msgtraffic_count *cnt) {
   struct ipaddr_str strbuf;
-
-  if (csv) {
-    return abuf_appendf(buf, "msgstat,%s,%d,%d,%d,%d,%d,%d,%d\n",
-        debuginfo_print_trafficip(&strbuf, ip),
-        cnt->data[DTR_HELLO],
-        cnt->data[DTR_TC],
-        cnt->data[DTR_MID],
-        cnt->data[DTR_HNA],
-        cnt->data[DTR_OTHER],
-        cnt->data[DTR_MESSAGES],
-        cnt->data[DTR_MSG_TRAFFIC]) < 0;
-  }
-
   return abuf_appendf(buf, "%-*s\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t\n",
       olsr_cnf->ip_version == AF_INET ? INET_ADDRSTRLEN : INET6_ADDRSTRLEN, debuginfo_print_trafficip(&strbuf, ip),
       cnt->data[DTR_HELLO],
@@ -426,21 +410,19 @@ debuginfo_msgstat(struct comport_connection *con,  char *cmd __attribute__ ((unu
 {
   struct debug_msgtraffic *tr;
 
-  if (!con->is_csv) {
-    if (abuf_appendf(&con->out, "Slot size: %d seconds\tSlot count: %d\n", traffic_interval, traffic_slots) < 0) {
-      return ABUF_ERROR;
-    }
-    if (abuf_appendf(&con->out,
-        "Table: Statistics (without duplicates)\n%-*s\tHello\tTC\tMID\tHNA\tOther\tTotal\tBytes\n",
-        olsr_cnf->ip_version == AF_INET ? INET_ADDRSTRLEN : INET6_ADDRSTRLEN, "IP"
-        ) < 0) {
-      return ABUF_ERROR;
-    }
+  if (abuf_appendf(&con->out, "Slot size: %d seconds\tSlot count: %d\n", traffic_interval, traffic_slots) < 0) {
+    return ABUF_ERROR;
+  }
+  if (abuf_appendf(&con->out,
+      "Table: Statistics (without duplicates)\n%-*s\tHello\tTC\tMID\tHNA\tOther\tTotal\tBytes\n",
+      olsr_cnf->ip_version == AF_INET ? INET_ADDRSTRLEN : INET6_ADDRSTRLEN, "IP"
+      ) < 0) {
+    return ABUF_ERROR;
   }
 
   if (param == NULL || strcasecmp(param, "node") == 0) {
     OLSR_FOR_ALL_MSGTRAFFIC_ENTRIES(tr) {
-      if (debuginfo_print_msgstat(&con->out, con->is_csv, &tr->ip, &tr->traffic[current_slot])) {
+      if (debuginfo_print_msgstat(&con->out, &tr->ip, &tr->traffic[current_slot])) {
         return ABUF_ERROR;
       }
     } OLSR_FOR_ALL_MSGTRAFFIC_ENTRIES_END(tr)
@@ -477,7 +459,7 @@ debuginfo_msgstat(struct comport_connection *con,  char *cmd __attribute__ ((unu
       for (i=0; i<DTR_MSG_COUNT; i++) {
         cnt.data[i] = (tr->total.data[i] * mult) / divisor;
       }
-      if (debuginfo_print_msgstat(&con->out, con->is_csv, &tr->ip, &cnt)) {
+      if (debuginfo_print_msgstat(&con->out, &tr->ip, &cnt)) {
         return ABUF_ERROR;
       }
     } OLSR_FOR_ALL_MSGTRAFFIC_ENTRIES_END(tr)
@@ -486,17 +468,8 @@ debuginfo_msgstat(struct comport_connection *con,  char *cmd __attribute__ ((unu
   return CONTINUE;
 }
 
-static bool debuginfo_print_pktstat(struct autobuf *buf, bool csv, union olsr_ip_addr *ip, char *int_name, struct debug_pkttraffic_count *cnt) {
+static bool debuginfo_print_pktstat(struct autobuf *buf, union olsr_ip_addr *ip, char *int_name, struct debug_pkttraffic_count *cnt) {
   struct ipaddr_str strbuf;
-
-  if (csv) {
-    return abuf_appendf(buf, "msgstat,%s,%s,%d,%d\n",
-        debuginfo_print_trafficip(&strbuf, ip),
-        int_name,
-        cnt->data[DTR_PACKETS],
-        cnt->data[DTR_PACK_TRAFFIC]) < 0;
-  }
-
   return abuf_appendf(buf, "%-*s\t%s\t%d\t%d\n",
       olsr_cnf->ip_version == AF_INET ? INET_ADDRSTRLEN : INET6_ADDRSTRLEN, debuginfo_print_trafficip(&strbuf, ip),
       int_name,
@@ -509,21 +482,19 @@ debuginfo_pktstat(struct comport_connection *con,  char *cmd __attribute__ ((unu
 {
   struct debug_pkttraffic *tr;
 
-  if (!con->is_csv) {
-    if (abuf_appendf(&con->out, "Slot size: %d seconds\tSlot count: %d\n", traffic_interval, traffic_slots) < 0) {
-      return ABUF_ERROR;
-    }
-    if (abuf_appendf(&con->out,
-        "Table: Statistics (without duplicates)\n%-*s\tInterf.\tPackets\tBytes\n",
-        olsr_cnf->ip_version == AF_INET ? INET_ADDRSTRLEN : INET6_ADDRSTRLEN, "IP"
-        ) < 0) {
-      return ABUF_ERROR;
-    }
+  if (abuf_appendf(&con->out, "Slot size: %d seconds\tSlot count: %d\n", traffic_interval, traffic_slots) < 0) {
+    return ABUF_ERROR;
+  }
+  if (abuf_appendf(&con->out,
+      "Table: Statistics (without duplicates)\n%-*s\tInterf.\tPackets\tBytes\n",
+      olsr_cnf->ip_version == AF_INET ? INET_ADDRSTRLEN : INET6_ADDRSTRLEN, "IP"
+      ) < 0) {
+    return ABUF_ERROR;
   }
 
   if (param == NULL || strcasecmp(param, "node") == 0) {
     OLSR_FOR_ALL_PKTTRAFFIC_ENTRIES(tr) {
-      if (debuginfo_print_pktstat(&con->out, con->is_csv, &tr->ip, tr->int_name, &tr->traffic[current_slot])) {
+      if (debuginfo_print_pktstat(&con->out, &tr->ip, tr->int_name, &tr->traffic[current_slot])) {
         return ABUF_ERROR;
       }
     } OLSR_FOR_ALL_PKTTRAFFIC_ENTRIES_END(tr)
@@ -560,7 +531,7 @@ debuginfo_pktstat(struct comport_connection *con,  char *cmd __attribute__ ((unu
       for (i=0; i<DTR_PKT_COUNT; i++) {
         cnt.data[i] = (tr->total.data[i] * mult) / divisor;
       }
-      if (debuginfo_print_pktstat(&con->out, con->is_csv, &tr->ip, tr->int_name, &cnt)) {
+      if (debuginfo_print_pktstat(&con->out, &tr->ip, tr->int_name, &cnt)) {
         return ABUF_ERROR;
       }
     } OLSR_FOR_ALL_PKTTRAFFIC_ENTRIES_END(tr)
@@ -603,21 +574,19 @@ static INLINE bool debuginfo_print_cookies_timer(struct autobuf *buf, const char
 static enum olsr_txtcommand_result
 debuginfo_cookies(struct comport_connection *con,  char *cmd __attribute__ ((unused)), char *param __attribute__ ((unused)))
 {
-  if (!con->is_csv && abuf_puts(&con->out, "Memory cookies:\n") < 0) {
+  if (abuf_puts(&con->out, "Memory cookies:\n") < 0) {
     return ABUF_ERROR;
   }
 
-  if (debuginfo_print_cookies_mem(&con->out, !con->is_csv ?
-      "%-25s (MEMORY) size: %lu usage: %u freelist: %u\n" : "mem_cookie,%s,%lu,%u,%u\n")) {
+  if (debuginfo_print_cookies_mem(&con->out, "%-25s (MEMORY) size: %lu usage: %u freelist: %u\n")) {
     return ABUF_ERROR;
   }
 
-  if (!con->is_csv && abuf_puts(&con->out, "\nTimer cookies:\n") < 0) {
+  if (abuf_puts(&con->out, "\nTimer cookies:\n") < 0) {
     return ABUF_ERROR;
   }
 
-  if (debuginfo_print_cookies_timer(&con->out, !con->is_csv ?
-      "%-25s (TIMER) usage: %u changes: %u\n" : "tmr_cookie,%s,%u,%u\n")) {
+  if (debuginfo_print_cookies_timer(&con->out, "%-25s (TIMER) usage: %u changes: %u\n")) {
     return ABUF_ERROR;
   }
   return CONTINUE;

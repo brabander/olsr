@@ -724,7 +724,7 @@ olsr_rtp_to_string(const struct rt_path *rtp)
 {
   static char buff[128];
   struct ipaddr_str origstr, gwstr;
-  struct lqtextbuffer lqbuffer;
+  char lqbuffer[LQTEXT_MAXLENGTH];
   struct ipprefix_str prefixstr;
 
   snprintf(buff, sizeof(buff),
@@ -734,7 +734,8 @@ olsr_rtp_to_string(const struct rt_path *rtp)
            olsr_ip_to_string(&origstr, &rtp->rtp_originator.prefix),
            olsr_ip_to_string(&gwstr, &rtp->rtp_nexthop.gateway),
            rtp->rtp_nexthop.interface ? rtp->rtp_nexthop.interface->int_name : "(null)",
-           get_linkcost_text(rtp->rtp_metric.cost, true, &lqbuffer), rtp->rtp_metric.hops, rtp->rtp_version);
+           olsr_get_linkcost_text(rtp->rtp_metric.cost, true, lqbuffer, sizeof(lqbuffer)),
+           rtp->rtp_metric.hops, rtp->rtp_version);
 
   return buff;
 }
@@ -749,7 +750,7 @@ olsr_print_routing_table(struct avl_tree *tree __attribute__ ((unused)))
   /* The whole function makes no sense without it. */
 #if !defined REMOVE_LOG_INFO
   struct avl_node *rt_tree_node;
-  struct lqtextbuffer lqbuffer;
+  char lqbuffer[LQTEXT_MAXLENGTH];
 
   OLSR_INFO(LOG_ROUTING, "ROUTING TABLE\n");
 
@@ -771,7 +772,7 @@ olsr_print_routing_table(struct avl_tree *tree __attribute__ ((unused)))
       struct rt_path *rtp = rtp_tree2rtp(rtp_tree_node);
       OLSR_INFO_NH(LOG_ROUTING, "\tfrom %s, cost %s, metric %u, via %s, dev %s, v %u\n",
                    olsr_ip_to_string(&origstr, &rtp->rtp_originator.prefix),
-                   get_linkcost_text(rtp->rtp_metric.cost, true, &lqbuffer),
+                   olsr_get_linkcost_text(rtp->rtp_metric.cost, true, lqbuffer, sizeof(lqbuffer)),
                    rtp->rtp_metric.hops,
                    olsr_ip_to_string(&gwstr, &rtp->rtp_nexthop.gateway),
                    rt->rt_nexthop.interface ? rt->rt_nexthop.interface->int_name : "(null)", rtp->rtp_version);

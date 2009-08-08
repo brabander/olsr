@@ -82,12 +82,12 @@ olsr_spf_add_cand_tree(struct avl_tree *tree, struct tc_entry *tc)
 {
 #if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
-  struct lqtextbuffer lqbuffer;
+  char lqbuffer[LQTEXT_MAXLENGTH];
 #endif
   tc->cand_tree_node.key = &tc->path_cost;
 
   OLSR_DEBUG(LOG_ROUTING, "SPF: insert candidate %s, cost %s\n",
-             olsr_ip_to_string(&buf, &tc->addr), get_linkcost_text(tc->path_cost, false, &lqbuffer));
+             olsr_ip_to_string(&buf, &tc->addr), olsr_get_linkcost_text(tc->path_cost, false, lqbuffer, sizeof(lqbuffer)));
 
   avl_insert(tree, &tc->cand_tree_node, AVL_DUP);
 }
@@ -103,10 +103,10 @@ olsr_spf_del_cand_tree(struct avl_tree *tree, struct tc_entry *tc)
 
 #if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
-  struct lqtextbuffer lqbuffer;
+  char lqbuffer[LQTEXT_MAXLENGTH];
 #endif
   OLSR_DEBUG(LOG_ROUTING, "SPF: delete candidate %s, cost %s\n",
-             olsr_ip_to_string(&buf, &tc->addr), get_linkcost_text(tc->path_cost, false, &lqbuffer));
+             olsr_ip_to_string(&buf, &tc->addr), olsr_get_linkcost_text(tc->path_cost, false, lqbuffer, sizeof(lqbuffer)));
 
   avl_delete(tree, &tc->cand_tree_node);
 }
@@ -121,12 +121,12 @@ olsr_spf_add_path_list(struct list_node *head, int *path_count, struct tc_entry 
 {
 #if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str pathbuf, nbuf;
-  struct lqtextbuffer lqbuffer;
+  char lqbuffer[LQTEXT_MAXLENGTH];
 #endif
 
   OLSR_DEBUG(LOG_ROUTING, "SPF: append path %s, cost %s, via %s\n",
              olsr_ip_to_string(&pathbuf, &tc->addr),
-             get_linkcost_text(tc->path_cost, false, &lqbuffer),
+             olsr_get_linkcost_text(tc->path_cost, false, lqbuffer, sizeof(lqbuffer)),
              tc->next_hop ? olsr_ip_to_string(&nbuf, &tc->next_hop->neighbor_iface_addr) : "-");
 
   list_add_before(head, &tc->path_list_node);
@@ -162,10 +162,11 @@ olsr_spf_relax(struct avl_tree *cand_tree, struct tc_entry *tc)
 
 #if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf, nbuf;
-  struct lqtextbuffer lqbuffer;
+  char lqbuffer[LQTEXT_MAXLENGTH];
 #endif
   OLSR_DEBUG(LOG_ROUTING, "SPF: exploring node %s, cost %s\n",
-             olsr_ip_to_string(&buf, &tc->addr), get_linkcost_text(tc->path_cost, false, &lqbuffer));
+             olsr_ip_to_string(&buf, &tc->addr),
+             olsr_get_linkcost_text(tc->path_cost, false, lqbuffer, sizeof(lqbuffer)));
 
   /*
    * loop through all edges of this vertex.
@@ -193,7 +194,8 @@ olsr_spf_relax(struct avl_tree *cand_tree, struct tc_entry *tc)
     new_cost = tc->path_cost + tc_edge->common_cost;
 
     OLSR_DEBUG(LOG_ROUTING, "SPF:   exploring edge %s, cost %s\n",
-               olsr_ip_to_string(&buf, &tc_edge->T_dest_addr), get_linkcost_text(new_cost, true, &lqbuffer));
+               olsr_ip_to_string(&buf, &tc_edge->T_dest_addr),
+               olsr_get_linkcost_text(new_cost, true, lqbuffer, sizeof(lqbuffer)));
 
     /*
      * if it's better than the current path quality of this edge's
@@ -220,7 +222,7 @@ olsr_spf_relax(struct avl_tree *cand_tree, struct tc_entry *tc)
 
       OLSR_DEBUG(LOG_ROUTING, "SPF:   better path to %s, cost %s, via %s, hops %d\n",
                  olsr_ip_to_string(&buf, &new_tc->addr),
-                 get_linkcost_text(new_cost, true, &lqbuffer),
+                 olsr_get_linkcost_text(new_cost, true, lqbuffer, sizeof(lqbuffer)),
                  tc->next_hop ? olsr_ip_to_string(&nbuf, &tc->next_hop->neighbor_iface_addr) : "<none>", new_tc->hops);
     }
   }

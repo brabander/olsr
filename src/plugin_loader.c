@@ -204,7 +204,7 @@ olsr_load_legacy_plugin(char *libname, void *dlhandle) {
   plugin = (struct olsr_plugin *)olsr_cookie_malloc(plugin_mem_cookie);
   plugin->p_name = strdup(libname);
   plugin->p_version = plugin_interface_version;
-  plugin->p_post_init = init_plugin;
+  plugin->p_legacy_init = init_plugin;
 
   plugin->p_node.key = plugin->p_name;
   plugin->dlhandle = dlhandle;
@@ -337,8 +337,15 @@ bool olsr_activate_plugin(struct olsr_plugin *plugin) {
   }
 
   if (plugin->p_post_init != NULL) {
-    if (plugin->p_post_init() != (plugin->p_version == 5 ? 1 : 0)) {
+    if (plugin->p_post_init()) {
       OLSR_WARN(LOG_PLUGINS, "Error, post init failed for plugin %s\n", plugin->p_name);
+      return true;
+    }
+    OLSR_DEBUG(LOG_PLUGINS, "Post initialization of plugin %s successful\n", plugin->p_name);
+  }
+  if (plugin->p_legacy_init != NULL) {
+    if (plugin->p_legacy_init() != 1) {
+      OLSR_WARN(LOG_PLUGINS, "Error, legacy init failed for plugin %s\n", plugin->p_name);
       return true;
     }
     OLSR_DEBUG(LOG_PLUGINS, "Post initialization of plugin %s successful\n", plugin->p_name);

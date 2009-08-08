@@ -50,6 +50,7 @@
 #include "mid_set.h"
 #include "scheduler.h"
 #include "olsr_logging.h"
+#include "common/string.h"
 
 #define PLUGIN_DESCR "Freifunk ETX metric based on the original design of Elektra and Thomas Lopatic"
 #define PLUGIN_AUTHOR "Henning Rogge"
@@ -60,7 +61,7 @@
 
 #define LQ_PLUGIN_RELEVANT_COSTCHANGE_FF 16
 
-static int lq_etxff_post_init(void);
+static bool lq_etxff_post_init(void);
 
 static void lq_etxff_initialize(void);
 static void lq_etxff_deinitialize(void);
@@ -86,15 +87,21 @@ static int lq_etxff_serialize_tc_lq(unsigned char *buff, struct tc_mpr_addr *lq)
 static void lq_etxff_deserialize_hello_lq(uint8_t const **curr, struct lq_hello_neighbor *lq);
 static void lq_etxff_deserialize_tc_lq(uint8_t const **curr, struct tc_edge_entry *lq);
 
-static char *lq_etxff_print_link_entry_lq(struct link_entry *entry, char separator, struct lqtextbuffer *buffer);
-static char *lq_etxff_print_tc_edge_entry_lq(struct tc_edge_entry *ptr, char separator, struct lqtextbuffer *buffer);
-static char *lq_etxff_print_cost(olsr_linkcost cost, struct lqtextbuffer *buffer);
+static int lq_etxff_get_linkentry_data(struct link_entry *, int);
+static const char *lq_etxff_print_cost(olsr_linkcost cost, char *buffer, size_t bufsize);
+static const char *lq_etxff_print_link_entry_lq(struct link_entry *entry, int index, char *buffer, size_t bufsize);
 
 static struct olsr_cookie_info *default_lq_ff_timer_cookie = NULL;
 
 DEFINE_PLUGIN6_NP(PLUGIN_DESCR, PLUGIN_AUTHOR, NULL, lq_etxff_post_init, NULL, NULL, false)
 
 /* etx lq plugin (freifunk fpm version) settings */
+struct lq_linkdata_type lq_etxff_linktypes[] = {
+  { "ETX", 5, 65536, 65536*2, 65536*4, INT32_MAX },
+  { "LQ", 5, 255, 240, 192, 0 },
+  { "NLQ", 5, 255, 240, 192, 0 }
+};
+
 struct lq_handler lq_etxff_handler = {
   "etx (freifunk)",
 
@@ -125,9 +132,12 @@ struct lq_handler lq_etxff_handler = {
   &lq_etxff_deserialize_hello_lq,
   &lq_etxff_deserialize_tc_lq,
 
-  &lq_etxff_print_link_entry_lq,
-  &lq_etxff_print_tc_edge_entry_lq,
+  &lq_etxff_get_linkentry_data,
   &lq_etxff_print_cost,
+  &lq_etxff_print_link_entry_lq,
+
+  lq_etxff_linktypes,
+  ARRAYSIZE(lq_etxff_linktypes),
 
   sizeof(struct lq_etxff_tc_edge),
   sizeof(struct lq_etxff_tc_mpr_addr),
@@ -140,9 +150,9 @@ struct lq_handler lq_etxff_handler = {
   4,4
 };
 
-static int lq_etxff_post_init(void) {
+static bool lq_etxff_post_init(void) {
   active_lq_handler = &lq_etxff_handler;
-  return 0;
+  return false;
 }
 
 static void
@@ -429,52 +439,42 @@ lq_etxff_deserialize_tc_lq(uint8_t const **curr, struct tc_edge_entry *edge)
   pkt_ignore_u16(curr);
 }
 
-static char *
-lq_etxff_print_lq(struct lq_etxff_linkquality *lq, char separator, struct lqtextbuffer *buffer)
-{
-  int i = 0;
+static int
+lq_etxff_get_linkentry_data(struct link_entry *link, int idx) {
+  struct lq_etxff_link_entry *lq = (struct lq_etxff_link_entry *)link;
+  return idx == 1 ? lq->lq.valueLq : lq->lq.valueNlq;
+}
 
-  if (lq->valueLq == 255) {
-    strcpy(buffer->buf, "1.000");
-    i += 5;
-  } else {
-    i = sprintf(buffer->buf, "0.%03d", (lq->valueLq * 1000) / 255);
+static const char *
+lq_etxff_print_link_entry_lq(struct link_entry *link, int idx, char *buffer, size_t bufsize)
+{
+  struct lq_etxff_link_entry *lq = (struct lq_etxff_link_entry *)link;
+  uint8_t value;
+
+  if (idx == 1) {
+    value = lq->lq.valueLq;
   }
-  buffer->buf[i++] = separator;
-
-  if (lq->valueNlq == 255) {
-    strcpy(&buffer->buf[i], "1.000");
-  } else {
-    sprintf(&buffer->buf[i], "0.%03d", (lq->valueNlq * 1000) / 255);
+  else {
+    value = lq->lq.valueNlq;
   }
-  return buffer->buf;
+
+  if (value == 255) {
+    strscpy(buffer, "1.000", bufsize);
+  } else {
+    snprintf(buffer, bufsize, "0.%03d", (value * 1000) / 255);
+  }
+  return buffer;
 }
 
-static char *
-lq_etxff_print_link_entry_lq(struct link_entry *link, char separator, struct lqtextbuffer *buffer)
-{
-  struct lq_etxff_link_entry *lq_link = (struct lq_etxff_link_entry *)link;
-
-  return lq_etxff_print_lq(&lq_link->lq, separator, buffer);
-}
-
-static char *
-lq_etxff_print_tc_edge_entry_lq(struct tc_edge_entry *edge, char separator, struct lqtextbuffer *buffer)
-{
-  struct lq_etxff_tc_edge *lq_edge = (struct lq_etxff_tc_edge *)edge;
-
-  return lq_etxff_print_lq(&lq_edge->lq, separator, buffer);
-}
-
-static char *
-lq_etxff_print_cost(olsr_linkcost cost, struct lqtextbuffer *buffer)
+static const char *
+lq_etxff_print_cost(olsr_linkcost cost, char *buffer, size_t bufsize)
 {
   // must calculate
   uint32_t roundDown = cost >> 16;
   uint32_t fraction = ((cost & 0xffff) * 1000) >> 16;
 
-  sprintf(buffer->buf, "%u.%03u", roundDown, fraction);
-  return buffer->buf;
+  snprintf(buffer, bufsize, "%u.%03u", roundDown, fraction);
+  return buffer;
 }
 
 /*

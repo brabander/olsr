@@ -57,7 +57,7 @@
 #define LQ_QUICKSTART_STEPS        12
 
 static int set_plugin_float(const char *, void *, set_plugin_parameter_addon);
-static int lq_etxfloat_post_init(void);
+static bool lq_etxfloat_post_init(void);
 
 static olsr_linkcost lq_etxfloat_calc_link_entry_cost(struct link_entry *);
 static olsr_linkcost lq_etxfloat_calc_lq_hello_neighbor_cost(struct lq_hello_neighbor *);
@@ -78,11 +78,17 @@ static int lq_etxfloat_serialize_tc_lq(unsigned char *buff, struct tc_mpr_addr *
 static void lq_etxfloat_deserialize_hello_lq(uint8_t const **curr, struct lq_hello_neighbor *lq);
 static void lq_etxfloat_deserialize_tc_lq(uint8_t const **curr, struct tc_edge_entry *lq);
 
-static char *lq_etxfloat_print_link_entry_lq(struct link_entry *entry, char separator, struct lqtextbuffer *buffer);
-static char *lq_etxfloat_print_tc_edge_entry_lq(struct tc_edge_entry *ptr, char separator, struct lqtextbuffer *buffer);
-static char *lq_etxfloat_print_cost(olsr_linkcost cost, struct lqtextbuffer *buffer);
+static int lq_etxfloat_get_linkentry_data(struct link_entry *, int);
+static const char *lq_etxfloat_print_cost(olsr_linkcost cost, char *buffer, size_t bufsize);
+static const char *lq_etxfloat_print_link_entry_lq(struct link_entry *entry, int index, char *buffer, size_t bufsize);
 
-/* etx lq plugin (freifunk fpm version) settings */
+/* etx lq plugin (float version) settings */
+struct lq_linkdata_type lq_etxfloat_linktypes[] = {
+  { "ETX", 5, 1000, 1000*2, 1000*4, INT32_MAX },
+  { "LQ", 5, 255, 240, 192, 0 },
+  { "NLQ", 5, 255, 240, 192, 0 }
+};
+
 struct lq_handler lq_etxfloat_handler = {
   "etx (float)",
 
@@ -113,9 +119,12 @@ struct lq_handler lq_etxfloat_handler = {
   &lq_etxfloat_deserialize_hello_lq,
   &lq_etxfloat_deserialize_tc_lq,
 
-  &lq_etxfloat_print_link_entry_lq,
-  &lq_etxfloat_print_tc_edge_entry_lq,
+  &lq_etxfloat_get_linkentry_data,
   &lq_etxfloat_print_cost,
+  &lq_etxfloat_print_link_entry_lq,
+
+  lq_etxfloat_linktypes,
+  ARRAYSIZE(lq_etxfloat_linktypes),
 
   sizeof(struct lq_etxfloat_tc_edge),
   sizeof(struct lq_etxfloat_tc_mpr_addr),
@@ -148,9 +157,9 @@ set_plugin_float(const char *value, void *data, set_plugin_parameter_addon addon
   return 0;
 }
 
-static int lq_etxfloat_post_init(void) {
+static bool lq_etxfloat_post_init(void) {
   active_lq_handler = &lq_etxfloat_handler;
-  return 0;
+  return false;
 }
 
 static olsr_linkcost
@@ -329,35 +338,27 @@ lq_etxfloat_deserialize_tc_lq(uint8_t const **curr, struct tc_edge_entry *edge)
   lq_edge->lq.valueNlq = (float)nlq_value / 255.0;
 }
 
-static char *
-lq_etxfloat_print_lq(struct lq_etxfloat_linkquality *lq, char separator, struct lqtextbuffer *buffer)
-{
-  snprintf(buffer->buf, sizeof(struct lqtextbuffer), "%2.3f%c%2.3f", lq->valueLq, separator, lq->valueNlq);
-  return buffer->buf;
+static int lq_etxfloat_get_linkentry_data(struct link_entry *link, int idx) {
+  struct lq_etxfloat_link_entry *lq_link = (struct lq_etxfloat_link_entry *)link;
+  float value =  idx == 1 ? lq_link->lq.valueLq : lq_link->lq.valueNlq;
+
+  return (int)(value * 1000);
 }
 
-static char *
-lq_etxfloat_print_link_entry_lq(struct link_entry *link, char separator, struct lqtextbuffer *buffer)
+static const char *
+lq_etxfloat_print_link_entry_lq(struct link_entry *link, int idx, char *buffer, size_t bufsize)
 {
   struct lq_etxfloat_link_entry *lq_link = (struct lq_etxfloat_link_entry *)link;
-
-  return lq_etxfloat_print_lq(&lq_link->lq, separator, buffer);
+  snprintf(buffer, bufsize, "%2.3f",
+      idx==1 ? lq_link->lq.valueLq : lq_link->lq.valueNlq);
+  return buffer;
 }
 
-static char *
-lq_etxfloat_print_tc_edge_entry_lq(struct tc_edge_entry *edge, char separator, struct lqtextbuffer *buffer)
+static const char *
+lq_etxfloat_print_cost(olsr_linkcost cost, char *buffer, size_t bufsize)
 {
-  struct lq_etxfloat_tc_edge *lq_edge = (struct lq_etxfloat_tc_edge *)edge;
-
-  return lq_etxfloat_print_lq(&lq_edge->lq, separator, buffer);
-}
-
-static char *
-lq_etxfloat_print_cost(olsr_linkcost cost, struct lqtextbuffer *buffer)
-{
-  // must calculate
-  snprintf(buffer->buf, sizeof(struct lqtextbuffer), "%2.3f", ((float)cost) / LQ_PLUGIN_LC_MULTIPLIER);
-  return buffer->buf;
+  snprintf(buffer, bufsize, "%2.3f", ((float)cost) / LQ_PLUGIN_LC_MULTIPLIER);
+  return buffer;
 }
 
 /*

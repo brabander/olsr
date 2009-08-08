@@ -46,6 +46,7 @@
 #include "olsr.h"
 #include "lq_plugin_etx_fpm.h"
 #include "olsr_logging.h"
+#include "common/string.h"
 
 #define PLUGIN_DESCR    "Integer arithmetic based ETX metric with exponential aging"
 #define PLUGIN_AUTHOR   "Sven-Ola Tuecke and Henning Rogge"
@@ -57,7 +58,7 @@
 #define LQ_FPM_QUICKSTART_AGING    16384       /* 65536 * 0.25 */
 #define LQ_QUICKSTART_STEPS        12
 
-static int lq_etxfpm_post_init(void);
+static bool lq_etxfpm_post_init(void);
 static int set_plugin_aging(const char *, void *, set_plugin_parameter_addon);
 
 static olsr_linkcost lq_etxfpm_calc_link_entry_cost(struct link_entry *);
@@ -79,11 +80,17 @@ static int lq_etxfpm_serialize_tc_lq(unsigned char *buff, struct tc_mpr_addr *lq
 static void lq_etxfpm_deserialize_hello_lq(uint8_t const **curr, struct lq_hello_neighbor *lq);
 static void lq_etxfpm_deserialize_tc_lq(uint8_t const **curr, struct tc_edge_entry *lq);
 
-static char *lq_etxfpm_print_link_entry_lq(struct link_entry *entry, char separator, struct lqtextbuffer *buffer);
-static char *lq_etxfpm_print_tc_edge_entry_lq(struct tc_edge_entry *ptr, char separator, struct lqtextbuffer *buffer);
-static char *lq_etxfpm_print_cost(olsr_linkcost cost, struct lqtextbuffer *buffer);
+static int lq_etxfpm_get_linkentry_data(struct link_entry *, int);
+static const char *lq_etxfpm_print_cost(olsr_linkcost cost, char *buffer, size_t bufsize);
+static const char *lq_etxfpm_print_link_entry_lq(struct link_entry *entry, int idx, char *buffer, size_t bufsize);
 
-/* etx lq plugin (freifunk fpm version) settings */
+/* etx lq plugin (fpm version) settings */
+struct lq_linkdata_type lq_etxfpm_linktypes[] = {
+  { "ETX", 5, 1000, 1000*2, 1000*4, INT32_MAX },
+  { "LQ", 5, 255, 240, 192, 0 },
+  { "NLQ", 5, 255, 240, 192, 0 }
+};
+
 struct lq_handler lq_etxfpm_handler = {
   "etx (fpm)",
 
@@ -114,9 +121,12 @@ struct lq_handler lq_etxfpm_handler = {
   &lq_etxfpm_deserialize_hello_lq,
   &lq_etxfpm_deserialize_tc_lq,
 
-  &lq_etxfpm_print_link_entry_lq,
-  &lq_etxfpm_print_tc_edge_entry_lq,
+  &lq_etxfpm_get_linkentry_data,
   &lq_etxfpm_print_cost,
+  &lq_etxfpm_print_link_entry_lq,
+
+  lq_etxfpm_linktypes,
+  ARRAYSIZE(lq_etxfpm_linktypes),
 
   sizeof(struct lq_etxfpm_tc_edge),
   sizeof(struct lq_etxfpm_tc_mpr_addr),
@@ -140,9 +150,9 @@ static const struct olsrd_plugin_parameters plugin_parameters[] = {
 
 DEFINE_PLUGIN6(PLUGIN_DESCR, PLUGIN_AUTHOR, NULL, lq_etxfpm_post_init, NULL, NULL, false, plugin_parameters)
 
-static int lq_etxfpm_post_init(void) {
+static bool lq_etxfpm_post_init(void) {
   active_lq_handler = &lq_etxfpm_handler;
-  return 0;
+  return false;
 }
 
 static int
@@ -350,52 +360,35 @@ lq_etxfpm_deserialize_tc_lq(uint8_t const **curr, struct tc_edge_entry *edge)
   pkt_ignore_u16(curr);
 }
 
-static char *
-lq_etxfpm_print_lq(struct lq_etxfpm_linkquality *lq, char separator, struct lqtextbuffer *buffer)
-{
-  int i = 0;
+static int lq_etxfpm_get_linkentry_data(struct link_entry *link, int idx) {
+  struct lq_etxfpm_link_entry *lq_link = (struct lq_etxfpm_link_entry *)link;
 
-  if (lq->valueLq == 255) {
-    strcpy(buffer->buf, "1.000");
-    i += 5;
-  } else {
-    i = sprintf(buffer->buf, "0.%03d", (lq->valueLq * 1000) / 255);
-  }
-  buffer->buf[i++] = separator;
-
-  if (lq->valueNlq == 255) {
-    strcpy(&buffer->buf[i], "1.000");
-  } else {
-    sprintf(&buffer->buf[i], "0.%03d", (lq->valueNlq * 1000) / 255);
-  }
-  return buffer->buf;
+  return (idx == 1) ? lq_link->lq.valueLq : lq_link->lq.valueNlq;
 }
 
-static char *
-lq_etxfpm_print_link_entry_lq(struct link_entry *link, char separator, struct lqtextbuffer *buffer)
+static const char *
+lq_etxfpm_print_link_entry_lq(struct link_entry *link, int idx, char *buffer, size_t bufsize)
 {
   struct lq_etxfpm_link_entry *lq_link = (struct lq_etxfpm_link_entry *)link;
 
-  return lq_etxfpm_print_lq(&lq_link->lq, separator, buffer);
+  uint8_t value = (idx == 1) ? lq_link->lq.valueLq : lq_link->lq.valueNlq;
+  if (value == 255) {
+    strscpy(buffer, "1.000", bufsize);
+  } else {
+    snprintf(buffer, bufsize, "0.%03d", (value * 1000) / 255);
+  }
+  return buffer;
 }
 
-static char *
-lq_etxfpm_print_tc_edge_entry_lq(struct tc_edge_entry *edge, char separator, struct lqtextbuffer *buffer)
-{
-  struct lq_etxfpm_tc_edge *lq_edge = (struct lq_etxfpm_tc_edge *)edge;
-
-  return lq_etxfpm_print_lq(&lq_edge->lq, separator, buffer);
-}
-
-static char *
-lq_etxfpm_print_cost(olsr_linkcost cost, struct lqtextbuffer *buffer)
+static const char *
+lq_etxfpm_print_cost(olsr_linkcost cost, char *buffer, size_t bufsize)
 {
   // must calculate
   uint32_t roundDown = cost >> 16;
   uint32_t fraction = ((cost & 0xffff) * 1000) >> 16;
 
-  sprintf(buffer->buf, "%u.%03u", roundDown, fraction);
-  return buffer->buf;
+  snprintf(buffer, bufsize, "%u.%03u", roundDown, fraction);
+  return buffer;
 }
 
 /*

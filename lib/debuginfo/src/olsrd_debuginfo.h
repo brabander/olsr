@@ -43,8 +43,8 @@
  * Dynamic linked library for the olsr.org olsr daemon
  */
 
-#ifndef _OLSRD_TXTINFO
-#define _OLSRD_TXTINFO
+#ifndef _OLSRD_DEBUGINFO
+#define _OLSRD_DEBUGINFO
 
 #include "olsr_types.h"
 #include "plugin.h"

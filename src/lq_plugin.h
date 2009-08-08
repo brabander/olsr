@@ -48,15 +48,27 @@
 #include "lq_packet.h"
 #include "common/avl.h"
 
-#define LINK_COST_BROKEN (1<<22)
+#define LINK_COST_BROKEN (0x00ffffff)
 #define ROUTE_COST_BROKEN (0xffffffff)
 #define ZERO_ROUTE_COST 0
 
 #define MINIMAL_USEFUL_LQ 0.1
 #define LQ_PLUGIN_RELEVANT_COSTCHANGE 16
 
-struct lqtextbuffer {
-  char buf[16];
+#define LQTEXT_MAXLENGTH 32
+
+struct lq_linkdata_type {
+  const char *name;
+  size_t name_maxlen;
+  int32_t best, good, average, worst;
+};
+
+enum lq_linkdata_quality {
+  LQ_QUALITY_BEST,
+  LQ_QUALITY_GOOD,
+  LQ_QUALITY_AVERAGE,
+  LQ_QUALITY_BAD,
+  LQ_QUALITY_WORST
 };
 
 struct lq_handler {
@@ -65,16 +77,17 @@ struct lq_handler {
   void (*initialize) (void);
   void (*deinitialize) (void);
 
-    olsr_linkcost(*calc_link_entry_cost) (struct link_entry *);
-    olsr_linkcost(*calc_lq_hello_neighbor_cost) (struct lq_hello_neighbor *);
-    olsr_linkcost(*calc_tc_mpr_addr_cost) (struct tc_mpr_addr *);
-    olsr_linkcost(*calc_tc_edge_entry_cost) (struct tc_edge_entry *);
+  olsr_linkcost(*calc_link_entry_cost) (struct link_entry *);
+  olsr_linkcost(*calc_lq_hello_neighbor_cost) (struct lq_hello_neighbor *);
+  olsr_linkcost(*calc_tc_mpr_addr_cost) (struct tc_mpr_addr *);
+  olsr_linkcost(*calc_tc_edge_entry_cost) (struct tc_edge_entry *);
 
-    bool(*is_relevant_costchange) (olsr_linkcost c1, olsr_linkcost c2);
+  bool(*is_relevant_costchange) (olsr_linkcost c1, olsr_linkcost c2);
 
-    olsr_linkcost(*packet_loss_handler) (struct link_entry *, bool);
+  olsr_linkcost(*packet_loss_handler) (struct link_entry *, bool);
 
   void (*memorize_foreign_hello) (struct link_entry *, struct lq_hello_neighbor *);
+
   void (*copy_link_entry_lq_into_tc_mpr_addr) (struct tc_mpr_addr *, struct link_entry *);
   void (*copy_link_entry_lq_into_tc_edge_entry) (struct tc_edge_entry *, struct link_entry *);
   void (*copy_link_lq_into_neighbor) (struct lq_hello_neighbor *, struct link_entry *);
@@ -89,9 +102,13 @@ struct lq_handler {
   void (*deserialize_hello_lq) (uint8_t const **, struct lq_hello_neighbor *);
   void (*deserialize_tc_lq) (uint8_t const **, struct tc_edge_entry *);
 
-  char *(*print_link_entry_lq) (struct link_entry *, char, struct lqtextbuffer *);
-  char *(*print_tc_edge_entry_lq) (struct tc_edge_entry *, char, struct lqtextbuffer *);
-  char *(*print_cost) (olsr_linkcost cost, struct lqtextbuffer *);
+  int (*get_link_entry_data) (struct link_entry *, int);
+
+  const char *(*print_cost) (olsr_linkcost cost, char *, size_t);
+  const char *(*print_link_entry_lq) (struct link_entry *, int, char *, size_t);
+
+  struct lq_linkdata_type *linkdata_hello;
+  int linkdata_hello_count;
 
   size_t size_tc_edge;
   size_t size_tc_mpr_addr;
@@ -119,16 +136,16 @@ void olsr_deserialize_tc_lq_pair(const uint8_t **, struct tc_edge_entry *);
 void olsr_update_packet_loss_worker(struct link_entry *, bool);
 void olsr_memorize_foreign_hello_lq(struct link_entry *, struct lq_hello_neighbor *);
 
-const char *EXPORT(get_link_entry_text) (struct link_entry *, char, struct lqtextbuffer *);
-const char *EXPORT(get_tc_edge_entry_text) (struct tc_edge_entry *, char, struct lqtextbuffer *);
-const char *EXPORT(get_linkcost_text) (olsr_linkcost, bool, struct lqtextbuffer *);
+const char *EXPORT(olsr_get_linkcost_text) (olsr_linkcost, bool, char *, size_t);
+const char *EXPORT(olsr_get_linkdata_text) (struct link_entry *, int, char *, size_t);
+const char *EXPORT(olsr_get_linklabel) (int);
+size_t EXPORT(olsr_get_linklabel_maxlength) (int);
+size_t EXPORT(olsr_get_linklabel_count) (void);
+enum lq_linkdata_quality EXPORT(olsr_get_linkdata_quality) (struct link_entry *, int);
 
 void olsr_copy_hello_lq(struct lq_hello_neighbor *, struct link_entry *);
 void olsr_copylq_link_entry_2_tc_mpr_addr(struct tc_mpr_addr *, struct link_entry *);
 void olsr_copylq_link_entry_2_tc_edge_entry(struct tc_edge_entry *, struct link_entry *);
-#if 0
-void olsr_clear_tc_lq(struct tc_mpr_addr *);
-#endif
 
 struct tc_edge_entry *olsr_malloc_tc_edge_entry(void);
 struct tc_mpr_addr *olsr_malloc_tc_mpr_addr(void);
@@ -148,7 +165,6 @@ size_t olsr_sizeof_TCLQ(void);
 
 /* Externals. */
 extern struct lq_handler *EXPORT(active_lq_handler);
-
 
 #endif /*LQPLUGIN_H_ */
 

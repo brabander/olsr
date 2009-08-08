@@ -298,13 +298,13 @@ olsr_tc_edge_to_string(struct tc_edge_entry *tc_edge)
 {
   static char buf[128];
   struct ipaddr_str addrbuf, dstbuf;
-  struct lqtextbuffer lqbuffer1, lqbuffer2;
+  char lqbuffer[LQTEXT_MAXLENGTH];
 
   snprintf(buf, sizeof(buf),
-           "%s > %s, cost (%6s) %s",
+           "%s > %s, cost %s",
            olsr_ip_to_string(&addrbuf, &tc_edge->tc->addr),
            olsr_ip_to_string(&dstbuf, &tc_edge->T_dest_addr),
-           get_tc_edge_entry_text(tc_edge, '/', &lqbuffer1), get_linkcost_text(tc_edge->cost, false, &lqbuffer2));
+           olsr_get_linkcost_text(tc_edge->cost, false, lqbuffer, sizeof(lqbuffer)));
   return buf;
 }
 #endif
@@ -690,14 +690,14 @@ olsr_print_tc_table(void)
   const int ipwidth = olsr_cnf->ip_version == AF_INET ? 15 : 30;
 
   OLSR_INFO(LOG_TC, "\n--- %s ------------------------------------------------- TOPOLOGY\n\n", olsr_wallclock_string());
-  OLSR_INFO_NH(LOG_TC, "%-*s %-*s             %-14s  %8s %8s\n", ipwidth,
-               "Source IP addr", ipwidth, "Dest IP addr", "      LQ      ", "ETX", "(common)");
+  OLSR_INFO_NH(LOG_TC, "%-*s %-*s             %8s %8s\n", ipwidth,
+               "Source IP addr", ipwidth, "Dest IP addr", olsr_get_linklabel(0), "(common)");
 
   OLSR_FOR_ALL_TC_ENTRIES(tc) {
     struct tc_edge_entry *tc_edge;
     OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
       struct ipaddr_str addrbuf, dstaddrbuf;
-      struct lqtextbuffer lqbuffer1, lqbuffer2, lqbuffer3;
+      char lqbuffer1[LQTEXT_MAXLENGTH], lqbuffer2[LQTEXT_MAXLENGTH];
       char *type = NORMAL;
       /* there should be no local virtual edges ! */
       if (tc_edge->is_local) {
@@ -707,14 +707,13 @@ olsr_print_tc_table(void)
         type = VIRTUAL;
       }
 
-      OLSR_INFO_NH(LOG_TC, "%-*s %-*s %-7s      %-14s %8s/%8s\n",
+      OLSR_INFO_NH(LOG_TC, "%-*s %-*s %-7s      %8s %8s\n",
                    ipwidth, olsr_ip_to_string(&addrbuf, &tc->addr),
                    ipwidth, olsr_ip_to_string(&dstaddrbuf,
                                               &tc_edge->T_dest_addr),
                    type,
-                   get_tc_edge_entry_text(tc_edge, '/', &lqbuffer1),
-                   get_linkcost_text(tc_edge->cost, false, &lqbuffer2),
-                   get_linkcost_text(tc_edge->common_cost, false, &lqbuffer3));
+                   olsr_get_linkcost_text(tc_edge->cost, false, lqbuffer1, sizeof(lqbuffer1)),
+                   olsr_get_linkcost_text(tc_edge->common_cost, false, lqbuffer2, sizeof(lqbuffer2)));
 
     } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
   } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
