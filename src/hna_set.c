@@ -336,7 +336,52 @@ olsr_input_hna(union olsr_message *msg, struct interface *in_if __attribute__ ((
    * Prune the HNAs that did not get refreshed by this advertisment.
    */
   olsr_prune_hna_entries(tc);
+}
 
+void
+generate_hna(void *p) {
+  struct interface *ifp = p;
+  struct ip_prefix_entry *h;
+  uint8_t msg_buffer[MAXMESSAGESIZE - OLSR_HEADERSIZE];
+  uint8_t *curr = msg_buffer;
+  uint8_t *length_field, *last;
+  bool sendHNA = false;
+
+  OLSR_INFO(LOG_PACKET_CREATION, "Building HNA on %s\n-------------------\n", ifp->int_name);
+
+  pkt_put_u8(&curr, HNA_MESSAGE);
+  pkt_put_reltime(&curr, olsr_cnf->hna_params.validity_time);
+
+  length_field = curr;
+  pkt_put_u16(&curr, 0); /* put in real messagesize later */
+
+  pkt_put_ipaddress(&curr, &olsr_cnf->router_id);
+
+  pkt_put_u8(&curr, 255);
+  pkt_put_u8(&curr, 0);
+  pkt_put_u16(&curr, get_msg_seqno());
+
+  last = msg_buffer + sizeof(msg_buffer) - olsr_cnf->ipsize;
+  OLSR_FOR_ALL_IPPREFIX_ENTRIES(&olsr_cnf->hna_entries, h) {
+    union olsr_ip_addr subnet;
+
+    olsr_prefix_to_netmask(&subnet, h->net.prefix_len);
+    sendHNA = true;
+    pkt_put_ipaddress(&curr, &h->net.prefix);
+    pkt_put_ipaddress(&curr, &subnet);
+  } OLSR_FOR_ALL_IPPREFIX_ENTRIES_END()
+
+  if (!sendHNA) {
+    return;
+  }
+
+  pkt_put_u16(&length_field, curr - msg_buffer);
+
+  if (net_outbuffer_bytes_left(ifp) < curr - msg_buffer) {
+    net_output(ifp);
+    set_buffer_timer(ifp);
+  }
+  net_outbuffer_push(ifp, msg_buffer, curr - msg_buffer);
 }
 
 /*

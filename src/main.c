@@ -51,11 +51,9 @@
 #include "log.h"
 #include "scheduler.h"
 #include "parser.h"
-#include "generate_msg.h"
 #include "plugin_loader.h"
 #include "apm.h"
 #include "net_os.h"
-#include "build_msg.h"
 #include "net_olsr.h"
 #include "misc.h"
 #include "olsr_cfg_gen.h"
@@ -71,6 +69,8 @@
 #include <fcntl.h>
 #include "kernel_routes.h"
 #endif
+
+#define STDOUT_PULSE_INT 600    /* msec */
 
 #ifdef WIN32
 int __stdcall SignalHandler(unsigned long signo);
@@ -94,6 +94,18 @@ volatile enum app_state app_state = STATE_INIT;
 
 static char copyright_string[] __attribute__ ((unused)) =
   "The olsr.org Optimized Link-State Routing daemon(olsrd) Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org) All rights reserved.";
+
+static char pulsedata[] = "\\|/-";
+static uint8_t pulse_state = 0;
+
+static void
+generate_stdout_pulse(void *foo __attribute__ ((unused)))
+{
+  if (pulsedata[++pulse_state] == '\0') {
+    pulse_state = 0;
+  }
+  fprintf(stderr, "%c\r", pulsedata[pulse_state]);
+}
 
 /**
  * Main entrypoint

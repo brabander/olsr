@@ -75,6 +75,7 @@ void olsr_input_hna(union olsr_message *, struct interface *, union olsr_ip_addr
 void olsr_init_hna_set(void);
 void olsr_flush_hna_nets(struct tc_entry *tc);
 void olsr_print_hna_set(void);
+void generate_hna(void *p);
 
 #endif
 

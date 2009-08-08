@@ -53,11 +53,12 @@
 #include "net_olsr.h"
 #include "parser.h"
 #include "scheduler.h"
-#include "generate_msg.h"
 #include "olsr_time.h"
 #include "lq_packet.h"
 #include "log.h"
 #include "link_set.h"
+#include "mid_set.h"
+#include "hna_set.h"
 #include "../common/string.h"
 #include "../valgrind/valgrind.h"
 

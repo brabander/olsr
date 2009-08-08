@@ -533,6 +533,7 @@ generate_mid(void *p) {
   uint8_t msg_buffer[MAXMESSAGESIZE - OLSR_HEADERSIZE];
   uint8_t *curr = msg_buffer;
   uint8_t *length_field, *last;
+  bool sendMID = false;
 
   OLSR_INFO(LOG_PACKET_CREATION, "Building MID on %s\n-------------------\n", ifp->int_name);
 
@@ -556,8 +557,13 @@ generate_mid(void *p) {
         return;
       }
       pkt_put_ipaddress(&curr, &allif->ip_addr);
+      sendMID = true;
     }
   } OLSR_FOR_ALL_INTERFACES_END(allif)
+
+  if (!sendMID) {
+    return;
+  }
 
   pkt_put_u16(&length_field, curr - msg_buffer);
 

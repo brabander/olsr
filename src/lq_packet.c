@@ -50,7 +50,6 @@
 #include "olsr_time.h"
 #include "process_package.h"    // XXX - remove
 #include "olsr.h"
-#include "build_msg.h"
 #include "net_olsr.h"
 #include "lq_plugin.h"
 #include "olsr_logging.h"

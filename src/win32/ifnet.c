@@ -47,13 +47,14 @@
 #include "defs.h"
 #include "net_os.h"
 #include "ifnet.h"
-#include "generate_msg.h"
 #include "scheduler.h"
 #include "olsr_time.h"
 #include "lq_packet.h"
 #include "net_olsr.h"
 #include "common/string.h"
 #include "olsr_logging.h"
+#include "mid_set.h"
+#include "hna_set.h"
 
 #include <iphlpapi.h>
 #include <iprtrmib.h>
