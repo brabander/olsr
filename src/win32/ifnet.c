@@ -741,15 +741,6 @@ chk_if_up(struct olsr_if_config *IntConf)
   New->hello_gen_timer =
     olsr_start_timer(IntConf->cnf->hello_params.emission_interval,
                      HELLO_JITTER, OLSR_TIMER_PERIODIC, &olsr_output_lq_hello, New, hello_gen_timer_cookie->ci_id);
-  New->tc_gen_timer =
-    olsr_start_timer(olsr_cnf->tc_params.emission_interval,
-                     TC_JITTER, OLSR_TIMER_PERIODIC, &olsr_output_lq_tc, New, tc_gen_timer_cookie->ci_id);
-  New->mid_gen_timer =
-    olsr_start_timer(olsr_cnf->mid_params.emission_interval,
-                     MID_JITTER, OLSR_TIMER_PERIODIC, &generate_mid, New, mid_gen_timer_cookie->ci_id);
-  New->hna_gen_timer =
-    olsr_start_timer(olsr_cnf->hna_params.emission_interval,
-                     HNA_JITTER, OLSR_TIMER_PERIODIC, &generate_hna, New, hna_gen_timer_cookie->ci_id);
 
   New->hello_interval = (uint32_t) (IntConf->cnf->hello_params.emission_interval);
   New->hello_validity = reltime_to_me(IntConf->cnf->hello_params.validity_time);
