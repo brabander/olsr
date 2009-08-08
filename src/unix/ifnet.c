@@ -602,8 +602,8 @@ chk_if_up(struct olsr_if_config *iface)
     olsr_start_timer(olsr_cnf->hna_params.emission_interval,
                      HNA_JITTER, OLSR_TIMER_PERIODIC, &generate_hna, ifp, hna_gen_timer_cookie);
 
-  ifp->hello_etime = iface->cnf->hello_params.emission_interval;
-  ifp->hello_valtime = reltime_to_me(iface->cnf->hello_params.validity_time);
+  ifp->hello_interval = iface->cnf->hello_params.emission_interval;
+  ifp->hello_validity = iface->cnf->hello_params.validity_time;
 
   ifp->mode = iface->cnf->mode;
 

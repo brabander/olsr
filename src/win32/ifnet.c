@@ -750,8 +750,8 @@ chk_if_up(struct olsr_if_config *IntConf)
     olsr_start_timer(olsr_cnf->hna_params.emission_interval,
                      HNA_JITTER, OLSR_TIMER_PERIODIC, &generate_hna, New, hna_gen_timer_cookie->ci_id);
 
-  New->hello_etime = (uint32_t) (IntConf->cnf->hello_params.emission_interval);
-  New->hello_valtime = reltime_to_me(IntConf->cnf->hello_params.validity_time);
+  New->hello_interval = (uint32_t) (IntConf->cnf->hello_params.emission_interval);
+  New->hello_validity = reltime_to_me(IntConf->cnf->hello_params.validity_time);
 
   New->mode = IntConf->cnf->mode;
 

@@ -165,8 +165,8 @@ struct interface {
   } nic_state;
 #endif
 
-  uint32_t hello_etime;
-  uint8_t hello_valtime;
+  uint32_t hello_interval;
+  uint32_t hello_validity;
 #if 0
   struct if_gen_property *gen_properties;       /* Generic interface properties */
 #endif
