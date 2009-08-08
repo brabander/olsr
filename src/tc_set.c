@@ -64,6 +64,8 @@ struct olsr_cookie_info *tc_mem_cookie = NULL;
 static uint32_t relevantTcCount = 0;
 static int ttl_index = 0;
 
+static uint16_t local_ansn_number = 0;
+
 static void olsr_cleanup_tc_entry(struct tc_entry *tc);
 
 /**
@@ -982,6 +984,16 @@ calculate_border_flag(void *lower_border, void *higher_border)
   return bitpos + 1;
 }
 
+uint16_t
+get_local_ansn_number(void) {
+  return local_ansn_number;
+}
+
+void
+increase_local_ansn_number(void) {
+  local_ansn_number++;
+}
+
 static bool
 olsr_output_lq_tc_internal(void *ctx  __attribute__ ((unused)), union olsr_ip_addr *nextIp, bool skip)
 {
@@ -1021,7 +1033,7 @@ olsr_output_lq_tc_internal(void *ctx  __attribute__ ((unused)), union olsr_ip_ad
   pkt_put_u8(&curr, 0);
 
   pkt_put_u16(&curr, get_msg_seqno());
-  pkt_put_u16(&curr, get_local_ansn_number(false));
+  pkt_put_u16(&curr, get_local_ansn_number());
 
   /* border flags */
   border_flags = curr;

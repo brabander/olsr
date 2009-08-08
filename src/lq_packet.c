@@ -60,15 +60,6 @@ bool lq_tc_pending = false;
 
 static unsigned char msg_buffer[MAXMESSAGESIZE - OLSR_HEADERSIZE];
 
-static uint16_t local_ansn_number = 0;
-
-uint16_t get_local_ansn_number(bool increase) {
-  if (increase)
-    local_ansn_number++;
-  return local_ansn_number;
-}
-
-
 static void
 create_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
 {

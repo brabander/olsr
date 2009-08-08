@@ -204,9 +204,9 @@ AVLNODE2STRUCT(node_tree2lostif, struct interface_lost, node);
 #define OLSR_FOR_ALL_LOSTIF_ENTRIES_END(lostif) }}
 
 #define OLSR_BUFFER_HOLD_JITTER 25      /* percent */
-#define OLSR_BUFFER_HOLD_TIME 1000      /* milliseconds */
+#define OLSR_BUFFER_HOLD_TIME  100      /* milliseconds */
 
-#define OLSR_DEFAULT_MTU             1500
+#define OLSR_DEFAULT_MTU      1500
 
 /* Ifchange actions */
 

@@ -194,6 +194,8 @@ bool olsr_calc_tc_edge_entry_etx(struct tc_edge_entry *);
 void olsr_set_tc_edge_timer(struct tc_edge_entry *, unsigned int);
 void olsr_delete_all_tc_entries(void);
 uint32_t EXPORT(getRelevantTcCount) (void);
+uint16_t EXPORT(get_local_ansn_number)(void);
+void increase_local_ansn_number(void);
 void olsr_output_lq_tc(void *ifp);
 #endif
 

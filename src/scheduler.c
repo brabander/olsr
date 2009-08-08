@@ -470,7 +470,8 @@ olsr_scheduler(void)
 
     /* Check for changes in topology */
     if (link_changes) {
-      OLSR_DEBUG(LOG_SCHEDULER, "ANSN UPDATED %d\n\n", get_local_ansn_number(true));
+      increase_local_ansn_number();
+      OLSR_DEBUG(LOG_SCHEDULER, "ANSN UPDATED %d\n\n", get_local_ansn_number());
       link_changes = false;
     }
 
