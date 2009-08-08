@@ -47,32 +47,19 @@
 #include <stdio.h>
 #include <errno.h>
 
-/* handle Windows specific errno/strerror name */
-#ifdef WIN32
-// #define olsr_errno WSAGetLastError()
-// #define olsr_strerror(x) StrError(x)
-// extern char *StrError(unsigned int ErrNo);
-#else
-// #define olsr_errno errno
-// #define olsr_strerror(x) strerror(x)
-#endif
-
 /* Export symbol for use in plugins. See ../olsrd-exports.sh */
 #define EXPORT(sym) sym
 
-extern const char
-EXPORT(olsrd_version)[];
-     extern const char EXPORT(build_date)[];
-     extern const char EXPORT(build_host)[];
+extern const char EXPORT(olsrd_version)[];
+extern const char EXPORT(build_date)[];
+extern const char EXPORT(build_host)[];
 
 #define	MAXMESSAGESIZE		1500    /* max broadcast size */
 #define UDP_IPV4_HDRSIZE        28
 #define UDP_IPV6_HDRSIZE        62
 
 #if __GNUC__
-
-     extern FILE *EXPORT(debug_handle);
-
+extern FILE *EXPORT(debug_handle);
 #endif
 
 #define ARRAYSIZE(x)	(sizeof(x)/sizeof(*(x)))
@@ -96,40 +83,22 @@ EXPORT(olsrd_version)[];
 
 #define ROUND_UP_TO_POWER_OF_2(val, pow2) (((val) + (pow2) - 1) & ~((pow2) - 1))
 
-/*
- * Queueing macros
- */
-
-/* First "argument" is NOT a pointer! */
-
-#define QUEUE_ELEM(pre, new) do { \
-    (pre).next->prev = (new);         \
-    (new)->next = (pre).next;         \
-    (new)->prev = &(pre);             \
-    (pre).next = (new);               \
-  } while (0)
-
-#define DEQUEUE_ELEM(elem) do { \
-    (elem)->prev->next = (elem)->next;     \
-    (elem)->next->prev = (elem)->prev;     \
-  } while (0)
-
 #ifdef WIN32
 #define CLOSESOCKET(fd)  do { closesocket(fd); (fd) = -1; } while (0)
 #else
 #define CLOSESOCKET(fd)  do { close(fd); (fd) = -1; } while (0)
 #endif
 
-     enum app_state {
-       STATE_INIT,
-       STATE_RUNNING,
-       STATE_SHUTDOWN,
+enum app_state {
+  STATE_INIT,
+  STATE_RUNNING,
+  STATE_SHUTDOWN,
 #ifndef WIN32
-       STATE_RECONFIGURE,
+  STATE_RECONFIGURE,
 #endif
-     };
+};
 
-     extern volatile enum app_state app_state;
+extern volatile enum app_state app_state;
 
 #endif
 
