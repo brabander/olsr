@@ -277,7 +277,7 @@ remove_interface(struct interface **pinterf)
   /*
    * remember the IP for some time
    */
-  add_lost_interface_ip(&ifp->ip_addr, me_to_reltime(ifp->valtimes.hello));
+  add_lost_interface_ip(&ifp->ip_addr, me_to_reltime(ifp->hello_valtime));
 
   /*
    * Unlink from config.

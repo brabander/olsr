@@ -182,7 +182,7 @@ serialize_mid4(struct interface *ifp)
   /* Set main(first) address */
   m->v4.originator = olsr_cnf->router_id.v4.s_addr;
   m->v4.olsr_msgtype = MID_MESSAGE;
-  m->v4.olsr_vtime = ifp->valtimes.mid;
+  m->v4.olsr_vtime = reltime_to_me(olsr_cnf->mid_params.validity_time);
 
   addrs = m->v4.message.mid.mid_addr;
 
@@ -267,7 +267,8 @@ serialize_mid6(struct interface *ifp)
   m->v6.hopcnt = 0;
   m->v6.ttl = MAX_TTL;
   m->v6.olsr_msgtype = MID_MESSAGE;
-  m->v6.olsr_vtime = ifp->valtimes.mid;
+  m->v6.olsr_vtime = reltime_to_me(olsr_cnf->mid_params.validity_time);
+
   /* Set main(first) address */
   m->v6.originator = olsr_cnf->router_id.v6;
 
@@ -360,7 +361,7 @@ serialize_hna4(struct interface *ifp)
   m->v4.hopcnt = 0;
   m->v4.ttl = MAX_TTL;
   m->v4.olsr_msgtype = HNA_MESSAGE;
-  m->v4.olsr_vtime = ifp->valtimes.hna;
+  m->v4.olsr_vtime = reltime_to_me(olsr_cnf->hna_params.validity_time);
 
 
   pair = m->v4.message.hna.hna_net;
@@ -441,7 +442,7 @@ serialize_hna6(struct interface *ifp)
   m->v6.hopcnt = 0;
   m->v6.ttl = MAX_TTL;
   m->v6.olsr_msgtype = HNA_MESSAGE;
-  m->v6.olsr_vtime = ifp->valtimes.hna;
+  m->v6.olsr_vtime = reltime_to_me(olsr_cnf->hna_params.validity_time);
 
   pair6 = m->v6.message.hna.hna_net;
 

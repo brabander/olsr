@@ -105,13 +105,6 @@ struct if_gen_property {
 };
 #endif
 
-struct vtimes {
-  uint8_t hello;
-  uint8_t tc;
-  uint8_t mid;
-  uint8_t hna;
-};
-
 /*
  * Output buffer structure. This should actually be in net_olsr.h
  * but we have circular references then.
@@ -173,7 +166,7 @@ struct interface {
 #endif
 
   uint32_t hello_etime;
-  struct vtimes valtimes;
+  uint8_t hello_valtime;
 #if 0
   struct if_gen_property *gen_properties;       /* Generic interface properties */
 #endif

@@ -183,6 +183,15 @@ olsr_write_cnf_buf(struct autobuf *abuf, struct olsr_config *cnf, bool write_mor
   }
   abuf_appendf(abuf, "\n");
 
+  append_reltime(abuf, "TcInterval", cnf->tc_params.emission_interval, TC_INTERVAL, true);
+  append_reltime(abuf, "TcValidityTime", cnf->tc_params.validity_time, TOP_HOLD_TIME, true);
+  append_reltime(abuf, "MidInterval", cnf->mid_params.emission_interval, MID_INTERVAL, true);
+  append_reltime(abuf, "MidValidityTime", cnf->mid_params.validity_time, MID_HOLD_TIME, true);
+  append_reltime(abuf, "HnaInterval", cnf->hna_params.emission_interval, HNA_INTERVAL, true);
+  append_reltime(abuf, "HnaValidityTime", cnf->hna_params.validity_time, HNA_HOLD_TIME, true);
+
+  abuf_puts(abuf, "\n");
+
   /* Interfaces */
   abuf_appendf(abuf, "# Interfaces\n"
                "# Multiple interfaces with the same configuration\n"
@@ -246,11 +255,6 @@ olsr_write_cnf_buf(struct autobuf *abuf, struct olsr_config *cnf, bool write_mor
       }
       append_reltime(abuf, "HelloInterval", in->cnf->hello_params.emission_interval, HELLO_INTERVAL, first);
       append_reltime(abuf, "HelloValidityTime", in->cnf->hello_params.validity_time, NEIGHB_HOLD_TIME, first);
-      append_reltime(abuf, "TcInterval", in->cnf->tc_params.emission_interval, TC_INTERVAL, first);
-      append_reltime(abuf, "TcValidityTime", in->cnf->tc_params.validity_time, TOP_HOLD_TIME, first);
-      append_reltime(abuf, "MidValidityTime", in->cnf->mid_params.validity_time, MID_HOLD_TIME, first);
-      append_reltime(abuf, "HnaInterval", in->cnf->hna_params.emission_interval, HNA_INTERVAL, first);
-      append_reltime(abuf, "HnaValidityTime", in->cnf->hna_params.validity_time, HNA_HOLD_TIME, first);
       if (in->cnf->lq_mult == NULL) {
         if (first) {
           abuf_appendf(abuf, "    #LinkQualityMult\tdefault 1.0\n");

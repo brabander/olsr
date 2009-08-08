@@ -83,7 +83,14 @@ enum cfg_long_options {
   CFG_HTTPPORT,
   CFG_HTTPLIMIT,
   CFG_TXTPORT,
-  CFG_TXTLIMIT
+  CFG_TXTLIMIT,
+
+  CFG_HNA_HTIME,
+  CFG_HNA_VTIME,
+  CFG_MID_HTIME,
+  CFG_MID_VTIME,
+  CFG_TC_HTIME,
+  CFG_TC_VTIME,
 };
 
 /* remember which log severities have been explicitly set */
@@ -302,12 +309,6 @@ olsr_get_default_if_options(void)
   /* new_io->weight.value = 0; */
   new_io->hello_params.emission_interval = HELLO_INTERVAL;
   new_io->hello_params.validity_time = NEIGHB_HOLD_TIME;
-  new_io->tc_params.emission_interval = TC_INTERVAL;
-  new_io->tc_params.validity_time = TOP_HOLD_TIME;
-  new_io->mid_params.emission_interval = MID_INTERVAL;
-  new_io->mid_params.validity_time = MID_HOLD_TIME;
-  new_io->hna_params.emission_interval = HNA_INTERVAL;
-  new_io->hna_params.validity_time = HNA_HOLD_TIME;
   /* new_io->lq_mult = NULL; */
   new_io->autodetect_chg = true;
   new_io->mode = IF_MODE_MESH;
@@ -507,23 +508,17 @@ parse_cfg_interface(char *argstr, struct olsr_config *rcfg, char *rmsg)
             new_if->cnf->hello_params.validity_time = olsr_txt_to_milli(p_next[1]);
             PARSER_DEBUG_PRINTF("\tHELLO validity: %u ms\n", new_if->cnf->hello_params.validity_time);
           } else if (0 == strcasecmp("Tcinterval", p_next[0])) {
-            new_if->cnf->tc_params.emission_interval = olsr_txt_to_milli(p_next[1]);
-            PARSER_DEBUG_PRINTF("\tTC interval1: %u ms\n", new_if->cnf->tc_params.emission_interval);
+            PARSER_DEBUG_PRINTF("\tIgnore TC interval1: %s ms in interface\n", p_next[1]);
           } else if (0 == strcasecmp("TcValidityTime", p_next[0])) {
-            new_if->cnf->tc_params.validity_time = olsr_txt_to_milli(p_next[1]);
-            PARSER_DEBUG_PRINTF("\tTC validity: %u ms\n", new_if->cnf->tc_params.validity_time);
+            PARSER_DEBUG_PRINTF("\tIgnore TC validity: %s ms in interface\n", p_next[1]);
           } else if (0 == strcasecmp("Midinterval", p_next[0])) {
-            new_if->cnf->mid_params.emission_interval = olsr_txt_to_milli(p_next[1]);
-            PARSER_DEBUG_PRINTF("\tMID interval1: %u ms\n", new_if->cnf->mid_params.emission_interval);
+            PARSER_DEBUG_PRINTF("\tIgnore MID interval1: %s ms in interface\n", p_next[1]);
           } else if (0 == strcasecmp("MidValidityTime", p_next[0])) {
-            new_if->cnf->mid_params.validity_time = olsr_txt_to_milli(p_next[1]);
-            PARSER_DEBUG_PRINTF("\tMID validity: %u ms\n", new_if->cnf->mid_params.validity_time);
+            PARSER_DEBUG_PRINTF("\ttIgnore MID validity: %s ms in interface\n", p_next[1]);
           } else if (0 == strcasecmp("Hnainterval", p_next[0])) {
-            new_if->cnf->hna_params.emission_interval = olsr_txt_to_milli(p_next[1]);
-            PARSER_DEBUG_PRINTF("\tHNA interval1: %u ms\n", new_if->cnf->hna_params.emission_interval);
+            PARSER_DEBUG_PRINTF("\ttIgnore HNA interval1: %s ms in interface\n", p_next[1]);
           } else if (0 == strcasecmp("HnaValidityTime", p_next[0])) {
-            new_if->cnf->hna_params.validity_time = olsr_txt_to_milli(p_next[1]);
-            PARSER_DEBUG_PRINTF("\tHNA validity: %u ms\n", new_if->cnf->hna_params.validity_time);
+            PARSER_DEBUG_PRINTF("\ttIgnore HNA validity: %s ms in interface\n", p_next[1]);
           } else if (0 == strcasecmp("Weight", p_next[0])) {
             new_if->cnf->weight.fixed = true;
             PARSER_DEBUG_PRINTF("\tFixed willingness: %d\n", new_if->cnf->weight.value);
@@ -1107,6 +1102,31 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
       PARSER_DEBUG_PRINTF("TXT connection limit: %d\n", rcfg->comport_txt_limit);
     }
     break;
+  case CFG_HNA_HTIME:
+    rcfg->hna_params.emission_interval = olsr_txt_to_milli(argstr);
+    PARSER_DEBUG_PRINTF("\tHNA interval1: %u ms\n", rcfg->hna_params.emission_interval);
+    break;
+  case CFG_HNA_VTIME:
+    rcfg->hna_params.validity_time = olsr_txt_to_milli(argstr);
+    PARSER_DEBUG_PRINTF("\tHNA validity: %u ms\n", rcfg->hna_params.validity_time);
+    break;
+  case CFG_MID_HTIME:
+    rcfg->mid_params.emission_interval = olsr_txt_to_milli(argstr);
+    PARSER_DEBUG_PRINTF("\tMID interval1: %u ms\n", rcfg->mid_params.emission_interval);
+    break;
+  case CFG_MID_VTIME:
+    rcfg->mid_params.validity_time = olsr_txt_to_milli(argstr);
+    PARSER_DEBUG_PRINTF("\tMID validity: %u ms\n", rcfg->mid_params.validity_time);
+    break;
+  case CFG_TC_HTIME:
+    rcfg->tc_params.emission_interval = olsr_txt_to_milli(argstr);
+    PARSER_DEBUG_PRINTF("\tTC interval1: %u ms\n", rcfg->tc_params.emission_interval);
+    break;
+  case CFG_TC_VTIME:
+    rcfg->tc_params.validity_time = olsr_txt_to_milli(argstr);
+    PARSER_DEBUG_PRINTF("\tTC validity: %u ms\n", rcfg->tc_params.validity_time);
+    break;
+
   default:
     sprintf(rmsg, "Unknown arg in line %d.\n", line);
     return CFG_ERROR;
@@ -1215,6 +1235,12 @@ olsr_parse_cfg(int argc, char *argv[], const char *file, char *rmsg, struct olsr
     {"HttpLimit",                required_argument, 0, CFG_HTTPLIMIT}, /* (i) */
     {"TxtPort",                  required_argument, 0, CFG_TXTPORT},   /* (i) */
     {"TxtLimit",                 required_argument, 0, CFG_TXTLIMIT},  /* (i) */
+    {"TcInterval",               required_argument, 0, CFG_TC_HTIME},  /* (f) */
+    {"TcValidityTime",           required_argument, 0, CFG_TC_VTIME},  /* (f) */
+    {"MidInterval",              required_argument, 0, CFG_MID_HTIME},  /* (f) */
+    {"MidValidityTime",          required_argument, 0, CFG_MID_VTIME},  /* (f) */
+    {"HnaInterval",              required_argument, 0, CFG_HNA_HTIME},  /* (f) */
+    {"HnaValidityTime",          required_argument, 0, CFG_HNA_VTIME},  /* (f) */
 
     {"IpcConnect",               required_argument, 0,  0 }, /* ignored */
     {"UseHysteresis",            required_argument, 0,  0 }, /* ignored */
@@ -1470,6 +1496,33 @@ olsr_sanity_check_cfg(struct olsr_config *cfg)
     return -1;
   }
 
+  /* TC interval */
+  if (cfg->tc_params.emission_interval < cfg->pollrate ||
+      cfg->tc_params.emission_interval > cfg->tc_params.validity_time) {
+    fprintf(stderr, "Bad TC parameters! (em: %u ms, vt: %u ms)\n",
+        cfg->tc_params.emission_interval,
+        cfg->tc_params.validity_time);
+    return -1;
+  }
+
+  /* MID interval */
+  if (cfg->mid_params.emission_interval < cfg->pollrate ||
+      cfg->mid_params.emission_interval > cfg->mid_params.validity_time) {
+    fprintf(stderr, "Bad MID parameters! (em: %u ms, vt: %u ms)\n",
+        cfg->mid_params.emission_interval,
+        cfg->mid_params.validity_time);
+    return -1;
+  }
+
+  /* HNA interval */
+  if (cfg->hna_params.emission_interval < cfg->pollrate ||
+      cfg->hna_params.emission_interval > cfg->hna_params.validity_time) {
+    fprintf(stderr, "Bad HNA parameters! (em: %u ms, vt: %u ms)\n",
+        cfg->hna_params.emission_interval,
+        cfg->hna_params.validity_time);
+    return -1;
+  }
+
   if (in == NULL) {
     fprintf(stderr, "No interfaces configured!\n");
     return -1;
@@ -1498,34 +1551,6 @@ olsr_sanity_check_cfg(struct olsr_config *cfg)
           io->hello_params.validity_time);
       return -1;
     }
-
-    /* TC interval */
-    if (io->tc_params.emission_interval < cfg->pollrate ||
-        io->tc_params.emission_interval > io->tc_params.validity_time) {
-      fprintf(stderr, "Bad TC parameters! (em: %u ms, vt: %u ms)\n",
-          io->tc_params.emission_interval,
-          io->tc_params.validity_time);
-      return -1;
-    }
-
-    /* MID interval */
-    if (io->mid_params.emission_interval < cfg->pollrate ||
-        io->mid_params.emission_interval > io->mid_params.validity_time) {
-      fprintf(stderr, "Bad MID parameters! (em: %u ms, vt: %u ms)\n",
-          io->mid_params.emission_interval,
-          io->mid_params.validity_time);
-      return -1;
-    }
-
-    /* HNA interval */
-    if (io->hna_params.emission_interval < cfg->pollrate ||
-        io->hna_params.emission_interval > io->hna_params.validity_time) {
-      fprintf(stderr, "Bad HNA parameters! (em: %u ms, vt: %u ms)\n",
-          io->hna_params.emission_interval,
-          io->hna_params.validity_time);
-      return -1;
-    }
-
     in = in->next;
   }
 
@@ -1660,6 +1685,14 @@ olsr_get_default_cfg(void)
   cfg->comport_http_limit = DEF_HTTPLIMIT;
   cfg->comport_txt        = DEF_TXTPORT;
   cfg->comport_txt_limit  = DEF_TXTLIMIT;
+
+
+  cfg->tc_params.emission_interval = TC_INTERVAL;
+  cfg->tc_params.validity_time = TOP_HOLD_TIME;
+  cfg->mid_params.emission_interval = MID_INTERVAL;
+  cfg->mid_params.validity_time = MID_HOLD_TIME;
+  cfg->hna_params.emission_interval = HNA_INTERVAL;
+  cfg->hna_params.validity_time = HNA_HOLD_TIME;
 
   assert(0 == memcmp(&all_zero, &cfg->router_id, sizeof(cfg->router_id)));
   assert(0 == cfg->source_ip_mode);

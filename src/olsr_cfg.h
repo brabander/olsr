@@ -133,9 +133,6 @@ struct olsr_if_options {
   union olsr_ip_addr ipv6_multi_glbl;
   struct olsr_if_weight weight;
   struct olsr_msg_params hello_params;
-  struct olsr_msg_params tc_params;
-  struct olsr_msg_params mid_params;
-  struct olsr_msg_params hna_params;
   struct olsr_lq_mult *lq_mult;
   bool autodetect_chg;
   enum interface_mode mode;
@@ -217,6 +214,10 @@ struct olsr_config {
   uint16_t comport_http_limit;         /* maximum number of connections (including interactive ones) */
   uint16_t comport_txt;                /* communication port for txt connections */
   uint16_t comport_txt_limit;          /* maximum number of interactive connections */
+
+  struct olsr_msg_params tc_params;
+  struct olsr_msg_params mid_params;
+  struct olsr_msg_params hna_params;
 
   /*
    * Someone has added global variables to the config struct.
