@@ -459,7 +459,7 @@ olsr_print_neighbor_table(void)
   struct ipaddr_str buf;
   struct nbr2_entry *nbr2;
   struct nbr_con *connector;
-  struct lqtextbuffer lqbuffer;
+  char lqbuffer[LQTEXT_MAXLENGTH];
   bool first;
 
   OLSR_INFO(LOG_NEIGHTABLE, "\n--- %s ------------------------------------------------ NEIGHBORS\n\n"
@@ -489,7 +489,7 @@ olsr_print_neighbor_table(void)
       OLSR_INFO_NH(LOG_2NEIGH, "%-*s  %-*s  %s\n",
                    ipwidth, first ? olsr_ip_to_string(&buf, &nbr2->nbr2_addr) : "",
                    ipwidth, olsr_ip_to_string(&buf, &connector->nbr->nbr_addr),
-                   get_linkcost_text(connector->path_linkcost, false, &lqbuffer));
+                   olsr_get_linkcost_text(connector->path_linkcost, false, lqbuffer, sizeof(lqbuffer)));
 
       first = false;
     } OLSR_FOR_ALL_NBR2_CON_ENTRIES_END(nbr2, connector);

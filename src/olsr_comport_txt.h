@@ -72,8 +72,6 @@ void olsr_com_destroy_txt(void);
 
 struct olsr_txtcommand *EXPORT(olsr_com_add_normal_txtcommand) (
     const char *command, olsr_txthandler handler);
-struct olsr_txtcommand *EXPORT(olsr_com_add_csv_txtcommand) (
-    const char *command, olsr_txthandler handler);
 struct olsr_txtcommand *EXPORT(olsr_com_add_help_txtcommand) (
     const char *command, olsr_txthandler handler);
 void EXPORT(olsr_com_remove_normal_txtcommand) (struct olsr_txtcommand *cmd);

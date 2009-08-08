@@ -63,7 +63,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stdarg.h>
 #include <unistd.h>
 #include <errno.h>
 #ifdef WIN32
@@ -755,14 +754,14 @@ build_ipaddr_link(struct autobuf *abuf, const bool want_link, const union olsr_i
 static void
 build_route(struct autobuf *abuf, const struct rt_entry *rt)
 {
-  struct lqtextbuffer lqbuffer;
+  char lqbuffer[LQTEXT_MAXLENGTH];
 
   abuf_puts(abuf, "<tr>");
   build_ipaddr_with_link(abuf, &rt->rt_dst.prefix, rt->rt_dst.prefix_len);
   build_ipaddr_with_link(abuf, &rt->rt_best->rtp_nexthop.gateway, -1);
 
   abuf_appendf(abuf, "<td>%u</td>", rt->rt_best->rtp_metric.hops);
-  abuf_appendf(abuf, "<td>%s</td>", get_linkcost_text(rt->rt_best->rtp_metric.cost, true, &lqbuffer));
+  abuf_appendf(abuf, "<td>%s</td>", olsr_get_linkcost_text(rt->rt_best->rtp_metric.cost, true, lqbuffer, sizeof(lqbuffer)));
   abuf_appendf(abuf,
                "<td>%s</td></tr>\n", rt->rt_best->rtp_nexthop.interface ? rt->rt_best->rtp_nexthop.interface->int_name : "[null]");
 }
@@ -928,23 +927,29 @@ build_neigh_body(struct autobuf *abuf)
 {
   struct nbr_entry *neigh;
   struct link_entry *lnk;
+  size_t i;
   const char *colspan = resolve_ip_addresses ? " colspan=\"2\"" : "";
 
   section_title(abuf, "Links");
 
   abuf_appendf(abuf, "<tr><th%s>Local IP</th><th%s>Remote IP</th>", colspan, colspan);
+  for (i=1; i<olsr_get_linklabel_count(); i++) {
+    abuf_appendf(abuf, "<th>%s</th>", olsr_get_linklabel(i));
+  }
   abuf_puts(abuf, "<th>LinkCost</th>");
   abuf_puts(abuf, "</tr>\n");
 
   /* Link set */
   OLSR_FOR_ALL_LINK_ENTRIES(lnk) {
-    struct lqtextbuffer lqbuffer1, lqbuffer2;
+    char lqbuffer[LQTEXT_MAXLENGTH];
     abuf_puts(abuf, "<tr>");
     build_ipaddr_with_link(abuf, &lnk->local_iface_addr, -1);
     build_ipaddr_with_link(abuf, &lnk->neighbor_iface_addr, -1);
-    abuf_appendf(abuf,
-                 "<td>(%s) %s</td>",
-                 get_link_entry_text(lnk, '/', &lqbuffer1), get_linkcost_text(lnk->linkcost, false, &lqbuffer2));
+
+    for (i=1; i<olsr_get_linklabel_count(); i++) {
+      abuf_appendf(abuf, "<td>%s</td>", olsr_get_linkdata_text(lnk, i, lqbuffer, sizeof(lqbuffer)));
+    }
+    abuf_appendf(abuf, "<td>%s</td>", olsr_get_linkcost_text(lnk->linkcost, false, lqbuffer, sizeof(lqbuffer)));
     abuf_puts(abuf, "</tr>\n");
   } OLSR_FOR_ALL_LINK_ENTRIES_END(lnk);
 
@@ -999,13 +1004,12 @@ build_topo_body(struct autobuf *abuf)
     struct tc_edge_entry *tc_edge;
     OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
       if (tc_edge->edge_inv) {
-        struct lqtextbuffer lqbuffer1, lqbuffer2;
+        char lqbuffer[LQTEXT_MAXLENGTH];
         abuf_puts(abuf, "<tr>");
         build_ipaddr_with_link(abuf, &tc_edge->T_dest_addr, -1);
         build_ipaddr_with_link(abuf, &tc->addr, -1);
-        abuf_appendf(abuf,
-                     "<td>(%s)</td><td>&nbsp;</td><td>%s</td>\n",
-                     get_tc_edge_entry_text(tc_edge, '/', &lqbuffer1), get_linkcost_text(tc_edge->cost, false, &lqbuffer2));
+        abuf_appendf(abuf, "<td colspan=\"3\">%s</td>\n",
+                     olsr_get_linkcost_text(tc_edge->cost, false, lqbuffer, sizeof(lqbuffer)));
         abuf_puts(abuf, "</tr>\n");
       }
     } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);

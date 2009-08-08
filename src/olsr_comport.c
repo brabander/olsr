@@ -228,7 +228,6 @@ static void olsr_com_parse_request(int fd, void *data __attribute__ ((unused)), 
   abuf_init(&con->out, 0);
 
   con->is_http = fd == comsocket_http;
-  con->is_csv = false;
   con->fd = sock;
 
   if (olsr_cnf->ip_version == AF_INET6) {
@@ -626,8 +625,8 @@ static void olsr_com_parse_txt(struct comport_connection *con,
             con->state = SEND_AND_QUIT;
             break;
         }
-        /* put an empty line behind each command if not in csv mode */
-        if (!con->is_csv) {
+        /* put an empty line behind each command */
+        if (con->show_echo) {
           abuf_puts(&con->out, "\n");
         }
       }
@@ -648,7 +647,7 @@ static void olsr_com_parse_txt(struct comport_connection *con,
   }
 
   /* print prompt */
-  if (processedCommand && con->state == INTERACTIVE && !con->is_csv) {
+  if (processedCommand && con->state == INTERACTIVE && con->show_echo) {
     abuf_puts(&con->out, "> ");
   }
 }

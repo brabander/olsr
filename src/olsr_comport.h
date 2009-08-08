@@ -79,9 +79,6 @@ struct comport_connection {
   /* ip addr of peer (R) */
   union olsr_ip_addr addr;
 
-  /* true if the txt session is in CSV mode (RW) */
-  bool is_csv;
-
   /* callback and data to stop a continous output txt command (RW) */
   olsr_txt_stop_continous stop_handler;
   void *stop_data[4];
@@ -98,7 +95,7 @@ struct comport_connection {
   enum connection_state state;
   enum http_header_type send_as;
   struct timer_entry *timeout;
-  bool is_http;
+  bool is_http, show_echo;
   struct autobuf in;
 };
 

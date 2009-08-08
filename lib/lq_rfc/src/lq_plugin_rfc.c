@@ -80,11 +80,14 @@ static int lq_rfc_serialize_tc_lq(unsigned char *buff, struct tc_mpr_addr *lq);
 static void lq_rfc_deserialize_hello_lq(uint8_t const **curr, struct lq_hello_neighbor *lq);
 static void lq_rfc_deserialize_tc_lq(uint8_t const **curr, struct tc_edge_entry *lq);
 
-static char *lq_rfc_print_link_entry_lq(struct link_entry *entry, char separator, struct lqtextbuffer *buffer);
-static char *lq_rfc_print_tc_edge_entry_lq(struct tc_edge_entry *ptr, char separator, struct lqtextbuffer *buffer);
-static char *lq_rfc_print_cost(olsr_linkcost cost, struct lqtextbuffer *buffer);
+static const char *lq_rfc_print_cost(olsr_linkcost cost, char *buffer, size_t bufsize);
+static const char *lq_rfc_print_link_entry_lq(struct link_entry *entry, int idx, char *buffer, size_t bufsize);
 
 /* RFC "lq" handler (hopcount metric with hysteresis) */
+struct lq_linkdata_type lq_rfc_linktypes[] = {
+  { "Hops", 3, 1, 4, 8, 255 }
+};
+
 struct lq_handler lq_rfc_handler = {
   "rfc",
 
@@ -115,9 +118,12 @@ struct lq_handler lq_rfc_handler = {
   &lq_rfc_deserialize_hello_lq,
   &lq_rfc_deserialize_tc_lq,
 
-  &lq_rfc_print_link_entry_lq,
-  &lq_rfc_print_tc_edge_entry_lq,
+  NULL,
   &lq_rfc_print_cost,
+  &lq_rfc_print_link_entry_lq,
+
+  lq_rfc_linktypes,
+  ARRAYSIZE(lq_rfc_linktypes),
 
   sizeof(struct tc_edge_entry),
   sizeof(struct tc_mpr_addr),
@@ -259,27 +265,19 @@ lq_rfc_deserialize_tc_lq(uint8_t const __attribute__ ((unused)) ** curr, struct 
 {
 }
 
-static char *
-lq_rfc_print_link_entry_lq(struct link_entry __attribute__ ((unused)) * link, char __attribute__ ((unused)) separator,
-                           struct lqtextbuffer *buffer)
+static const char *
+lq_rfc_print_link_entry_lq(struct link_entry __attribute__ ((unused)) * link,
+    int __attribute__ ((unused)) idx, char *buffer, size_t __attribute__ ((unused)) bufsize)
 {
-  strcpy(buffer->buf, "");
-  return buffer->buf;
+  buffer[0] = 0;
+  return buffer;
 }
 
-static char *
-lq_rfc_print_tc_edge_entry_lq(struct tc_edge_entry __attribute__ ((unused)) * edge,
-                              char __attribute__ ((unused)) separator, struct lqtextbuffer *buffer)
+static const char *
+lq_rfc_print_cost(olsr_linkcost cost, char *buffer, size_t bufsize)
 {
-  strcpy(buffer->buf, "");
-  return buffer->buf;
-}
-
-static char *
-lq_rfc_print_cost(olsr_linkcost cost, struct lqtextbuffer *buffer)
-{
-  sprintf(buffer->buf, "%d", cost);
-  return buffer->buf;
+  snprintf(buffer, bufsize, "%3d", cost);
+  return buffer;
 }
 
 /*

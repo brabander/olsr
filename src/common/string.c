@@ -45,6 +45,9 @@
 #include <string.h>
 #include <assert.h>
 
+const char *OLSR_YES = "yes";
+const char *OLSR_NO = "no";
+
 /*
  * A somewhat safe version of strncpy and strncat. Note, that
  * BSD/Solaris strlcpy()/strlcat() differ in implementation, while

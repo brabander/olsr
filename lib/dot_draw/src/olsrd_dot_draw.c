@@ -147,7 +147,7 @@ ipc_print_neigh_link(int ipc_connection, const struct nbr_entry *neighbor)
   olsr_linkcost etx = 0.0;
   const char *style;
   const char *adr = olsr_ip_to_string(&mainaddrstrbuf, &olsr_cnf->router_id);
-  struct lqtextbuffer lqbuffer;
+  char lqbuffer[LQTEXT_MAXLENGTH];
 
   if (neighbor->is_sym == 0) {  /* non SYM */
     style = "dashed";
@@ -161,7 +161,8 @@ ipc_print_neigh_link(int ipc_connection, const struct nbr_entry *neighbor)
 
   ipc_send_fmt(ipc_connection,
                "\"%s\" -> \"%s\"[label=\"%s\", style=%s];\n",
-               adr, olsr_ip_to_string(&strbuf, &neighbor->nbr_addr), get_linkcost_text(etx, false, &lqbuffer), style);
+               adr, olsr_ip_to_string(&strbuf, &neighbor->nbr_addr),
+               olsr_get_linkcost_text(etx, false, lqbuffer, sizeof(lqbuffer)), style);
 
   if (neighbor->is_mpr) {
     ipc_send_fmt(ipc_connection, "\"%s\"[shape=box];\n", adr);
@@ -313,12 +314,13 @@ static void
 ipc_print_tc_link(int ipc_connection, const struct tc_entry *entry, const struct tc_edge_entry *dst_entry)
 {
   struct ipaddr_str strbuf1, strbuf2;
-  struct lqtextbuffer lqbuffer;
+  char lqbuffer[LQTEXT_MAXLENGTH];
 
   ipc_send_fmt(ipc_connection,
                "\"%s\" -> \"%s\"[label=\"%s\"];\n",
                olsr_ip_to_string(&strbuf1, &entry->addr),
-               olsr_ip_to_string(&strbuf2, &dst_entry->T_dest_addr), get_linkcost_text(dst_entry->cost, false, &lqbuffer));
+               olsr_ip_to_string(&strbuf2, &dst_entry->T_dest_addr),
+               olsr_get_linkcost_text(dst_entry->cost, false, lqbuffer, sizeof(lqbuffer)));
 }
 
 

@@ -58,16 +58,14 @@ struct txt_repeat_data {
   bool csv;
 };
 
-static struct avl_tree txt_normal_tree, txt_csv_tree, txt_help_tree;
+static struct avl_tree txt_normal_tree, txt_help_tree;
 static struct olsr_cookie_info *txtcommand_cookie, *txt_repeattimer_cookie;
 
 static enum olsr_txtcommand_result olsr_txtcmd_quit(
     struct comport_connection *con, char *cmd, char *param);
 static enum olsr_txtcommand_result olsr_txtcmd_help(
     struct comport_connection *con, char *cmd, char *param);
-static enum olsr_txtcommand_result olsr_txtcmd_csv(
-    struct comport_connection *con, char *cmd, char *param);
-static enum olsr_txtcommand_result olsr_txtcmd_csvoff(
+static enum olsr_txtcommand_result olsr_txtcmd_echo(
     struct comport_connection *con, char *cmd, char *param);
 static enum olsr_txtcommand_result olsr_txtcmd_repeat(
     struct comport_connection *con, char *cmd, char *param);
@@ -85,8 +83,7 @@ static const char *txt_internal_names[] = {
   "quit",
   "exit",
   "help",
-  "csv",
-  "csvoff",
+  "echo",
   "repeat",
   "timeout",
   "version",
@@ -97,8 +94,7 @@ static const char *txt_internal_help[] = {
   "shuts down the terminal connection\n",
   "shuts down the terminal connection\n",
   "display the online help text\n",
-  "activates the csv (comma separated value) flag\n",
-  "deactivates the csv (comma separated value) flag\n",
+  "switchs the prompt on/off\n",
   "repeat <interval> <command>: repeats a command every <interval> seconds\n",
   "timeout <interval>: set the timeout interval to <interval> seconds, 0 means no timeout\n"
   "displays the version of the olsrd\n"
@@ -110,8 +106,7 @@ static olsr_txthandler txt_internal_handlers[] = {
   olsr_txtcmd_quit,
   olsr_txtcmd_quit,
   olsr_txtcmd_help,
-  olsr_txtcmd_csv,
-  olsr_txtcmd_csvoff,
+  olsr_txtcmd_echo,
   olsr_txtcmd_repeat,
   olsr_txtcmd_timeout,
   olsr_txtcmd_version,
@@ -123,7 +118,6 @@ olsr_com_init_txt(void) {
   size_t i;
 
   avl_init(&txt_normal_tree, &avl_comp_strcasecmp);
-  avl_init(&txt_csv_tree, &avl_comp_strcasecmp);
   avl_init(&txt_help_tree, &avl_comp_strcasecmp);
 
   txtcommand_cookie = olsr_alloc_cookie("comport txt commands", OLSR_COOKIE_TYPE_MEMORY);
@@ -133,7 +127,6 @@ olsr_com_init_txt(void) {
 
   for (i=0; i < ARRAYSIZE(txt_internal_names); i++) {
     olsr_com_add_normal_txtcommand(txt_internal_names[i], txt_internal_handlers[i]);
-    olsr_com_add_csv_txtcommand(txt_internal_names[i], txt_internal_handlers[i]);
     olsr_com_add_help_txtcommand(txt_internal_names[i], olsr_txtcmd_displayhelp);
   }
 }
@@ -146,10 +139,6 @@ olsr_com_destroy_txt(void) {
   while ((node = avl_walk_first(&txt_normal_tree)) != NULL) {
     cmd = txt_tree2cmd(node);
     olsr_com_remove_normal_txtcommand(cmd);
-  }
-  while ((node = avl_walk_first(&txt_csv_tree)) != NULL) {
-    cmd = txt_tree2cmd(node);
-    olsr_com_remove_csv_txtcommand(cmd);
   }
   while ((node = avl_walk_first(&txt_help_tree)) != NULL) {
     cmd = txt_tree2cmd(node);
@@ -165,18 +154,6 @@ olsr_com_add_normal_txtcommand (const char *command, olsr_txthandler handler) {
   txt->handler = handler;
 
   avl_insert(&txt_normal_tree, &txt->node, AVL_DUP_NO);
-  return txt;
-}
-
-struct olsr_txtcommand *
-olsr_com_add_csv_txtcommand (const char *command, olsr_txthandler handler) {
-  struct olsr_txtcommand *txt;
-
-  txt = olsr_cookie_malloc(txtcommand_cookie);
-  txt->node.key = strdup(command);
-  txt->handler = handler;
-
-  avl_insert(&txt_csv_tree, &txt->node, AVL_DUP_NO);
   return txt;
 }
 
@@ -198,12 +175,6 @@ void olsr_com_remove_normal_txtcommand (struct olsr_txtcommand *cmd) {
   olsr_cookie_free(txtcommand_cookie, cmd);
 }
 
-void olsr_com_remove_csv_txtcommand (struct olsr_txtcommand *cmd) {
-  avl_delete(&txt_csv_tree, &cmd->node);
-  free(cmd->node.key);
-  olsr_cookie_free(txtcommand_cookie, cmd);
-}
-
 void olsr_com_remove_help_txtcommand (struct olsr_txtcommand *cmd) {
   avl_delete(&txt_help_tree, &cmd->node);
   free(cmd->node.key);
@@ -214,10 +185,10 @@ enum olsr_txtcommand_result
 olsr_com_handle_txtcommand(struct comport_connection *con, char *cmd, char *param) {
   struct olsr_txtcommand *ptr;
 
-  ptr = (struct olsr_txtcommand *) avl_find(con->is_csv ? (&txt_csv_tree) : (&txt_normal_tree), cmd);
+  ptr = (struct olsr_txtcommand *) avl_find(&txt_normal_tree, cmd);
 
-  OLSR_DEBUG(LOG_COMPORT, "Looking for command '%s' (%s): %s\n",
-    cmd, con->is_csv ? "csv" : "normal", ptr ? "unknown" : "available");
+  OLSR_DEBUG(LOG_COMPORT, "Looking for command '%s': %s\n",
+    cmd, ptr ? "unknown" : "available");
   if (ptr == NULL) {
     return UNKNOWN;
   }
@@ -264,31 +235,38 @@ olsr_txtcmd_help(struct comport_connection *con,
     return UNKNOWN;
   }
 
-  if (!con->is_csv) {
-    abuf_puts(&con->out, "Known commands:\n");
+  if (abuf_puts(&con->out, "Known commands:\n") < 0) {
+    return ABUF_ERROR;
   }
 
-  ptr = (struct olsr_txtcommand *)avl_walk_first(con->is_csv ? (&txt_csv_tree) : (&txt_normal_tree));
+  ptr = (struct olsr_txtcommand *)avl_walk_first(&txt_normal_tree);
   while (ptr) {
-    abuf_appendf(&con->out, con->is_csv ? ",%s" : "  %s\n", (char *)ptr->node.key);
+    if (abuf_appendf(&con->out, "  %s\n", (char *)ptr->node.key) < 0) {
+      return ABUF_ERROR;
+    }
     ptr = (struct olsr_txtcommand *)avl_walk_next(&ptr->node);
   }
 
-  abuf_puts(&con->out, con->is_csv ? "\n" : "Use 'help <command> to see a help text for a certain command\n");
+  if (abuf_puts(&con->out, "Use 'help <command> to see a help text for a certain command\n") < 0) {
+    return ABUF_ERROR;
+  }
   return CONTINUE;
 }
 
 static enum olsr_txtcommand_result
-olsr_txtcmd_csv(struct comport_connection *con,
-    char *cmd __attribute__ ((unused)), char *param __attribute__ ((unused))) {
-  con->is_csv = true;
-  return CONTINUE;
-}
-
-static enum olsr_txtcommand_result
-olsr_txtcmd_csvoff(struct comport_connection *con,
-    char *cmd __attribute__ ((unused)), char *param __attribute__ ((unused))) {
-  con->is_csv = false;
+olsr_txtcmd_echo(struct comport_connection *con,
+    char *cmd __attribute__ ((unused)), char *param) {
+  if (strcasecmp(param, "on") == 0) {
+    con->show_echo = true;
+  }
+  else if (strcasecmp(param, "off") == 0) {
+    con->show_echo = false;
+  }
+  else {
+    if (abuf_appendf(&con->out, "Error, unknown argument '%s' for echo. Try 'on' or 'off'\n", param) < 0) {
+      return ABUF_ERROR;
+    }
+  }
   return CONTINUE;
 }
 
@@ -361,8 +339,7 @@ olsr_txtcmd_repeat(struct comport_connection *con, char *cmd __attribute__ ((unu
 
 static enum olsr_txtcommand_result
 olsr_txtcmd_version(struct comport_connection *con, char *cmd __attribute__ ((unused)), char *param __attribute__ ((unused))) {
-  abuf_appendf(&con->out,
-      con->is_csv ? "version,%s,%s,%s\n" : " *** %s ***\n Build date: %s on %s\n http://www.olsr.org\n\n",
+  abuf_appendf(&con->out, " *** %s ***\n Build date: %s on %s\n http://www.olsr.org\n\n",
       olsrd_version, build_date, build_host);
   return CONTINUE;
 }
@@ -372,11 +349,11 @@ olsr_txtcmd_plugin(struct comport_connection *con, char *cmd, char *param) {
   struct olsr_plugin *plugin;
   char *para2 = NULL;
   if (param == NULL || strcasecmp(param, "list") == 0) {
-    if (!con->is_csv && abuf_puts(&con->out, "Table:\n") < 0) {
+    if (abuf_puts(&con->out, "Table:\n") < 0) {
       return ABUF_ERROR;
     }
     OLSR_FOR_ALL_PLUGIN_ENTRIES(plugin) {
-      if (abuf_appendf(&con->out, con->is_csv ? "%s,%s,%s": " %-30s\t%s\t%s\n",
+      if (abuf_appendf(&con->out, " %-30s\t%s\t%s\n",
           plugin->p_name, plugin->active ? "active" : "", plugin->dlhandle == NULL ? "static" : "") < 0) {
         return ABUF_ERROR;
       }
@@ -386,8 +363,8 @@ olsr_txtcmd_plugin(struct comport_connection *con, char *cmd, char *param) {
 
   para2 = strchr(param, ' ');
   if (para2 == NULL) {
-    if (con->is_csv) {
-      abuf_appendf(&con->out, "Error, missing or unknown parameter\n");
+    if (abuf_appendf(&con->out, "Error, missing or unknown parameter\n") < 0) {
+      return ABUF_ERROR;
     }
     return CONTINUE;
   }
@@ -410,8 +387,8 @@ olsr_txtcmd_plugin(struct comport_connection *con, char *cmd, char *param) {
   }
 
   if (plugin == NULL) {
-    if (con->is_csv) {
-      abuf_appendf(&con->out, "Error, could not find plugin '%s'.\n", para2);
+    if (abuf_appendf(&con->out, "Error, could not find plugin '%s'.\n", para2) < 0) {
+      return ABUF_ERROR;
     }
     return CONTINUE;
   }

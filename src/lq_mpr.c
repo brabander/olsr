@@ -51,6 +51,7 @@ olsr_calculate_lq_mpr(void)
 {
   struct nbr2_entry *nbr2;
   struct nbr_con *walker;
+  struct link_entry *lnk;
   int k;
   struct nbr_entry *neigh;
   olsr_linkcost best, best_1hop;
@@ -94,7 +95,7 @@ olsr_calculate_lq_mpr(void)
        */
 
       /* determine the link quality of the direct link */
-      struct link_entry *lnk = get_best_link_to_neighbor(&neigh->nbr_addr);
+      lnk = get_best_link_to_neighbor(&neigh->nbr_addr);
       if (!lnk) {
         continue;
       }
@@ -163,6 +164,10 @@ olsr_calculate_lq_mpr(void)
       }
   } OLSR_FOR_ALL_NBR2_ENTRIES_END(nbr2);
 
+  /* ugly hack */
+  OLSR_FOR_ALL_LINK_ENTRIES(lnk) {
+    lnk->is_mpr = lnk->neighbor->is_mpr;
+  } OLSR_FOR_ALL_LINK_ENTRIES_END(lnk)
   if (mpr_changes && olsr_cnf->tc_redundancy > 0)
     signal_link_changes(true);
 }

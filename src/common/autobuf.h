@@ -62,6 +62,8 @@ int EXPORT(abuf_strftime) (struct autobuf * autobuf, const char *format, const s
 int EXPORT(abuf_memcpy) (struct autobuf * autobuf, const void *p, const unsigned int len);
 int EXPORT(abuf_memcpy_prefix) (struct autobuf *autobuf, const void *p, const unsigned int len);
 int EXPORT(abuf_pull) (struct autobuf * autobuf, int len);
+int EXPORT(abuf_template_init) (const char **keys, size_t length, const char *format, size_t *indexTable, size_t indexLength);
+int EXPORT(abuf_templatef) (struct autobuf *autobuf, const char *format, char **values, size_t *indexTable, size_t indexCount);
 #endif
 
 /*

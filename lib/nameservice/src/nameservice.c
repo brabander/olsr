@@ -1309,14 +1309,14 @@ select_best_nameserver(struct rt_entry **rt)
     if (!rt2 || olsr_cmp_rt(rt1, rt2)) {
 #if !defined REMOVE_LOG_DEBUG
       struct ipaddr_str strbuf;
-      struct lqtextbuffer lqbuffer;
+      char lqbuffer[LQTEXT_MAXLENGTH];
 #endif
       /*
        * first is better, swap the pointers.
        */
       OLSR_DEBUG(LOG_PLUGINS, "NAME PLUGIN: nameserver %s, cost %s\n",
                  olsr_ip_to_string(&strbuf, &rt1->rt_dst.prefix),
-                 get_linkcost_text(rt1->rt_best->rtp_metric.cost, true, &lqbuffer));
+                 olsr_get_linkcost_text(rt1->rt_best->rtp_metric.cost, true, lqbuffer, sizeof(lqbuffer)));
 
       rt[nameserver_idx] = rt2;
       rt[nameserver_idx + 1] = rt1;
@@ -1356,7 +1356,7 @@ write_resolv_file(void)
       for (name = entry->names; name != NULL; name = name->next) {
 #if !defined REMOVE_LOG_DEBUG
         struct ipaddr_str strbuf;
-        struct lqtextbuffer lqbuffer;
+        char lqbuffer[LQTEXT_MAXLENGTH];
 #endif
         route = olsr_lookup_routing_table(&name->ip);
 
@@ -1369,7 +1369,8 @@ write_resolv_file(void)
         /* enqueue it on the head of list */
         *nameserver_routes = route;
         OLSR_DEBUG(LOG_PLUGINS, "NAME PLUGIN: found nameserver %s, cost %s",
-                   olsr_ip_to_string(&strbuf, &name->ip), get_linkcost_text(route->rt_best->rtp_metric.cost, true, &lqbuffer));
+                   olsr_ip_to_string(&strbuf, &name->ip),
+                   olsr_get_linkcost_text(route->rt_best->rtp_metric.cost, true, lqbuffer, sizeof(lqbuffer)));
 
         /* find the closet one */
         select_best_nameserver(nameserver_routes);
