@@ -695,8 +695,6 @@ chk_if_up(struct olsr_if_config *IntConf)
 
   New->olsr_seqnum = rand() & 0xffff;
 
-  New->ttl_index = -32;         /* For the first 32 TC's, fish-eye is disabled */
-
   OLSR_INFO(LOG_NETWORKING, "\tInterface %s set up for use with index %d\n\n", IntConf->name, New->if_index);
 
   OLSR_INFO(LOG_NETWORKING, "\tMTU: %d\n", New->int_mtu);

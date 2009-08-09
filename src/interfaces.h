@@ -167,7 +167,6 @@ struct interface {
 #if 0
   struct if_gen_property *gen_properties;       /* Generic interface properties */
 #endif
-  int ttl_index;                       /* index in TTL array for fish-eye */
 
   uint32_t refcount;                   /* Refcount */
 };

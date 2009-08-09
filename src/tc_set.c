@@ -62,7 +62,9 @@ struct olsr_cookie_info *spf_backoff_timer_cookie = NULL;
 struct olsr_cookie_info *tc_mem_cookie = NULL;
 
 static uint32_t relevantTcCount = 0;
-static int ttl_index = 0;
+
+/* the first 32 TCs are without Fisheye */
+static int ttl_index = -32;
 
 static uint16_t local_ansn_number = 0;
 
@@ -1003,8 +1005,9 @@ olsr_output_lq_tc_internal(void *ctx  __attribute__ ((unused)), union olsr_ip_ad
   struct link_entry *link;
   uint8_t msg_buffer[MAXMESSAGESIZE - OLSR_HEADERSIZE];
   uint8_t *curr = msg_buffer;
-  uint8_t *length_field, *border_flags, *last;
+  uint8_t *length_field, *border_flags, *seqno, *last;
   bool sendTC = false, nextFragment = false;
+  uint8_t ttl = 255;
 
   OLSR_INFO(LOG_PACKET_CREATION, "Building TC\n-------------------\n");
 
@@ -1018,21 +1021,22 @@ olsr_output_lq_tc_internal(void *ctx  __attribute__ ((unused)), union olsr_ip_ad
 
   if (olsr_cnf->lq_fish > 0) {
     /* handle fisheye */
-    pkt_put_u8(&curr, ttl_list[ttl_index]);
-    OLSR_DEBUG(LOG_PACKET_CREATION, "Creating LQ TC with TTL %d.\n", ttl_list[ttl_index]);
-
     ttl_index++;
-    ttl_index %= ARRAYSIZE(ttl_list);
+    if (ttl_index >= (int)ARRAYSIZE(ttl_list)) {
+      ttl_index = 0;
+    }
+    if (ttl_index >= 0) {
+      ttl = ttl_list[ttl_index];
+    }
   }
-  else {
-    /* normal TTL */
-    pkt_put_u8(&curr, MAX_TTL);
-  }
+  pkt_put_u8(&curr, ttl_list[ttl_index]);
 
   /* hopcount */
   pkt_put_u8(&curr, 0);
 
-  pkt_put_u16(&curr, get_msg_seqno());
+  /* reserve sequence number lazy */
+  seqno = curr;
+  pkt_put_u16(&curr, 0);
   pkt_put_u16(&curr, get_local_ansn_number());
 
   /* border flags */
@@ -1116,8 +1120,11 @@ olsr_output_lq_tc_internal(void *ctx  __attribute__ ((unused)), union olsr_ip_ad
     return false;
   }
 
+  /* late initialization of length and sequence number */
+  pkt_put_u16(&seqno, get_msg_seqno());
   pkt_put_u16(&length_field, curr - msg_buffer);
 
+  /* send to all interfaces */
   OLSR_FOR_ALL_INTERFACES(ifp) {
     if (net_outbuffer_bytes_left(ifp) < curr - msg_buffer) {
       net_output(ifp);

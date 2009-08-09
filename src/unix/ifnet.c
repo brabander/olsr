@@ -502,8 +502,6 @@ chk_if_up(struct olsr_if_config *iface)
   }
   ifp->int_mtu -= olsr_cnf->ip_version == AF_INET6 ? UDP_IPV6_HDRSIZE : UDP_IPV4_HDRSIZE;
 
-  ifp->ttl_index = -32;         /* For the first 32 TC's, fish-eye is disabled */
-
   /* Set up buffer */
   net_add_buffer(ifp);
 
