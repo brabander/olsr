@@ -149,7 +149,7 @@ ifeq ($(OS),linux)
 SUBDIRS = $(notdir $(shell find lib -maxdepth 2 -name Makefile -not -path lib/Makefile -printf "%h\n"|sort))
 else
 ifeq ($(OS),win32)
-SUBDIRS := debug dot_draw httpinfo lq_etx_ff lq_etx_float lq_etx_fpm lq_rfc mini secure txtinfo watchdog
+SUBDIRS := dot_draw httpinfo lq_etx_ff lq_etx_float lq_etx_fpm lq_rfc mini secure txtinfo watchdog
 else
 SUBDIRS := bmf debuginfo dot_draw dyn_gw dyn_gw_plain httpinfo lq_etx_ff lq_etx_float lq_etx_fpm lq_rfc mdns mini nameservice secure txtinfo watchdog
 endif
@@ -161,11 +161,7 @@ libs:
 libs_clean clean_libs:
 		-for dir in $(SUBDIRS);do $(MAKECMD) -C lib/$$dir LIBDIR=$(LIBDIR) clean;done
 ifeq ($(OS), win32)
-		-rm -f lib/txtinfo/olsrd_txtinfo.dll
-		-rm -f lib/httpinfo/olsrd_httpinfo.dll
-		-rm -f lib/secure/olsrd_secure.dll
-		-rm -f lib/dot_draw/olsrd_dot_draw.dll
-		-rm -f lib/mini/olsrd_mini.dll
+		-for dir in $(SUBDIRS);do rm -f lib/*.dll;done
 endif
 
 libs_install install_libs:

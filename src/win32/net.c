@@ -139,7 +139,7 @@ getsocket6(int BuffSize, char *Int __attribute__ ((unused)))
 
   if (setsockopt(Sock, SOL_SOCKET, SO_BROADCAST, (char *)&On, sizeof(On)) < 0) {
     OLSR_ERROR(LOG_NETWORKING, "Cannot set socket for OLSR PDUs to broadcast mode (%s)\n", strerror(errno));
-    CLOSESOCKET(sock);
+    CLOSESOCKET(Sock);
     olsr_exit(EXIT_FAILURE);
   }
 

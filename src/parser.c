@@ -422,7 +422,7 @@ olsr_input_hostemu(int fd, void *data __attribute__ ((unused)), unsigned int fla
   /* Host emulator receives IP address first to emulate
      direct link */
 
-  int cc = recv(fd, from_addr.v6.s6_addr, olsr_cnf->ipsize, 0);
+  int cc = recv(fd, (void *)from_addr.v6.s6_addr, olsr_cnf->ipsize, 0);
   if (cc != (int)olsr_cnf->ipsize) {
     OLSR_WARN(LOG_NETWORKING, "Error receiving host-client IP hook(%d) %s!\n", cc, strerror(errno));
     memcpy(&from_addr, &((struct olsr *)inbuf)->olsr_msg->originator, olsr_cnf->ipsize);

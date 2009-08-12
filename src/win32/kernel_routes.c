@@ -45,8 +45,8 @@
 #include "kernel_routes.h"
 #include "net_olsr.h"
 #include "ipcalc.h"
-#include "ipc_frontend.h"
 #include "routing_table.h"
+#include "olsr_logging.h"
 
 #define WIN32_LEAN_AND_MEAN
 #include <iprtrmib.h>
@@ -122,14 +122,6 @@ olsr_kernel_add_route(const struct rt_entry *rt, int ip_version)
     return -1;
   }
 
-  /*
-   * Send IPC route update message
-   */
-  if (olsr_cnf->ipc_connections > 0) {
-    ipc_route_send_rtentry(&rt->rt_dst.prefix, &rt->rt_best->rtp_nexthop.gateway,
-                           rt->rt_best->rtp_metric.hops, 1, rt->rt_best->rtp_nexthop.interface->int_name);
-  }
-
   return 0;
 }
 
@@ -189,14 +181,6 @@ olsr_kernel_del_route(const struct rt_entry *rt, int ip_version)
 
     return -1;
   }
-
-  /*
-   * Send IPC route update message
-   */
-  if (olsr_cnf->ipc_connections > 0) {
-    ipc_route_send_rtentry(&rt->rt_dst.prefix, NULL, 0, 0, NULL);
-  }
-
   return 0;
 }
 

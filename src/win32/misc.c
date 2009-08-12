@@ -80,7 +80,7 @@ set_nonblocking(int fd)
   /* make the fd non-blocking */
   unsigned long flags = 1;
   if (ioctlsocket(fd, FIONBIO, &flags) != 0) {
-    olsr_syslog(OLSR_LOG_ERR, "Cannot set the socket flags: %s", StrError(WSAGetLastError()));
+    OLSR_WARN(LOG_NETWORKING, "Cannot set the socket flags: %s", StrError(WSAGetLastError()));
     return -1;
   }
   return 0;

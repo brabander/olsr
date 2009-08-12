@@ -55,6 +55,8 @@
 #include "olsr_logging.h"
 #include "mid_set.h"
 #include "hna_set.h"
+#include "olsr_logging.h"
+#include "link_set.h"
 
 #include <iphlpapi.h>
 #include <iprtrmib.h>
@@ -440,9 +442,7 @@ ListInterfaces(void)
   IP_ADAPTER_INFO AdInfo[MAX_INTERFACES], *Walker;
   unsigned long AdInfoLen;
   char IntName[5];
-  IP_ADDR_STRING *Walker2;
   unsigned long Res;
-  int IsWlan;
 
   if (olsr_cnf->ip_version == AF_INET6) {
     OLSR_WARN(LOG_NETWORKING, "IPv6 not supported by ListInterfaces()!\n");
@@ -454,7 +454,7 @@ ListInterfaces(void)
   Res = GetAdaptersInfo(AdInfo, &AdInfoLen);
 
   if (Res == ERROR_NO_DATA) {
-    LOG_INFO(LOG_NETWORKING, "No interfaces detected.\n");
+    OLSR_INFO(LOG_NETWORKING, "No interfaces detected.\n");
     return;
   }
 
@@ -671,8 +671,6 @@ chk_if_up(struct olsr_if_config *IntConf)
 
   New->int_flags = 0;
 
-  New->is_hcif = false;
-
   New->int_mtu = Info.Mtu;
 
   name_size = strlen(IntConf->name) + 1;
@@ -737,7 +735,7 @@ chk_if_up(struct olsr_if_config *IntConf)
    */
   New->hello_gen_timer =
     olsr_start_timer(IntConf->cnf->hello_params.emission_interval,
-                     HELLO_JITTER, OLSR_TIMER_PERIODIC, &olsr_output_lq_hello, New, hello_gen_timer_cookie->ci_id);
+                     HELLO_JITTER, OLSR_TIMER_PERIODIC, &generate_hello, New, hello_gen_timer_cookie);
 
   New->hello_interval = (uint32_t) (IntConf->cnf->hello_params.emission_interval);
   New->hello_validity = reltime_to_me(IntConf->cnf->hello_params.validity_time);

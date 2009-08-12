@@ -529,7 +529,7 @@ write(int fd, const void *buf, unsigned int count)
 {
   size_t written = 0;
   while (written < count) {
-    ssize_t rc = send(fd, (const unsigned char *)buf + written,
+    ssize_t rc = send(fd, (const void *)((const unsigned char *)buf + written),
                       min(count - written, CHUNK_SIZE), 0);
     if (rc <= 0) {
       break;

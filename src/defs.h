@@ -47,6 +47,10 @@
 #include <stdio.h>
 #include <errno.h>
 
+#ifdef WIN32
+#define IF_NAMESIZE 32
+#endif
+
 /* Export symbol for use in plugins. See ../olsrd-exports.sh */
 #define EXPORT(sym) sym
 

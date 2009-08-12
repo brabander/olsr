@@ -350,7 +350,7 @@ add_signature(uint8_t * pck, int *size)
 
   /* Add timestamp */
   msg->sig.timestamp = htonl(now.tv_sec);
-  OLSR_DEBUG(LOG_PLUGINS, "[ENC]timestamp: %lld\n", (long long)now.tv_sec);
+  OLSR_DEBUG(LOG_PLUGINS, "[ENC]timestamp: %ld\n", (long)now.tv_sec);
 
   /* Set the new size */
   *size += sizeof(struct s_olsrmsg);
@@ -509,8 +509,8 @@ one_checksum_SHA:
     return 0;
   }
 
-  OLSR_DEBUG(LOG_PLUGINS, "[ENC]Received timestamp %lld diff: %lld\n", (long long)rec_time,
-             (long long)now.tv_sec - (long long)rec_time);
+  OLSR_DEBUG(LOG_PLUGINS, "[ENC]Received timestamp %ld diff: %ld\n", (long)rec_time,
+             (long)now.tv_sec - (long)rec_time);
 
   /* Remove signature message */
   *size = packetsize;
@@ -948,7 +948,7 @@ send_cres(struct interface *olsr_if_config, union olsr_ip_addr *to, union olsr_i
 
   /* set timestamp */
   crmsg.timestamp = now.tv_sec;
-  OLSR_DEBUG(LOG_PLUGINS, "[ENC]Timestamp %lld\n", (long long)crmsg.timestamp);
+  OLSR_DEBUG(LOG_PLUGINS, "[ENC]Timestamp %ld\n", (long)crmsg.timestamp);
 
   /* Fill subheader */
   memcpy(&crmsg.destination, to, olsr_cnf->ipsize);
@@ -1024,7 +1024,7 @@ send_rres(struct interface *olsr_if_config, union olsr_ip_addr *to, union olsr_i
 
   /* set timestamp */
   rrmsg.timestamp = now.tv_sec;
-  OLSR_DEBUG(LOG_PLUGINS, "[ENC]Timestamp %lld\n", (long long)rrmsg.timestamp);
+  OLSR_DEBUG(LOG_PLUGINS, "[ENC]Timestamp %ld\n", (long)rrmsg.timestamp);
 
   /* Fill subheader */
   memcpy(&rrmsg.destination, to, olsr_cnf->ipsize);
