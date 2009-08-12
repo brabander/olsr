@@ -189,10 +189,8 @@ lookup_mpr_status(const struct lq_hello_message *message, const struct interface
 void
 olsr_init_package_process(void)
 {
-  olsr_parser_add_function(&olsr_input_hello, HELLO_MESSAGE);
-  olsr_parser_add_function(&olsr_input_hello, LQ_HELLO_MESSAGE);
-  olsr_parser_add_function(&olsr_input_tc, TC_MESSAGE);
-  olsr_parser_add_function(&olsr_input_tc, LQ_TC_MESSAGE);
+  olsr_parser_add_function(&olsr_input_hello, olsr_get_Hello_MessageId());
+  olsr_parser_add_function(&olsr_input_tc, olsr_get_TC_MessageId());
   olsr_parser_add_function(&olsr_input_mid, MID_MESSAGE);
   olsr_parser_add_function(&olsr_input_hna, HNA_MESSAGE);
 }
@@ -200,10 +198,8 @@ olsr_init_package_process(void)
 void
 olsr_deinit_package_process(void)
 {
-  olsr_parser_remove_function(&olsr_input_hello, HELLO_MESSAGE);
-  olsr_parser_remove_function(&olsr_input_hello, LQ_HELLO_MESSAGE);
-  olsr_parser_remove_function(&olsr_input_tc, TC_MESSAGE);
-  olsr_parser_remove_function(&olsr_input_tc, LQ_TC_MESSAGE);
+  olsr_parser_remove_function(&olsr_input_hello, olsr_get_Hello_MessageId());
+  olsr_parser_remove_function(&olsr_input_tc, olsr_get_TC_MessageId());
   olsr_parser_remove_function(&olsr_input_mid, MID_MESSAGE);
   olsr_parser_remove_function(&olsr_input_hna, HNA_MESSAGE);
 }
