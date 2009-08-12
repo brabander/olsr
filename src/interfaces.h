@@ -150,8 +150,6 @@ struct interface {
   /* Message build related  */
   struct timer_entry *buffer_hold_timer;        /* Timer for message batching */
   struct olsr_netbuf netbuf;           /* the build buffer */
-  bool immediate_send_tc;              /* Hello's are sent immediately normally,
-                                          this flag prefers to send TC's */
 
 #ifdef linux
 

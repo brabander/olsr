@@ -69,6 +69,9 @@ struct link_entry {
 
   bool is_mpr, is_mprs;
 
+  /* for faster hello packet generation */
+  uint8_t iflocal_link_status, iflocal_neigh_status;
+
   /*
    * packet loss
    */
@@ -131,7 +134,7 @@ int lookup_link_status(const struct link_entry *);
 void olsr_update_packet_loss_hello_int(struct link_entry *, uint32_t);
 void olsr_update_packet_loss(struct link_entry *entry);
 void olsr_print_link_set(void);
-
+void generate_hello(void *);
 #endif
 
 /*

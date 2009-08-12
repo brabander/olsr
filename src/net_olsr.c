@@ -378,13 +378,6 @@ net_output(struct interface *ifp)
   }
 
   ifp->netbuf.pending = 0;
-
-  /*
-   * if we've just transmitted a TC message, let Dijkstra use the current
-   * link qualities for the links to our neighbours
-   */
-
-  lq_tc_pending = false;
   return retval;
 }
 

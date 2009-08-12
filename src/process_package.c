@@ -217,7 +217,7 @@ deserialize_hello(struct lq_hello_message *hello, const void *ser)
 
   const unsigned char *curr = ser;
   pkt_get_u8(&curr, &type);
-  if (type != HELLO_MESSAGE && type != LQ_HELLO_MESSAGE) {
+  if (type != olsr_get_Hello_MessageId()) {
     /* No need to do anything more */
     return true;
   }

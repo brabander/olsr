@@ -804,7 +804,7 @@ olsr_input_tc(union olsr_message * msg, struct interface * input_if __attribute_
 
   /* We are only interested in TC message types. */
   pkt_get_u8(&curr, &type);
-  if ((type != LQ_TC_MESSAGE) && (type != TC_MESSAGE)) {
+  if (type != olsr_get_TC_MessageId()) {
     return;
   }
 

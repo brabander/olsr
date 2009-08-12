@@ -524,7 +524,6 @@ chk_if_up(struct olsr_if_config *iface)
    */
   ifp->int_name = olsr_strdup(ifr_basename);
 
-  ifp->immediate_send_tc = olsr_cnf->tc_params.emission_interval < iface->cnf->hello_params.emission_interval;
 #if 0
   ifp->gen_properties = NULL;
 #endif
@@ -590,7 +589,7 @@ chk_if_up(struct olsr_if_config *iface)
    */
   ifp->hello_gen_timer =
     olsr_start_timer(iface->cnf->hello_params.emission_interval,
-                     HELLO_JITTER, OLSR_TIMER_PERIODIC, &olsr_output_lq_hello, ifp, hello_gen_timer_cookie);
+                     HELLO_JITTER, OLSR_TIMER_PERIODIC, &generate_hello, ifp, hello_gen_timer_cookie);
   ifp->hello_interval = iface->cnf->hello_params.emission_interval;
   ifp->hello_validity = iface->cnf->hello_params.validity_time;
 

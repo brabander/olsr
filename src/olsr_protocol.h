@@ -97,31 +97,36 @@
  *Message Types
  */
 
-#define HELLO_MESSAGE         1
-#define TC_MESSAGE            2
-#define MID_MESSAGE           3
-#define HNA_MESSAGE           4
-#define MAX_MESSAGE           4
+enum olsr_message_types {
+  HELLO_MESSAGE,        /* 1 */
+  TC_MESSAGE,           /* 2 */
+  MID_MESSAGE,          /* 3 */
+  HNA_MESSAGE,          /* 4 */
+  COUNT_MESSAGE_TYPES
+};
 
 /*
  *Link Types
  */
 
-#define UNSPEC_LINK           0
-#define ASYM_LINK             1
-#define SYM_LINK              2
-#define LOST_LINK             3
-#define HIDE_LINK             4
-#define MAX_LINK              4
+enum olsr_link_types {
+  UNSPEC_LINK,          /* 0 */
+  ASYM_LINK,            /* 1 */
+  SYM_LINK,             /* 2 */
+  LOST_LINK,            /* 3 */
+  COUNT_LINK_TYPES
+};
 
 /*
  *Neighbor Types
  */
 
-#define NOT_NEIGH             0
-#define SYM_NEIGH             1
-#define MPR_NEIGH             2
-#define MAX_NEIGH             2
+enum olsr_neigh_types {
+  NOT_NEIGH,            /* 0 */
+  SYM_NEIGH,            /* 1 */
+  MPR_NEIGH,            /* 2 */
+  COUNT_NEIGH_TYPES
+};
 
 /*
  *Willingness

@@ -130,13 +130,12 @@ olsr_is_relevant_costchange(olsr_linkcost c1, olsr_linkcost c2)
  * format
  *
  * @param pointer to binary buffer to write into
- * @param pointer to lq_hello_neighbor
- * @return number of bytes that have been written
+ * @param pointer to link_entry
  */
-int
-olsr_serialize_hello_lq_pair(unsigned char *buff, struct lq_hello_neighbor *neigh)
+void
+olsr_serialize_hello_lq_pair(uint8_t **buff, struct link_entry *link)
 {
-  return active_lq_handler->serialize_hello_lq(buff, neigh);
+  active_lq_handler->serialize_hello_lq(buff, link);
 }
 
 /*
@@ -229,11 +228,7 @@ olsr_update_packet_loss_worker(struct link_entry *entry, bool lost)
 void
 olsr_memorize_foreign_hello_lq(struct link_entry *local, struct lq_hello_neighbor *foreign)
 {
-  if (foreign) {
-    active_lq_handler->memorize_foreign_hello(local, foreign);
-  } else {
-    active_lq_handler->memorize_foreign_hello(local, NULL);
-  }
+  active_lq_handler->memorize_foreign_hello(local, foreign);
 }
 
 /*
@@ -367,21 +362,6 @@ enum lq_linkdata_quality olsr_get_linkdata_quality (struct link_entry *link, int
     }
   }
   return LQ_QUALITY_BAD;
-}
-
-/*
- * olsr_copy_hello_lq
- *
- * this function copies the link quality information from a link_entry to a
- * lq_hello_neighbor.
- *
- * @param pointer to target lq_hello_neighbor
- * @param pointer to source link_entry
- */
-void
-olsr_copy_hello_lq(struct lq_hello_neighbor *target, struct link_entry *source)
-{
-  active_lq_handler->copy_link_lq_into_neighbor(target, source);
 }
 
 /*

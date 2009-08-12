@@ -268,11 +268,7 @@ pkt_put_prefixlen(uint8_t ** p, uint8_t var)
   *p += olsr_cnf->ipsize;
 }
 
-void olsr_output_lq_hello(void *para);
-
 void destroy_lq_hello(struct lq_hello_message *lq_hello);
-
-extern bool lq_tc_pending;
 
 #endif
 

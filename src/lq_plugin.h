@@ -86,15 +86,13 @@ struct lq_handler {
   olsr_linkcost(*packet_loss_handler) (struct link_entry *, bool);
 
   void (*memorize_foreign_hello) (struct link_entry *, struct lq_hello_neighbor *);
-
   void (*copy_link_entry_lq_into_tc_edge_entry) (struct tc_edge_entry *, struct link_entry *);
-  void (*copy_link_lq_into_neighbor) (struct lq_hello_neighbor *, struct link_entry *);
 
   void (*clear_link_entry) (struct link_entry *);
   void (*clear_lq_hello_neighbor) (struct lq_hello_neighbor *);
   void (*clear_tc_edge_entry) (struct tc_edge_entry *);
 
-  int (*serialize_hello_lq) (unsigned char *, struct lq_hello_neighbor *);
+  void (*serialize_hello_lq) (uint8_t **, struct link_entry *);
   void (*serialize_tc_lq) (uint8_t **, struct link_entry *);
   void (*deserialize_hello_lq) (uint8_t const **, struct lq_hello_neighbor *);
   void (*deserialize_tc_lq) (uint8_t const **, struct tc_edge_entry *);
@@ -124,9 +122,9 @@ void deinit_lq_handler(void);
 olsr_linkcost olsr_calc_tc_cost(struct tc_edge_entry *);
 bool olsr_is_relevant_costchange(olsr_linkcost c1, olsr_linkcost c2);
 
-int olsr_serialize_hello_lq_pair(unsigned char *, struct lq_hello_neighbor *);
+void olsr_serialize_hello_lq_pair(uint8_t **, struct link_entry *);
 void olsr_deserialize_hello_lq_pair(const uint8_t **, struct lq_hello_neighbor *);
-void olsr_serialize_tc_lq(unsigned char **curr, struct link_entry *lnk);
+void olsr_serialize_tc_lq(uint8_t **curr, struct link_entry *lnk);
 void olsr_deserialize_tc_lq_pair(const uint8_t **, struct tc_edge_entry *);
 
 void olsr_update_packet_loss_worker(struct link_entry *, bool);
@@ -139,7 +137,6 @@ size_t EXPORT(olsr_get_linklabel_maxlength) (int);
 size_t EXPORT(olsr_get_linklabel_count) (void);
 enum lq_linkdata_quality EXPORT(olsr_get_linkdata_quality) (struct link_entry *, int);
 
-void olsr_copy_hello_lq(struct lq_hello_neighbor *, struct link_entry *);
 void olsr_copylq_link_entry_2_tc_edge_entry(struct tc_edge_entry *, struct link_entry *);
 
 struct tc_edge_entry *olsr_malloc_tc_edge_entry(void);

@@ -76,11 +76,10 @@ static olsr_linkcost lq_etxff_packet_loss_handler(struct link_entry *, bool);
 
 static void lq_etxff_memorize_foreign_hello(struct link_entry *, struct lq_hello_neighbor *);
 static void lq_etxff_copy_link_entry_lq_into_tc_edge_entry(struct tc_edge_entry *target, struct link_entry *source);
-static void lq_etxff_copy_link_lq_into_neighbor(struct lq_hello_neighbor *target, struct link_entry *source);
 
 static void lq_etxff_clear_link_entry(struct link_entry *);
 
-static int lq_etxff_serialize_hello_lq(unsigned char *buff, struct lq_hello_neighbor *lq);
+static void lq_etxff_serialize_hello_lq(uint8_t **curr, struct link_entry *link);
 static void lq_etxff_serialize_tc_lq(uint8_t **curr, struct link_entry *link);
 static void lq_etxff_deserialize_hello_lq(uint8_t const **curr, struct lq_hello_neighbor *lq);
 static void lq_etxff_deserialize_tc_lq(uint8_t const **curr, struct tc_edge_entry *lq);
@@ -116,7 +115,6 @@ struct lq_handler lq_etxff_handler = {
 
   &lq_etxff_memorize_foreign_hello,
   &lq_etxff_copy_link_entry_lq_into_tc_edge_entry,
-  &lq_etxff_copy_link_lq_into_neighbor,
 
   &lq_etxff_clear_link_entry,
   NULL,
@@ -351,15 +349,6 @@ lq_etxff_copy_link_entry_lq_into_tc_edge_entry(struct tc_edge_entry *target, str
 }
 
 static void
-lq_etxff_copy_link_lq_into_neighbor(struct lq_hello_neighbor *target, struct link_entry *source)
-{
-  struct lq_etxff_lq_hello_neighbor *lq_target = (struct lq_etxff_lq_hello_neighbor *)target;
-  struct lq_etxff_link_entry *lq_source = (struct lq_etxff_link_entry *)source;
-
-  lq_target->lq = lq_source->lq;
-}
-
-static void
 lq_etxff_clear_link_entry(struct link_entry *link)
 {
   struct lq_etxff_link_entry *lq_link = (struct lq_etxff_link_entry *)link;
@@ -371,17 +360,14 @@ lq_etxff_clear_link_entry(struct link_entry *link)
   }
 }
 
-static int
-lq_etxff_serialize_hello_lq(unsigned char *buff, struct lq_hello_neighbor *neigh)
+static void
+lq_etxff_serialize_hello_lq(uint8_t **curr, struct link_entry *link)
 {
-  struct lq_etxff_lq_hello_neighbor *lq_neigh = (struct lq_etxff_lq_hello_neighbor *)neigh;
+  struct lq_etxff_link_entry *lq_link = (struct lq_etxff_link_entry *)link;
 
-  buff[0] = (unsigned char)lq_neigh->lq.valueLq;
-  buff[1] = (unsigned char)lq_neigh->lq.valueNlq;
-  buff[2] = (unsigned char)(0);
-  buff[3] = (unsigned char)(0);
-
-  return 4;
+  pkt_put_u8(curr, lq_link->lq.valueLq);
+  pkt_put_u8(curr, lq_link->lq.valueNlq);
+  pkt_put_u16(curr, 0);
 }
 static void
 lq_etxff_serialize_tc_lq(uint8_t **curr, struct link_entry *link)
@@ -390,8 +376,7 @@ lq_etxff_serialize_tc_lq(uint8_t **curr, struct link_entry *link)
 
   pkt_put_u8(curr, lq_link->lq.valueLq);
   pkt_put_u8(curr, lq_link->lq.valueNlq);
-  pkt_put_u8(curr, 0);
-  pkt_put_u8(curr, 0);
+  pkt_put_u16(curr, 0);
 }
 
 static void

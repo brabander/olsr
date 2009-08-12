@@ -817,6 +817,96 @@ olsr_update_packet_loss(struct link_entry *entry)
                  OLSR_LINK_LOSS_JITTER, OLSR_TIMER_PERIODIC, &olsr_expire_link_loss_timer, entry, link_loss_timer_cookie);
 }
 
+void
+generate_hello(void *p) {
+  struct interface *ifp = p;
+  uint8_t msg_buffer[MAXMESSAGESIZE - OLSR_HEADERSIZE];
+  uint8_t *curr = msg_buffer;
+  uint8_t *length_field, *last;
+  struct link_entry *link;
+  uint8_t writeLinkType, writeNeighType;
+  OLSR_INFO(LOG_PACKET_CREATION, "Building Hello for %s\n-------------------\n", ifp->int_name);
+
+  pkt_put_u8(&curr, olsr_get_Hello_MessageId());
+  pkt_put_reltime(&curr, ifp->hello_validity);
+
+  length_field = curr;
+  pkt_put_u16(&curr, 0); /* put in real messagesize later */
+
+  pkt_put_ipaddress(&curr, &olsr_cnf->router_id);
+
+  pkt_put_u8(&curr, 1);
+  pkt_put_u8(&curr, 0);
+  pkt_put_u16(&curr, get_msg_seqno());
+
+  pkt_put_u16(&curr, 0);
+  pkt_put_reltime(&curr, ifp->hello_interval);
+  pkt_put_u8(&curr, olsr_cnf->willingness);
+
+  last = msg_buffer + sizeof(msg_buffer) - olsr_cnf->ipsize;
+
+  /* first calculate local link status */
+  OLSR_FOR_ALL_LINK_ENTRIES(link) {
+    if (olsr_ipcmp(&link->local_iface_addr, &ifp->ip_addr) != 0) {
+      link->iflocal_link_status = UNSPEC_LINK;
+    }
+    else {
+      link->iflocal_link_status = lookup_link_status(link);
+    }
+
+    if (link->neighbor->is_mpr) {
+      link->iflocal_neigh_status = MPR_NEIGH;
+    }
+    else if (link->neighbor->is_sym) {
+      link->iflocal_neigh_status = SYM_NEIGH;
+    }
+    else {
+      link->iflocal_neigh_status = NOT_NEIGH;
+    }
+  } OLSR_FOR_ALL_LINK_ENTRIES_END(link)
+
+  for (writeNeighType = 0; writeNeighType < COUNT_NEIGH_TYPES; writeNeighType++) {
+    for (writeLinkType = 0; writeLinkType < COUNT_LINK_TYPES; writeLinkType++) {
+      bool first = true;
+      uint8_t *linkstart = NULL;
+
+      OLSR_FOR_ALL_LINK_ENTRIES(link) {
+        if (link->iflocal_link_status != writeLinkType
+            || link->iflocal_neigh_status != writeNeighType) {
+          continue;
+        }
+
+        if (first) {
+          pkt_put_u8(&curr, CREATE_LINK_CODE(writeNeighType, writeLinkType));
+          pkt_put_u8(&curr, 0);
+          first = false;
+
+          /* put in dummy length */
+          linkstart = curr;
+          pkt_put_u16(&curr, 0);
+        }
+
+        pkt_put_ipaddress(&curr, &link->neighbor_iface_addr);
+        olsr_serialize_hello_lq_pair(&curr, link);
+      } OLSR_FOR_ALL_LINK_ENTRIES_END(link)
+
+      /* fix length field of hello block */
+      if (linkstart != NULL) {
+        pkt_put_u16(&linkstart, curr + 2 - linkstart);
+      }
+    }
+  }
+
+  /* fix length field of message */
+  pkt_put_u16(&length_field, curr - msg_buffer);
+
+  /* send hello immediately */
+  if (net_outbuffer_bytes_left(ifp) < curr - msg_buffer) {
+    net_output(ifp);
+  }
+  net_outbuffer_push(ifp, msg_buffer, curr - msg_buffer);
+  net_output(ifp);
+}
 /*
  * Local Variables:
  * c-basic-offset: 2

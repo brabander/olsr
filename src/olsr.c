@@ -517,8 +517,6 @@ olsr_link_to_string(uint8_t linktype)
     return "SYM";
   case (LOST_LINK):
     return "LOST";
-  case (HIDE_LINK):
-    return "HIDE";
   default:
     break;
   }
