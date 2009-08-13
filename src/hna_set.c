@@ -369,7 +369,7 @@ olsr_input_hna(union olsr_message *m, struct interface *in_if __attribute__ ((un
   pkt_get_u16(&curr, &olsr_msgsize);
 
   if (olsr_msgsize < 8 + olsr_cnf->ipsize) {
-    OLSR_PRINTF(1, "HNA message size %d too small (at least %lu)!\n", olsr_msgsize,
+    OLSR_PRINTF(1, "HNA message size %d too small (at least %zu)!\n", olsr_msgsize,
                 8 + olsr_cnf->ipsize);
     return false;
   }
