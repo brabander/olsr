@@ -62,30 +62,6 @@ struct olsr_common {
   uint16_t seqno;
 };
 
-/* serialized IPv4 OLSR header */
-
-struct olsr_header_v4 {
-  uint8_t type;
-  uint8_t vtime;
-  uint16_t size;
-  uint32_t orig;
-  uint8_t ttl;
-  uint8_t hops;
-  uint16_t seqno;
-};
-
-/* serialized IPv6 OLSR header */
-
-struct olsr_header_v6 {
-  uint8_t type;
-  uint8_t vtime;
-  uint16_t size;
-  unsigned char orig[16];
-  uint8_t ttl;
-  uint8_t hops;
-  uint16_t seqno;
-};
-
 /* deserialized LQ_HELLO */
 
 struct lq_hello_neighbor {
@@ -111,12 +87,6 @@ struct lq_hello_info_header {
   uint16_t size;
 };
 
-struct lq_hello_header {
-  uint16_t reserved;
-  uint8_t htime;
-  uint8_t will;
-};
-
 static INLINE void
 pkt_get_u8(const uint8_t ** p, uint8_t * var)
 {
@@ -126,13 +96,13 @@ pkt_get_u8(const uint8_t ** p, uint8_t * var)
 static INLINE void
 pkt_get_u16(const uint8_t ** p, uint16_t * var)
 {
-  *var = ntohs(*(const uint16_t *)(*p));
+  *var = ntohs(**((const uint16_t **)p));
   *p += sizeof(uint16_t);
 }
 static INLINE void
 pkt_get_u32(const uint8_t ** p, uint32_t * var)
 {
-  *var = ntohl(*(const uint32_t *)(p));
+  *var = ntohl(**((const uint32_t **)p));
   *p += sizeof(uint32_t);
 }
 static INLINE void
@@ -144,13 +114,13 @@ pkt_get_s8(const uint8_t ** p, int8_t * var)
 static INLINE void
 pkt_get_s16(const uint8_t ** p, int16_t * var)
 {
-  *var = ntohs(*(const int16_t *)(*p));
+  *var = ntohs(**((const int16_t **)p));
   *p += sizeof(int16_t);
 }
 static INLINE void
 pkt_get_s32(const uint8_t ** p, int32_t * var)
 {
-  *var = ntohl(*(const int32_t *)(*p));
+  *var = ntohl(**((const int32_t **)p));
   *p += sizeof(int32_t);
 }
 static INLINE void
