@@ -141,13 +141,13 @@ pkt_get_u8(const uint8_t ** p, uint8_t * var)
 static INLINE void
 pkt_get_u16(const uint8_t ** p, uint16_t * var)
 {
-  *var = ntohs(*(const uint16_t *)(*p));
+  *var = ntohs(**((const uint16_t **)p));
   *p += sizeof(uint16_t);
 }
 static INLINE void
 pkt_get_u32(const uint8_t ** p, uint32_t * var)
 {
-  *var = ntohl(*(const uint32_t *)(p));
+  *var = ntohl(**((const uint32_t **)p));
   *p += sizeof(uint32_t);
 }
 static INLINE void
@@ -159,13 +159,13 @@ pkt_get_s8(const uint8_t ** p, int8_t * var)
 static INLINE void
 pkt_get_s16(const uint8_t ** p, int16_t * var)
 {
-  *var = ntohs(*(const int16_t *)(*p));
+  *var = ntohs(**((const int16_t **)p));
   *p += sizeof(int16_t);
 }
 static INLINE void
 pkt_get_s32(const uint8_t ** p, int32_t * var)
 {
-  *var = ntohl(*(const int32_t *)(*p));
+  *var = ntohl(**((const int32_t **)p));
   *p += sizeof(int32_t);
 }
 static INLINE void
