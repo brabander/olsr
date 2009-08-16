@@ -344,14 +344,28 @@ ipc_print_link(struct autobuf *abuf)
 
   struct link_entry *link = NULL;
 
+#ifdef ACTIVATE_VTIME_TXTINFO
+  abuf_puts(abuf, "Table: Links\nLocal IP\tRemote IP\tVtime\tLQ\tNLQ\tCost\n");
+#else
   abuf_puts(abuf, "Table: Links\nLocal IP\tRemote IP\tHyst.\tLQ\tNLQ\tCost\n");
+#endif
 
   /* Link set */
   OLSR_FOR_ALL_LINK_ENTRIES(link) {
-    abuf_appendf(abuf, "%s\t%s\t%0.2f\t%s\t%s\t\n", olsr_ip_to_string(&buf1, &link->local_iface_addr),
-              olsr_ip_to_string(&buf2, &link->neighbor_iface_addr), link->L_link_quality, get_link_entry_text(link, '\t',
-                                                                                                              &lqbuffer1),
+#ifdef ACTIVATE_VTIME_TXTINFO
+    int diff = olsr_cnf->system_tick_divider * (unsigned int)(link->ASYM_time - now_times);
+
+    abuf_appendf(abuf, "%s\t%s\t%d.%03d\t%s\t%s\t\n", olsr_ip_to_string(&buf1, &link->local_iface_addr),
+              olsr_ip_to_string(&buf2, &link->neighbor_iface_addr),
+              diff/1000, diff%1000,
+              get_link_entry_text(link, '\t', &lqbuffer1),
               get_linkcost_text(link->linkcost, false, &lqbuffer2));
+#else
+    abuf_appendf(abuf, "%s\t%s\t\t%s\t%s\t\n", olsr_ip_to_string(&buf1, &link->local_iface_addr),
+              olsr_ip_to_string(&buf2, &link->neighbor_iface_addr),
+              get_link_entry_text(link, '\t', &lqbuffer1),
+              get_linkcost_text(link->linkcost, false, &lqbuffer2));
+#endif
   } OLSR_FOR_ALL_LINK_ENTRIES_END(link);
 
   abuf_puts(abuf, "\n");
@@ -383,7 +397,11 @@ ipc_print_topology(struct autobuf *abuf)
 {
   struct tc_entry *tc;
 
+#ifdef ACTIVATE_VTIME_TXTINFO
+  abuf_puts(abuf, "Table: Topology\nDest. IP\tLast hop IP\tLQ\tNLQ\tCost\tVTime\n");
+#else
   abuf_puts(abuf, "Table: Topology\nDest. IP\tLast hop IP\tLQ\tNLQ\tCost\n");
+#endif
 
   /* Topology */
   OLSR_FOR_ALL_TC_ENTRIES(tc) {
@@ -392,8 +410,18 @@ ipc_print_topology(struct autobuf *abuf)
       if (tc_edge->edge_inv) {
         struct ipaddr_str dstbuf, addrbuf;
         struct lqtextbuffer lqbuffer1, lqbuffer2;
+#ifdef ACTIVATE_VTIME_TXTINFO
+        clock_t vt = tc->validity_timer != NULL ? (tc->validity_timer->timer_clock - now_times) : 0;
+        int diff = olsr_cnf->system_tick_divider * (int)(vt);
+        abuf_appendf(abuf, "%s\t%s\t%s\t%s\t%d.%03d\n", olsr_ip_to_string(&dstbuf, &tc_edge->T_dest_addr),
+            olsr_ip_to_string(&addrbuf, &tc->addr),
+            get_tc_edge_entry_text(tc_edge, '\t', &lqbuffer1),
+            get_linkcost_text(tc_edge->cost, false, &lqbuffer2),
+            diff/1000, diff%1000);
+#else
         abuf_appendf(abuf, "%s\t%s\t%s\t%s\n", olsr_ip_to_string(&dstbuf, &tc_edge->T_dest_addr), olsr_ip_to_string(&addrbuf, &tc->addr),
                   get_tc_edge_entry_text(tc_edge, '\t', &lqbuffer1), get_linkcost_text(tc_edge->cost, false, &lqbuffer2));
+#endif
       }
     } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
   } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
