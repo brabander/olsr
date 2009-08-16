@@ -272,7 +272,7 @@ get_http_socket(int port)
   /* complete the socket structure */
   memset(&sin, 0, sizeof(sin));
   sin.sin_family = AF_INET;
-  sin.sin_addr.s_addr = INADDR_ANY;
+  sin.sin_addr.s_addr = httpinfo_listen_ip.v4.s_addr;
   sin.sin_port = htons(port);
 
   /* bind the socket to the port number */

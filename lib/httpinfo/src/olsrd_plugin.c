@@ -59,6 +59,7 @@
 int http_port = 0;
 int resolve_ip_addresses = 0;
 struct allowed_net *allowed_nets = NULL;
+union olsr_ip_addr httpinfo_listen_ip;
 
 static void my_init(void) __attribute__ ((constructor));
 static void my_fini(void) __attribute__ ((destructor));
@@ -87,6 +88,7 @@ my_init(void)
 {
   /* Print plugin info to stdout */
   printf("%s\n", MOD_DESC);
+  httpinfo_listen_ip.v4.s_addr = htonl(INADDR_ANY);
 }
 
 /**
