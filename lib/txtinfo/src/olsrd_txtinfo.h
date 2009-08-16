@@ -54,7 +54,8 @@
 /* uncomment this to include VTime values into Link/Topology command */
 /* #define ACTIVATE_VTIME_TXTINFO */
 
-extern union olsr_ip_addr ipc_accept_ip;
+extern union olsr_ip_addr txtinfo_accept_ip;
+extern union olsr_ip_addr txtinfo_listen_ip;
 extern int ipc_port;
 extern int nompr;
 

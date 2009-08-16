@@ -192,7 +192,7 @@ plugin_ipc_init(void)
 #ifdef SIN6_LEN
       sin->sin_len = addrlen;
 #endif
-      sin->sin_addr.s_addr = INADDR_ANY;
+      sin->sin_addr.s_addr = txtinfo_listen_ip.v4.s_addr;
       sin->sin_port = htons(ipc_port);
     } else {
       sin6 = (struct sockaddr_in6 *)&sst;
@@ -201,7 +201,7 @@ plugin_ipc_init(void)
 #ifdef SIN6_LEN
       sin6->sin6_len = addrlen;
 #endif
-      sin6->sin6_addr = in6addr_any;
+      sin6->sin6_addr = txtinfo_listen_ip.v6;
       sin6->sin6_port = htons(ipc_port);
     }
 
@@ -257,7 +257,7 @@ ipc_action(int fd)
     sin4 = (struct sockaddr_in *)&pin;
     if (inet_ntop(olsr_cnf->ip_version, &sin4->sin_addr, addr, INET6_ADDRSTRLEN) == NULL)
       addr[0] = '\0';
-    if (!ip4equal(&sin4->sin_addr, &ipc_accept_ip.v4)) {
+    if (!ip4equal(&sin4->sin_addr, &txtinfo_accept_ip.v4)) {
       olsr_printf(1, "(TXTINFO) From host(%s) not allowed!\n", addr);
       close(ipc_connection);
       return;
@@ -267,7 +267,7 @@ ipc_action(int fd)
     if (inet_ntop(olsr_cnf->ip_version, &sin6->sin6_addr, addr, INET6_ADDRSTRLEN) == NULL)
       addr[0] = '\0';
     /* Use in6addr_any (::) in olsr.conf to allow anybody. */
-    if (!ip6equal(&in6addr_any, &ipc_accept_ip.v6) && !ip6equal(&sin6->sin6_addr, &ipc_accept_ip.v6)) {
+    if (!ip6equal(&in6addr_any, &txtinfo_accept_ip.v6) && !ip6equal(&sin6->sin6_addr, &txtinfo_accept_ip.v6)) {
       olsr_printf(1, "(TXTINFO) From host(%s) not allowed!\n", addr);
       close(ipc_connection);
       return;
