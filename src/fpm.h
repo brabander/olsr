@@ -164,7 +164,6 @@ fpm fpmldiv(fpm a, fpm b);
 
 fpm atofpm(const char *);
 const char *fpmtoa(fpm);
-const char *etxtoa(fpm);
 
 #else /* USE_FPM */
 
@@ -176,7 +175,6 @@ const char *etxtoa(fpm);
 
 float atofpm(const char *);
 const char *fpmtoa(float);
-const char *etxtoa(float);
 
 #endif /* USE_FPM */
 

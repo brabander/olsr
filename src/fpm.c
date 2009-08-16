@@ -51,7 +51,8 @@ fpm
 itofpm(int i)
 {
   fpm r;
-  assert(FPM_MIN <= i && i <= FPM_MAX);
+  assert(fpmtoi_def(FPM_MIN) <= i);
+  assert(i <= fpmtoi_def(FPM_INT_MAX));
   r = (fpm) itofpm_def(i);
   return r;
 }
@@ -187,12 +188,6 @@ fpmtoa(fpm a)
   return ret[idx];
 }
 
-const char *
-etxtoa(fpm etx)
-{
-  return etx >= INFINITE_ETX ? "INF" : fpmtoa(etx);
-}
-
 #else /* USE_FPM */
 
 float
@@ -212,12 +207,6 @@ fpmtoa(float a)
   idx = (idx + 1) % (sizeof(ret) / sizeof(ret[0]));
   snprintf(ret[idx], sizeof(ret[0]), "%.3f", a);
   return ret[idx];
-}
-
-const char *
-etxtoa(float etx)
-{
-  return etx >= INFINITE_ETX ? "INF" : fpmtoa(etx);
 }
 
 #endif /* USE_FPM */
