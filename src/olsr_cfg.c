@@ -949,7 +949,9 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
     break;
   case 'N':                    /* NatThreshold (f) */
     {
+#ifdef DEBUG
       struct millitxt_buf tbuf;
+#endif
 
       rcfg->lq_nat_thresh = olsr_txt_to_milli(argstr);
       PARSER_DEBUG_PRINTF("NAT threshold %s\n", olsr_milli_to_txt(&tbuf, rcfg->lq_nat_thresh));
