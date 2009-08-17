@@ -130,7 +130,7 @@ static int
 set_sysctl_int(const char *name, int new)
 {
   int old;
-#if defined(__MacOSX__) || defined(__OpenBSD__) || defined(__NetBSD__)
+#if defined(__FreeBSD__) || defined(__MacOSX__) || defined(__OpenBSD__) || defined(__NetBSD__)
   size_t len = sizeof(old);
 #else
   unsigned int len = sizeof(old);
@@ -540,7 +540,7 @@ get_ipv6_address(char *ifname, struct sockaddr_in6 *saddr6, int scope_in)
         break;
       }
       ifr6.ifr_addr = *sin6;
-      if (ioctl(s6, SIOCGIFAFLAG_IN6, (int)&ifr6) < 0) {
+      if (ioctl(s6, SIOCGIFAFLAG_IN6, &ifr6) < 0) {
         OLSR_PRINTF(3, "ioctl(SIOCGIFAFLAG_IN6)");
         close(s6);
         break;
