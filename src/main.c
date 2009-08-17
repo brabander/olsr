@@ -309,7 +309,9 @@ main(int argc, char *argv[])
       olsr_cnf->willingness_auto = 0;
       olsr_cnf->willingness = WILL_DEFAULT;
     } else {
+#if REMOVE_LOG_INFO != 1
       struct millitxt_buf tbuf;
+#endif
       olsr_cnf->willingness = olsr_calculate_willingness();
 
       OLSR_INFO(LOG_MAIN, "Willingness set to %d - next update in %s secs\n",
