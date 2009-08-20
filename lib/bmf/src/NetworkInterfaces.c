@@ -415,7 +415,6 @@ FindNeighbors(struct TBestNeighbors *neighbors, struct link_entry **bestNeighbor
       /* Consider only neighbors with an IP address that differs from the
        * passed IP addresses (if passed). Rely on short-circuit boolean evaluation. */
       if (source != NULL && ipequal(neighborMainIp, MainAddressOf(source))) {
-        struct ipaddr_str buf;
         OLSR_PRINTF(9, "%s: ----> Not forwarding to %s: is source of pkt\n", PLUGIN_NAME_SHORT,
                     olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
 
@@ -424,7 +423,6 @@ FindNeighbors(struct TBestNeighbors *neighbors, struct link_entry **bestNeighbor
 
       /* Rely on short-circuit boolean evaluation */
       if (forwardedBy != NULL && ipequal(neighborMainIp, MainAddressOf(forwardedBy))) {
-        struct ipaddr_str buf;
         OLSR_PRINTF(9, "%s: ----> Not forwarding to %s: is the node that forwarded the pkt\n", PLUGIN_NAME_SHORT,
                     olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
 
@@ -433,7 +431,6 @@ FindNeighbors(struct TBestNeighbors *neighbors, struct link_entry **bestNeighbor
 
       /* Rely on short-circuit boolean evaluation */
       if (forwardedTo != NULL && ipequal(neighborMainIp, MainAddressOf(forwardedTo))) {
-        struct ipaddr_str buf;
         OLSR_PRINTF(9, "%s: ----> Not forwarding to %s: is the node to which the pkt was forwarded\n", PLUGIN_NAME_SHORT,
                     olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
 
@@ -689,13 +686,11 @@ FindNeighbors(struct TBestNeighbors *neighbors, struct link_entry **bestNeighbor
 
       if (walker != bestLinkToNeighbor) {
         if (bestLinkToNeighbor == NULL) {
-          struct ipaddr_str buf;
           OLSR_PRINTF(9, "%s: ----> Not forwarding to %s: no link found\n", PLUGIN_NAME_SHORT,
                       olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
         } else {
 #ifndef NODEBUG
           struct interface *bestIntf = if_ifwithaddr(&bestLinkToNeighbor->local_iface_addr);
-          struct ipaddr_str buf;
           struct lqtextbuffer lqbuffer;
 #endif
           OLSR_PRINTF(9, "%s: ----> Not forwarding to %s: \"%s\" gives a better link to this neighbor, costing %s\n",

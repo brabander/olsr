@@ -121,7 +121,7 @@ olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *
 }
 
 static int
-insert_plugin_ipnet(const char *sz_net, const char *sz_mask, struct allowed_net **allowed_nets)
+insert_plugin_ipnet(const char *sz_net, const char *sz_mask, struct allowed_net **my_allowed_nets)
 {
   struct allowed_net *an;
 
@@ -135,8 +135,8 @@ insert_plugin_ipnet(const char *sz_net, const char *sz_mask, struct allowed_net 
     free(an);
     return 1;
   }
-  an->next = *allowed_nets;
-  *allowed_nets = an;
+  an->next = *my_allowed_nets;
+  *my_allowed_nets = an;
   return 0;
 }
 

@@ -157,7 +157,7 @@ static int
 plugin_ipc_init(void)
 {
   struct sockaddr_storage sst;
-  struct sockaddr_in *sin;
+  struct sockaddr_in *sock_in;
   struct sockaddr_in6 *sin6;
   uint32_t yes = 1;
   socklen_t addrlen;
@@ -186,14 +186,14 @@ plugin_ipc_init(void)
     /* complete the socket structure */
     memset(&sst, 0, sizeof(sst));
     if (olsr_cnf->ip_version == AF_INET) {
-      sin = (struct sockaddr_in *)&sst;
-      sin->sin_family = AF_INET;
+      sock_in = (struct sockaddr_in *)&sst;
+      sock_in->sin_family = AF_INET;
       addrlen = sizeof(struct sockaddr_in);
 #ifdef SIN6_LEN
-      sin->sin_len = addrlen;
+      sock_in->sin_len = addrlen;
 #endif
-      sin->sin_addr.s_addr = txtinfo_listen_ip.v4.s_addr;
-      sin->sin_port = htons(ipc_port);
+      sock_in->sin_addr.s_addr = txtinfo_listen_ip.v4.s_addr;
+      sock_in->sin_port = htons(ipc_port);
     } else {
       sin6 = (struct sockaddr_in6 *)&sst;
       sin6->sin6_family = AF_INET6;
@@ -342,7 +342,7 @@ ipc_print_link(struct autobuf *abuf)
   struct ipaddr_str buf1, buf2;
   struct lqtextbuffer lqbuffer1, lqbuffer2;
 
-  struct link_entry *link = NULL;
+  struct link_entry *my_link = NULL;
 
 #ifdef ACTIVATE_VTIME_TXTINFO
   abuf_puts(abuf, "Table: Links\nLocal IP\tRemote IP\tVtime\tLQ\tNLQ\tCost\n");
@@ -351,22 +351,22 @@ ipc_print_link(struct autobuf *abuf)
 #endif
 
   /* Link set */
-  OLSR_FOR_ALL_LINK_ENTRIES(link) {
+  OLSR_FOR_ALL_LINK_ENTRIES(my_link) {
 #ifdef ACTIVATE_VTIME_TXTINFO
-    int diff = olsr_cnf->system_tick_divider * (unsigned int)(link->ASYM_time - now_times);
+    int diff = olsr_cnf->system_tick_divider * (unsigned int)(my_link->ASYM_time - now_times);
 
-    abuf_appendf(abuf, "%s\t%s\t%d.%03d\t%s\t%s\t\n", olsr_ip_to_string(&buf1, &link->local_iface_addr),
-              olsr_ip_to_string(&buf2, &link->neighbor_iface_addr),
+    abuf_appendf(abuf, "%s\t%s\t%d.%03d\t%s\t%s\t\n", olsr_ip_to_string(&buf1, &my_link->local_iface_addr),
+              olsr_ip_to_string(&buf2, &my_link->neighbor_iface_addr),
               diff/1000, diff%1000,
-              get_link_entry_text(link, '\t', &lqbuffer1),
-              get_linkcost_text(link->linkcost, false, &lqbuffer2));
+              get_link_entry_text(my_link, '\t', &lqbuffer1),
+              get_linkcost_text(my_link->linkcost, false, &lqbuffer2));
 #else
-    abuf_appendf(abuf, "%s\t%s\t\t%s\t%s\t\n", olsr_ip_to_string(&buf1, &link->local_iface_addr),
-              olsr_ip_to_string(&buf2, &link->neighbor_iface_addr),
-              get_link_entry_text(link, '\t', &lqbuffer1),
-              get_linkcost_text(link->linkcost, false, &lqbuffer2));
+    abuf_appendf(abuf, "%s\t%s\t\t%s\t%s\t\n", olsr_ip_to_string(&buf1, &my_link->local_iface_addr),
+              olsr_ip_to_string(&buf2, &my_link->neighbor_iface_addr),
+              get_link_entry_text(my_link, '\t', &lqbuffer1),
+              get_linkcost_text(my_link->linkcost, false, &lqbuffer2));
 #endif
-  } OLSR_FOR_ALL_LINK_ENTRIES_END(link);
+  } OLSR_FOR_ALL_LINK_ENTRIES_END(my_link);
 
   abuf_puts(abuf, "\n");
 }
@@ -436,7 +436,7 @@ ipc_print_hna(struct autobuf *abuf)
   struct ip_prefix_list *hna;
   struct hna_entry *tmp_hna;
   struct hna_net *tmp_net;
-  struct ipaddr_str addrbuf, mainaddrbuf;
+  struct ipaddr_str buf, mainaddrbuf;
 
   size = 0;
 
@@ -445,14 +445,12 @@ ipc_print_hna(struct autobuf *abuf)
   /* Announced HNA entries */
   if (olsr_cnf->ip_version == AF_INET) {
     for (hna = olsr_cnf->hna_entries; hna != NULL; hna = hna->next) {
-      struct ipaddr_str addrbuf, mainaddrbuf;
-      abuf_appendf(abuf, "%s/%d\t%s\n", olsr_ip_to_string(&addrbuf, &hna->net.prefix), hna->net.prefix_len,
+      abuf_appendf(abuf, "%s/%d\t%s\n", olsr_ip_to_string(&buf, &hna->net.prefix), hna->net.prefix_len,
                 olsr_ip_to_string(&mainaddrbuf, &olsr_cnf->main_addr));
     }
   } else {
     for (hna = olsr_cnf->hna_entries; hna != NULL; hna = hna->next) {
-      struct ipaddr_str addrbuf, mainaddrbuf;
-      abuf_appendf(abuf, "%s/%d\t%s\n", olsr_ip_to_string(&addrbuf, &hna->net.prefix), hna->net.prefix_len,
+      abuf_appendf(abuf, "%s/%d\t%s\n", olsr_ip_to_string(&buf, &hna->net.prefix), hna->net.prefix_len,
                 olsr_ip_to_string(&mainaddrbuf, &olsr_cnf->main_addr));
     }
   }
@@ -463,7 +461,7 @@ ipc_print_hna(struct autobuf *abuf)
     /* Check all networks */
     for (tmp_net = tmp_hna->networks.next; tmp_net != &tmp_hna->networks; tmp_net = tmp_net->next) {
 
-      abuf_appendf(abuf, "%s/%d\t%s\n", olsr_ip_to_string(&addrbuf, &tmp_net->A_network_addr), tmp_net->prefixlen,
+      abuf_appendf(abuf, "%s/%d\t%s\n", olsr_ip_to_string(&buf, &tmp_net->A_network_addr), tmp_net->prefixlen,
                 olsr_ip_to_string(&mainaddrbuf, &tmp_hna->A_gateway_addr));
     }
   }
@@ -475,7 +473,7 @@ ipc_print_hna(struct autobuf *abuf)
 static void
 ipc_print_mid(struct autobuf *abuf)
 {
-  int index;
+  int idx;
   unsigned short is_first;
   struct mid_entry *entry;
   struct mid_address *alias;
@@ -483,10 +481,10 @@ ipc_print_mid(struct autobuf *abuf)
   abuf_puts(abuf, "Table: MID\nIP address\tAliases\n");
 
   /* MID */
-  for (index = 0; index < HASHSIZE; index++) {
-    entry = mid_set[index].next;
+  for (idx = 0; idx < HASHSIZE; idx++) {
+    entry = mid_set[idx].next;
 
-    while (entry != &mid_set[index]) {
+    while (entry != &mid_set[idx]) {
       struct ipaddr_str buf;
       abuf_puts(abuf, olsr_ip_to_string(&buf, &entry->main_addr));
       alias = entry->aliases;
@@ -556,7 +554,7 @@ txtinfo_write_data(void *foo __attribute__ ((unused))) {
 }
 
 static void
-send_info(int send_what, int socket)
+send_info(int send_what, int the_socket)
 {
   struct autobuf abuf;
 
@@ -594,7 +592,7 @@ send_info(int send_what, int socket)
   outbuffer[outbuffer_count] = olsr_malloc(abuf.len, "txt output buffer");
   outbuffer_size[outbuffer_count] = abuf.len;
   outbuffer_written[outbuffer_count] = 0;
-  outbuffer_socket[outbuffer_count] = socket;
+  outbuffer_socket[outbuffer_count] = the_socket;
 
   memcpy(outbuffer[outbuffer_count], abuf.buf, abuf.len);
   outbuffer_count++;

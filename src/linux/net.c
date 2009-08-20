@@ -54,6 +54,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <syslog.h>
+#include <unistd.h>
 
 /* Redirect proc entry */
 #define REDIRECT_PROC "/proc/sys/net/ipv4/conf/%s/send_redirects"

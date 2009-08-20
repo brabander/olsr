@@ -166,15 +166,15 @@ ipc_print_neigh_link(struct autobuf *abuf, const struct neighbor_entry *neighbor
   olsr_linkcost etx = 0.0;
   const char *style;
   const char *adr = olsr_ip_to_string(&mainaddrstrbuf, &olsr_cnf->main_addr);
-  struct link_entry *link;
+  struct link_entry *the_link;
   struct lqtextbuffer lqbuffer;
 
   if (neighbor->status == 0) {  /* non SYM */
     style = DASHED;
   } else {
-    link = get_best_link_to_neighbor(&neighbor->neighbor_main_addr);
-    if (link) {
-      etx = link->linkcost;
+    the_link = get_best_link_to_neighbor(&neighbor->neighbor_main_addr);
+    if (the_link) {
+      etx = the_link->linkcost;
     }
     style = SOLID;
   }
@@ -190,7 +190,7 @@ ipc_print_neigh_link(struct autobuf *abuf, const struct neighbor_entry *neighbor
 static int
 plugin_ipc_init(void)
 {
-  struct sockaddr_in sin;
+  struct sockaddr_in sock_in;
   uint32_t yes = 1;
 
   if (ipc_socket != -1) {
@@ -220,13 +220,13 @@ plugin_ipc_init(void)
   /* Bind the socket */
 
   /* complete the socket structure */
-  memset(&sin, 0, sizeof(sin));
-  sin.sin_family = AF_INET;
-  sin.sin_addr.s_addr = ipc_listen_ip.v4.s_addr;
-  sin.sin_port = htons(ipc_port);
+  memset(&sock_in, 0, sizeof(sock_in));
+  sock_in.sin_family = AF_INET;
+  sock_in.sin_addr.s_addr = ipc_listen_ip.v4.s_addr;
+  sock_in.sin_port = htons(ipc_port);
 
   /* bind the socket to the port number */
-  if (bind(ipc_socket, (struct sockaddr *)&sin, sizeof(sin)) == -1) {
+  if (bind(ipc_socket, (struct sockaddr *)&sock_in, sizeof(sock_in)) == -1) {
     olsr_printf(1, "(DOT DRAW)IPC bind %s\n", strerror(errno));
     CLOSE(ipc_socket);
     return 0;
@@ -319,7 +319,7 @@ dotdraw_write_data(void *foo __attribute__ ((unused))) {
  *Scheduled event
  */
 static int
-pcf_event(int changes_neighborhood, int changes_topology, int changes_hna)
+pcf_event(int my_changes_neighborhood, int my_changes_topology, int my_changes_hna)
 {
   struct neighbor_entry *neighbor_table_tmp;
   struct tc_entry *tc;
@@ -334,7 +334,7 @@ pcf_event(int changes_neighborhood, int changes_topology, int changes_hna)
     return 1;
   }
 
-  if (changes_neighborhood || changes_topology || changes_hna) {
+  if (my_changes_neighborhood || my_changes_topology || my_changes_hna) {
     /* Print tables to IPC socket */
     abuf_puts(&outbuffer, "digraph topology\n{\n");
 

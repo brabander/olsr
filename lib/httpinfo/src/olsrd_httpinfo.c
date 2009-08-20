@@ -251,7 +251,7 @@ static const struct dynamic_file_entry dynamic_files[] = {
 static int
 get_http_socket(int port)
 {
-  struct sockaddr_in sin;
+  struct sockaddr_in sock_in;
   uint32_t yes = 1;
 
   /* Init ipc socket */
@@ -270,13 +270,13 @@ get_http_socket(int port)
   /* Bind the socket */
 
   /* complete the socket structure */
-  memset(&sin, 0, sizeof(sin));
-  sin.sin_family = AF_INET;
-  sin.sin_addr.s_addr = httpinfo_listen_ip.v4.s_addr;
-  sin.sin_port = htons(port);
+  memset(&sock_in, 0, sizeof(sock_in));
+  sock_in.sin_family = AF_INET;
+  sock_in.sin_addr.s_addr = httpinfo_listen_ip.v4.s_addr;
+  sock_in.sin_port = htons(port);
 
   /* bind the socket to the port number */
-  if (bind(s, (struct sockaddr *)&sin, sizeof(sin)) == -1) {
+  if (bind(s, (struct sockaddr *)&sock_in, sizeof(sock_in)) == -1) {
     olsr_printf(1, "(HTTPINFO) bind failed %s\n", strerror(errno));
     close(s);
     return -1;
@@ -687,7 +687,7 @@ section_title(struct autobuf *abuf, const char *title)
 }
 
 static void
-build_frame(struct autobuf *abuf, const char *title __attribute__ ((unused)), const char *link
+build_frame(struct autobuf *abuf, const char *title __attribute__ ((unused)), const char *the_link
             __attribute__ ((unused)), int width __attribute__ ((unused)), build_body_callback frame_body_cb)
 {
   abuf_puts(abuf, "<div id=\"maintable\">\n");
@@ -945,7 +945,7 @@ static void
 build_neigh_body(struct autobuf *abuf)
 {
   struct neighbor_entry *neigh;
-  struct link_entry *link = NULL;
+  struct link_entry *the_link = NULL;
   const char *colspan = resolve_ip_addresses ? " colspan=\"2\"" : "";
 
   section_title(abuf, "Links");
@@ -959,18 +959,18 @@ build_neigh_body(struct autobuf *abuf)
   abuf_puts(abuf, "</tr>\n");
 
   /* Link set */
-  OLSR_FOR_ALL_LINK_ENTRIES(link) {
+  OLSR_FOR_ALL_LINK_ENTRIES(the_link) {
     abuf_puts(abuf, "<tr>");
-    build_ipaddr_with_link(abuf, &link->local_iface_addr, -1);
-    build_ipaddr_with_link(abuf, &link->neighbor_iface_addr, -1);
-    abuf_appendf(abuf, "<td>%0.2f</td>", link->L_link_quality);
+    build_ipaddr_with_link(abuf, &the_link->local_iface_addr, -1);
+    build_ipaddr_with_link(abuf, &the_link->neighbor_iface_addr, -1);
+    abuf_appendf(abuf, "<td>%0.2f</td>", the_link->L_link_quality);
     if (olsr_cnf->lq_level > 0) {
       struct lqtextbuffer lqbuffer1, lqbuffer2;
-      abuf_appendf(abuf, "<td>(%s) %s</td>", get_link_entry_text(link, '/', &lqbuffer1),
-                 get_linkcost_text(link->linkcost, false, &lqbuffer2));
+      abuf_appendf(abuf, "<td>(%s) %s</td>", get_link_entry_text(the_link, '/', &lqbuffer1),
+                 get_linkcost_text(the_link->linkcost, false, &lqbuffer2));
     }
     abuf_puts(abuf, "</tr>\n");
-  } OLSR_FOR_ALL_LINK_ENTRIES_END(link);
+  } OLSR_FOR_ALL_LINK_ENTRIES_END(the_link);
 
   abuf_puts(abuf, "</table>\n");
 
@@ -1156,10 +1156,10 @@ build_cfgfile_body(struct autobuf *abuf)
 }
 
 static int
-check_allowed_ip(const struct allowed_net *const allowed_nets, const union olsr_ip_addr *const addr)
+check_allowed_ip(const struct allowed_net *const my_allowed_nets, const union olsr_ip_addr *const addr)
 {
   const struct allowed_net *alln;
-  for (alln = allowed_nets; alln != NULL; alln = alln->next) {
+  for (alln = my_allowed_nets; alln != NULL; alln = alln->next) {
     if ((addr->v4.s_addr & alln->mask.v4.s_addr) == (alln->net.v4.s_addr & alln->mask.v4.s_addr)) {
       return 1;
     }

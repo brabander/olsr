@@ -66,7 +66,7 @@
 
 #ifdef WIN32
 #define close(x) closesocket(x)
-int __stdcall SignalHandler(unsigned long signal) __attribute__ ((noreturn));
+int __stdcall SignalHandler(unsigned long signo) __attribute__ ((noreturn));
 void ListInterfaces(void);
 void DisableIcmpRedirects(void);
 bool olsr_win32_end_request = false;
@@ -487,7 +487,7 @@ int main(int argc, char *argv[]) {
  *@param signal the signal that triggered this callback
  */
 #ifndef WIN32
-void olsr_reconfigure(int signal __attribute__ ((unused))) {
+void olsr_reconfigure(int signo __attribute__ ((unused))) {
   /* if we are started with -nofork, we do not weant to go into the
    * background here. So we can simply stop on -HUP
    */
@@ -524,14 +524,14 @@ void olsr_reconfigure(int signal __attribute__ ((unused))) {
  */
 #ifdef WIN32
 int __stdcall
-SignalHandler(unsigned long signal)
+SignalHandler(unsigned long signo)
 #else
-static void olsr_shutdown(int signal __attribute__ ((unused)))
+static void olsr_shutdown(int signo __attribute__ ((unused)))
 #endif
 {
   struct interface *ifn;
 
-  OLSR_PRINTF(1, "Received signal %d - shutting down\n", (int)signal);
+  OLSR_PRINTF(1, "Received signal %d - shutting down\n", (int)signo);
 
 #ifdef WIN32
   OLSR_PRINTF(1, "Waiting for the scheduler to stop.\n");

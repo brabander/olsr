@@ -406,9 +406,7 @@ olsr_input(int fd)
   cpu_overload_exit = 0;
 
   for (;;) {
-#ifdef DEBUG
     struct ipaddr_str buf;
-#endif
     /* sockaddr_in6 is bigger than sockaddr !!!! */
     struct sockaddr_storage from;
     socklen_t fromlen;
@@ -452,7 +450,6 @@ olsr_input(int fd)
       return;
 
     if ((olsr_in_if = if_ifwithsock(fd)) == NULL) {
-      struct ipaddr_str buf;
       OLSR_PRINTF(1, "Could not find input interface for message from %s size %d\n", olsr_ip_to_string(&buf, &from_addr), cc);
       olsr_syslog(OLSR_LOG_ERR, "Could not find input interface for message from %s size %d\n", olsr_ip_to_string(&buf, &from_addr),
                   cc);

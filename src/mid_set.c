@@ -528,9 +528,7 @@ olsr_print_mid_set(void)
 bool
 olsr_input_mid(union olsr_message *m, struct interface *in_if __attribute__ ((unused)), union olsr_ip_addr *from_addr)
 {
-#ifdef DEBUG
   struct ipaddr_str buf;
-#endif
   struct mid_alias *tmp_adr;
   struct mid_message message;
 
@@ -552,7 +550,6 @@ olsr_input_mid(union olsr_message *m, struct interface *in_if __attribute__ ((un
    */
 
   if (check_neighbor_link(from_addr) != SYM_LINK) {
-    struct ipaddr_str buf;
     OLSR_PRINTF(2, "Received MID from NON SYM neighbor %s\n", olsr_ip_to_string(&buf, from_addr));
     olsr_free_mid_packet(&message);
     return false;
@@ -563,7 +560,6 @@ olsr_input_mid(union olsr_message *m, struct interface *in_if __attribute__ ((un
 
   while (tmp_adr) {
     if (!mid_lookup_main_addr(&tmp_adr->alias_addr)) {
-      struct ipaddr_str buf;
       OLSR_PRINTF(1, "MID new: (%s, ", olsr_ip_to_string(&buf, &message.mid_origaddr));
       OLSR_PRINTF(1, "%s)\n", olsr_ip_to_string(&buf, &tmp_adr->alias_addr));
       insert_mid_alias(&message.mid_origaddr, &tmp_adr->alias_addr, message.vtime);

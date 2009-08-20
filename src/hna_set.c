@@ -345,8 +345,8 @@ olsr_input_hna(union olsr_message *m, struct interface *in_if __attribute__ ((un
   int hnasize;
   const uint8_t *curr, *curr_end;
 
-#ifdef DEBUG
   struct ipaddr_str buf;
+#ifdef DEBUG
   OLSR_PRINTF(5, "Processing HNA\n");
 #endif
 
@@ -402,7 +402,6 @@ olsr_input_hna(union olsr_message *m, struct interface *in_if __attribute__ ((un
    *      message MUST be discarded.
    */
   if (check_neighbor_link(from_addr) != SYM_LINK) {
-    struct ipaddr_str buf;
     OLSR_PRINTF(2, "Received HNA from NON SYM neighbor %s\n", olsr_ip_to_string(&buf, from_addr));
     return false;
   }
