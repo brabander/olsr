@@ -332,7 +332,7 @@ olsr_input(int fd, void *data __attribute__ ((unused)), unsigned int flags __att
     struct sockaddr_storage from;
     socklen_t fromlen;
     int cc;
-    char inbuf[MAXMESSAGESIZE + 1];
+    char inbuf[MAXMESSAGESIZE] __attribute__ ((aligned));
 
     if (32 < ++cpu_overload_exit) {
       OLSR_WARN(LOG_PACKET_PARSING, "CPU overload detected, ending olsr_input() loop\n");
@@ -414,7 +414,7 @@ olsr_input_hostemu(int fd, void *data __attribute__ ((unused)), unsigned int fla
   uint16_t pcklen;
   struct preprocessor_function_entry *entry;
   char *packet;
-  char inbuf[MAXMESSAGESIZE + 1];
+  char inbuf[MAXMESSAGESIZE] __attribute__ ((aligned));
 #ifndef REMOVE_LOG_WARN
   struct ipaddr_str buf;
 #endif

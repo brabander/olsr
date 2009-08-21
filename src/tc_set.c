@@ -1003,7 +1003,7 @@ olsr_output_lq_tc_internal(void *ctx  __attribute__ ((unused)), union olsr_ip_ad
   struct interface *ifp;
   struct nbr_entry *nbr;
   struct link_entry *link;
-  uint8_t msg_buffer[MAXMESSAGESIZE - OLSR_HEADERSIZE];
+  uint8_t msg_buffer[MAXMESSAGESIZE - OLSR_HEADERSIZE] __attribute__ ((aligned));
   uint8_t *curr = msg_buffer;
   uint8_t *length_field, *border_flags, *seqno, *last;
   bool sendTC = false, nextFragment = false;

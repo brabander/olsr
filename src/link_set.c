@@ -820,7 +820,7 @@ olsr_update_packet_loss(struct link_entry *entry)
 void
 generate_hello(void *p) {
   struct interface *ifp = p;
-  uint8_t msg_buffer[MAXMESSAGESIZE - OLSR_HEADERSIZE];
+  uint8_t msg_buffer[MAXMESSAGESIZE - OLSR_HEADERSIZE] __attribute__ ((aligned));
   uint8_t *curr = msg_buffer;
   uint8_t *length_field, *last;
   struct link_entry *link;

@@ -532,7 +532,7 @@ olsr_input_mid(union olsr_message *msg, struct interface *input_if __attribute__
 void
 generate_mid(void *p  __attribute__ ((unused))) {
   struct interface *ifp, *allif;
-  uint8_t msg_buffer[MAXMESSAGESIZE - OLSR_HEADERSIZE];
+  uint8_t msg_buffer[MAXMESSAGESIZE - OLSR_HEADERSIZE] __attribute__ ((aligned));
   uint8_t *curr = msg_buffer;
   uint8_t *length_field, *last;
   bool sendMID = false;
