@@ -85,6 +85,15 @@ extern FILE *EXPORT(debug_handle);
 #endif
 #endif
 
+/*
+ * On ARM, the compiler spits out additional warnings if called
+ * with -Wcast-align if you cast e.g. char* -> int*. While this
+ * is fine, most of that warnings are un-critical. Also the ARM
+ * CPU will throw BUS_ERROR if alignment does not fit. For this,
+ * we add an additional cast to (void *) to prevent the warning.
+ */
+#define ARM_NOWARN_ALIGN void *
+
 #define ROUND_UP_TO_POWER_OF_2(val, pow2) (((val) + (pow2) - 1) & ~((pow2) - 1))
 
 #ifdef WIN32

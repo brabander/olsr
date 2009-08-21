@@ -309,7 +309,7 @@ olsr_cookie_malloc(struct olsr_cookie_info *ci)
    * When the block is freed to detect corruption.
    */
   branding = (struct olsr_cookie_mem_brand *)
-    ((unsigned char *)ptr + ci->ci_size);
+    (ARM_NOWARN_ALIGN)((unsigned char *)ptr + ci->ci_size);
   memcpy(&branding->cmb_sig, "cookie", 6);
   branding->id = ci->ci_membrand;
 
@@ -335,7 +335,7 @@ olsr_cookie_free(struct olsr_cookie_info *ci, void *ptr)
   bool reuse = false;
 #endif
   struct olsr_cookie_mem_brand *branding = (struct olsr_cookie_mem_brand *)
-    ((unsigned char *)ptr + ci->ci_size);
+    (ARM_NOWARN_ALIGN)((unsigned char *)ptr + ci->ci_size);
 
   /*
    * Verify if there has been a memory overrun, or

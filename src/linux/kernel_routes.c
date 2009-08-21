@@ -77,7 +77,7 @@ struct olsr_ipadd_req {
 static void
 olsr_netlink_addreq(struct nlmsghdr *n, size_t reqSize __attribute__ ((unused)), int type, const void *data, int len)
 {
-  struct rtattr *rta = (struct rtattr *)(((char *)n) + NLMSG_ALIGN(n->nlmsg_len));
+  struct rtattr *rta = (struct rtattr *)(ARM_NOWARN_ALIGN)(((char *)n) + NLMSG_ALIGN(n->nlmsg_len));
   n->nlmsg_len = NLMSG_ALIGN(n->nlmsg_len) + RTA_LENGTH(len);
   //produces strange compile error
   //assert(n->nlmsg_len < reqSize);
@@ -113,7 +113,7 @@ olsr_netlink_send(struct nlmsghdr *n, char *buf, size_t bufSize, uint8_t flag, c
     iov.iov_len = bufSize;
     ret = recvmsg(olsr_cnf->rts_linux, &msg, 0);
     if (0 < ret) {
-      struct nlmsghdr *h = (struct nlmsghdr *)buf;
+      struct nlmsghdr *h = (struct nlmsghdr *)(ARM_NOWARN_ALIGN)buf;
       while (NLMSG_OK(h, (unsigned int)ret)) {
         if (NLMSG_DONE == h->nlmsg_type) {
           //seems to be never reached
@@ -214,7 +214,13 @@ olsr_netlink_send(struct nlmsghdr *n, char *buf, size_t bufSize, uint8_t flag, c
           }
           break;
         }
-        h = NLMSG_NEXT(h, ret);
+/*
+ * The ARM compile complains about alignment. Copied
+ * from /usr/include/linux/netlink.h and adapted for ARM
+ */
+#define MY_NLMSG_NEXT(nlh,len)	 ((len) -= NLMSG_ALIGN((nlh)->nlmsg_len), \
+				  (struct nlmsghdr*)(ARM_NOWARN_ALIGN)(((char*)(nlh)) + NLMSG_ALIGN((nlh)->nlmsg_len)))
+        h = MY_NLMSG_NEXT(h, ret);
       }
     }
   }

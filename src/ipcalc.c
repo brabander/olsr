@@ -161,8 +161,8 @@ ip_in_net(const union olsr_ip_addr *ipaddr, const struct olsr_ip_prefix *net, in
   } else {
     /* IPv6 */
     uint32_t netmask;
-    const uint32_t *i = (const uint32_t *)&ipaddr->v6.s6_addr;
-    const uint32_t *n = (const uint32_t *)&net->prefix.v6.s6_addr;
+    const uint32_t *i = (const uint32_t *)(ARM_NOWARN_ALIGN)&ipaddr->v6.s6_addr;
+    const uint32_t *n = (const uint32_t *)(ARM_NOWARN_ALIGN)&net->prefix.v6.s6_addr;
     unsigned int prefix_len;
     /* First we compare whole unsigned int's */
     for (prefix_len = net->prefix_len; prefix_len > 32; prefix_len -= 32) {
@@ -183,7 +183,7 @@ static const char *
 sockaddr4_to_string(char *const buf, int bufsize, const struct sockaddr *const addr)
 {
   char addrbuf[INET6_ADDRSTRLEN];
-  const struct sockaddr_in *const sin4 = (const struct sockaddr_in *)addr;
+  const struct sockaddr_in *const sin4 = (const struct sockaddr_in *)(const ARM_NOWARN_ALIGN)addr;
   snprintf(buf, bufsize, "IPv4/%s:%d", inet_ntop(AF_INET, &sin4->sin_addr, addrbuf, sizeof(addrbuf)), sin4->sin_port);
   return buf;
 }
@@ -192,7 +192,7 @@ static const char *
 sockaddr6_to_string(char *const buf, int bufsize, const struct sockaddr *const addr)
 {
   char addrbuf[INET6_ADDRSTRLEN];
-  const struct sockaddr_in6 *const sin6 = (const struct sockaddr_in6 *)addr;
+  const struct sockaddr_in6 *const sin6 = (const struct sockaddr_in6 *)(const ARM_NOWARN_ALIGN)addr;
   snprintf(buf, bufsize,
            "IPv6/[%s]:%d/%x/%x",
            inet_ntop(AF_INET6, &sin6->sin6_addr, addrbuf, sizeof(addrbuf)),

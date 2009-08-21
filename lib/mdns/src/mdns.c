@@ -76,8 +76,8 @@ PacketReceivedFromOLSR(unsigned char *encapsulationUdpData, int len)
   //union olsr_ip_addr mcDst;            /* Multicast destination of the encapsulated packet */
   struct TBmfInterface *walker;
   int stripped_len;
-  ipHeader = (struct ip *)encapsulationUdpData;
-  ip6Header = (struct ip6_hdr *)encapsulationUdpData;
+  ipHeader = (struct ip *)(ARM_NOWARN_ALIGN)encapsulationUdpData;
+  ip6Header = (struct ip6_hdr *)(ARM_NOWARN_ALIGN)encapsulationUdpData;
   //mcSrc.v4 = ipHeader->ip_src;
   //mcDst.v4 = ipHeader->ip_dst;
   OLSR_DEBUG(LOG_PLUGINS, "MDNS PLUGIN got packet from OLSR message\n");
@@ -326,7 +326,7 @@ BmfPacketCaptured(
 
   if ((encapsulationUdpData[0] & 0xf0) == 0x40) {       //IPV4
 
-    ipHeader = (struct ip *)encapsulationUdpData;
+    ipHeader = (struct ip *)(ARM_NOWARN_ALIGN)encapsulationUdpData;
 
     dst.v4 = ipHeader->ip_dst;
 
@@ -341,7 +341,7 @@ BmfPacketCaptured(
       //OLSR_PRINTF(1,"NON UDP PACKET\n");
       return;                   /* for */
     }
-    udpHeader = (struct udphdr *)(encapsulationUdpData + GetIpHeaderLength(encapsulationUdpData));
+    udpHeader = (struct udphdr *)(ARM_NOWARN_ALIGN)(encapsulationUdpData + GetIpHeaderLength(encapsulationUdpData));
     destPort = ntohs(udpHeader->dest);
     if (destPort != 5353) {
       return;
@@ -350,7 +350,7 @@ BmfPacketCaptured(
 
   else if ((encapsulationUdpData[0] & 0xf0) == 0x60) {  //IPv6
 
-    ipHeader6 = (struct ip6_hdr *)encapsulationUdpData;
+    ipHeader6 = (struct ip6_hdr *)(ARM_NOWARN_ALIGN)encapsulationUdpData;
     if (ipHeader6->ip6_dst.s6_addr[0] == 0xff)  //Multicast
     {
       //Continua
@@ -362,7 +362,7 @@ BmfPacketCaptured(
       //OLSR_PRINTF(1,"NON UDP PACKET\n");
       return;                   /* for */
     }
-    udpHeader = (struct udphdr *)(encapsulationUdpData + 40);
+    udpHeader = (struct udphdr *)(ARM_NOWARN_ALIGN)(encapsulationUdpData + 40);
     destPort = ntohs(udpHeader->dest);
     if (destPort != 5353) {
       return;

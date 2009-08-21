@@ -232,7 +232,7 @@ deserialize_hello(struct lq_hello_message *hello, const void *ser)
   hello->neigh = NULL;
   limit = ((const unsigned char *)ser) + size;
   while (curr < limit) {
-    const struct lq_hello_info_header *info_head = (const struct lq_hello_info_header *)curr;
+    const struct lq_hello_info_header *info_head = (const struct lq_hello_info_header *)(const ARM_NOWARN_ALIGN)curr;
     const unsigned char *limit2 = curr + ntohs(info_head->size);
 
     curr = (const unsigned char *)(info_head + 1);
