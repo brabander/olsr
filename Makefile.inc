@@ -98,7 +98,7 @@ ifndef CFLAGS
     ALL_WARNINGS +=	-Wwrite-strings
     ALL_WARNINGS +=	-Wbad-function-cast
     ALL_WARNINGS +=	-Wpointer-arith
-    # ALL_WARNINGS +=	-Wcast-qual
+    ALL_WARNINGS +=	-Wcast-qual
     ALL_WARNINGS +=	-Wshadow
     ALL_WARNINGS +=	-Wformat-2
     ALL_WARNINGS +=	-Wsequence-point

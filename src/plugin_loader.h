@@ -50,7 +50,7 @@
 
 #define DEFINE_PLUGIN6(descr, author, pre_init, post_init, pre_cleanup, post_cleanup, deactivate, parameter) \
 static struct olsr_plugin olsr_internal_plugin_definition = { \
-  .p_name = (char*) PLUGIN_FULLNAME , .p_descr = (char*)descr, .p_author = (char*)author, \
+  .p_name = PLUGIN_FULLNAME , .p_descr = descr, .p_author = author, \
   .p_pre_init = pre_init, .p_post_init = post_init, .p_pre_cleanup = pre_cleanup, .p_post_cleanup = post_cleanup, \
   .p_legacy_init = NULL, .p_deactivate = deactivate, .p_version = 6, .p_param = parameter, .p_param_cnt = ARRAYSIZE(parameter) \
 }; \
@@ -61,7 +61,7 @@ static void hookup_plugin_definition (void) { \
 
 #define DEFINE_PLUGIN6_NP(descr, author, pre_init, post_init, pre_cleanup, post_cleanup, deactivate) \
 static struct olsr_plugin olsr_internal_plugin_definition = { \
-  .p_name = (char*) PLUGIN_FULLNAME , .p_descr = (char*)descr, .p_author = (char*)author, \
+  .p_name = PLUGIN_FULLNAME , .p_descr = descr, .p_author = author, \
   .p_pre_init = pre_init, .p_post_init = post_init, .p_pre_cleanup = pre_cleanup, .p_post_cleanup = post_cleanup, \
   .p_deactivate = deactivate, .p_version = 6, .p_param = NULL, .p_param_cnt = 0 \
 }; \
@@ -79,9 +79,9 @@ struct olsr_plugin {
   struct avl_node p_node;
 
   /* plugin information */
-  char *p_name;
-  char *p_descr;
-  char *p_author;
+  const char *p_name;
+  const char *p_descr;
+  const char *p_author;
   bool p_deactivate;    /* plugin can be deactivated */
 
   /* function pointers */
@@ -117,7 +117,7 @@ AVLNODE2STRUCT(plugin_node2tree, struct olsr_plugin, p_node)
     plugin = plugin_node2tree(plugin_node);
 #define OLSR_FOR_ALL_PLUGIN_ENTRIES_END(plugin) }}
 
-struct olsr_plugin *EXPORT(olsr_get_plugin)(char *libname);
+struct olsr_plugin *EXPORT(olsr_get_plugin)(const char *libname);
 
 void EXPORT(olsr_hookup_plugin) (struct olsr_plugin *plugin);
 void EXPORT(olsr_unhookup_plugin) (struct olsr_plugin *plugin);
@@ -125,7 +125,7 @@ void EXPORT(olsr_unhookup_plugin) (struct olsr_plugin *plugin);
 void EXPORT(olsr_init_pluginsystem)(bool);
 void EXPORT(olsr_destroy_pluginsystem)(void);
 
-struct olsr_plugin *EXPORT(olsr_load_plugin)(char *);
+struct olsr_plugin *EXPORT(olsr_load_plugin)(const char *);
 bool EXPORT(olsr_unload_plugin)(struct olsr_plugin *);
 
 bool EXPORT(olsr_activate_plugin)(struct olsr_plugin *);

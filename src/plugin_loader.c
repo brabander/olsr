@@ -54,7 +54,7 @@
 #include <stdlib.h>
 
 /* Local functions */
-static struct olsr_plugin *olsr_load_legacy_plugin(char *, void *);
+static struct olsr_plugin *olsr_load_legacy_plugin(const char *, void *);
 
 struct avl_tree plugin_tree;
 static bool plugin_tree_initialized = false;
@@ -75,7 +75,7 @@ olsr_hookup_plugin(struct olsr_plugin *pl_def) {
     avl_init(&plugin_tree, avl_comp_strcasecmp);
     plugin_tree_initialized = true;
   }
-  pl_def->p_node.key = pl_def->p_name;
+  pl_def->p_node.key = strdup(pl_def->p_name);
   avl_insert(&plugin_tree, &pl_def->p_node, AVL_DUP_NO);
 }
 
@@ -89,7 +89,7 @@ olsr_unhookup_plugin(struct olsr_plugin *pl_def) {
   avl_delete(&plugin_tree, &pl_def->p_node);
 }
 
-struct olsr_plugin *olsr_get_plugin(char *libname) {
+struct olsr_plugin *olsr_get_plugin(const char *libname) {
   struct avl_node *node;
   if ((node = avl_find(&plugin_tree, libname)) != NULL) {
     return plugin_node2tree(node);
@@ -161,7 +161,7 @@ olsr_destroy_pluginsystem(void) {
 }
 
 static struct olsr_plugin *
-olsr_load_legacy_plugin(char *libname, void *dlhandle) {
+olsr_load_legacy_plugin(const char *libname, void *dlhandle) {
   get_interface_version_func get_interface_version;
   get_plugin_parameters_func get_plugin_parameters;
   plugin_init_func init_plugin;
@@ -202,11 +202,11 @@ olsr_load_legacy_plugin(char *libname, void *dlhandle) {
 
   /* initialize plugin structure */
   plugin = (struct olsr_plugin *)olsr_cookie_malloc(plugin_mem_cookie);
-  plugin->p_name = strdup(libname);
+  plugin->p_name = libname;
   plugin->p_version = plugin_interface_version;
   plugin->p_legacy_init = init_plugin;
 
-  plugin->p_node.key = plugin->p_name;
+  plugin->p_node.key = strdup(plugin->p_name);
   plugin->dlhandle = dlhandle;
 
   /* get parameters */
@@ -224,7 +224,7 @@ olsr_load_legacy_plugin(char *libname, void *dlhandle) {
  *@return dlhandle
  */
 struct olsr_plugin *
-olsr_load_plugin(char *libname)
+olsr_load_plugin(const char *libname)
 {
   void *dlhandle;
   struct olsr_plugin *plugin;
@@ -291,7 +291,6 @@ olsr_unload_plugin(struct olsr_plugin *plugin) {
    * modern plugins
    */
   if (legacy) {
-    free(plugin->p_name);
     olsr_cookie_free(plugin_mem_cookie, plugin);
   }
   return false;
