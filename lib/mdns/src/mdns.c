@@ -75,7 +75,7 @@ PacketReceivedFromOLSR(unsigned char *encapsulationUdpData, int len)
   //union olsr_ip_addr mcSrc;            /* Original source of the encapsulated multicast packet */
   //union olsr_ip_addr mcDst;            /* Multicast destination of the encapsulated packet */
   struct TBmfInterface *walker;
-  int stripped_len;
+  int stripped_len = 0;
   ipHeader = (struct ip *)(ARM_NOWARN_ALIGN)encapsulationUdpData;
   ip6Header = (struct ip6_hdr *)(ARM_NOWARN_ALIGN)encapsulationUdpData;
   //mcSrc.v4 = ipHeader->ip_src;
@@ -100,6 +100,8 @@ PacketReceivedFromOLSR(unsigned char *encapsulationUdpData, int len)
         dest.sll_protocol = htons(ETH_P_IPV6);
         stripped_len = 40 + ntohs(ip6Header->ip6_plen); //IPv6 Header size (40) + payload_len 
         }
+      // Sven-Ola: Don't know how to handle the "stripped_len is uninitialized" condition, maybe exit(1) is better...?
+      if (0 == stripped_len) return;
       //TODO: if packet is not IP die here
       
       if (stripped_len > len) {
