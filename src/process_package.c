@@ -198,10 +198,10 @@ olsr_init_package_process(void)
 void
 olsr_deinit_package_process(void)
 {
-  olsr_parser_remove_function(&olsr_input_hello, olsr_get_Hello_MessageId());
-  olsr_parser_remove_function(&olsr_input_tc, olsr_get_TC_MessageId());
-  olsr_parser_remove_function(&olsr_input_mid, MID_MESSAGE);
-  olsr_parser_remove_function(&olsr_input_hna, HNA_MESSAGE);
+  olsr_parser_remove_function(&olsr_input_hello);
+  olsr_parser_remove_function(&olsr_input_tc);
+  olsr_parser_remove_function(&olsr_input_mid);
+  olsr_parser_remove_function(&olsr_input_hna);
 }
 
 static bool

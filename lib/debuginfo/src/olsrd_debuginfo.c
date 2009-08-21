@@ -171,7 +171,7 @@ debuginfo_delete(void)
   for (i=0; i<ARRAYSIZE(commands); i++) {
     olsr_com_remove_normal_txtcommand(commands[i].cmd);
   }
-  olsr_parser_remove_function(&olsr_msg_statistics, PROMISCUOUS);
+  olsr_parser_remove_function(&olsr_msg_statistics);
   olsr_preprocessor_remove_function(&olsr_packet_statistics);
   ip_acl_flush(&allowed_nets);
 }

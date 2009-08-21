@@ -90,7 +90,7 @@ void
   EXPORT(olsr_parser_add_function) (parse_function, uint32_t);
 
 int
-  EXPORT(olsr_parser_remove_function) (parse_function, uint32_t);
+  EXPORT(olsr_parser_remove_function) (parse_function);
 
 void
   EXPORT(olsr_preprocessor_add_function) (preprocessor_function);

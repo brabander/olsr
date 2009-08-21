@@ -495,7 +495,7 @@ name_destructor(void)
 {
   OLSR_INFO(LOG_PLUGINS, "NAME PLUGIN: exit. cleaning up...\n");
 
-  olsr_parser_remove_function(&olsr_parser, PARSER_TYPE);
+  olsr_parser_remove_function(&olsr_parser);
 
   free_name_entry_list(&my_names);
   free_name_entry_list(&my_services);

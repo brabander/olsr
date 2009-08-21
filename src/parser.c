@@ -104,12 +104,12 @@ olsr_parser_add_function(parse_function * function, uint32_t type)
 }
 
 int
-olsr_parser_remove_function(parse_function * function, uint32_t type)
+olsr_parser_remove_function(parse_function * function)
 {
   struct parse_function_entry *entry, *prev;
 
   for (entry = parse_functions, prev = NULL; entry != NULL; prev = entry, entry = entry->next) {
-    if ((entry->function == function) && (entry->type == type)) {
+    if ((entry->function == function)) {
       if (entry == parse_functions) {
         parse_functions = entry->next;
       } else {
