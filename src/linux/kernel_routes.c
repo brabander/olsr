@@ -72,7 +72,7 @@ struct olsr_rtreq {
 static void
 olsr_netlink_addreq(struct olsr_rtreq *req, int type, const void *data, int len)
 {
-  struct rtattr *rta = (struct rtattr *)(((char *)req) + NLMSG_ALIGN(req->n.nlmsg_len));
+  struct rtattr *rta = (struct rtattr *)(ARM_NOWARN_ALIGN)(((char *)req) + NLMSG_ALIGN(req->n.nlmsg_len));
   req->n.nlmsg_len = NLMSG_ALIGN(req->n.nlmsg_len) + RTA_LENGTH(len);
   assert(req->n.nlmsg_len < sizeof(struct olsr_rtreq));
   rta->rta_type = type;
@@ -213,7 +213,7 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
     iov.iov_base = req.buf;
     iov.iov_len = sizeof(req.buf);
     if (0 < (ret = recvmsg(olsr_cnf->rtnl_s, &msg, 0))) {
-      struct nlmsghdr *h = (struct nlmsghdr *)req.buf;
+      struct nlmsghdr *h = (struct nlmsghdr *)(ARM_NOWARN_ALIGN)req.buf;
       while (NLMSG_OK(h, (unsigned int)ret)) {
         if (NLMSG_DONE == h->nlmsg_type) {
           /* seems to reached never */
@@ -320,7 +320,13 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
           olsr_syslog(OLSR_LOG_INFO,"_received %u Byte rtnetlink response of type %u with seqnr %u and flags %u from %u (%u)",
               h->nlmsg_len, h->nlmsg_type, h->nlmsg_seq, h->nlmsg_flags, h->nlmsg_pid, NLMSG_ERROR);
         }
-        h = NLMSG_NEXT(h, ret);
+/*
+ * The ARM compile complains about alignment. Copied
+ * from /usr/include/linux/netlink.h and adapted for ARM
+ */
+#define MY_NLMSG_NEXT(nlh,len)	 ((len) -= NLMSG_ALIGN((nlh)->nlmsg_len), \
+				  (struct nlmsghdr*)(ARM_NOWARN_ALIGN)(((char*)(nlh)) + NLMSG_ALIGN((nlh)->nlmsg_len)))
+        h = MY_NLMSG_NEXT(h, ret);
       }
     }
   }

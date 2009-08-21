@@ -372,7 +372,7 @@ serialize_hello4(struct hello_message *message, struct interface *ifp)
         *haddr = nb->address;
 
         /* Point to next address */
-        haddr = (union olsr_ip_addr *)&haddr->v6.s6_addr[4];
+        haddr += sizeof(haddr->v4);
         curr_size += olsr_cnf->ipsize;  /* IP address added */
 
         first_entry = false;

@@ -113,6 +113,15 @@ extern FILE *debug_handle;
 #define INLINE inline __attribute__((always_inline))
 
 /*
+ * On ARM, the compiler spits out additional warnings if called
+ * with -Wcast-align if you cast e.g. char* -> int*. While this
+ * is fine, most of that warnings are un-critical. Also the ARM
+ * CPU will throw BUS_ERROR if alignment does not fit. For this,
+ * we add an additional cast to (void *) to prevent the warning.
+ */
+#define ARM_NOWARN_ALIGN void *
+
+/*
  * A somewhat safe version of strncpy and strncat. Note, that
  * BSD/Solaris strlcpy()/strlcat() differ in implementation, while
  * the BSD compiler prints out a warning if you use plain strcpy().
