@@ -62,7 +62,7 @@ struct link_entry {
   char *if_name;
   struct timer_entry *link_timer;
   struct timer_entry *link_sym_timer;
-  clock_t ASYM_time;
+  uint32_t ASYM_time;
   olsr_reltime vtime;
   struct neighbor_entry *neighbor;
   uint8_t prev_status;
@@ -72,7 +72,7 @@ struct link_entry {
    */
   float L_link_quality;
   int L_link_pending;
-  clock_t L_LOST_LINK_time;
+  uint32_t L_LOST_LINK_time;
   struct timer_entry *link_hello_timer; /* When we should receive a new HELLO */
   olsr_reltime last_htime;
   bool olsr_seqno_valid;

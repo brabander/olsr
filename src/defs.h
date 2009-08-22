@@ -94,13 +94,13 @@ extern FILE *debug_handle;
  * Provides a timestamp s1 milliseconds in the future according
  * to system ticks returned by times(2)
 */
-#define GET_TIMESTAMP(s1)	(now_times + ((s1) / olsr_cnf->system_tick_divider))
+#define GET_TIMESTAMP(s1)	olsr_getTimestamp(s1)
 
 /* Compute the time in milliseconds when a timestamp will expire. */
-#define TIME_DUE(s1)   ((int)((s1) * olsr_cnf->system_tick_divider) - now_times)
+#define TIME_DUE(s1)   olsr_getTimeDue(s1)
 
 /* Returns TRUE if a timestamp is expired */
-#define TIMED_OUT(s1)	((int)((s1) - now_times) < 0)
+#define TIMED_OUT(s1)	olsr_isTimedOut(s1)
 
 #define ARRAYSIZE(x)	(sizeof(x)/sizeof(*(x)))
 #ifndef MAX
@@ -182,21 +182,14 @@ strscat(char *dest, const char *src, size_t size)
 extern struct olsrd_config *olsr_cnf;
 
 /* Timer data */
-extern clock_t now_times;              /* current idea of times(2) reported uptime */
+extern uint32_t now_times1;              /* current idea of times(2) reported uptime */
 
 #if defined WIN32
 extern bool olsr_win32_end_request;
 extern bool olsr_win32_end_flag;
 #endif
 
-/*
- * a wrapper around times(2). times(2) has the problem, that it may return -1
- * in case of an err (e.g. EFAULT on the parameter) or immediately before an
- * overrun (though it is not en error) just because the jiffies (or whatever
- * the underlying kernel calls the smallest accountable time unit) are
- * inherently "unsigned" (and always incremented).
- */
-clock_t olsr_times(void);
+uint32_t olsr_times(void);
 
 /*
  *IPC functions

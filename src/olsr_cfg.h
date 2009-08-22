@@ -224,7 +224,6 @@ struct olsrd_config {
 
   float min_tc_vtime;
   /* Stuff set by olsrd */
-  uint16_t system_tick_divider;        /* Tick resolution */
   uint8_t maxplen;                     /* maximum prefix len */
   size_t ipsize;                       /* Size of address */
   bool del_gws;                        /* Delete InternetGWs at startup */

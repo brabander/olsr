@@ -67,7 +67,7 @@ static void check_buffspace(int msgsize, int buffsize, const char *type);
 static uint32_t msg_buffer_align[(MAXMESSAGESIZE - OLSR_HEADERSIZE)/sizeof(uint32_t) + 1];
 static uint8_t *msg_buffer = (uint8_t *)msg_buffer_align;
 
-static clock_t send_empty_tc;          /* TC empty message sending */
+static uint32_t send_empty_tc;          /* TC empty message sending */
 
 /* Prototypes for internal functions */
 
@@ -96,7 +96,7 @@ static bool serialize_hna6(struct interface *);
  * empty TC messages
  */
 void
-set_empty_tc_timer(clock_t empty_tc_new)
+set_empty_tc_timer(uint32_t empty_tc_new)
 {
   send_empty_tc = empty_tc_new;
 }
@@ -105,7 +105,7 @@ set_empty_tc_timer(clock_t empty_tc_new)
  * Get the timer that controls the generation of
  * empty TC messages
  */
-clock_t
+uint32_t
 get_empty_tc_timer(void)
 {
   return send_empty_tc;
@@ -650,8 +650,8 @@ serialize_tc4(struct tc_message *message, struct interface *ifp)
   } else {
     if ((!partial_sent) && (!TIMED_OUT(send_empty_tc))) {
       if (!TIMED_OUT(send_empty_tc))
-        OLSR_PRINTF(1, "TC: Sending empty package - (%d/%d/%d/%d)\n", partial_sent, (int)send_empty_tc, (int)now_times,
-                    (int)((send_empty_tc) - now_times));
+        OLSR_PRINTF(1, "TC: Sending empty package - (%d/%d/%d/%d)\n", partial_sent, (int)send_empty_tc, (int)now_times1,
+                    (int)((send_empty_tc) - now_times1));
 
       m->v4.olsr_msgsize = htons(curr_size);
       m->v4.seqno = htons(get_msg_seqno());

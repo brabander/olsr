@@ -353,11 +353,11 @@ ipc_print_link(struct autobuf *abuf)
   /* Link set */
   OLSR_FOR_ALL_LINK_ENTRIES(my_link) {
 #ifdef ACTIVATE_VTIME_TXTINFO
-    int diff = olsr_cnf->system_tick_divider * (unsigned int)(my_link->ASYM_time - now_times);
+    int diff = (unsigned int)(my_link->link_timer->timer_clock - now_times1);
 
     abuf_appendf(abuf, "%s\t%s\t%d.%03d\t%s\t%s\t\n", olsr_ip_to_string(&buf1, &my_link->local_iface_addr),
               olsr_ip_to_string(&buf2, &my_link->neighbor_iface_addr),
-              diff/1000, diff%1000,
+              diff/1000, abs(diff%1000),
               get_link_entry_text(my_link, '\t', &lqbuffer1),
               get_linkcost_text(my_link->linkcost, false, &lqbuffer2));
 #else
@@ -411,8 +411,8 @@ ipc_print_topology(struct autobuf *abuf)
         struct ipaddr_str dstbuf, addrbuf;
         struct lqtextbuffer lqbuffer1, lqbuffer2;
 #ifdef ACTIVATE_VTIME_TXTINFO
-        clock_t vt = tc->validity_timer != NULL ? (tc->validity_timer->timer_clock - now_times) : 0;
-        int diff = olsr_cnf->system_tick_divider * (int)(vt);
+        uint32_t vt = tc->validity_timer != NULL ? (tc->validity_timer->timer_clock - now_times1) : 0;
+        int diff = (int)(vt);
         abuf_appendf(abuf, "%s\t%s\t%s\t%s\t%d.%03d\n", olsr_ip_to_string(&dstbuf, &tc_edge->T_dest_addr),
             olsr_ip_to_string(&addrbuf, &tc->addr),
             get_tc_edge_entry_text(tc_edge, '\t', &lqbuffer1),

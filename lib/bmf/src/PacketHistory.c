@@ -51,6 +51,7 @@
 /* OLSRD includes */
 #include "defs.h"               /* GET_TIMESTAMP, TIMED_OUT */
 #include "olsr.h"               /* olsr_printf */
+#include "scheduler.h"
 
 /* Plugin includes */
 #include "Packet.h"
@@ -245,7 +246,7 @@ CheckAndMarkRecentPacket(u_int32_t crc32)
       /* Found duplicate entry */
 
       /* Always mark as "seen recently": refresh time-out */
-      walker->timeOut = GET_TIMESTAMP(HISTORY_HOLD_TIME);
+      walker->timeOut = olsr_getTimestamp(HISTORY_HOLD_TIME);
 
       return 1;
     }                           /* if */

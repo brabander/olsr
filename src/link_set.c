@@ -50,6 +50,7 @@
 #include "mpr.h"
 #include "neighbor_table.h"
 #include "olsr.h"
+#include "log.h"
 #include "scheduler.h"
 #include "olsr_spf.h"
 #include "net_olsr.h"
@@ -556,6 +557,7 @@ add_link_entry(const union olsr_ip_addr *local, const union olsr_ip_addr *remote
 
     olsr_set_timer(&new_link->link_loss_timer, htime + htime / 2, OLSR_LINK_LOSS_JITTER, OLSR_TIMER_PERIODIC,
                    &olsr_expire_link_loss_timer, new_link, 0);
+
 
     set_loss_link_multiplier(new_link);
   }

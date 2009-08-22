@@ -58,17 +58,99 @@
 #include "olsr_cookie.h"
 
 /* Timer data, global. Externed in defs.h */
-clock_t now_times;                     /* current idea of times(2) reported uptime */
+uint32_t now_times1;                    /* relative time compared to startup (in milliseconds */
+struct timeval first_tv;               /* timevalue during startup */
+struct timeval last_tv;                /* timevalue used for last olsr_times() calculation */
 
 /* Hashed root of all timers */
-struct list_node timer_wheel[TIMER_WHEEL_SLOTS];
-clock_t timer_last_run;                /* remember the last timeslot walk */
+static struct list_node timer_wheel[TIMER_WHEEL_SLOTS];
+static uint32_t timer_last_run1;                /* remember the last timeslot walk */
 
 /* Pool of timers to avoid malloc() churn */
-struct list_node free_timer_list;
+static struct list_node free_timer_list;
 
 /* Statistics */
 unsigned int timers_running;
+
+uint32_t
+olsr_times(void)
+{
+  struct timeval tv;
+  uint32_t t;
+
+  if (gettimeofday(&tv, NULL) != 0) {
+    OLSR_PRINTF(0, "OS clock is not working, have to shut down OLSR (%s)\n", strerror(errno));
+    exit(0);
+  }
+
+  /* test if time jumped backward or more than 60 seconds forward */
+  if (tv.tv_sec < last_tv.tv_sec || (tv.tv_sec == last_tv.tv_sec && tv.tv_usec < last_tv.tv_usec)
+      || tv.tv_sec - last_tv.tv_sec > 60) {
+    OLSR_PRINTF(3, "Time jump (%d.%06d to %d.%06d)\n",
+              (int32_t) (last_tv.tv_sec), (int32_t) (last_tv.tv_usec), (int32_t) (tv.tv_sec), (int32_t) (tv.tv_usec));
+
+    t = (last_tv.tv_sec - first_tv.tv_sec) * 1000 + (last_tv.tv_usec - first_tv.tv_usec) / 1000;
+    t++;                        /* advance time by one millisecond */
+
+    first_tv = tv;
+    first_tv.tv_sec -= (t / 1000);
+    first_tv.tv_usec -= ((t % 1000) * 1000);
+
+    if (first_tv.tv_usec < 0) {
+      first_tv.tv_sec--;
+      first_tv.tv_usec += 1000000;
+    }
+    last_tv = tv;
+    return t;
+  }
+  last_tv = tv;
+  return (tv.tv_sec - first_tv.tv_sec) * 1000 + (tv.tv_usec - first_tv.tv_usec) / 1000;
+}
+
+/**
+ * Returns a timestamp s seconds in the future
+ */
+uint32_t
+olsr_getTimestamp(uint32_t s)
+{
+  return now_times1 + s;
+}
+
+/**
+ * Returns the number of milliseconds until the timestamp will happen
+ */
+
+int32_t
+olsr_getTimeDue(uint32_t s)
+{
+  uint32_t diff;
+  if (s > now_times1) {
+    diff = s - now_times1;
+
+    /* overflow ? */
+    if (diff > (1u << 31)) {
+      return -(int32_t) (0xffffffff - diff);
+    }
+    return (int32_t) (diff);
+  }
+
+  diff = now_times1 - s;
+  /* overflow ? */
+  if (diff > (1u << 31)) {
+    return (int32_t) (0xffffffff - diff);
+  }
+  return -(int32_t) (diff);
+}
+
+bool
+olsr_isTimedOut(uint32_t s)
+{
+  if (s > now_times1) {
+    return s - now_times1 > (1u << 31);
+  }
+
+  return now_times1 - s <= (1u << 31);
+}
 
 /**
  * Sleep until the next scheduling interval.
@@ -77,7 +159,7 @@ unsigned int timers_running;
  * @return nada
  */
 static void
-olsr_scheduler_sleep(unsigned long scheduler_runtime)
+olsr_scheduler_sleep(uint32_t scheduler_runtime)
 {
   struct timespec remainder_spec, sleeptime_spec;
   struct timeval sleeptime_val, time_used, next_interval;
@@ -90,7 +172,7 @@ olsr_scheduler_sleep(unsigned long scheduler_runtime)
   next_interval.tv_usec = next_interval_usec % USEC_PER_SEC;
 
   /* Determine used runtime */
-  milliseconds_used = scheduler_runtime * olsr_cnf->system_tick_divider;
+  milliseconds_used = scheduler_runtime;
   time_used.tv_sec = milliseconds_used / MSEC_PER_SEC;
   time_used.tv_usec = (milliseconds_used % MSEC_PER_SEC) * USEC_PER_MSEC;
 
@@ -129,13 +211,13 @@ olsr_scheduler(void)
      * Update the global timestamp. We are using a non-wallclock timer here
      * to avoid any undesired side effects if the system clock changes.
      */
-    now_times = olsr_times();
+    now_times1 = olsr_times();
 
     /* Read incoming data */
     olsr_poll_sockets();
 
     /* Process timers (before packet generation) */
-    olsr_walk_timers(&timer_last_run);
+    olsr_walk_timers(&timer_last_run1);
 
     /* Update */
     olsr_process_changes();
@@ -155,7 +237,7 @@ olsr_scheduler(void)
     }
 
     /* We are done, sleep until the next scheduling interval. */
-    olsr_scheduler_sleep(olsr_times() - now_times);
+    olsr_scheduler_sleep(olsr_times() - now_times1);
 
 #if defined WIN32
     /* The Ctrl-C signal handler thread asks us to exit */
@@ -187,7 +269,7 @@ olsr_scheduler(void)
  * @param cached result of random() at system init.
  * @return the absolute timer in system clock tick units
  */
-static clock_t
+static uint32_t
 olsr_jitter(unsigned int rel_time, uint8_t jitter_pct, unsigned int random_val)
 {
   unsigned int jitter_time;
@@ -298,7 +380,14 @@ olsr_init_timers(void)
   /*
    * Reset the last timer run.
    */
-  timer_last_run = now_times;
+  timer_last_run1 = now_times1;
+
+  if (gettimeofday(&first_tv, NULL)) {
+    OLSR_PRINTF(0, "OS clock is not working, have to shut down OLSR (%d)\n", errno);
+    exit(1);
+  }
+  last_tv = first_tv;
+  now_times1 = olsr_times();
 
   /* Timer memory pooling */
   list_head_init(&free_timer_list);
@@ -310,7 +399,7 @@ olsr_init_timers(void)
  * Callback the provided function with the context pointer.
  */
 void
-olsr_walk_timers(clock_t * last_run)
+olsr_walk_timers(uint32_t * last_run)
 {
   static struct timer_entry *timer;
   struct list_node *timer_head_node;
@@ -325,7 +414,7 @@ olsr_walk_timers(clock_t * last_run)
    * The latter is meant as a safety belt if the scheduler falls behind.
    */
   total_timers_walked = total_timers_fired = timers_walked = timers_fired = 0;
-  while ((*last_run <= now_times) && (wheel_slot_walks < TIMER_WHEEL_SLOTS)) {
+  while ((*last_run <= now_times1) && (wheel_slot_walks < TIMER_WHEEL_SLOTS)) {
 
     /* keep some statistics */
     total_timers_walked += timers_walked;
@@ -408,7 +497,7 @@ olsr_walk_timers(clock_t * last_run)
    * If the scheduler has slipped and we have walked all wheel slots,
    * reset the last timer run.
    */
-  *last_run = now_times;
+  *last_run = now_times1;
 }
 
 /**
@@ -492,19 +581,16 @@ olsr_wallclock_string(void)
  * @return buffer to a formatted system time string.
  */
 const char *
-olsr_clock_string(clock_t the_clock)
+olsr_clock_string(uint32_t clk)
 {
   static char buf[4][sizeof("00:00:00.000")];
   static int idx = 0;
   char *ret;
-  unsigned int sec, msec;
+  unsigned int msec = clk % 1000;
+  unsigned int sec = clk / 1000;
 
   ret = buf[idx];
   idx = (idx + 1) & 3;
-
-  /* On most systems a clocktick is a 10ms quantity. */
-  msec = olsr_cnf->system_tick_divider * (unsigned int)(the_clock - now_times);
-  sec = msec / MSEC_PER_SEC;
 
   snprintf(ret, sizeof(buf) / 4, "%02u:%02u:%02u.%03u", sec / 3600, (sec % 3600) / 60, (sec % 60), (msec % MSEC_PER_SEC));
 
