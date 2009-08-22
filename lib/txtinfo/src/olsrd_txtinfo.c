@@ -177,7 +177,7 @@ static char *values_topology[] = {
   buf_rawlinkcost, buf_linkcost, buf_rawcommoncost, buf_commoncost
 };
 
-static const char *tmpl_hna = "%localip%\t%destprefix%\t%vtime%\n";
+static const char *tmpl_hna = "%destprefix%\t%localip%\t%vtime%\n";
 static const char *keys_hna[] = {
   KEY_LOCALIP, KEY_DESTPREFIX, KEY_VTIME
 };
@@ -511,8 +511,13 @@ txtinfo_hna(struct comport_connection *con,  char *cmd __attribute__ ((unused)),
   OLSR_FOR_ALL_TC_ENTRIES(tc) {
     struct hna_net *tmp_net;
 
-    olsr_ip_to_string(&buf_localip, &olsr_cnf->router_id);
-    olsr_milli_to_txt(&buf_vtime, tc->validity_timer->timer_clock - now_times);
+    olsr_ip_to_string(&buf_localip, &tc->addr);
+    if (tc->validity_timer) {
+      olsr_milli_to_txt(&buf_vtime, tc->validity_timer->timer_clock - now_times);
+    }
+    else {
+      strscpy(buf_vtime.buf, "0.0", sizeof(buf_vtime));
+    }
 
     /* Check all networks */
     OLSR_FOR_ALL_TC_HNA_ENTRIES(tc, tmp_net) {
@@ -569,7 +574,12 @@ txtinfo_mid(struct comport_connection *con,  char *cmd __attribute__ ((unused)),
 
     olsr_ip_to_string(&buf_localip, &tc->addr);
     if (tc->validity_timer) {
-      olsr_milli_to_txt(&buf_vtime, tc->validity_timer->timer_clock - now_times);
+      if (tc->validity_timer) {
+        olsr_milli_to_txt(&buf_vtime, tc->validity_timer->timer_clock - now_times);
+      }
+      else {
+        strscpy(buf_vtime.buf, "0.0", sizeof(buf_vtime));
+      }
 
       OLSR_FOR_ALL_TC_MID_ENTRIES(tc, alias) {
         olsr_ip_to_string(&buf_aliasip, &alias->mid_alias_addr);
