@@ -341,7 +341,11 @@ olsr_cookie_free(struct olsr_cookie_info *ci, void *ptr)
    * Verify if there has been a memory overrun, or
    * the wrong owner is trying to free this.
    */
-  assert(!memcmp(&branding->cmb_sig, "cookie", 6) && branding->id == ci->ci_membrand);
+
+  if (!(memcmp(&branding->cmb_sig, "cookie", 6) == 0 && branding->id == ci->ci_membrand)) {
+    OLSR_ERROR(LOG_COOKIE, "Memory corruption at end of '%s' cookie\n", ci->ci_name);
+    olsr_exit(1);
+  }
 
   /* Kill the brand */
   memset(branding, 0, sizeof(*branding));

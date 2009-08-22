@@ -64,7 +64,6 @@ struct tc_edge_entry {
   struct tc_entry *tc;                 /* backpointer to owning tc entry */
   olsr_linkcost cost;                  /* metric for tc received by this tc */
   olsr_linkcost common_cost;           /* common metric of both edges used for SPF calculation */
-  unsigned int is_local:1;             /* 1 if this is a local edge */
   unsigned int is_virtual:1;           /* 1 if this is a virtual edge created by the neighbors TC ? */
   uint16_t ansn;                       /* ansn of this edge, used for multipart msgs */
 };

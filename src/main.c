@@ -328,7 +328,7 @@ main(int argc, char *argv[])
     }
   }
   /* Initializing networkinterfaces */
-  if (!ifinit()) {
+  if (!init_interfaces()) {
     if (olsr_cnf->allow_no_interfaces) {
       OLSR_INFO(LOG_MAIN,
                 "No interfaces detected! This might be intentional, but it also might mean that your configuration is fubar.\nI will continue after 5 seconds...\n");
@@ -510,7 +510,6 @@ static void
 olsr_shutdown(void)
 {
   struct mid_entry *mid;
-  struct interface *iface;
 
   olsr_delete_all_kernel_routes();
 
@@ -536,10 +535,7 @@ olsr_shutdown(void)
   olsr_destroy_pluginsystem();
 
   /* Remove active interfaces */
-  OLSR_FOR_ALL_INTERFACES(iface) {
-    struct interface **ptr = &iface;
-    remove_interface(ptr);
-  } OLSR_FOR_ALL_INTERFACES_END(iface)
+  destroy_interfaces();
 
   /* delete lo:olsr if neccesarry */
   if (olsr_cnf->source_ip_mode) {

@@ -217,8 +217,9 @@ extern struct list_node EXPORT(interface_head);
 typedef int (*ifchg_cb_func) (struct interface *, int);
 
 
-bool ifinit(void);
+bool init_interfaces(void);
 bool EXPORT(is_lost_interface_ip)(union olsr_ip_addr *ip);
+void destroy_interfaces(void);
 void remove_interface(struct interface **);
 void run_ifchg_cbs(struct interface *, int);
 struct interface *if_ifwithsock(int);

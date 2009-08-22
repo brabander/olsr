@@ -75,7 +75,6 @@ struct olsr_txtcommand *EXPORT(olsr_com_add_normal_txtcommand) (
 struct olsr_txtcommand *EXPORT(olsr_com_add_help_txtcommand) (
     const char *command, olsr_txthandler handler);
 void EXPORT(olsr_com_remove_normal_txtcommand) (struct olsr_txtcommand *cmd);
-void EXPORT(olsr_com_remove_csv_txtcommand) (struct olsr_txtcommand *cmd);
 void EXPORT(olsr_com_remove_help_txtcommand) (struct olsr_txtcommand *cmd);
 
 enum olsr_txtcommand_result olsr_com_handle_txtcommand(struct comport_connection *con,

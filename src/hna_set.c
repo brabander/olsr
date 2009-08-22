@@ -149,7 +149,11 @@ void
 olsr_flush_hna_nets(struct tc_entry *tc)
 {
   struct hna_net *hna_net;
+#if !defined REMOVE_LOG_DEBUG
+  struct ipaddr_str buf;
+#endif
 
+  OLSR_DEBUG(LOG_TC, "flush hna nets of '%s' (%u)\n", olsr_ip_to_string(&buf, &tc->addr), tc->edge_tree.count);
   OLSR_FOR_ALL_TC_HNA_ENTRIES(tc, hna_net) {
     olsr_delete_hna_net(hna_net);
   } OLSR_FOR_ALL_TC_HNA_ENTRIES_END(tc, hna_net);

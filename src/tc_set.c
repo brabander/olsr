@@ -196,12 +196,6 @@ olsr_change_myself_tc(void)
     if (main_ip_change || entry->link_tc_edge == NULL) {
       struct nbr_entry *ne = entry->neighbor;
       entry->link_tc_edge = olsr_add_tc_edge_entry(tc_myself, &ne->nbr_addr, 0);
-
-      /*
-       * Mark the edge local such that it does not get deleted
-       * during cleanup functions.
-       */
-      entry->link_tc_edge->is_local = 1;
     }
   } OLSR_FOR_ALL_LINK_ENTRIES_END(link);
   changes_topology = true;
@@ -218,19 +212,23 @@ void
 olsr_delete_tc_entry(struct tc_entry *tc)
 {
   struct tc_edge_entry *tc_edge;
+
 #if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
 #endif
-  OLSR_DEBUG(LOG_TC, "TC: del entry %s\n", olsr_ip_to_string(&buf, &tc->addr));
+  OLSR_DEBUG(LOG_TC, "TC: del entry %s %u %s\n", olsr_ip_to_string(&buf, &tc->addr),
+      tc->edge_tree.count, tc->is_virtual ? "true" : "false");
 
   /* we don't want to keep this node */
   tc->is_virtual = true;
 
+  if (tc->edge_tree.count == 0) {
+    olsr_cleanup_tc_entry(tc);
+    return;
+  }
   /* The delete all non-virtual edges, the last one will clean up the tc if possible */
   OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
-    /* we don't need this edge for the tc, so mark it virtual for possible cleanup */
-
-    tc_edge->is_virtual = 1;
+    /* we don't need this edge for the tc, so let's try to remove it */
     olsr_delete_tc_edge_entry(tc_edge);
   } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
 }
@@ -243,13 +241,10 @@ olsr_delete_tc_entry(struct tc_entry *tc)
 static void
 olsr_cleanup_tc_entry(struct tc_entry *tc) {
   struct rt_path *rtp;
+  struct ipaddr_str buf;
 
+  OLSR_DEBUG(LOG_TC, "TC: del entry %s %u\n", olsr_ip_to_string(&buf, &tc->addr), tc->refcount);
   assert (tc->edge_tree.count == 0);
-
-  /*
-   * Delete the rt_path for ourselves.
-   */
-  olsr_delete_routing_table(&tc->addr, 8 * olsr_cnf->ipsize, &tc->addr, OLSR_RT_ORIGIN_TC);
 
   OLSR_FOR_ALL_PREFIX_ENTRIES(tc, rtp) {
     olsr_delete_rt_path(rtp);
@@ -431,7 +426,7 @@ olsr_add_tc_edge_entry(struct tc_entry *tc, union olsr_ip_addr *addr, uint16_t a
   }
 
   /* don't create an inverse edge for a tc pointing to us ! */
-  if (tc_neighbor != tc_myself) {
+  if (1 && tc_neighbor != tc_myself) {
     tc_edge_inv = olsr_lookup_tc_edge(tc_neighbor, &tc->addr);
     if (!tc_edge_inv ) {
       OLSR_DEBUG(LOG_TC, "TC:   creating inverse edge for %s\n", olsr_ip_to_string(&buf, &tc->addr));
@@ -462,24 +457,22 @@ olsr_add_tc_edge_entry(struct tc_entry *tc, union olsr_ip_addr *addr, uint16_t a
  *
  * @param tc the TC entry
  * @param tc_edge the TC edge entry
+ * @return true if the tc entry was deleted, false otherwise
  */
 void
 olsr_delete_tc_edge_entry(struct tc_edge_entry *tc_edge)
 {
   struct tc_entry *tc;
-  struct link_entry *link;
   struct tc_edge_entry *tc_edge_inv;
 #if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
 #endif
 
-  tc_edge_inv = tc_edge->edge_inv;
-  if (tc_edge->is_local == 0 && tc_edge_inv != NULL
-      && tc_edge_inv->is_virtual == 0 && tc_edge_inv->is_local == 0) {
-    /* mark this a virtual edge instead of removing it */
-    OLSR_DEBUG(LOG_TC, "TC: mark edge entry %s\n", olsr_tc_edge_to_string(tc_edge));
+  tc_edge->is_virtual = 1;
 
-    tc_edge->is_virtual = 1;
+  tc_edge_inv = tc_edge->edge_inv;
+  if (tc_edge_inv != NULL && tc_edge_inv->is_virtual == 0) {
+    OLSR_DEBUG(LOG_TC, "TC: mark edge entry %s\n", olsr_tc_edge_to_string(tc_edge));
     return;
   }
 
@@ -503,29 +496,14 @@ olsr_delete_tc_edge_entry(struct tc_edge_entry *tc_edge)
 
   /* remove edge from tc FIRST */
   avl_delete(&tc->edge_tree, &tc_edge->edge_node);
+  OLSR_DEBUG(LOG_TC, "TC: %s down to %d edges\n", olsr_ip_to_string(&buf, &tc->addr), tc->edge_tree.count);
 
   /* now check if TC is virtual and has no edges left */
   if (tc->is_virtual && tc->edge_tree.count == 0) {
     /* cleanup virtual tc node */
     olsr_cleanup_tc_entry(tc);
   }
-
-  OLSR_DEBUG(LOG_TC, "TC: %s down to %d edges\n", olsr_ip_to_string(&buf, &tc->addr), tc->edge_tree.count);
   olsr_unlock_tc_entry(tc);
-
-  /*
-   * If this is a local edge, delete all references to it.
-   */
-  if (tc_edge->is_local) {
-    OLSR_FOR_ALL_LINK_ENTRIES(link) {
-      if (link->link_tc_edge == tc_edge) {
-        link->link_tc_edge = NULL;
-        break;
-      }
-    }
-    OLSR_FOR_ALL_LINK_ENTRIES_END(link);
-  }
-
   olsr_free_tc_edge_entry(tc_edge);
 }
 
@@ -544,7 +522,7 @@ delete_outdated_tc_edges(struct tc_entry *tc)
   OLSR_DEBUG(LOG_TC, "TC: deleting outdated TC-edge entries\n");
 
   OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
-    if (SEQNO_GREATER_THAN(tc->ansn, tc_edge->ansn) && !(tc_edge->is_local)) {
+    if (SEQNO_GREATER_THAN(tc->ansn, tc_edge->ansn)) {
       olsr_delete_tc_edge_entry(tc_edge);
       retval = true;
     }
@@ -588,7 +566,7 @@ olsr_delete_revoked_tc_edges(struct tc_entry *tc, uint16_t ansn, union olsr_ip_a
       }
     }
 
-    if (SEQNO_GREATER_THAN(ansn, tc_edge->ansn) && tc_edge->is_local == 0) {
+    if (SEQNO_GREATER_THAN(ansn, tc_edge->ansn)) {
       olsr_delete_tc_edge_entry(tc_edge);
       retval = 1;
     }
@@ -690,10 +668,6 @@ olsr_print_tc_table(void)
 {
 #if !defined REMOVE_LOG_INFO
   /* The whole function makes no sense without it. */
-  static char LOCAL[] = "local";
-  static char VIRTUAL[] = "virtual";
-  static char NORMAL[] = "";
-
   struct tc_entry *tc;
   const int ipwidth = olsr_cnf->ip_version == AF_INET ? 15 : 30;
 
@@ -706,20 +680,12 @@ olsr_print_tc_table(void)
     OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
       struct ipaddr_str addrbuf, dstaddrbuf;
       char lqbuffer1[LQTEXT_MAXLENGTH], lqbuffer2[LQTEXT_MAXLENGTH];
-      char *type = NORMAL;
-      /* there should be no local virtual edges ! */
-      if (tc_edge->is_local) {
-        type = LOCAL;
-      }
-      else if (tc_edge->is_virtual) {
-        type = VIRTUAL;
-      }
 
       OLSR_INFO_NH(LOG_TC, "%-*s %-*s %-7s      %8s %8s\n",
                    ipwidth, olsr_ip_to_string(&addrbuf, &tc->addr),
                    ipwidth, olsr_ip_to_string(&dstaddrbuf,
                                               &tc_edge->T_dest_addr),
-                   type,
+                   tc_edge->is_virtual ? "virtual" : "",
                    olsr_get_linkcost_text(tc_edge->cost, false, lqbuffer1, sizeof(lqbuffer1)),
                    olsr_get_linkcost_text(tc_edge->common_cost, false, lqbuffer2, sizeof(lqbuffer2)));
 
@@ -922,41 +888,29 @@ getRelevantTcCount(void)
 void
 olsr_delete_all_tc_entries(void) {
   struct tc_entry *tc;
-  struct tc_edge_entry *edge;
-
-  if (NULL == tc_myself) return;
-
-  /* first mark all nodes non-virtual and all edges virtual */
-  tc_myself->is_virtual = false;
-  OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc_myself, edge) {
-    edge->is_virtual = 1;
-  } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc_myself, edge)
-
-  OLSR_FOR_ALL_TC_ENTRIES(tc) {
-    tc->is_virtual = false;
-    OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, edge) {
-      edge->is_virtual = 1;
-    } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, edge)
-  }OLSR_FOR_ALL_TC_ENTRIES_END(tc)
-
-  /* erase all edges */
-  OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc_myself, edge) {
-    olsr_delete_tc_edge_entry(edge);
-  } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc_myself, edge)
-  OLSR_FOR_ALL_TC_ENTRIES(tc) {
-    OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, edge) {
-      olsr_delete_tc_edge_entry(edge);
-    } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, edge)
-  }OLSR_FOR_ALL_TC_ENTRIES_END(tc)
+  struct link_entry *link;
 
   /* then remove all tc entries */
-  tc_myself->is_virtual = true;
-  olsr_delete_tc_entry(tc_myself);
-  tc_myself = NULL;
   OLSR_FOR_ALL_TC_ENTRIES(tc) {
-    tc->is_virtual = true;
-    olsr_delete_tc_entry(tc);
-  }OLSR_FOR_ALL_TC_ENTRIES_END(tc)
+    tc->is_virtual = 0;
+  } OLSR_FOR_ALL_TC_ENTRIES_END(tc)
+
+  OLSR_FOR_ALL_TC_ENTRIES(tc) {
+    if (tc != tc_myself) {
+      olsr_delete_tc_entry(tc);
+    }
+  } OLSR_FOR_ALL_TC_ENTRIES_END(tc)
+
+  /* kill all references in link_set */
+  OLSR_FOR_ALL_LINK_ENTRIES(link) {
+    link->link_tc_edge = NULL;
+  } OLSR_FOR_ALL_LINK_ENTRIES_END(link)
+
+
+  /* kill tc_myself */
+  olsr_delete_tc_entry(tc_myself);
+  olsr_unlock_tc_entry(tc_myself);
+  tc_myself = NULL;
 }
 
 static uint8_t

@@ -95,7 +95,9 @@ olsr_expire_mid_entries(void *context)
 
   OLSR_DEBUG(LOG_MID, "MID aliases for %s timed out\n", olsr_ip_to_string(&buf, &tc->addr));
 
+  tc->mid_timer = NULL;
   olsr_flush_mid_entries(tc);
+  olsr_unlock_tc_entry(tc);
 }
 
 /**
@@ -107,8 +109,27 @@ olsr_expire_mid_entries(void *context)
 static void
 olsr_set_mid_timer(struct tc_entry *tc, uint32_t rel_timer)
 {
-  olsr_set_timer(&tc->mid_timer, rel_timer, OLSR_MID_JITTER,
-                 OLSR_TIMER_ONESHOT, &olsr_expire_mid_entries, tc, mid_validity_timer_cookie);
+  if (tc->mid_timer) {
+    olsr_change_timer(tc->mid_timer, rel_timer, OLSR_MID_JITTER, OLSR_TIMER_ONESHOT);
+  }
+  else {
+    tc->mid_timer = olsr_start_timer(rel_timer, OLSR_MID_JITTER, OLSR_TIMER_ONESHOT,
+        &olsr_expire_mid_entries, tc, mid_validity_timer_cookie);
+    olsr_lock_tc_entry(tc);
+  }
+}
+
+/**
+ * Delete possible duplicate entries in tc set.
+ * This optimization is not specified in rfc3626.
+ */
+static void
+olsr_flush_tc_duplicates(struct mid_entry *alias) {
+  struct tc_entry *tc;
+  tc = olsr_lookup_tc_entry(&alias->mid_alias_addr);
+  if (tc) {
+    olsr_delete_tc_entry(tc);
+  }
 }
 
 /**
@@ -250,13 +271,7 @@ olsr_insert_mid_entry(const union olsr_ip_addr *main_addr,
    */
   olsr_insert_routing_table(&alias->mid_alias_addr, 8 * olsr_cnf->ipsize, main_addr, OLSR_RT_ORIGIN_MID);
 
-  /*
-   * Start the timer. Because we provide the TC reference
-   * as callback data for the timer we need to lock
-   * the underlying TC entry again.
-   */
   olsr_set_mid_timer(alias->mid_tc, vtime);
-  olsr_lock_tc_entry(tc);
 
   return alias;
 }
@@ -305,6 +320,7 @@ olsr_update_mid_entry(const union olsr_ip_addr *main_addr,
    */
   olsr_fixup_mid_main_addr(main_addr, alias_addr);
   olsr_flush_nbr2_duplicates(alias);
+  olsr_flush_tc_duplicates(alias);
 
   /*
    * Recalculate topology.
@@ -400,11 +416,11 @@ olsr_flush_mid_entries(struct tc_entry *tc)
     olsr_delete_mid_entry(alias);
   } OLSR_FOR_ALL_TC_MID_ENTRIES_END(tc, alias);
 
-  /*
-   * Kill any pending timers.
-   */
-  olsr_set_mid_timer(tc, 0);
-  olsr_unlock_tc_entry(tc);
+  if (tc->mid_timer) {
+    olsr_stop_timer(tc->mid_timer);
+    olsr_unlock_tc_entry(tc);
+    tc->mid_timer = NULL;
+  }
 }
 
 /**

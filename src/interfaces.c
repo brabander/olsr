@@ -92,7 +92,7 @@ static void check_interface_updates(void *);
  * @return if more than zero interfaces were configured
  */
 bool
-ifinit(void)
+init_interfaces(void)
 {
   struct olsr_if_config *tmp_if;
 
@@ -172,6 +172,20 @@ bool
 is_lost_interface_ip(union olsr_ip_addr *ip) {
   assert(ip);
   return get_lost_interface_ip(ip) != NULL;
+}
+
+void destroy_interfaces(void) {
+  struct interface *iface;
+  struct interface_lost *lost;
+
+  OLSR_FOR_ALL_INTERFACES(iface) {
+    struct interface **ptr = &iface;
+    remove_interface(ptr);
+  } OLSR_FOR_ALL_INTERFACES_END(iface)
+
+  OLSR_FOR_ALL_LOSTIF_ENTRIES(lost) {
+    remove_lost_interface_ip(lost);
+  } OLSR_FOR_ALL_LOSTIF_ENTRIES_END(lost);
 }
 
 /**

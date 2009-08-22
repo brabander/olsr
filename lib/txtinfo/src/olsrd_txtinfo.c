@@ -225,6 +225,9 @@ txtinfo_pre_cleanup(void)
   for (i=0; i<ARRAYSIZE(commands); i++) {
     olsr_com_remove_normal_txtcommand(commands[i].cmd);
   }
+  for (i=link_keys_static; i<link_keys_count; i++) {
+    free(values_link[i]);
+  }
   ip_acl_flush(&allowed_nets);
   return false;
 }

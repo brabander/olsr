@@ -61,6 +61,8 @@ static bool plugin_tree_initialized = false;
 
 static struct olsr_cookie_info *plugin_mem_cookie = NULL;
 
+static bool olsr_internal_unload_plugin(struct olsr_plugin *plugin, bool cleanup);
+
 /**
  * This function is called by the constructor of a plugin.
  * because of this the first call has to initialize the list
@@ -70,23 +72,13 @@ static struct olsr_cookie_info *plugin_mem_cookie = NULL;
  */
 void
 olsr_hookup_plugin(struct olsr_plugin *pl_def) {
-  fprintf(stderr, "hookup %s\n", pl_def->p_name);
+  fprintf(stdout, "hookup %s\n", pl_def->p_name);
   if (!plugin_tree_initialized) {
     avl_init(&plugin_tree, avl_comp_strcasecmp);
     plugin_tree_initialized = true;
   }
   pl_def->p_node.key = strdup(pl_def->p_name);
   avl_insert(&plugin_tree, &pl_def->p_node, AVL_DUP_NO);
-}
-
-/**
- * This function is called by the destructor of a plugin.
- *
- * @param pl_def pointer to plugin definition
- */
-void
-olsr_unhookup_plugin(struct olsr_plugin *pl_def) {
-  avl_delete(&plugin_tree, &pl_def->p_node);
 }
 
 struct olsr_plugin *olsr_get_plugin(const char *libname) {
@@ -158,7 +150,7 @@ olsr_destroy_pluginsystem(void) {
 
   OLSR_FOR_ALL_PLUGIN_ENTRIES(plugin) {
     olsr_deactivate_plugin(plugin);
-    olsr_unload_plugin(plugin);
+    olsr_internal_unload_plugin(plugin, true);
   } OLSR_FOR_ALL_PLUGIN_ENTRIES_END(plugin)
 }
 
@@ -263,15 +255,15 @@ olsr_load_plugin(const char *libname)
   return olsr_load_legacy_plugin(libname, dlhandle);
 }
 
-bool
-olsr_unload_plugin(struct olsr_plugin *plugin) {
+static bool
+olsr_internal_unload_plugin(struct olsr_plugin *plugin, bool cleanup) {
   bool legacy = false;
 
   if (plugin->active) {
     olsr_deactivate_plugin(plugin);
   }
 
-  if (plugin->dlhandle == NULL) {
+  if (plugin->dlhandle == NULL && !cleanup) {
     /* this is a static plugin, it cannot be unloaded */
     return true;
   }
@@ -280,6 +272,7 @@ olsr_unload_plugin(struct olsr_plugin *plugin) {
 
   /* remove first from tree */
   avl_delete(&plugin_tree, &plugin->p_node);
+  free(plugin->p_node.key);
 
   legacy = plugin->p_version == 5;
 
@@ -296,6 +289,11 @@ olsr_unload_plugin(struct olsr_plugin *plugin) {
     olsr_cookie_free(plugin_mem_cookie, plugin);
   }
   return false;
+}
+
+bool
+olsr_unload_plugin(struct olsr_plugin *plugin) {
+  return olsr_internal_unload_plugin(plugin, false);
 }
 
 bool olsr_activate_plugin(struct olsr_plugin *plugin) {

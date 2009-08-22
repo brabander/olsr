@@ -113,6 +113,9 @@ static olsr_txthandler txt_internal_handlers[] = {
   olsr_txtcmd_plugin
 };
 
+static struct olsr_txtcommand *txt_internal_normalcmd[ARRAYSIZE(txt_internal_names)];
+static struct olsr_txtcommand *txt_internal_helpcmd[ARRAYSIZE(txt_internal_names)];
+
 void
 olsr_com_init_txt(void) {
   size_t i;
@@ -126,23 +129,17 @@ olsr_com_init_txt(void) {
   txt_repeattimer_cookie = olsr_alloc_cookie("txt repeat timer", OLSR_COOKIE_TYPE_TIMER);
 
   for (i=0; i < ARRAYSIZE(txt_internal_names); i++) {
-    olsr_com_add_normal_txtcommand(txt_internal_names[i], txt_internal_handlers[i]);
-    olsr_com_add_help_txtcommand(txt_internal_names[i], olsr_txtcmd_displayhelp);
+    txt_internal_normalcmd[i] = olsr_com_add_normal_txtcommand(txt_internal_names[i], txt_internal_handlers[i]);
+    txt_internal_helpcmd[i] = olsr_com_add_help_txtcommand(txt_internal_names[i], olsr_txtcmd_displayhelp);
   }
 }
 
 void
 olsr_com_destroy_txt(void) {
-  struct olsr_txtcommand *cmd;
-  struct avl_node *node;
-
-  while ((node = avl_walk_first(&txt_normal_tree)) != NULL) {
-    cmd = txt_tree2cmd(node);
-    olsr_com_remove_normal_txtcommand(cmd);
-  }
-  while ((node = avl_walk_first(&txt_help_tree)) != NULL) {
-    cmd = txt_tree2cmd(node);
-    olsr_com_remove_help_txtcommand(cmd);
+  size_t i;
+  for (i=0; i < ARRAYSIZE(txt_internal_names); i++) {
+    olsr_com_remove_normal_txtcommand(txt_internal_normalcmd[i]);
+    olsr_com_remove_help_txtcommand(txt_internal_helpcmd[i]);
   }
 }
 struct olsr_txtcommand *
