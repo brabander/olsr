@@ -58,13 +58,13 @@
 #include "olsr_cookie.h"
 
 /* Timer data, global. Externed in defs.h */
-uint32_t now_times1;                    /* relative time compared to startup (in milliseconds */
+uint32_t now_times;                    /* relative time compared to startup (in milliseconds */
 struct timeval first_tv;               /* timevalue during startup */
 struct timeval last_tv;                /* timevalue used for last olsr_times() calculation */
 
 /* Hashed root of all timers */
 static struct list_node timer_wheel[TIMER_WHEEL_SLOTS];
-static uint32_t timer_last_run1;                /* remember the last timeslot walk */
+static uint32_t timer_last_run;                /* remember the last timeslot walk */
 
 /* Pool of timers to avoid malloc() churn */
 static struct list_node free_timer_list;
@@ -113,7 +113,7 @@ olsr_times(void)
 uint32_t
 olsr_getTimestamp(uint32_t s)
 {
-  return now_times1 + s;
+  return now_times + s;
 }
 
 /**
@@ -124,8 +124,8 @@ int32_t
 olsr_getTimeDue(uint32_t s)
 {
   uint32_t diff;
-  if (s > now_times1) {
-    diff = s - now_times1;
+  if (s > now_times) {
+    diff = s - now_times;
 
     /* overflow ? */
     if (diff > (1u << 31)) {
@@ -134,7 +134,7 @@ olsr_getTimeDue(uint32_t s)
     return (int32_t) (diff);
   }
 
-  diff = now_times1 - s;
+  diff = now_times - s;
   /* overflow ? */
   if (diff > (1u << 31)) {
     return (int32_t) (0xffffffff - diff);
@@ -145,11 +145,11 @@ olsr_getTimeDue(uint32_t s)
 bool
 olsr_isTimedOut(uint32_t s)
 {
-  if (s > now_times1) {
-    return s - now_times1 > (1u << 31);
+  if (s > now_times) {
+    return s - now_times > (1u << 31);
   }
 
-  return now_times1 - s <= (1u << 31);
+  return now_times - s <= (1u << 31);
 }
 
 /**
@@ -211,13 +211,13 @@ olsr_scheduler(void)
      * Update the global timestamp. We are using a non-wallclock timer here
      * to avoid any undesired side effects if the system clock changes.
      */
-    now_times1 = olsr_times();
+    now_times = olsr_times();
 
     /* Read incoming data */
     olsr_poll_sockets();
 
     /* Process timers (before packet generation) */
-    olsr_walk_timers(&timer_last_run1);
+    olsr_walk_timers(&timer_last_run);
 
     /* Update */
     olsr_process_changes();
@@ -237,7 +237,7 @@ olsr_scheduler(void)
     }
 
     /* We are done, sleep until the next scheduling interval. */
-    olsr_scheduler_sleep(olsr_times() - now_times1);
+    olsr_scheduler_sleep(olsr_times() - now_times);
 
 #if defined WIN32
     /* The Ctrl-C signal handler thread asks us to exit */
@@ -380,14 +380,14 @@ olsr_init_timers(void)
   /*
    * Reset the last timer run.
    */
-  timer_last_run1 = now_times1;
+  timer_last_run = now_times;
 
   if (gettimeofday(&first_tv, NULL)) {
     OLSR_PRINTF(0, "OS clock is not working, have to shut down OLSR (%d)\n", errno);
     exit(1);
   }
   last_tv = first_tv;
-  now_times1 = olsr_times();
+  now_times = olsr_times();
 
   /* Timer memory pooling */
   list_head_init(&free_timer_list);
@@ -414,7 +414,7 @@ olsr_walk_timers(uint32_t * last_run)
    * The latter is meant as a safety belt if the scheduler falls behind.
    */
   total_timers_walked = total_timers_fired = timers_walked = timers_fired = 0;
-  while ((*last_run <= now_times1) && (wheel_slot_walks < TIMER_WHEEL_SLOTS)) {
+  while ((*last_run <= now_times) && (wheel_slot_walks < TIMER_WHEEL_SLOTS)) {
 
     /* keep some statistics */
     total_timers_walked += timers_walked;
@@ -497,7 +497,7 @@ olsr_walk_timers(uint32_t * last_run)
    * If the scheduler has slipped and we have walked all wheel slots,
    * reset the last timer run.
    */
-  *last_run = now_times1;
+  *last_run = now_times;
 }
 
 /**

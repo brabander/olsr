@@ -182,7 +182,7 @@ strscat(char *dest, const char *src, size_t size)
 extern struct olsrd_config *olsr_cnf;
 
 /* Timer data */
-extern uint32_t now_times1;              /* current idea of times(2) reported uptime */
+extern uint32_t now_times;              /* current idea of times(2) reported uptime */
 
 #if defined WIN32
 extern bool olsr_win32_end_request;

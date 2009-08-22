@@ -650,8 +650,8 @@ serialize_tc4(struct tc_message *message, struct interface *ifp)
   } else {
     if ((!partial_sent) && (!TIMED_OUT(send_empty_tc))) {
       if (!TIMED_OUT(send_empty_tc))
-        OLSR_PRINTF(1, "TC: Sending empty package - (%d/%d/%d/%d)\n", partial_sent, (int)send_empty_tc, (int)now_times1,
-                    (int)((send_empty_tc) - now_times1));
+        OLSR_PRINTF(1, "TC: Sending empty package - (%d/%d/%d/%d)\n", partial_sent, (int)send_empty_tc, (int)now_times,
+                    (int)((send_empty_tc) - now_times));
 
       m->v4.olsr_msgsize = htons(curr_size);
       m->v4.seqno = htons(get_msg_seqno());

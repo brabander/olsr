@@ -180,7 +180,7 @@ olsr_poll_sockets(void)
   }
 
   /* Update time since this is much used by the parsing functions */
-  now_times1 = olsr_times();
+  now_times = olsr_times();
 
   for (olsr_sockets = olsr_socket_entries; olsr_sockets; olsr_sockets = olsr_sockets->next) {
     if (FD_ISSET(olsr_sockets->fd, &ibits))

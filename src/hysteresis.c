@@ -83,7 +83,7 @@ olsr_process_hysteresis(struct link_entry *entry)
       changes_neighborhood = true;
 
     /* time = now -1 */
-    entry->L_LOST_LINK_time = now_times1 - 1;
+    entry->L_LOST_LINK_time = now_times - 1;
 
     return 1;
   }
