@@ -91,6 +91,8 @@ olsr_unhookup_plugin(struct olsr_plugin *pl_def) {
 
 struct olsr_plugin *olsr_get_plugin(const char *libname) {
   struct avl_node *node;
+  /* SOT: Hacked away the funny plugin check which fails if pathname is included */
+  if (strrchr(libname, '/')) libname = strrchr(libname, '/') + 1;
   if ((node = avl_find(&plugin_tree, libname)) != NULL) {
     return plugin_node2tree(node);
   }
