@@ -924,6 +924,8 @@ olsr_delete_all_tc_entries(void) {
   struct tc_entry *tc;
   struct tc_edge_entry *edge;
 
+  if (NULL == tc_myself) return;
+
   /* first mark all nodes non-virtual and all edges virtual */
   tc_myself->is_virtual = false;
   OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc_myself, edge) {
