@@ -133,8 +133,9 @@ void olsr_com_destroy(void) {
   while (!list_is_empty(&olsr_comport_head)) {
     struct comport_connection *con;
 
-    con = comport_node2con(olsr_comport_head.next);
-    olsr_com_cleanup_session(con);
+    if (NULL != (con = comport_node2con(olsr_comport_head.next))) {
+      olsr_com_cleanup_session(con);
+    }
   }
 
   olsr_com_destroy_http();
