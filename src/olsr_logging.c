@@ -57,10 +57,11 @@ struct log_handler_entry {
     bool(*bitmask)[LOG_SEVERITY_COUNT][LOG_SOURCE_COUNT];
 };
 
+bool log_global_mask[LOG_SEVERITY_COUNT][LOG_SOURCE_COUNT];
+
 static struct log_handler_entry log_handler[MAX_LOG_HANDLER];
 static int log_handler_count = 0;
 
-static bool log_global_mask[LOG_SEVERITY_COUNT][LOG_SOURCE_COUNT];
 
 static bool log_initialized = false;
 static FILE *log_fileoutput = NULL;
