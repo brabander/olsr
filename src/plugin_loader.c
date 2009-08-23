@@ -196,6 +196,8 @@ olsr_load_legacy_plugin(const char *libname, void *dlhandle) {
 
   /* initialize plugin structure */
   plugin = (struct olsr_plugin *)olsr_cookie_malloc(plugin_mem_cookie);
+  /* SOT: Hacked away the funny plugin check which fails if pathname is included */
+  if (strrchr(libname, '/')) libname = strrchr(libname, '/') + 1;
   plugin->p_name = libname;
   plugin->p_version = plugin_interface_version;
   plugin->p_legacy_init = init_plugin;
