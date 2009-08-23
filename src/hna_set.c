@@ -133,6 +133,10 @@ olsr_delete_hna_net(struct hna_net *hna_net)
    */
   avl_delete(&tc->hna_tree, &hna_net->hna_tc_node);
 
+  if (hna_net->hna_net_timer) {
+    olsr_stop_timer(hna_net->hna_net_timer);
+    hna_net->hna_net_timer = NULL;
+  }
   /*
    * Unlock and free.
    */
