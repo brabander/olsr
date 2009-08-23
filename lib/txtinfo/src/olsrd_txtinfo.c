@@ -279,6 +279,51 @@ txtinfo_post_init(void)
   return false;
 }
 
+/*
+ * Parse user templates for \%, \n and \t
+ *
+ * @param template
+ */
+static char *
+parse_user_template(char *template) {
+  char *src = template;
+  char *dst = template;
+  bool changed = false;
+
+  while (*src) {
+    if (*src == '\\') {
+      changed = true;
+
+      src++;
+      switch (*src) {
+        case 0:
+          *dst = 0;
+          break;
+        case 'n':
+          *dst = '\n';
+          break;
+        case 't':
+          *dst = '\t';
+          break;
+        case '\\':
+          *dst = '\\';
+          break;
+        default:
+          *dst++ = '\\';
+          *dst = *src;
+          break;
+      }
+    }
+    else if (changed) {
+      *dst = *src;
+    }
+    src++;
+    dst++;
+  }
+  *dst = 0;
+  return template;
+}
+
 /**
  * Callback for neigh command
  */
@@ -289,7 +334,7 @@ txtinfo_neigh(struct comport_connection *con,  char *cmd __attribute__ ((unused)
   const char *template;
   int indexLength;
 
-  template = param != NULL ? param : tmpl_neigh;
+  template = param != NULL ? parse_user_template(param) : tmpl_neigh;
   if (param == NULL &&
       abuf_puts(&con->out, "Table: Neighbors\nIP address\tSYM\tMPR\tMPRS\tWill.\t2 Hop Neighbors\n") < 0) {
     return ABUF_ERROR;
@@ -339,7 +384,7 @@ txtinfo_link(struct comport_connection *con,  char *cmd __attribute__ ((unused))
   const char *template;
   int indexLength;
 
-  template = param != NULL ? param : tmpl_link;
+  template = param != NULL ? parse_user_template(param) : tmpl_link;
   if (param == NULL) {
     if (abuf_puts(&con->out, headline_link) < 0) {
       return ABUF_ERROR;
@@ -383,7 +428,7 @@ txtinfo_routes(struct comport_connection *con,  char *cmd __attribute__ ((unused
   const char *template;
   int indexLength;
 
-  template = param != NULL ? param : tmpl_routes;
+  template = param != NULL ? parse_user_template(param) : tmpl_routes;
   if (param == NULL) {
     if (abuf_appendf(&con->out, "Table: Routes\nDestination\tGateway IP\tMetric\t%s\tInterface\n",
         olsr_get_linklabel(0)) < 0) {
@@ -424,7 +469,7 @@ txtinfo_topology(struct comport_connection *con,  char *cmd __attribute__ ((unus
   const char *template;
   int indexLength;
 
-  template = param != NULL ? param : tmpl_topology;
+  template = param != NULL ? parse_user_template(param) : tmpl_topology;
   if (param == NULL) {
     if (abuf_appendf(&con->out, "Table: Topology\nDest. IP\tLast hop IP\tVirtual\t%s\t(common)\n",
         olsr_get_linklabel(0)) < 0) {
@@ -484,7 +529,7 @@ txtinfo_hna(struct comport_connection *con,  char *cmd __attribute__ ((unused)),
   const char *template;
   int indexLength;
 
-  template = param != NULL ? param : tmpl_hna;
+  template = param != NULL ? parse_user_template(param) : tmpl_hna;
   if (param == NULL) {
     if (abuf_puts(&con->out, "Table: HNA\nDestination\tGateway\tvtime\n") < 0) {
       return ABUF_ERROR;
@@ -544,7 +589,7 @@ txtinfo_mid(struct comport_connection *con,  char *cmd __attribute__ ((unused)),
   const char *template;
   int indexLength;
 
-  template = param != NULL ? param : tmpl_mid;
+  template = param != NULL ? parse_user_template(param) : tmpl_mid;
   if (param == NULL) {
     if (abuf_puts(&con->out, "Table: MID\nIP address\tAliases\tvtime\n") < 0) {
       return ABUF_ERROR;
