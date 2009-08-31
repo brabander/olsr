@@ -1,0 +1,76 @@
+= OLSR OBAMP plugin =
+
+This README file is the main documentation source for the OLSR OBAMP plugin
+
+Last update 31/08/2009
+
+== Description ==
+
+The OBAMP plugin lets multicast traffic be forwarded in a OLSR mesh network.
+
+This version of the OBAMP protocol, implemented as a OLSR plugin, is a simplified one for Wireless Community Networks, where we assume the nodes to be in fixed positions on the roof of the houses. All the protocol features regarding mobility have not been implemented.
+
+OBAMP is an overlay protocol. It first makes a mesh network with overlay links (udp tunnels) between the OBAMP nodes, and then it creates a distribution spanning tree over these mesh links.
+
+To explain how the plugin works consider the scenario in the attached figure scenario.jpeg.
+
+There are 7 routers, where only 5 have the OBAMP plugin working. Router 1 2 and 6 also have an attached HNA network with some hosts.
+
+OBAMP nodes generate OLSR OBAMP_ALIVE messages, these OLSR messages are forwarded in the whole network (also by the nodes that do not understand OBAMP thanks to the OLSR design). Because of the flooding mechanism every OBAMP node has a complete list of all the other OBAMP nodes in the mesh network.
+
+Every OBAMP node listens on the UDP port 6226 for OBAMP signalling.
+
+When a OBAMP nodes starts it has 5 timers to periodically start operations:
+
+OBAMP_alive_timer: every obamp node sends alive messages to advertise its presence to the other obamp nodes in the network. In the alive message every nodes states its IP address, and if it has already a tree link or not (we will see later this information is important for the outer tree create procedure).
+The OBAMP network must have a member called "Core", that starts the TREE_CREATE procedure. The core is the node with the smallest IP address. When the list of known OBAMP nodes changes, the Core Election procedure is eventually called.
+
+mesh_create_timer: every obamp node every OBAMP_MESH_CREATE_IVAL evaluates how far the other obamp nodes are and selects a subset of nodes to keep mesh links with. Note that to reduce signalling and to increase scalability, the overylay mesh links are setup only with a subset of the nearest OBAMP nodes. To select the overlay neighbor the OBAMP nodes first calculates the ETX distance of the nearest OBAMP nodes, and the creates overlay mesh links to every node that are far in the range (minETX,minETX+1)
+
+tree_create_timer: the core of the network every OBAMP_TREE_CREATE_IVAL sends a message called TREE_CREATE on its mesh links. The creation of the spanning tree is very similar to the spanning tree protocol. When a TREE_CREATE message is received a OBAMP node enables a tree link with its parent and forwards the TREE_CREATE on the other mesh links. TREE_CREATE messages are generated only by the core and are numbered, so TREE_CREATE received over loops can be discarded.
+
+outer_tree_create_timer: The mesh_create algorithm may create cluster of OBAMP nodes within the network that are disconnected between each other. This happens if there are groups OBAMP nodes that are far from each other. If this happens only the cluster where the Core is present will receive the TREE_CREATE and will receive traffic from the distribution tree. To overcome this problem if in a cluster there are not TREE_CREATE every OBAMP_TREE_CREATE_IVAL the node with the smallest IP in the cluster will make a long mesh link with the nearest node that has at least a tree link. All the necessary information to perform this procedure is diffused in the OBAMP_ALIVE messages.
+
+purge_nodes_timer: checks expire time of various variables, and deletes nodes or tree links in a soft state fashion
+
+The OBAMP nodes will capture the multicast udp traffic from the non-OLSR interfaces, and will forward this traffic encapsulated in the UDP tunnels of the distribution tree.
+The other OBAMP nodes will forward the traffic in the tree and will decapsulate it on their non-OLSR interfaces.
+To avoid duplicated packets the data is carried into OBAMP_DATA messages, that are identified by a sequence number, and the OBAMP source node where the traffic has been encapsulated.
+
+To better understand the protocol we attached a graphic file. In the figure black links represent real radio links, and red links represent overlay mesh links (udp tunnels). Router 1 2 3 and will create a OBAMP cluster, with two mesh links. Router 6 and 7 will create a mesh link between them. Because the mesh_create algorithm does not create a mesh link between the two clusters, the router 6 (supposing it has the smallest IP address in the mesh) will create an outer tree link with Router 3. In this example topology
+In the references there is a URL to a netkit lab where we implemented this scenario to test this implementation.
+
+
+== Configuration ==
+
+To enable the Plugin use the following syntax
+
+LoadPlugin "olsrd_obamp.so.1.0.0"
+{
+PlParam     "NonOlsrIf"  "eth1"
+}
+
+The only (optional) parameter you have to specify are the interface where you want to capture and decapsulate the multicast traffic. Please note that this version of OBAMP will capture and forward only UDP traffic (no multicast ICMP ping).
+
+=== References ===
+
+Main OBAMP protocol Home Page
+http://netgroup.uniroma2.it/Andrea_Detti/obamp/
+
+Netkit lab to test this implementation in a emulated environment
+https://svn.ninux.org/ninuxdeveloping/browser/obamp-netkitlab
+
+Wiki Ninux
+http://wiki.ninux.org/ObampDocs
+
+OBAMP scientific papers:
+
+http://netgroup.uniroma2.it/Andrea_Detti/obamp/obamp_ext.pdf
+http://www.pomposini.it/remo/docs/1569049233.pdf
+http://www.pomposini.it/remo/docs/1569049233.pdf
+
+
+
+=== Contact ===
+ * Saverio Proto zioproto@gmail.com
+ * Claudio Pisa claudio.pisa@clauz.net
