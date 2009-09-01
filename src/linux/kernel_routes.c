@@ -107,7 +107,7 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
   uint32_t metric = 0;
   const struct rt_nexthop *nexthop = NULL;
   if ( ( cmd != RTM_NEWRULE ) && ( cmd != RTM_DELRULE ) ) {
-    if (FIBM_FLAT != olsr_cnf->fib_metric) {
+    if (FIBM_FLAT == olsr_cnf->fib_metric) {
       metric = RT_METRIC_DEFAULT;
     }
     else {
