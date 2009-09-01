@@ -189,16 +189,10 @@ struct interface_lost {
   uint32_t valid_until;
 };
 
-AVLNODE2STRUCT(node_tree2lostif, struct interface_lost, node);
+AVLNODE2STRUCT(node_tree2lostif, interface_lost, node);
 
-#define OLSR_FOR_ALL_LOSTIF_ENTRIES(lostif) \
-{ \
-  struct avl_node *lostif_tree_node, *next_lostif_tree_node; \
-  for (lostif_tree_node = avl_walk_first(&interface_lost_tree); \
-    lostif_tree_node; lostif_tree_node = next_lostif_tree_node) { \
-    next_lostif_tree_node = avl_walk_next(lostif_tree_node); \
-    lostif = node_tree2lostif(lostif_tree_node);
-#define OLSR_FOR_ALL_LOSTIF_ENTRIES_END(lostif) }}
+#define OLSR_FOR_ALL_LOSTIF_ENTRIES(lostif) OLSR_FOR_ALL_AVL_ENTRIES(&interface_lost_tree, node_tree2lostif, lostif)
+#define OLSR_FOR_ALL_LOSTIF_ENTRIES_END() OLSR_FOR_ALL_AVL_ENTRIES_END()
 
 #define OLSR_BUFFER_HOLD_JITTER 25      /* percent */
 #define OLSR_BUFFER_HOLD_TIME  100      /* milliseconds */

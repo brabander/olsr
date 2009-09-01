@@ -66,16 +66,9 @@ struct olsr_html_site {
   void (*sitehandler)(struct autobuf *buf, char *path, int parameter_count, char *parameters[]);
 };
 
-AVLNODE2STRUCT(html_tree2site, struct olsr_html_site, node);
-
-#define OLSR_FOR_ALL_HTML_ENTRIES(site) \
-{ \
-  struct avl_node *site_node, *next_site_node; \
-  for (site_node = avl_walk_first(&http_handler_tree); \
-    site_node; site_node = next_site_node) { \
-    next_site_node = avl_walk_next(site_node); \
-    site = html_tree2site(site_node);
-#define OLSR_FOR_ALL_HTML_ENTRIES_END(site) }}
+AVLNODE2STRUCT(html_tree2site, olsr_html_site, node);
+#define OLSR_FOR_ALL_HTML_ENTRIES(site) OLSR_FOR_ALL_AVL_ENTRIES(&http_handler_tree, html_tree2site, site)
+#define OLSR_FOR_ALL_HTML_ENTRIES_END() OLSR_FOR_ALL_AVL_ENTRIES_END()
 
 void olsr_com_init_http(void);
 void olsr_com_destroy_http(void);

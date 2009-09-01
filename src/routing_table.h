@@ -91,7 +91,6 @@ struct rt_entry {
   struct list_node rt_change_node;     /* queue for kernel FIB add/chg/del */
 };
 
-AVLNODE2STRUCT(rt_tree2rt, struct rt_entry, rt_tree_node);
 LISTNODE2STRUCT(changelist2rt, struct rt_entry, rt_change_node);
 
 /*
@@ -114,8 +113,8 @@ struct rt_path {
   uint32_t rtp_version;                /* for detection of outdated rt_paths */
 };
 
-AVLNODE2STRUCT(rtp_tree2rtp, struct rt_path, rtp_tree_node);
-AVLNODE2STRUCT(rtp_prefix_tree2rtp, struct rt_path, rtp_prefix_tree_node);
+AVLNODE2STRUCT(rtp_tree2rtp, rt_path, rtp_tree_node);
+AVLNODE2STRUCT(rtp_prefix_tree2rtp, rt_path, rtp_prefix_tree_node);
 
 /*
  * Different routes types used in olsrd.
@@ -140,14 +139,9 @@ enum olsr_rt_origin {
  * the loop prefetches the next node in order to not loose context if
  * for example the caller wants to delete the current rt_entry.
  */
-#define OLSR_FOR_ALL_RT_ENTRIES(rt) \
-{ \
-  struct avl_node *rt_tree_node, *next_rt_tree_node; \
-  for (rt_tree_node = avl_walk_first(&routingtree); \
-    rt_tree_node; rt_tree_node = next_rt_tree_node) { \
-    next_rt_tree_node = avl_walk_next(rt_tree_node); \
-    rt = rt_tree2rt(rt_tree_node);
-#define OLSR_FOR_ALL_RT_ENTRIES_END(rt) }}
+AVLNODE2STRUCT(rt_tree2rt, rt_entry, rt_tree_node);
+#define OLSR_FOR_ALL_RT_ENTRIES(rt) OLSR_FOR_ALL_AVL_ENTRIES(&routingtree, rt_tree2rt, rt)
+#define OLSR_FOR_ALL_RT_ENTRIES_END(rt) OLSR_FOR_ALL_AVL_ENTRIES_END()
 
 
 /**

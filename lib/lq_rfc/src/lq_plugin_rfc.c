@@ -140,7 +140,11 @@ static const struct olsrd_plugin_parameters plugin_parameters[] = {
   {.name = "HystThrLow",.set_plugin_parameter = &set_plugin_float,.data = &thr_low},
 };
 
-DEFINE_PLUGIN6(PLUGIN_DESCR, PLUGIN_AUTHOR, NULL, lq_rfc_post_init, NULL, NULL, false, plugin_parameters)
+OLSR_PLUGIN6(plugin_parameters) {
+  .descr = PLUGIN_DESCR,
+  .author = PLUGIN_AUTHOR,
+  .post_init = lq_rfc_post_init
+};
 
 static bool lq_rfc_post_init(void) {
   active_lq_handler = &lq_rfc_handler;

@@ -230,7 +230,7 @@ olsr_delete_tc_entry(struct tc_entry *tc)
   OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
     /* we don't need this edge for the tc, so let's try to remove it */
     olsr_delete_tc_edge_entry(tc_edge);
-  } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
+  } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END();
 }
 
 /**
@@ -248,7 +248,7 @@ olsr_cleanup_tc_entry(struct tc_entry *tc) {
 
   OLSR_FOR_ALL_PREFIX_ENTRIES(tc, rtp) {
     olsr_delete_rt_path(rtp);
-  } OLSR_FOR_ALL_PREFIX_ENTRIES_END(tc, rtp);
+  } OLSR_FOR_ALL_PREFIX_ENTRIES_END();
 
   /* Flush all MID aliases and kill the MID timer */
   olsr_flush_mid_entries(tc);
@@ -527,7 +527,7 @@ delete_outdated_tc_edges(struct tc_entry *tc)
       retval = true;
     }
   }
-  OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
+  OLSR_FOR_ALL_TC_EDGE_ENTRIES_END();
 
   if (retval)
     changes_topology = true;
@@ -571,7 +571,7 @@ olsr_delete_revoked_tc_edges(struct tc_entry *tc, uint16_t ansn, union olsr_ip_a
       retval = 1;
     }
   }
-  OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
+  OLSR_FOR_ALL_TC_EDGE_ENTRIES_END();
 
   if (retval)
     changes_topology = true;
@@ -689,8 +689,8 @@ olsr_print_tc_table(void)
                    olsr_get_linkcost_text(tc_edge->cost, false, lqbuffer1, sizeof(lqbuffer1)),
                    olsr_get_linkcost_text(tc_edge->common_cost, false, lqbuffer2, sizeof(lqbuffer2)));
 
-    } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
-  } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
+    } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END();
+  } OLSR_FOR_ALL_TC_ENTRIES_END();
 #endif
 }
 
@@ -1069,7 +1069,7 @@ olsr_output_lq_tc_internal(void *ctx  __attribute__ ((unused)), union olsr_ip_ad
     olsr_serialize_tc_lq(&curr, link);
 
     sendTC = true;
-  } OLSR_FOR_ALL_NBR_ENTRIES_END(nbr)
+  } OLSR_FOR_ALL_NBR_ENTRIES_END()
 
   if (!sendTC && skip) {
     OLSR_DEBUG(LOG_TC, "Nothing to send for this TC...\n");

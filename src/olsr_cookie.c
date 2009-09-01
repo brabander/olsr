@@ -142,7 +142,7 @@ olsr_delete_all_cookies(void)
    */
   OLSR_FOR_ALL_COOKIES(info) {
     olsr_free_cookie(info);
-  } OLSR_FOR_ALL_COOKIES_END(info)
+  } OLSR_FOR_ALL_COOKIES_END()
 }
 
 /*

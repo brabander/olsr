@@ -48,74 +48,65 @@
 #include "common/avl.h"
 #include "common/list.h"
 
-#define DEFINE_PLUGIN6(descr, author, pre_init, post_init, pre_cleanup, post_cleanup, deactivate, parameter) \
-static struct olsr_plugin olsr_internal_plugin_definition = { \
-  .p_name = PLUGIN_FULLNAME , .p_descr = descr, .p_author = author, \
-  .p_pre_init = pre_init, .p_post_init = post_init, .p_pre_cleanup = pre_cleanup, .p_post_cleanup = post_cleanup, \
-  .p_legacy_init = NULL, .p_deactivate = deactivate, .p_version = 6, .p_param = parameter, .p_param_cnt = ARRAYSIZE(parameter) \
-}; \
+#define OLSR_PLUGIN6_NP()   static struct olsr_plugin olsr_internal_plugin_definition; \
 static void hookup_plugin_definition (void) __attribute__ ((constructor)); \
 static void hookup_plugin_definition (void) { \
+  static const char *plname = PLUGIN_FULLNAME; \
+  olsr_internal_plugin_definition.name = plname; \
   olsr_hookup_plugin(&olsr_internal_plugin_definition); \
-}
+} \
+static struct olsr_plugin olsr_internal_plugin_definition =
 
-#define DEFINE_PLUGIN6_NP(descr, author, pre_init, post_init, pre_cleanup, post_cleanup, deactivate) \
-static struct olsr_plugin olsr_internal_plugin_definition = { \
-  .p_name = PLUGIN_FULLNAME , .p_descr = descr, .p_author = author, \
-  .p_pre_init = pre_init, .p_post_init = post_init, .p_pre_cleanup = pre_cleanup, .p_post_cleanup = post_cleanup, \
-  .p_deactivate = deactivate, .p_version = 6, .p_param = NULL, .p_param_cnt = 0 \
-}; \
+#define OLSR_PLUGIN6(param) static struct olsr_plugin olsr_internal_plugin_definition; \
 static void hookup_plugin_definition (void) __attribute__ ((constructor)); \
 static void hookup_plugin_definition (void) { \
+  static const char *plname = PLUGIN_FULLNAME; \
+  olsr_internal_plugin_definition.name = plname; \
+  olsr_internal_plugin_definition.internal_param = param; \
+  olsr_internal_plugin_definition.internal_param_cnt = ARRAYSIZE(param); \
   olsr_hookup_plugin(&olsr_internal_plugin_definition); \
-}
+} \
+static struct olsr_plugin olsr_internal_plugin_definition =
 
 /* version 5 */
 typedef int (*plugin_init_func) (void);
 typedef int (*get_interface_version_func) (void);
-typedef void (*get_plugin_parameters_func) (const struct olsrd_plugin_parameters ** params, unsigned int *size);
+typedef void (*get_plugin_parameters_func) (const struct olsrd_plugin_parameters ** internal_params, unsigned int *size);
 
 struct olsr_plugin {
   struct avl_node p_node;
 
   /* plugin information */
-  const char *p_name;
-  const char *p_descr;
-  const char *p_author;
-  bool p_deactivate;    /* plugin can be deactivated */
+  const char *name;
+  const char *descr;
+  const char *author;
+  bool deactivate;    /* plugin can be deactivated */
 
   /* function pointers */
-  bool (*p_pre_init) (void);
-  bool (*p_post_init) (void);
-  bool (*p_pre_cleanup) (void);
-  bool (*p_post_cleanup) (void);
-  int  (*p_legacy_init) (void);
+  bool (*pre_init) (void);
+  bool (*post_init) (void);
+  bool (*pre_cleanup) (void);
+  bool (*post_cleanup) (void);
+  int  (*internal_legacy_init) (void);
 
   /* plugin interface version */
-  int p_version;
+  int internal_version;
 
   /* plugin list of possible arguments */
-  const struct olsrd_plugin_parameters *p_param;
+  const struct olsrd_plugin_parameters *internal_param;
 
   /* number of arguments */
-  unsigned int p_param_cnt;
+  unsigned int internal_param_cnt;
 
   /* internal olsr data */
-  void *dlhandle;
-  struct plugin_param *params;
-  bool active;
+  void *internal_dlhandle;
+  struct plugin_param *internal_params;
+  bool internal_active;
 };
 
-AVLNODE2STRUCT(plugin_node2tree, struct olsr_plugin, p_node)
-
-#define OLSR_FOR_ALL_PLUGIN_ENTRIES(plugin) \
-{ \
-  struct avl_node *plugin_node, *next_plugin_node; \
-  for (plugin_node = avl_walk_first(&plugin_tree); \
-    plugin_node; plugin_node = next_plugin_node) { \
-    next_plugin_node = avl_walk_next(plugin_node); \
-    plugin = plugin_node2tree(plugin_node);
-#define OLSR_FOR_ALL_PLUGIN_ENTRIES_END(plugin) }}
+AVLNODE2STRUCT(plugin_node2tree, olsr_plugin, p_node)
+#define OLSR_FOR_ALL_PLUGIN_ENTRIES(plugin) OLSR_FOR_ALL_AVL_ENTRIES(&plugin_tree, plugin_node2tree, plugin)
+#define OLSR_FOR_ALL_PLUGIN_ENTRIES_END(plugin) OLSR_FOR_ALL_AVL_ENTRIES_END()
 
 struct olsr_plugin *EXPORT(olsr_get_plugin)(const char *libname);
 

@@ -318,7 +318,7 @@ olsr_update_rib_routes(void)
     if (!rt->rt_path_tree.count) {
 
       /* oops, all routes are gone - flush the route head */
-      avl_delete(&routingtree, rt_tree_node);
+      avl_delete(&routingtree, &rt->rt_tree_node);
 
       olsr_enqueue_rt(&del_kernel_list, rt);
       continue;
@@ -342,7 +342,7 @@ olsr_update_rib_routes(void)
       }
     }
   }
-  OLSR_FOR_ALL_RT_ENTRIES_END(rt);
+  OLSR_FOR_ALL_RT_ENTRIES_END();
 }
 
 /**

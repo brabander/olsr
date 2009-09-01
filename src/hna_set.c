@@ -160,7 +160,7 @@ olsr_flush_hna_nets(struct tc_entry *tc)
   OLSR_DEBUG(LOG_TC, "flush hna nets of '%s' (%u)\n", olsr_ip_to_string(&buf, &tc->addr), tc->edge_tree.count);
   OLSR_FOR_ALL_TC_HNA_ENTRIES(tc, hna_net) {
     olsr_delete_hna_net(hna_net);
-  } OLSR_FOR_ALL_TC_HNA_ENTRIES_END(tc, hna_net);
+  } OLSR_FOR_ALL_TC_HNA_ENTRIES_END()
 }
 
 /**
@@ -245,8 +245,8 @@ olsr_print_hna_set(void)
 
     OLSR_FOR_ALL_TC_HNA_ENTRIES(tc, hna_net) {
       OLSR_INFO_NH(LOG_HNA, "\t%-27s\n", olsr_ip_prefix_to_string(&prefixstr, &hna_net->hna_prefix));
-    } OLSR_FOR_ALL_TC_HNA_ENTRIES_END(tc, hna_net);
-  } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
+    } OLSR_FOR_ALL_TC_HNA_ENTRIES_END();
+  } OLSR_FOR_ALL_TC_ENTRIES_END();
 #endif
 }
 
@@ -259,7 +259,7 @@ olsr_prune_hna_entries(struct tc_entry *tc)
     if (hna_net->tc_entry_seqno != tc->hna_seq) {
       olsr_delete_hna_net(hna_net);
     }
-  } OLSR_FOR_ALL_TC_HNA_ENTRIES_END(tc, hna_net);
+  } OLSR_FOR_ALL_TC_HNA_ENTRIES_END();
 }
 
 /**

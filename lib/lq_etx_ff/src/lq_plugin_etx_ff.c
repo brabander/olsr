@@ -90,7 +90,11 @@ static const char *lq_etxff_print_link_entry_lq(struct link_entry *entry, int in
 
 static struct olsr_cookie_info *default_lq_ff_timer_cookie = NULL;
 
-DEFINE_PLUGIN6_NP(PLUGIN_DESCR, PLUGIN_AUTHOR, NULL, lq_etxff_post_init, NULL, NULL, false)
+OLSR_PLUGIN6_NP() {
+  .descr = PLUGIN_DESCR,
+  .author = PLUGIN_AUTHOR,
+  .post_init = lq_etxff_post_init
+};
 
 /* etx lq plugin (freifunk fpm version) settings */
 struct lq_linkdata_type lq_etxff_linktypes[] = {

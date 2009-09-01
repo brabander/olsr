@@ -89,7 +89,7 @@ void olsr_com_destroy_http(void) {
   struct olsr_html_site *site;
   OLSR_FOR_ALL_HTML_ENTRIES(site) {
     olsr_com_remove_htmlsite(site);
-  } OLSR_FOR_ALL_HTML_ENTRIES_END(site)
+  } OLSR_FOR_ALL_HTML_ENTRIES_END()
 }
 
 struct olsr_html_site *

@@ -351,10 +351,10 @@ olsr_txtcmd_plugin(struct comport_connection *con, char *cmd, char *param) {
     }
     OLSR_FOR_ALL_PLUGIN_ENTRIES(plugin) {
       if (abuf_appendf(&con->out, " %-30s\t%s\t%s\n",
-          plugin->p_name, plugin->active ? "active" : "", plugin->dlhandle == NULL ? "static" : "") < 0) {
+          plugin->name, plugin->internal_active ? "active" : "", plugin->internal_dlhandle == NULL ? "static" : "") < 0) {
         return ABUF_ERROR;
       }
-    } OLSR_FOR_ALL_PLUGIN_ENTRIES_END(plugin)
+    } OLSR_FOR_ALL_PLUGIN_ENTRIES_END()
     return CONTINUE;
   }
 
@@ -390,7 +390,7 @@ olsr_txtcmd_plugin(struct comport_connection *con, char *cmd, char *param) {
     return CONTINUE;
   }
   if (strcasecmp(param, "activate") == 0) {
-    if (plugin->active) {
+    if (plugin->internal_active) {
       abuf_appendf(&con->out, "Plugin %s already active\n", para2);
     }
     else if (olsr_activate_plugin(plugin)) {
@@ -401,7 +401,7 @@ olsr_txtcmd_plugin(struct comport_connection *con, char *cmd, char *param) {
     }
   }
   else if (strcasecmp(param, "deactivate") == 0) {
-    if (!plugin->active) {
+    if (!plugin->internal_active) {
       abuf_appendf(&con->out, "Plugin %s is not active\n", para2);
     }
     else if (olsr_deactivate_plugin(plugin)) {
@@ -412,7 +412,7 @@ olsr_txtcmd_plugin(struct comport_connection *con, char *cmd, char *param) {
     }
   }
   else if (strcasecmp(param, "unload") == 0) {
-    if (plugin->dlhandle == NULL) {
+    if (plugin->internal_dlhandle == NULL) {
       abuf_appendf(&con->out, "Plugin %s is static and cannot be unloaded\n", para2);
     }
     else if (olsr_unload_plugin(plugin)) {

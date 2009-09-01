@@ -91,7 +91,14 @@ static const struct olsrd_plugin_parameters plugin_parameters[] = {
   {.name = IP_ACL_DEFAULTPOLICY_PARAM,.set_plugin_parameter = &ip_acl_add_plugin_defaultPolicy,.data = &allowed_nets}
 };
 
-DEFINE_PLUGIN6(PLUGIN_DESCR, PLUGIN_AUTHOR, txtinfo_pre_init, txtinfo_post_init, txtinfo_pre_cleanup, NULL, true, plugin_parameters)
+OLSR_PLUGIN6(plugin_parameters) {
+  .descr = PLUGIN_DESCR,
+  .author = PLUGIN_AUTHOR,
+  .pre_init = txtinfo_pre_init,
+  .post_init = txtinfo_post_init,
+  .pre_cleanup = txtinfo_pre_cleanup,
+  .deactivate = true
+};
 
 /* command callbacks and names */
 static struct txtinfo_cmd commands[] = {
@@ -357,7 +364,7 @@ txtinfo_neigh(struct comport_connection *con,  char *cmd __attribute__ ((unused)
     if (abuf_templatef(&con->out, template, values_neigh, tmpl_indices, indexLength) < 0) {
         return ABUF_ERROR;
     }
-  } OLSR_FOR_ALL_NBR_ENTRIES_END(neigh);
+  } OLSR_FOR_ALL_NBR_ENTRIES_END()
 
   return CONTINUE;
 }
@@ -512,8 +519,8 @@ txtinfo_topology(struct comport_connection *con,  char *cmd __attribute__ ((unus
       if (abuf_templatef(&con->out, template, values_topology, tmpl_indices, indexLength) < 0) {
           return ABUF_ERROR;
       }
-    } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
-  } OLSR_FOR_ALL_TC_ENTRIES_END(tc)
+    } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END();
+  } OLSR_FOR_ALL_TC_ENTRIES_END()
 
   return CONTINUE;
 }
@@ -571,8 +578,8 @@ txtinfo_hna(struct comport_connection *con,  char *cmd __attribute__ ((unused)),
       if (abuf_templatef(&con->out, template, values_hna, tmpl_indices, indexLength) < 0) {
           return ABUF_ERROR;
       }
-    } OLSR_FOR_ALL_TC_HNA_ENTRIES_END(tc, tmp_net);
-  } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
+    } OLSR_FOR_ALL_TC_HNA_ENTRIES_END();
+  } OLSR_FOR_ALL_TC_ENTRIES_END();
 
   return CONTINUE;
 }

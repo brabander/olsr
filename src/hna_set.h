@@ -56,18 +56,11 @@ struct hna_net {
   uint16_t tc_entry_seqno;             /* sequence number for cleanup */
 };
 
-AVLNODE2STRUCT(hna_tc_tree2hna, struct hna_net, hna_tc_node);
-
 #define OLSR_HNA_NET_JITTER 5   /* percent */
 
-#define OLSR_FOR_ALL_TC_HNA_ENTRIES(tc, hna_net) \
-{ \
-  struct avl_node *hna_net_node, *next_hna_net_node; \
-  for (hna_net_node = avl_walk_first(&tc->hna_tree); \
-    hna_net_node; hna_net_node = next_hna_net_node) { \
-    next_hna_net_node = avl_walk_next(hna_net_node); \
-    hna_net = hna_tc_tree2hna(hna_net_node);
-#define OLSR_FOR_ALL_TC_HNA_ENTRIES_END(tc, hna_net) }}
+AVLNODE2STRUCT(hna_tc_tree2hna, hna_net, hna_tc_node)
+#define OLSR_FOR_ALL_TC_HNA_ENTRIES(tc, hna_set) OLSR_FOR_ALL_AVL_ENTRIES(&tc->hna_tree, hna_tc_tree2hna, hna_set)
+#define OLSR_FOR_ALL_TC_HNA_ENTRIES_END() OLSR_FOR_ALL_AVL_ENTRIES_END()
 
 /* HNA msg input parser */
 void olsr_input_hna(union olsr_message *, struct interface *, union olsr_ip_addr *, enum duplicate_status);

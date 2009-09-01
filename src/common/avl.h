@@ -131,13 +131,19 @@ extern int avl_comp_strcasecmp(const void *, const void *);
  * base of the datastructure. That way you save an extra data pointer.
  */
 #define AVLNODE2STRUCT(funcname, structname, avlnodename) \
-static inline structname * funcname (struct avl_node *ptr)\
+static INLINE struct structname * funcname (struct avl_node *ptr)\
 {\
-  return( \
-    ptr ? \
-      (structname *) (((size_t) ptr) - offsetof(structname, avlnodename)) : \
-      NULL); \
+  if (!ptr) return NULL; \
+  return ((struct structname *) ((char *)ptr - offsetof(struct structname,avlnodename))); \
 }
+
+#define OLSR_FOR_ALL_AVL_ENTRIES(avltreeptr, convfunc, variable) \
+{ \
+  struct avl_node *convfunc##node, *convfunc##next_node; \
+  for (convfunc##node = avl_walk_first(avltreeptr); convfunc##node; convfunc##node = convfunc##next_node) { \
+    convfunc##next_node = avl_walk_next(convfunc##node); \
+    variable = convfunc (convfunc##node);
+#define OLSR_FOR_ALL_AVL_ENTRIES_END() }}
 
 #endif /* _AVL_H */
 

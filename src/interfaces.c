@@ -181,11 +181,11 @@ void destroy_interfaces(void) {
   OLSR_FOR_ALL_INTERFACES(iface) {
     struct interface **ptr = &iface;
     remove_interface(ptr);
-  } OLSR_FOR_ALL_INTERFACES_END(iface)
+  } OLSR_FOR_ALL_INTERFACES_END()
 
   OLSR_FOR_ALL_LOSTIF_ENTRIES(lost) {
     remove_lost_interface_ip(lost);
-  } OLSR_FOR_ALL_LOSTIF_ENTRIES_END(lost);
+  } OLSR_FOR_ALL_LOSTIF_ENTRIES_END();
 }
 
 /**
@@ -224,7 +224,7 @@ check_interface_updates(void *foo __attribute__ ((unused)))
     if (olsr_isTimedOut(lost->valid_until)) {
       remove_lost_interface_ip(lost);
     }
-  } OLSR_FOR_ALL_LOSTIF_ENTRIES_END(lost)
+  } OLSR_FOR_ALL_LOSTIF_ENTRIES_END()
 }
 
 /**

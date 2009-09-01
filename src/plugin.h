@@ -95,7 +95,7 @@ int olsrd_plugin_register_param(char *key, char *value);
 /**
  * Delivers the (address of the) table and the size of the parameter description
  */
-void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size);
+void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **internal_params, int *size);
 
 #endif
 

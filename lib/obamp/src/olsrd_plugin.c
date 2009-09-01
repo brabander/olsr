@@ -65,15 +65,16 @@ static bool obamp_post_init(void);
 static bool obamp_pre_cleanup(void);
 
 static const struct olsrd_plugin_parameters plugin_parameters[] = {
-
   { .name = "NonOlsrIf", .set_plugin_parameter = &AddObampSniffingIf, .data = NULL },
-
 };
 
-
-//DEFINE_PLUGIN6(PLUGIN_DESCR, PLUGIN_AUTHOR, obamp_pre_init, olsrd_plugin_init, obamp_pre_cleanup, NULL, true, plugin_parameters)
-
-DEFINE_PLUGIN6(PLUGIN_DESCR, PLUGIN_AUTHOR, obamp_pre_init, obamp_post_init, obamp_pre_cleanup, NULL, true, plugin_parameters)
+OLSR_PLUGIN6(plugin_parameters) {
+  .descr = PLUGIN_DESCR,
+  .author = PLUGIN_AUTHOR,
+  .pre_init = obamp_pre_init,
+  .post_init = obamp_post_init,
+  .pre_cleanup = obamp_pre_cleanup,
+};
 
 /**
  * Constructor of plugin, called before parameters are initialized

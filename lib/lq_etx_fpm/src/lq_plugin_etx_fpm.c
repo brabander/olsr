@@ -140,7 +140,12 @@ static const struct olsrd_plugin_parameters plugin_parameters[] = {
   {.name = "LinkQualityAging",.set_plugin_parameter = &set_plugin_aging,.data = NULL}
 };
 
-DEFINE_PLUGIN6(PLUGIN_DESCR, PLUGIN_AUTHOR, NULL, lq_etxfpm_post_init, NULL, NULL, false, plugin_parameters)
+OLSR_PLUGIN6(plugin_parameters) {
+  .descr = PLUGIN_DESCR,
+  .author = PLUGIN_AUTHOR,
+  .post_init = lq_etxfpm_post_init
+};
+
 
 static bool lq_etxfpm_post_init(void) {
   active_lq_handler = &lq_etxfpm_handler;

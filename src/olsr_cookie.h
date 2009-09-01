@@ -75,16 +75,9 @@ struct olsr_cookie_info {
   uint16_t ci_membrand;
 };
 
-AVLNODE2STRUCT(cookie_node2cookie, struct olsr_cookie_info, node);
-
-#define OLSR_FOR_ALL_COOKIES(ci) \
-{ \
-  struct avl_node *ci_tree_node, *next_ci_tree_node; \
-  for (ci_tree_node = avl_walk_first(&olsr_cookie_tree); \
-    ci_tree_node; ci_tree_node = next_ci_tree_node) { \
-    next_ci_tree_node = avl_walk_next(ci_tree_node); \
-    ci = cookie_node2cookie(ci_tree_node);
-#define OLSR_FOR_ALL_COOKIES_END(ci) }}
+AVLNODE2STRUCT(cookie_node2cookie, olsr_cookie_info, node);
+#define OLSR_FOR_ALL_COOKIES(ci) OLSR_FOR_ALL_AVL_ENTRIES(&olsr_cookie_tree, cookie_node2cookie, ci)
+#define OLSR_FOR_ALL_COOKIES_END() OLSR_FOR_ALL_AVL_ENTRIES_END()
 
 /* Cookie flags */
 #define COOKIE_NO_MEMCLEAR  ( 1 << 0)   /* Do not clear memory */

@@ -158,7 +158,7 @@ olsr_delete_nbr_entry(struct nbr_entry *nbr)
     if (nbr2->con_tree.count == 0) {
       olsr_delete_nbr2_entry(nbr2);
     }
-  } OLSR_FOR_ALL_NBR_CON_ENTRIES_END(nbr, connector);
+  } OLSR_FOR_ALL_NBR_CON_ENTRIES_END()
 
   /* Remove from global neighbor tree */
   avl_delete(&nbr_tree, &nbr->nbr_node);
@@ -298,7 +298,7 @@ olsr_delete_nbr2_entry(struct nbr2_entry *nbr2) {
    */
   OLSR_FOR_ALL_NBR2_CON_ENTRIES(nbr2, connector) {
     olsr_delete_nbr_con(connector);
-  } OLSR_FOR_ALL_NBR2_CON_ENTRIES_END(nbr2, connector);
+  } OLSR_FOR_ALL_NBR2_CON_ENTRIES_END();
 
   /* Remove from global neighbor tree */
   avl_delete(&nbr2_tree, &nbr2->nbr2_node);
@@ -478,7 +478,7 @@ olsr_print_neighbor_table(void)
                  nbr->is_mpr ? "YES" : "NO",
                  nbr->mprs_count == 0  ? "NO  " : "YES ",
                  nbr->willingness);
-  } OLSR_FOR_ALL_NBR_ENTRIES_END(nbr);
+  } OLSR_FOR_ALL_NBR_ENTRIES_END();
 
   OLSR_INFO(LOG_2NEIGH, "\n--- %s ----------------------- TWO-HOP NEIGHBORS\n\n"
             "IP addr (2-hop)  IP addr (1-hop)  Total cost\n", olsr_wallclock_string());
@@ -492,8 +492,8 @@ olsr_print_neighbor_table(void)
                    olsr_get_linkcost_text(connector->path_linkcost, false, lqbuffer, sizeof(lqbuffer)));
 
       first = false;
-    } OLSR_FOR_ALL_NBR2_CON_ENTRIES_END(nbr2, connector);
-  } OLSR_FOR_ALL_NBR2_ENTRIES_END(nbr2);
+    } OLSR_FOR_ALL_NBR2_CON_ENTRIES_END()
+  } OLSR_FOR_ALL_NBR2_ENTRIES_END()
 
 #endif
 }

@@ -194,9 +194,9 @@ mapwrite_work(FILE * fmap)
         }
       }
     }
-    OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
+    OLSR_FOR_ALL_TC_EDGE_ENTRIES_END();
   }
-  OLSR_FOR_ALL_TC_ENTRIES_END(tc);
+  OLSR_FOR_ALL_TC_ENTRIES_END();
 }
 
 #ifndef WIN32

@@ -65,7 +65,7 @@ struct olsr_txtcommand {
   olsr_txthandler handler;
 };
 
-AVLNODE2STRUCT(txt_tree2cmd, struct olsr_txtcommand, node);
+AVLNODE2STRUCT(txt_tree2cmd, olsr_txtcommand, node);
 
 void olsr_com_init_txt(void);
 void olsr_com_destroy_txt(void);

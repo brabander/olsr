@@ -271,7 +271,7 @@ pcf_event(int ipc_connection, int chgs_neighborhood, int chgs_topology, int chgs
     /* Neighbors */
     OLSR_FOR_ALL_NBR_ENTRIES(neighbor_table_tmp) {
       ipc_print_neigh_link(ipc_connection, neighbor_table_tmp);
-    } OLSR_FOR_ALL_NBR_ENTRIES_END(neighbor_table_tmp);
+    } OLSR_FOR_ALL_NBR_ENTRIES_END();
 
     /* Topology */
     OLSR_FOR_ALL_TC_ENTRIES(tc) {
@@ -281,9 +281,9 @@ pcf_event(int ipc_connection, int chgs_neighborhood, int chgs_topology, int chgs
           ipc_print_tc_link(ipc_connection, tc, tc_edge);
         }
       }
-      OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
+      OLSR_FOR_ALL_TC_EDGE_ENTRIES_END();
     }
-    OLSR_FOR_ALL_TC_ENTRIES_END(tc);
+    OLSR_FOR_ALL_TC_ENTRIES_END();
 
     /* HNA entries */
     OLSR_FOR_ALL_TC_ENTRIES(tc) {
@@ -292,7 +292,7 @@ pcf_event(int ipc_connection, int chgs_neighborhood, int chgs_topology, int chgs
       OLSR_FOR_ALL_TC_HNA_ENTRIES(tc, tmp_net) {
         ipc_print_net(ipc_connection, &tc->addr, &tmp_net->hna_prefix);
       }
-    } OLSR_FOR_ALL_TC_HNA_ENTRIES_END(tc, tmp_hna);
+    } OLSR_FOR_ALL_TC_HNA_ENTRIES_END();
     OLSR_FOR_ALL_TC_ENTRIES_END(tc);
 
     /* Local HNA entries */

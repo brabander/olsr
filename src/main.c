@@ -518,7 +518,7 @@ olsr_shutdown(void)
   /* Flush MID database */
   OLSR_FOR_ALL_MID_ENTRIES(mid) {
     olsr_delete_mid_entry(mid);
-  } OLSR_FOR_ALL_MID_ENTRIES_END(mid);
+  } OLSR_FOR_ALL_MID_ENTRIES_END();
 
   OLSR_INFO(LOG_MAIN, "Closing sockets...\n");
 

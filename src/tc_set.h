@@ -68,8 +68,6 @@ struct tc_edge_entry {
   uint16_t ansn;                       /* ansn of this edge, used for multipart msgs */
 };
 
-AVLNODE2STRUCT(edge_tree2tc_edge, struct tc_edge_entry, edge_node);
-
 struct tc_entry {
   struct avl_node vertex_node;         /* node keyed by ip address */
   union olsr_ip_addr addr;             /* vertex_node key */
@@ -108,8 +106,7 @@ struct tc_entry {
 #define OLSR_TC_VTIME_JITTER 5 /* percent */
 
 
-AVLNODE2STRUCT(vertex_tree2tc, struct tc_entry, vertex_node);
-AVLNODE2STRUCT(cand_tree2tc, struct tc_entry, cand_tree_node);
+AVLNODE2STRUCT(cand_tree2tc, tc_entry, cand_tree_node);
 LISTNODE2STRUCT(pathlist2tc, struct tc_entry, path_list_node);
 
 /*
@@ -120,32 +117,16 @@ LISTNODE2STRUCT(pathlist2tc, struct tc_entry, path_list_node);
  * the loop prefetches the next node in order to not loose context if
  * for example the caller wants to delete the current entry.
  */
-#define OLSR_FOR_ALL_TC_ENTRIES(tc) \
-{ \
-  struct avl_node *tc_tree_node, *next_tc_tree_node; \
-  for (tc_tree_node = avl_walk_first(&tc_tree); \
-    tc_tree_node; tc_tree_node = next_tc_tree_node) { \
-    next_tc_tree_node = avl_walk_next(tc_tree_node); \
-    tc = vertex_tree2tc(tc_tree_node);
-#define OLSR_FOR_ALL_TC_ENTRIES_END(tc) }}
+AVLNODE2STRUCT(vertex_tree2tc, tc_entry, vertex_node);
+#define OLSR_FOR_ALL_TC_ENTRIES(tc) OLSR_FOR_ALL_AVL_ENTRIES(&tc_tree, vertex_tree2tc, tc)
+#define OLSR_FOR_ALL_TC_ENTRIES_END(tc) OLSR_FOR_ALL_AVL_ENTRIES_END()
 
-#define OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) \
-{ \
-  struct avl_node *tc_edge_node, *next_tc_edge_node; \
-  for (tc_edge_node = avl_walk_first(&tc->edge_tree); \
-    tc_edge_node; tc_edge_node = next_tc_edge_node) { \
-    next_tc_edge_node = avl_walk_next(tc_edge_node); \
-    tc_edge = edge_tree2tc_edge(tc_edge_node);
-#define OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge) }}
+AVLNODE2STRUCT(edge_tree2tc_edge, tc_edge_entry, edge_node);
+#define OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) OLSR_FOR_ALL_AVL_ENTRIES(&tc->edge_tree, edge_tree2tc_edge, tc_edge)
+#define OLSR_FOR_ALL_TC_EDGE_ENTRIES_END() OLSR_FOR_ALL_AVL_ENTRIES_END()
 
-#define OLSR_FOR_ALL_PREFIX_ENTRIES(tc, rtp) \
-{ \
-  struct avl_node *rtp_node, *next_rtp_node; \
-  for (rtp_node = avl_walk_first(&tc->prefix_tree); \
-    rtp_node; rtp_node = next_rtp_node) { \
-    next_rtp_node = avl_walk_next(rtp_node); \
-    rtp = rtp_prefix_tree2rtp(rtp_node);
-#define OLSR_FOR_ALL_PREFIX_ENTRIES_END(tc, rtp) }}
+#define OLSR_FOR_ALL_PREFIX_ENTRIES(tc, rtp) OLSR_FOR_ALL_AVL_ENTRIES(&tc->prefix_tree, rtp_prefix_tree2rtp, rtp)
+#define OLSR_FOR_ALL_PREFIX_ENTRIES_END() OLSR_FOR_ALL_AVL_ENTRIES_END()
 
 extern struct avl_tree EXPORT(tc_tree);
 extern struct tc_entry *tc_myself;

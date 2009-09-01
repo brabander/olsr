@@ -135,7 +135,11 @@ static const struct olsrd_plugin_parameters plugin_parameters[] = {
   {.name = "LinkQualityAging",.set_plugin_parameter = &set_plugin_float,.data = &lq_aging},
 };
 
-DEFINE_PLUGIN6(PLUGIN_DESCR, PLUGIN_AUTHOR, NULL, lq_etxfloat_post_init, NULL, NULL, false, plugin_parameters)
+OLSR_PLUGIN6(plugin_parameters) {
+  .descr = PLUGIN_DESCR,
+  .author = PLUGIN_AUTHOR,
+  .post_init = lq_etxfloat_post_init
+};
 
 static int
 set_plugin_float(const char *value, void *data, set_plugin_parameter_addon addon __attribute__ ((unused)))

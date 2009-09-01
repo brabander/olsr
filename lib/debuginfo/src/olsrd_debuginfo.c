@@ -274,7 +274,7 @@ update_statistics_ptr(void *data __attribute__ ((unused)))
       avl_delete(&stat_msg_tree, &msg->node);
       olsr_cookie_free(statistics_msg_mem, msg);
     }
-  } OLSR_FOR_ALL_MSGTRAFFIC_ENTRIES_END(msg)
+  } OLSR_FOR_ALL_MSGTRAFFIC_ENTRIES_END()
 
   OLSR_FOR_ALL_PKTTRAFFIC_ENTRIES(pkt) {
     /* subtract old values from node count and total count */
@@ -300,7 +300,7 @@ update_statistics_ptr(void *data __attribute__ ((unused)))
       free(pkt->int_name);
       olsr_cookie_free(statistics_pkt_mem, pkt);
     }
-  } OLSR_FOR_ALL_PKTTRAFFIC_ENTRIES_END(pkt)
+  } OLSR_FOR_ALL_PKTTRAFFIC_ENTRIES_END()
 }
 
 /* update message statistics */
@@ -425,7 +425,7 @@ debuginfo_msgstat(struct comport_connection *con,  char *cmd __attribute__ ((unu
       if (debuginfo_print_msgstat(&con->out, &tr->ip, &tr->traffic[current_slot])) {
         return ABUF_ERROR;
       }
-    } OLSR_FOR_ALL_MSGTRAFFIC_ENTRIES_END(tr)
+    } OLSR_FOR_ALL_MSGTRAFFIC_ENTRIES_END()
   }
   else {
     uint32_t mult = 1, divisor = 1;
@@ -462,7 +462,7 @@ debuginfo_msgstat(struct comport_connection *con,  char *cmd __attribute__ ((unu
       if (debuginfo_print_msgstat(&con->out, &tr->ip, &cnt)) {
         return ABUF_ERROR;
       }
-    } OLSR_FOR_ALL_MSGTRAFFIC_ENTRIES_END(tr)
+    } OLSR_FOR_ALL_MSGTRAFFIC_ENTRIES_END()
   }
 
   return CONTINUE;
@@ -497,7 +497,7 @@ debuginfo_pktstat(struct comport_connection *con,  char *cmd __attribute__ ((unu
       if (debuginfo_print_pktstat(&con->out, &tr->ip, tr->int_name, &tr->traffic[current_slot])) {
         return ABUF_ERROR;
       }
-    } OLSR_FOR_ALL_PKTTRAFFIC_ENTRIES_END(tr)
+    } OLSR_FOR_ALL_PKTTRAFFIC_ENTRIES_END()
   }
   else {
     uint32_t mult = 1, divisor = 1;
@@ -534,7 +534,7 @@ debuginfo_pktstat(struct comport_connection *con,  char *cmd __attribute__ ((unu
       if (debuginfo_print_pktstat(&con->out, &tr->ip, tr->int_name, &cnt)) {
         return ABUF_ERROR;
       }
-    } OLSR_FOR_ALL_PKTTRAFFIC_ENTRIES_END(tr)
+    } OLSR_FOR_ALL_PKTTRAFFIC_ENTRIES_END()
   }
 
   return CONTINUE;
@@ -552,7 +552,7 @@ static INLINE bool debuginfo_print_cookies_mem(struct autobuf *buf, const char *
         (unsigned long)c->ci_size, c->ci_usage, c->ci_free_list_usage) < 0) {
       return true;
     }
-  } OLSR_FOR_ALL_COOKIES_END(c)
+  } OLSR_FOR_ALL_COOKIES_END()
   return false;
 }
 
@@ -567,7 +567,7 @@ static INLINE bool debuginfo_print_cookies_timer(struct autobuf *buf, const char
                        c->ci_usage, c->ci_changes) < 0) {
       return true;
     }
-  } OLSR_FOR_ALL_COOKIES_END(c)
+  } OLSR_FOR_ALL_COOKIES_END()
   return false;
 }
 

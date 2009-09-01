@@ -982,9 +982,9 @@ build_neigh_body(struct autobuf *abuf)
       struct ipaddr_str strbuf;
       abuf_appendf(abuf, "<option>%s</option>\n", olsr_ip_to_string(&strbuf, &connector->nbr2->nbr2_addr));
       thop_cnt++;
-    } OLSR_FOR_ALL_NBR_CON_ENTRIES_END(neigh, connector);
+    } OLSR_FOR_ALL_NBR_CON_ENTRIES_END()
     abuf_appendf(abuf, "</select> (%d)</td></tr>\n", thop_cnt);
-  } OLSR_FOR_ALL_NBR_ENTRIES_END(neigh);
+  } OLSR_FOR_ALL_NBR_ENTRIES_END()
 
   abuf_puts(abuf, "</table>\n");
 }
@@ -1012,8 +1012,8 @@ build_topo_body(struct autobuf *abuf)
                      olsr_get_linkcost_text(tc_edge->cost, false, lqbuffer, sizeof(lqbuffer)));
         abuf_puts(abuf, "</tr>\n");
       }
-    } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
-  } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
+    } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END();
+  } OLSR_FOR_ALL_TC_ENTRIES_END();
 
   abuf_puts(abuf, "</table>\n");
 }
@@ -1039,7 +1039,7 @@ build_mid_body(struct autobuf *abuf)
       abuf_appendf(abuf, "<option>%s</option>\n", olsr_ip_to_string(&strbuf, &alias->mid_alias_addr));
     } OLSR_FOR_ALL_TC_MID_ENTRIES_END(tc, alias);
     abuf_appendf(abuf, "</select> (%u)</td></tr>\n", tc->mid_tree.count);
-  } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
+  } OLSR_FOR_ALL_TC_ENTRIES_END();
 
   abuf_puts(abuf, "</table>\n");
 }

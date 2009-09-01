@@ -56,26 +56,13 @@ struct mid_entry {
   uint16_t mid_entry_seqno;            /* msg seq number for change tracking */
 };
 
-AVLNODE2STRUCT(global_tree2mid, struct mid_entry, mid_node);
-AVLNODE2STRUCT(alias_tree2mid, struct mid_entry, mid_tc_node);
+AVLNODE2STRUCT(global_tree2mid, mid_entry, mid_node);
+#define OLSR_FOR_ALL_MID_ENTRIES(mid_alias) OLSR_FOR_ALL_AVL_ENTRIES(&mid_tree, global_tree2mid, mid_alias)
+#define OLSR_FOR_ALL_MID_ENTRIES_END() OLSR_FOR_ALL_AVL_ENTRIES_END()
 
-#define OLSR_FOR_ALL_MID_ENTRIES(mid_alias) \
-{ \
-  struct avl_node *mid_alias_node, *next_mid_alias_node; \
-  for (mid_alias_node = avl_walk_first(&mid_tree); \
-    mid_alias_node; mid_alias_node = next_mid_alias_node) { \
-    next_mid_alias_node = avl_walk_next(mid_alias_node); \
-    mid_alias = global_tree2mid(mid_alias_node);
-#define OLSR_FOR_ALL_MID_ENTRIES_END(mid_alias) }}
-
-#define OLSR_FOR_ALL_TC_MID_ENTRIES(tc, mid_alias) \
-{ \
-  struct avl_node *mid_alias_node, *next_mid_alias_node; \
-  for (mid_alias_node = avl_walk_first(&tc->mid_tree); \
-    mid_alias_node; mid_alias_node = next_mid_alias_node) { \
-    next_mid_alias_node = avl_walk_next(mid_alias_node); \
-    mid_alias = alias_tree2mid(mid_alias_node);
-#define OLSR_FOR_ALL_TC_MID_ENTRIES_END(tc, mid_alias) }}
+AVLNODE2STRUCT(alias_tree2mid, mid_entry, mid_tc_node);
+#define OLSR_FOR_ALL_TC_MID_ENTRIES(tc, mid_alias) OLSR_FOR_ALL_AVL_ENTRIES(&tc->mid_tree, alias_tree2mid, mid_alias)
+#define OLSR_FOR_ALL_TC_MID_ENTRIES_END(tc, mid_alias) OLSR_FOR_ALL_AVL_ENTRIES_END()
 
 #define OLSR_MID_JITTER 5       /* percent */
 

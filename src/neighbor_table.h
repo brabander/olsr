@@ -67,8 +67,6 @@ struct nbr_con {
   olsr_linkcost saved_path_linkcost;
 };
 
-AVLNODE2STRUCT(nbr_con_node_to_connector, struct nbr_con, nbr_tree_node);
-AVLNODE2STRUCT(nbr2_con_node_to_connector, struct nbr_con, nbr2_tree_node);
 
 #define OLSR_NBR2_LIST_JITTER 5 /* percent */
 
@@ -85,7 +83,6 @@ struct nbr_entry {
   struct avl_tree con_tree;            /* subtree for connectors to nbr2 */
 };
 
-AVLNODE2STRUCT(nbr_node_to_nbr, struct nbr_entry, nbr_node);
 
 struct nbr2_entry {
   struct avl_node nbr2_node;
@@ -95,7 +92,6 @@ struct nbr2_entry {
   struct avl_tree con_tree;            /* subtree for connectors to nbr */
 };
 
-AVLNODE2STRUCT(nbr2_node_to_nbr2, struct nbr2_entry, nbr2_node);
 
 /*
  * macros for traversing neighbors, neighbor2 and connectors.
@@ -105,23 +101,13 @@ AVLNODE2STRUCT(nbr2_node_to_nbr2, struct nbr2_entry, nbr2_node);
  * the loop prefetches the next node in order to not loose context if
  * for example the caller wants to delete the current entry.
  */
-#define OLSR_FOR_ALL_NBR_ENTRIES(nbr) \
-{ \
-  struct avl_node *nbr_tree_node, *next_nbr_tree_node; \
-  for (nbr_tree_node = avl_walk_first(&nbr_tree); \
-    nbr_tree_node; nbr_tree_node = next_nbr_tree_node) { \
-    next_nbr_tree_node = avl_walk_next(nbr_tree_node); \
-    nbr = nbr_node_to_nbr(nbr_tree_node);
-#define OLSR_FOR_ALL_NBR_ENTRIES_END(nbr) }}
+AVLNODE2STRUCT(nbr_node_to_nbr, nbr_entry, nbr_node);
+#define OLSR_FOR_ALL_NBR_ENTRIES(nbr) OLSR_FOR_ALL_AVL_ENTRIES(&nbr_tree, nbr_node_to_nbr, nbr)
+#define OLSR_FOR_ALL_NBR_ENTRIES_END() OLSR_FOR_ALL_AVL_ENTRIES_END()
 
-#define OLSR_FOR_ALL_NBR_CON_ENTRIES(nbr, nbr_con) \
-{ \
-  struct avl_node *nbr_con_node, *next_nbr_con_node; \
-  for (nbr_con_node = avl_walk_first(&nbr->con_tree); \
-    nbr_con_node; nbr_con_node = next_nbr_con_node) { \
-    next_nbr_con_node = avl_walk_next(nbr_con_node); \
-    nbr_con = nbr_con_node_to_connector(nbr_con_node);
-#define OLSR_FOR_ALL_NBR_CON_ENTRIES_END(nbr, nbr_con) }}
+AVLNODE2STRUCT(nbr_con_node_to_connector, nbr_con, nbr_tree_node);
+#define OLSR_FOR_ALL_NBR_CON_ENTRIES(nbr, con) OLSR_FOR_ALL_AVL_ENTRIES(&nbr->con_tree, nbr_con_node_to_connector, con)
+#define OLSR_FOR_ALL_NBR_CON_ENTRIES_END() OLSR_FOR_ALL_AVL_ENTRIES_END()
 
 /*
  * macros for traversing two-hop neighbors and neighbor ref lists.
@@ -131,23 +117,13 @@ AVLNODE2STRUCT(nbr2_node_to_nbr2, struct nbr2_entry, nbr2_node);
  * the loop prefetches the next node in order to not loose context if
  * for example the caller wants to delete the current entry.
  */
-#define OLSR_FOR_ALL_NBR2_ENTRIES(nbr2) \
-{ \
-  struct avl_node *nbr2_tree_node, *next_nbr2_tree_node; \
-  for (nbr2_tree_node = avl_walk_first(&nbr2_tree); \
-    nbr2_tree_node; nbr2_tree_node = next_nbr2_tree_node) { \
-    next_nbr2_tree_node = avl_walk_next(nbr2_tree_node); \
-    nbr2 = nbr2_node_to_nbr2(nbr2_tree_node);
-#define OLSR_FOR_ALL_NBR2_ENTRIES_END(nbr2) }}
+AVLNODE2STRUCT(nbr2_node_to_nbr2, nbr2_entry, nbr2_node);
+#define OLSR_FOR_ALL_NBR2_ENTRIES(nbr2) OLSR_FOR_ALL_AVL_ENTRIES(&nbr2_tree, nbr2_node_to_nbr2, nbr2)
+#define OLSR_FOR_ALL_NBR2_ENTRIES_END(nbr2) OLSR_FOR_ALL_AVL_ENTRIES_END()
 
-#define OLSR_FOR_ALL_NBR2_CON_ENTRIES(nbr2, nbr_con) \
-{ \
-  struct avl_node *nbr_con_node, *next_nbr_con_node; \
-  for (nbr_con_node = avl_walk_first(&nbr2->con_tree); \
-    nbr_con_node; nbr_con_node = next_nbr_con_node) { \
-    next_nbr_con_node = avl_walk_next(nbr_con_node); \
-    nbr_con = nbr2_con_node_to_connector(nbr_con_node);
-#define OLSR_FOR_ALL_NBR2_CON_ENTRIES_END(nbr2, nbr_con) }}
+AVLNODE2STRUCT(nbr2_con_node_to_connector, nbr_con, nbr2_tree_node);
+#define OLSR_FOR_ALL_NBR2_CON_ENTRIES(nbr2, con) OLSR_FOR_ALL_AVL_ENTRIES(&nbr2->con_tree, nbr2_con_node_to_connector, con)
+#define OLSR_FOR_ALL_NBR2_CON_ENTRIES_END() OLSR_FOR_ALL_AVL_ENTRIES_END()
 
 /*
  * The one hop neighbor and two hop neighbor trees.

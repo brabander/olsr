@@ -120,7 +120,7 @@ deinit_netfilters(void)
   OLSR_FOR_ALL_FILTERS(filter) {
     avl_delete(&filter_tree, &filter->filter_node);
     free(filter);
-  } OLSR_FOR_ALL_FILTERS_END(filter);
+  } OLSR_FOR_ALL_FILTERS_END();
 }
 
 /**
