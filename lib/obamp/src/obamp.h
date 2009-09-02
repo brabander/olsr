@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -48,11 +49,11 @@
 
 #include "parser.h"
 
-#define MESSAGE_TYPE 		133 			//TODO: check if this number is ok
+#define MESSAGE_TYPE 		133     //TODO: check if this number is ok
 #define PARSER_TYPE		MESSAGE_TYPE
-#define EMISSION_INTERVAL       10      		/* seconds */
-#define EMISSION_JITTER         25      		/* percent */
-#define OBAMP_VALID_TIME	1800   			/* seconds */
+#define EMISSION_INTERVAL       10      /* seconds */
+#define EMISSION_JITTER         25      /* percent */
+#define OBAMP_VALID_TIME	1800    /* seconds */
 
 /* OBAMP plugin data */
 #define PLUGIN_NAME 		"OLSRD OBAMP plugin"
@@ -65,23 +66,23 @@
 
 #define PLUGIN_DESCR 		"OBAMP"
 
-#define OBAMP_JITTER         	25 			/* percent */
+#define OBAMP_JITTER         	25      /* percent */
 #define OBAMP_ALIVE_EIVAL    	5
-#define OBAMP_MESH_CREATE_IVAL	5 			//Seconds
-#define OBAMP_TREE_CREATE_IVAL	10 			//seconds
-#define TREE_HEARTBEAT    	25 			//seconds
-#define OBAMP_OUTER_TREE_CREATE_IVAL    30 		//seconds
-#define _MESH_LOCK_		10			//seconds
+#define OBAMP_MESH_CREATE_IVAL	5       //Seconds
+#define OBAMP_TREE_CREATE_IVAL	10      //seconds
+#define TREE_HEARTBEAT    	25      //seconds
+#define OBAMP_OUTER_TREE_CREATE_IVAL    30      //seconds
+#define _MESH_LOCK_		10      //seconds
 
-#define _Texpire_		15			 //time in seconds before expire a neighbor
-#define _Texpire_timer_		1			//time in seconds to parse the list decrement and purge
+#define _Texpire_		15      //time in seconds before expire a neighbor
+#define _Texpire_timer_		1       //time in seconds to parse the list decrement and purge
 
 
 /*OBAMP Protocol MESSAGE IDs */
 
 #define OBAMP_DATA 		0
-#define OBAMP_HELLO 		1 
-#define OBAMP_TREECREATE 	2 
+#define OBAMP_HELLO 		1
+#define OBAMP_TREECREATE 	2
 #define OBAMP_ALIVE 		3
 #define OBAMP_TREE_REQ 		4
 #define OBAMP_TREE_ACK 		5
@@ -90,7 +91,7 @@
 
 
 
-extern struct ObampNodeState* myState; //Internal state of the running OBAMP node
+extern struct ObampNodeState *myState; //Internal state of the running OBAMP node
 
 /* Forward declaration of OLSR interface type */
 struct interface;
@@ -100,7 +101,7 @@ union olsr_ip_addr *MainAddressOf(union olsr_ip_addr *ip);
 void ObampSignalling(int sd, void *x, unsigned int y);
 
 //Gets packets from sniffing interfaces, checks if are multicast, and pushes them to OBAMP tree links
-void EncapFlowInObamp(int sd, void * x, unsigned int y);
+void EncapFlowInObamp(int sd, void *x, unsigned int y);
 
 //Used to add Sniffing Interfaces read from config file to the list
 int AddObampSniffingIf(const char *ifName, void *data, set_plugin_parameter_addon addon);
@@ -119,7 +120,7 @@ void mesh_create(void *para);
 void tree_create(void *para);
 void outer_tree_create(void *para);
 
-int addObampNode4(struct in_addr * ipv4, u_int8_t status);
+int addObampNode4(struct in_addr *ipv4, u_int8_t status);
 
 
 /* Parser function to register with the scheduler */
@@ -128,54 +129,54 @@ void olsr_parser(union olsr_message *, struct interface *, union olsr_ip_addr *,
 //Struct to describe the other OBAMP nodes in the mesh network
 struct ObampNode {
 
-	union olsr_ip_addr neighbor_ip_addr; //IP address
+  union olsr_ip_addr neighbor_ip_addr; //IP address
 
-	int isMesh; //The consider the path from us to this OBAMP node as an overlay mesh link
-	int wasMesh;
-	int outerTreeLink; //I'm using this OBAMP node as an anchor
-	int isTree;//it identifies if it is a link of tree
-	int MeshLock; //Is mesh because requested from neighbor	with hello messages
+  int isMesh;                          //The consider the path from us to this OBAMP node as an overlay mesh link
+  int wasMesh;
+  int outerTreeLink;                   //I'm using this OBAMP node as an anchor
+  int isTree;                          //it identifies if it is a link of tree
+  int MeshLock;                        //Is mesh because requested from neighbor with hello messages
 
-	u_int8_t status; //indicates if this OBAMP node has at least a tree link
-	
-	int Texpire;// TTL to softstate expire
+  u_int8_t status;                     //indicates if this OBAMP node has at least a tree link
 
-	u_int8_t DataSeqNumber;
+  int Texpire;                         // TTL to softstate expire
 
-  	struct list_head list;
+  u_int8_t DataSeqNumber;
+
+  struct list_head list;
 };
 
 //Interfaces of the router not talking OLSR, where we capture the multicast traffic
 struct ObampSniffingIf {
 
-int skd; 		//Socket descriptor
-char ifName[16]; 	//Interface name
-struct list_head list;
+  int skd;                             //Socket descriptor
+  char ifName[16];                     //Interface name
+  struct list_head list;
 
 };
 
 
 //Internal State of the OBAMP NoDE
 struct ObampNodeState {
-    
-    union olsr_ip_addr myipaddr; //IP ADDRESS
-    union olsr_ip_addr CoreAddress; //CORE IP ADDRESS
 
-    int iamcore; //Indicates if I'm the core
-    
-    u_int8_t TreeCreateSequenceNumber;
-    u_int8_t tree_req_sn;
-    u_int8_t DataSequenceNumber;
+  union olsr_ip_addr myipaddr;         //IP ADDRESS
+  union olsr_ip_addr CoreAddress;      //CORE IP ADDRESS
 
-    union olsr_ip_addr ParentId;	//Tree link towards the core
-    union olsr_ip_addr OldParentId;
+  int iamcore;                         //Indicates if I'm the core
 
-    /*
-	TTL to check if I'm receiving tree_create messages from core
-	if this expires there is a problem with the spanning tree
+  u_int8_t TreeCreateSequenceNumber;
+  u_int8_t tree_req_sn;
+  u_int8_t DataSequenceNumber;
 
-	*/
-    int TreeHeartBeat;	
+  union olsr_ip_addr ParentId;         //Tree link towards the core
+  union olsr_ip_addr OldParentId;
+
+  /*
+     TTL to check if I'm receiving tree_create messages from core
+     if this expires there is a problem with the spanning tree
+
+   */
+  int TreeHeartBeat;
 };
 
 // OBAMP message types
@@ -183,59 +184,58 @@ struct ObampNodeState {
 
 struct OBAMP_data_message {
 
-u_int8_t MessageID;
-union olsr_ip_addr router_id;
-union olsr_ip_addr last_hop;
-u_int8_t SequenceNumber;
-union olsr_ip_addr CoreAddress;
-u_int8_t datalen;
-unsigned char data[1280]; //TODO:fix me
+  u_int8_t MessageID;
+  union olsr_ip_addr router_id;
+  union olsr_ip_addr last_hop;
+  u_int8_t SequenceNumber;
+  union olsr_ip_addr CoreAddress;
+  u_int8_t datalen;
+  unsigned char data[1280];            //TODO:fix me
 
 };
 
 struct OBAMP_tree_create {
 
-u_int8_t MessageID;
-union olsr_ip_addr router_id;
-u_int8_t SequenceNumber;
-union olsr_ip_addr CoreAddress;
+  u_int8_t MessageID;
+  union olsr_ip_addr router_id;
+  u_int8_t SequenceNumber;
+  union olsr_ip_addr CoreAddress;
 
 };
 
 struct OBAMP_tree_link_req {
 
-u_int8_t MessageID;
-union olsr_ip_addr router_id;
-u_int8_t SequenceNumber;
-union olsr_ip_addr CoreAddress;
+  u_int8_t MessageID;
+  union olsr_ip_addr router_id;
+  u_int8_t SequenceNumber;
+  union olsr_ip_addr CoreAddress;
 };
 
 struct OBAMP_tree_link_ack {
 
-u_int8_t MessageID;
-union olsr_ip_addr router_id;
-u_int8_t SequenceNumber;
-union olsr_ip_addr CoreAddress;
+  u_int8_t MessageID;
+  union olsr_ip_addr router_id;
+  u_int8_t SequenceNumber;
+  union olsr_ip_addr CoreAddress;
 };
 
 
 struct OBAMP_hello {
 
-u_int8_t MessageID;
-union olsr_ip_addr router_id;
-u_int8_t HelloSequenceNumber;
-union olsr_ip_addr CoreAddress;
+  u_int8_t MessageID;
+  union olsr_ip_addr router_id;
+  u_int8_t HelloSequenceNumber;
+  union olsr_ip_addr CoreAddress;
 
 };
 
 struct OBAMP_alive {
 
-u_int8_t MessageID;
-u_int8_t status;
-u_int32_t CoreAddress;
+  u_int8_t MessageID;
+  u_int8_t status;
+  u_int32_t CoreAddress;
 //REMEMBER:Pad to 4 bytes this is a OLSR message
 
 };
 
 #endif /* _OBAMP_OBAMP_H */
-

@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -54,7 +55,7 @@
 #include "olsr_cookie.h"        /* olsr_alloc_cookie() */
 
 /* OBAMP includes */
-#include "obamp.h"               
+#include "obamp.h"
 #include "list.h"
 
 static void __attribute__ ((constructor)) my_init(void);
@@ -65,16 +66,13 @@ static bool obamp_post_init(void);
 static bool obamp_pre_cleanup(void);
 
 static const struct olsrd_plugin_parameters plugin_parameters[] = {
-  { .name = "NonOlsrIf", .set_plugin_parameter = &AddObampSniffingIf, .data = NULL },
+  {.name = "NonOlsrIf",.set_plugin_parameter = &AddObampSniffingIf,.data = NULL},
 };
 
-OLSR_PLUGIN6(plugin_parameters) {
-  .descr = PLUGIN_DESCR,
-  .author = PLUGIN_AUTHOR,
-  .pre_init = obamp_pre_init,
-  .post_init = obamp_post_init,
-  .pre_cleanup = obamp_pre_cleanup,
-};
+OLSR_PLUGIN6(plugin_parameters)
+{
+.descr = PLUGIN_DESCR,.author = PLUGIN_AUTHOR,.pre_init = obamp_pre_init,.post_init = obamp_post_init,.pre_cleanup =
+    obamp_pre_cleanup,};
 
 /**
  * Constructor of plugin, called before parameters are initialized
@@ -82,7 +80,7 @@ OLSR_PLUGIN6(plugin_parameters) {
 static bool
 obamp_pre_init(void)
 {
-PreInitOBAMP();
+  PreInitOBAMP();
 
   //return 0;
   return false;
@@ -91,7 +89,7 @@ PreInitOBAMP();
 static bool
 obamp_post_init(void)
 {
-olsrd_plugin_init();
+  olsrd_plugin_init();
 
   //return 0;
   return false;
