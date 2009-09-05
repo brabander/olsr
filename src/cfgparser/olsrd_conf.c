@@ -289,6 +289,8 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
 
   /* Interfaces */
   while (in) {
+    struct olsr_lq_mult *mult;
+
     io = in->cnf;
 
     if (in->name == NULL || !strlen(in->name)) {
@@ -341,6 +343,15 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
       return -1;
     }
 
+    for (mult = io->lq_mult; mult; mult=mult->next) {
+      if (mult->value > LINK_LOSS_MULTIPLIER) {
+        struct ipaddr_str buf;
+
+        fprintf(stderr, "Bad Linkquality multiplier ('%s' on IP %s: %0.2f)\n",
+            in->name, olsr_ip_to_string(&buf, &mult->addr), (float)mult->value / (float)LINK_LOSS_MULTIPLIER);
+        return -1;
+      }
+    }
     in = in->next;
   }
 

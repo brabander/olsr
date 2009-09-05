@@ -156,25 +156,11 @@ olsr_linkcost
 default_lq_packet_loss_worker_fpm(struct link_entry *link __attribute__ ((unused)), void *ptr, bool lost)
 {
   struct default_lq_fpm *tlq = ptr;
-//  uint32_t alpha_old = aging_factor_old;
-//  uint32_t alpha_new = aging_factor_new;
+  uint32_t alpha_old = aging_factor_old;
+  uint32_t alpha_new = aging_factor_new;
 
-//  uint32_t value;
-  // fpm link_loss_factor = fpmidiv(itofpm(link->loss_link_multiplier), 65536);
+  uint32_t value;
 
-  if (lost) {
-    if (tlq->valueLq > 4) {
-      tlq->valueLq-=4;
-    }
-  }
-  else {
-    if (tlq->valueLq < 255-4) {
-      tlq->valueLq+=4;
-    }
-  }
-
-  return default_lq_calc_cost_fpm(ptr);
-#if 0
   if (tlq->quickstart < LQ_QUICKSTART_STEPS) {
     alpha_new = aging_quickstart_new;
     alpha_old = aging_quickstart_old;
@@ -194,7 +180,6 @@ default_lq_packet_loss_worker_fpm(struct link_entry *link __attribute__ ((unused
   tlq->valueLq = (value * 255 + LQ_FPM_INTERNAL_MULTIPLIER - 1) / LQ_FPM_INTERNAL_MULTIPLIER;
 
   return default_lq_calc_cost_fpm(ptr);
-#endif
 }
 
 void

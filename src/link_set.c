@@ -287,6 +287,7 @@ set_loss_link_multiplier(struct link_entry *entry)
   struct olsr_lq_mult *mult;
   uint32_t val = 0;
   union olsr_ip_addr null_addr;
+  struct ipaddr_str buf;
 
   /* find the interface for the link */
   inter = if_ifwithaddr(&entry->local_iface_addr);
@@ -320,6 +321,9 @@ set_loss_link_multiplier(struct link_entry *entry)
 
   /* store the multiplier */
   entry->loss_link_multiplier = val;
+
+  OLSR_PRINTF(1, "Set linkloss multiplier for %s on %s to %d\n",
+      olsr_ip_to_string(&buf, &entry->neighbor_iface_addr), cfg_inter->name, val);
 }
 
 /*
