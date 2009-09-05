@@ -149,7 +149,7 @@ default_lq_ff_timer(void __attribute__ ((unused)) * context)
       tlq->lq.valueLq = 0;
     } else {
       // start with link-loss-factor
-      ratio = fpmidiv(itofpm(link->loss_link_multiplier), 65536);
+      ratio = fpmidiv(itofpm(link->loss_link_multiplier), LINK_LOSS_MULTIPLIER);
 
       // calculate received/(received + loss) factor
       ratio = fpmmuli(ratio, (int)received);

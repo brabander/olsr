@@ -136,7 +136,7 @@ typedef unsigned long ufpm;
 
 #else /* NDEBUG */
 
-fpm itofpm(int i);
+fpm itofpm(sfpm i);
 fpm ftofpm(float f);
 int fpmtoi(fpm a);
 float fpmtof(fpm a);

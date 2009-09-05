@@ -48,13 +48,10 @@
 #ifndef NDEBUG
 
 fpm
-itofpm(int i)
+itofpm(sfpm i)
 {
-  fpm r;
-  assert(fpmtoi_def(FPM_MIN) <= i);
-  assert(i <= fpmtoi_def(FPM_INT_MAX));
-  r = (fpm) itofpm_def(i);
-  return r;
+  assert(FPM_MIN <= i && i <= FPM_MAX);
+  return itofpm_def(i);
 }
 
 fpm

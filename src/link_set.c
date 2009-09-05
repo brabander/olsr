@@ -42,6 +42,7 @@
 /*
  * Link sensing database for the OLSR routing daemon
  */
+#include <assert.h>
 
 #include "defs.h"
 #include "link_set.h"
@@ -290,7 +291,8 @@ set_loss_link_multiplier(struct link_entry *entry)
   struct ipaddr_str buf;
 
   /* find the interface for the link */
-  inter = if_ifwithaddr(&entry->local_iface_addr);
+  assert(entry->if_name);
+  inter = if_ifwithname(entry->if_name);
 
   /* find the interface configuration for the interface */
   for (cfg_inter = olsr_cnf->interfaces; cfg_inter; cfg_inter = cfg_inter->next) {
