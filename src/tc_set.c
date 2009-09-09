@@ -985,7 +985,7 @@ olsr_output_lq_tc_internal(void *ctx  __attribute__ ((unused)), union olsr_ip_ad
       ttl = ttl_list[ttl_index];
     }
   }
-  pkt_put_u8(&curr, ttl_list[ttl_index]);
+  pkt_put_u8(&curr, ttl);
 
   /* hopcount */
   pkt_put_u8(&curr, 0);
