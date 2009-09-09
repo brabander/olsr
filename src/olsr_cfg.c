@@ -514,11 +514,11 @@ parse_cfg_interface(char *argstr, struct olsr_config *rcfg, char *rmsg)
           } else if (0 == strcasecmp("Midinterval", p_next[0])) {
             PARSER_DEBUG_PRINTF("\tIgnore MID interval1: %s ms in interface\n", p_next[1]);
           } else if (0 == strcasecmp("MidValidityTime", p_next[0])) {
-            PARSER_DEBUG_PRINTF("\ttIgnore MID validity: %s ms in interface\n", p_next[1]);
+            PARSER_DEBUG_PRINTF("\tIgnore MID validity: %s ms in interface\n", p_next[1]);
           } else if (0 == strcasecmp("Hnainterval", p_next[0])) {
-            PARSER_DEBUG_PRINTF("\ttIgnore HNA interval1: %s ms in interface\n", p_next[1]);
+            PARSER_DEBUG_PRINTF("\tIgnore HNA interval1: %s ms in interface\n", p_next[1]);
           } else if (0 == strcasecmp("HnaValidityTime", p_next[0])) {
-            PARSER_DEBUG_PRINTF("\ttIgnore HNA validity: %s ms in interface\n", p_next[1]);
+            PARSER_DEBUG_PRINTF("\tIgnore HNA validity: %s ms in interface\n", p_next[1]);
           } else if (0 == strcasecmp("Weight", p_next[0])) {
             new_if->cnf->weight.fixed = true;
             PARSER_DEBUG_PRINTF("\tFixed willingness: %d\n", new_if->cnf->weight.value);
