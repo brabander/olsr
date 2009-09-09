@@ -801,7 +801,7 @@ parse_cfg_log(char *argstr, struct olsr_config *rcfg, char *rmsg, enum log_sever
 
     if (i == LOG_SOURCE_COUNT) {
       sprintf(rmsg, "Error, unknown logging source: %s\n", p);
-      return CFG_EXIT;
+      return CFG_ERROR;
     }
 
     /* handle "all" keyword */
