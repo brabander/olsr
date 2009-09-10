@@ -588,16 +588,15 @@ static void olsr_com_parse_txt(struct comport_connection *con,
       len = con->out.len;
 
       /* handle difference between multicommand and singlecommand mode */
-      if (!chainCommands) {
-        para = strchr(cmd, ' ');
-        if (para != NULL) {
-          *para++ = 0;
-        }
-      } else {
+      if (chainCommands) {
         next = strchr(cmd, '/');
         if (next) {
           *next++ = 0;
         }
+      }
+      para = strchr(cmd, ' ');
+      if (para != NULL) {
+        *para++ = 0;
       }
 
       /* if we are doing continous output, stop it ! */
