@@ -409,7 +409,7 @@ txtinfo_link(struct comport_connection *con,  char *cmd __attribute__ ((unused))
     olsr_ip_to_string(&buf_neighip, &lnk->neighbor_iface_addr);
     strscpy(buf_sym, lnk->status == SYM_LINK ? OLSR_YES : OLSR_NO, sizeof(buf_sym));
     strscpy(buf_mrp, lnk->is_mpr ? OLSR_YES : OLSR_NO, sizeof(buf_mrp));
-    olsr_milli_to_txt(&buf_vtime, lnk->link_sym_timer->timer_clock - now_times);
+    olsr_milli_to_txt(&buf_vtime, lnk->link_sym_timer == NULL ? 0 : lnk->link_sym_timer->timer_clock - now_times);
     snprintf(buf_rawlinkcost, sizeof(buf_rawlinkcost), "%ud", lnk->linkcost);
 
     olsr_get_linkcost_text(lnk->linkcost, false, buf_linkcost, sizeof(buf_linkcost));
