@@ -137,6 +137,9 @@ olsr_message_is_duplicate(union olsr_message *m)
   if (diff > (1 << 15)) {
     diff -= (1 << 16);
   }
+  else if (diff < -(1 << 15)) {
+      diff += (1 << 16);
+  }
 
   if (diff < -31) {
     entry->too_low_counter++;
