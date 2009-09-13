@@ -123,10 +123,12 @@ install_olsrd:	install_bin
 		@echo Edit $(CFGFILE) before running olsrd!!
 		@echo -------------------------------------------
 		@echo Installing manpages $(EXENAME)\(8\) and $(CFGNAME)\(5\)
+ifneq ($(MANDIR),)
 		mkdir -p $(MANDIR)/man8/
 		cp files/olsrd.8.gz $(MANDIR)/man8/$(EXENAME).8.gz
 		mkdir -p $(MANDIR)/man5/
 		cp files/olsrd.conf.5.gz $(MANDIR)/man5/$(CFGNAME).5.gz
+endif
 
 tags:
 		$(TAGCMD) -o $(TAGFILE) $(TAG_SRCS)
@@ -142,7 +144,7 @@ rpm:
 #
 
 # This is quite ugly but at least it works
-ifeq ($(OS),linux)
+ifeq ($(OS),$(filter $(OS),linux android))
 SUBDIRS = $(notdir $(shell find lib -maxdepth 2 -name Makefile -not -path lib/Makefile -printf "%h\n"|sort))
 else
 ifeq ($(OS),win32)
