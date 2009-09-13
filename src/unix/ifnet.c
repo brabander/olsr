@@ -39,7 +39,7 @@
  *
  */
 
-#if defined __FreeBSD__ || defined __MacOSX__ || defined __NetBSD__ || defined __OpenBSD__
+#if defined __FreeBSD__ || defined __FreeBSD_kernel__ || defined __MacOSX__ || defined __NetBSD__ || defined __OpenBSD__
 #define ifr_netmask ifr_addr
 #endif
 

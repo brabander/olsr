@@ -47,7 +47,7 @@
 #ifndef _OLSR_TYPES_H
 #define	_OLSR_TYPES_H
 
-#if !defined linux && !defined __MacOSX__ && !defined WIN32 && !defined __FreeBSD__ && !defined __NetBSD__ && !defined __OpenBSD__
+#if !defined linux && !defined __MacOSX__ && !defined WIN32 && !defined __FreeBSD__ && !defined __FreeBSD_kernel__ && !defined __NetBSD__ && !defined __OpenBSD__
 #       error "Unsupported system"
 #endif
 

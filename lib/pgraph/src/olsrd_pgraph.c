@@ -226,7 +226,7 @@ plugin_ipc_init(void)
       perror("SO_REUSEADDR failed");
       return 0;
     }
-#ifdef __FreeBSD__
+#if defined __FreeBSD__
     if (setsockopt(ipc_socket, SOL_SOCKET, SO_NOSIGPIPE, (char *)&yes, sizeof(yes)) < 0) {
       perror("SO_NOSIGPIPE failed");
       return 0;
@@ -385,7 +385,7 @@ ipc_send(const char *data, int size)
   if (ipc_connection == -1)
     return 0;
 
-#if defined __FreeBSD__ || defined __MacOSX__ || __OpenBSD__
+#if defined __FreeBSD__ || defined __FreeBSD_kernel__ || defined __MacOSX__ || __OpenBSD__
 #define FLAG 0
 #else
 #define FLAG MSG_NOSIGNAL

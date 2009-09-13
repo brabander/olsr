@@ -100,7 +100,7 @@ MD5_checksum(const uint8_t * data, const uint16_t data_len, uint8_t * hashbuf)
 #ifdef linux
 #define OS "GNU/Linux"
 #endif
-#ifdef __FreeBSD__
+#if defined __FreeBSD__ || defined __FreeBSD_kernel__
 #define OS "FreeBSD"
 #endif
 

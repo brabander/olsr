@@ -240,7 +240,7 @@ struct olsrd_config {
   int rtnl_s;                          /* Socket used for rtnetlink messages */
 #endif
 
-#if defined __FreeBSD__ || defined __MacOSX__ || defined __NetBSD__ || defined __OpenBSD__
+#if defined __FreeBSD__ || defined __FreeBSD_kernel__ || defined __MacOSX__ || defined __NetBSD__ || defined __OpenBSD__
   int rts;                             /* Socket used for route changes on BSDs */
 #endif
   float lq_nat_thresh;

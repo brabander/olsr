@@ -317,7 +317,7 @@ int main(int argc, char *argv[]) {
   /*
    * create routing socket
    */
-#if defined __FreeBSD__ || defined __MacOSX__ || defined __NetBSD__ || defined __OpenBSD__
+#if defined __FreeBSD__ || __FreeBSD_kernel__ || defined __MacOSX__ || defined __NetBSD__ || defined __OpenBSD__
   olsr_cnf->rts = socket(PF_ROUTE, SOCK_RAW, 0);
   if (olsr_cnf->rts < 0) {
     olsr_syslog(OLSR_LOG_ERR, "routing socket: %m");
@@ -552,7 +552,7 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
   close(olsr_cnf->rtnl_s);
 #endif
 
-#if defined __FreeBSD__ || defined __MacOSX__ || defined __NetBSD__ || defined __OpenBSD__
+#if defined __FreeBSD__ || defined __FreeBSD_kernel__ || defined __MacOSX__ || defined __NetBSD__ || defined __OpenBSD__
   /* routing socket */
   close(olsr_cnf->rts);
 #endif

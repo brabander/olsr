@@ -459,7 +459,7 @@ set_default_cnf(struct olsrd_config *cnf)
   cnf->rtnl_s = 0;
 #endif
 
-#if defined __FreeBSD__ || defined __MacOSX__ || defined __NetBSD__ || defined __OpenBSD__
+#if defined __FreeBSD__ || defined __FreeBSD_kernel__ || defined __MacOSX__ || defined __NetBSD__ || defined __OpenBSD__
   cnf->rts = 0;
 #endif
 }
