@@ -86,6 +86,9 @@ typedef signed int int32_t;
 /* user defined cookies */
 typedef uint16_t olsr_cookie_t;
 
+/* manpage says: fd_set is in sys/select.h with posix (at least with the Android-NDK) */
+#include <sys/select.h>
+
 /* OpenBSD wants this here */
 #include <sys/types.h>
 

@@ -44,9 +44,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#ifdef linux
-#include <linux/in_route.h>
-#endif
 #include <unistd.h>
 #include <errno.h>
 #include <signal.h>

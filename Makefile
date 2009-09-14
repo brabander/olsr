@@ -144,13 +144,18 @@ rpm:
 #
 
 # This is quite ugly but at least it works
-ifeq ($(OS),$(filter $(OS),linux android))
+ifeq ($(OS),linux)
 SUBDIRS = $(notdir $(shell find lib -maxdepth 2 -name Makefile -not -path lib/Makefile -printf "%h\n"|sort))
 else
 ifeq ($(OS),win32)
 SUBDIRS := dot_draw httpinfo mini pgraph secure txtinfo
 else
+ifeq ($(OS),android)
+# nameservice: no regex
+SUBDIRS := bmf dot_draw dyn_gw_plain httpinfo mini quagga secure tas txtinfo watchdog
+else
 SUBDIRS := bmf dot_draw dyn_gw dyn_gw_plain httpinfo mini nameservice pgraph secure txtinfo watchdog
+endif
 endif
 endif
 
