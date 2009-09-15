@@ -20,7 +20,7 @@ CPPFLAGS +=	-DOLSRD_GLOBAL_CONF_FILE=\"$(CFGFILE)\"
 CPPFLAGS +=	-D'setbuf(a,b)='
 
 # bionic libc: missing declaration
-CPPFLAGS +=	-DINET_ADDRSTRLEN=16
+CPPFLAGS +=	-DINET_ADDRSTRLEN=46
 # bionic libc: renamed declaration
 CPPFLAGS +=	-Dipv6mr_interface=ipv6mr_ifindex
 # bionic libc: missing declarations
