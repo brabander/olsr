@@ -98,11 +98,10 @@
  */
 
 enum olsr_message_types {
-  HELLO_MESSAGE,        /* 1 */
-  TC_MESSAGE,           /* 2 */
-  MID_MESSAGE,          /* 3 */
-  HNA_MESSAGE,          /* 4 */
-  COUNT_MESSAGE_TYPES
+  HELLO_MESSAGE = 1,
+  TC_MESSAGE    = 2,
+  MID_MESSAGE   = 3,
+  HNA_MESSAGE   = 4,
 };
 
 /*
