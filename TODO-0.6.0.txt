@@ -1,0 +1,12 @@
+- duplicate_set timer per dup set entry
+- rewrite httpinfo server
+- documentation for txtinfo
+- strict parser validation flag Makefile ?
+- remove debug code from html-server
+- use olsr_ip_acl für net_olsr (remove filter-tree) ?
+- remove fib_metric ?
+- make fib_metric (default 2) configurable ?
+- multi-arch port port of linuk kernel route handling
+- make route installs asynchronous of SPF
+- read routes before attempting a write
+- check which 0.5.6 patches are missing
