@@ -57,7 +57,8 @@ struct dup_entry {
   uint16_t seqnr;
   uint16_t too_low_counter;
   uint32_t array;
-  uint32_t valid_until;
+  struct timer_entry *validity_timer;
+  struct avl_tree *tree;               /* backpointer to owning tree */
 };
 
 enum duplicate_status {
@@ -69,7 +70,7 @@ enum duplicate_status {
 };
 
 
-int EXPORT(olsr_seqno_diff)(uint16_t reference, uint16_t other);
+int EXPORT(olsr_seqno_diff) (uint16_t reference, uint16_t other);
 void olsr_init_duplicate_set(void);
 bool olsr_is_duplicate_message(union olsr_message *m, bool forward_set, enum duplicate_status *status);
 void olsr_print_duplicate_table(void);

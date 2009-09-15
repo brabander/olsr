@@ -51,16 +51,15 @@
 
 #include <stdlib.h>
 
-static void olsr_cleanup_duplicate_entry(void *unused);
-
 struct avl_tree forward_set, processing_set;
-static struct timer_entry *duplicate_cleanup_timer;
 
 /* Some cookies for stats keeping */
 static struct olsr_cookie_info *duplicate_timer_cookie = NULL;
 static struct olsr_cookie_info *duplicate_mem_cookie = NULL;
 
-int olsr_seqno_diff(uint16_t reference, uint16_t other) {
+int
+olsr_seqno_diff(uint16_t reference, uint16_t other)
+{
   int diff;
 
   diff = (int)reference - (int)other;
@@ -68,8 +67,7 @@ int olsr_seqno_diff(uint16_t reference, uint16_t other) {
   // overflow ?
   if (diff >= (1 << 15)) {
     diff -= (1 << 16);
-  }
-  else if (diff < -(1 << 15)) {
+  } else if (diff < -(1 << 15)) {
     diff += (1 << 16);
   }
   return diff;
@@ -90,15 +88,13 @@ olsr_init_duplicate_set(void)
 
   duplicate_mem_cookie = olsr_alloc_cookie("dup_entry", OLSR_COOKIE_TYPE_MEMORY);
   olsr_cookie_set_memory_size(duplicate_mem_cookie, sizeof(struct dup_entry));
-
-  olsr_set_timer(&duplicate_cleanup_timer, DUPLICATE_CLEANUP_INTERVAL,
-                 DUPLICATE_CLEANUP_JITTER, OLSR_TIMER_PERIODIC, &olsr_cleanup_duplicate_entry, NULL, duplicate_timer_cookie);
 }
 
 static struct dup_entry *
 olsr_create_duplicate_entry(union olsr_ip_addr *ip, uint16_t seqnr)
 {
   struct dup_entry *entry;
+
   entry = olsr_cookie_malloc(duplicate_mem_cookie);
   if (entry != NULL) {
     memcpy(&entry->ip, ip, olsr_cnf->ip_version == AF_INET ? sizeof(entry->ip.v4) : sizeof(entry->ip.v6));
@@ -111,27 +107,21 @@ olsr_create_duplicate_entry(union olsr_ip_addr *ip, uint16_t seqnr)
 }
 
 static void
-olsr_delete_duplicate_entry(struct dup_entry *entry, bool forward)
+olsr_delete_duplicate_entry(struct dup_entry *entry)
 {
-  avl_delete(forward ? &forward_set : &processing_set, &entry->avl);
+  avl_delete(entry->tree, &entry->avl);
+  entry->tree = NULL;
+  olsr_stop_timer(entry->validity_timer);
+  entry->validity_timer = NULL;
   olsr_cookie_free(duplicate_mem_cookie, entry);
 }
 
 static void
-olsr_cleanup_duplicate_entry(void __attribute__ ((unused)) * unused)
+olsr_expire_duplicate_entry(void *context)
 {
-  struct dup_entry *entry;
+  struct dup_entry *entry = context;
 
-  OLSR_FOR_ALL_FORWARD_DUP_ENTRIES(entry) {
-    if (TIMED_OUT(entry->valid_until)) {
-      olsr_delete_duplicate_entry(entry, true);
-    }
-  } OLSR_FOR_ALL_FORWARD_DUP_ENTRIES_END()
-  OLSR_FOR_ALL_PROCESS_DUP_ENTRIES(entry) {
-    if (TIMED_OUT(entry->valid_until)) {
-      olsr_delete_duplicate_entry(entry, false);
-    }
-  } OLSR_FOR_ALL_PROCESS_DUP_ENTRIES_END()
+  olsr_delete_duplicate_entry(entry);
 }
 
 /**
@@ -142,14 +132,11 @@ olsr_flush_duplicate_entries(void)
 {
   struct dup_entry *entry;
 
-  olsr_stop_timer(duplicate_cleanup_timer);
-  duplicate_cleanup_timer = NULL;
-
   OLSR_FOR_ALL_FORWARD_DUP_ENTRIES(entry) {
-    olsr_delete_duplicate_entry(entry, true);
+    olsr_delete_duplicate_entry(entry);
   } OLSR_FOR_ALL_FORWARD_DUP_ENTRIES_END()
-  OLSR_FOR_ALL_PROCESS_DUP_ENTRIES(entry) {
-    olsr_delete_duplicate_entry(entry, false);
+    OLSR_FOR_ALL_PROCESS_DUP_ENTRIES(entry) {
+    olsr_delete_duplicate_entry(entry);
   } OLSR_FOR_ALL_PROCESS_DUP_ENTRIES_END()
 }
 
@@ -190,24 +177,28 @@ olsr_is_duplicate_message(union olsr_message *m, bool forwarding, enum duplicate
 
   valid_until = GET_TIMESTAMP(DUPLICATE_VTIME);
 
+  /* Check if entry exists */
   entry = (struct dup_entry *)avl_find(tree, ip);
   if (entry == NULL) {
     entry = olsr_create_duplicate_entry(ip, seqnr);
     if (entry != NULL) {
       avl_insert(tree, &entry->avl, 0);
-      entry->valid_until = valid_until;
+      entry->tree = tree;
+      entry->validity_timer = olsr_start_timer(DUPLICATE_CLEANUP_INTERVAL, DUPLICATE_CLEANUP_JITTER,
+                                               OLSR_TIMER_ONESHOT, &olsr_expire_duplicate_entry, entry, duplicate_timer_cookie);
     }
 
     *status = NEW_OLSR_MESSAGE;
     return false;               // okay, we process this package
+  } else {
+
+    /*
+     * Refresh timer.
+     */
+    olsr_change_timer(entry->validity_timer, DUPLICATE_CLEANUP_INTERVAL, DUPLICATE_CLEANUP_JITTER, OLSR_TIMER_ONESHOT);
   }
 
   diff = olsr_seqno_diff(seqnr, entry->seqnr);
-
-  // update timestamp
-  if (valid_until > entry->valid_until) {
-    entry->valid_until = valid_until;
-  }
 
   if (diff < -31) {
     entry->too_low_counter++;
@@ -276,17 +267,19 @@ olsr_print_duplicate_table(void)
   OLSR_FOR_ALL_FORWARD_DUP_ENTRIES(entry) {
     struct ipaddr_str addrbuf;
     OLSR_INFO_NH(LOG_DUPLICATE_SET, "%-*s %08x %s\n",
-                 ipwidth, olsr_ip_to_string(&addrbuf, entry->avl.key), entry->array, olsr_clock_string(entry->valid_until));
+                 ipwidth, olsr_ip_to_string(&addrbuf, entry->avl.key), entry->array,
+                 olsr_clock_string(entry->validity_timer->timer_clock));
   } OLSR_FOR_ALL_FORWARD_DUP_ENTRIES_END()
 
-  OLSR_INFO(LOG_DUPLICATE_SET, "\n--- %s ------------------------------------------------- DUPLICATE SET (processing)\n\n",
-            olsr_wallclock_string());
+    OLSR_INFO(LOG_DUPLICATE_SET, "\n--- %s ------------------------------------------------- DUPLICATE SET (processing)\n\n",
+              olsr_wallclock_string());
   OLSR_INFO_NH(LOG_DUPLICATE_SET, "%-*s %8s %s\n", ipwidth, "Node IP", "DupArray", "VTime");
 
   OLSR_FOR_ALL_PROCESS_DUP_ENTRIES(entry) {
     struct ipaddr_str addrbuf;
     OLSR_INFO_NH(LOG_DUPLICATE_SET, "%-*s %08x %s\n",
-                 ipwidth, olsr_ip_to_string(&addrbuf, entry->avl.key), entry->array, olsr_clock_string(entry->valid_until));
+                 ipwidth, olsr_ip_to_string(&addrbuf, entry->avl.key), entry->array,
+                 olsr_clock_string(entry->validity_timer->timer_clock));
   } OLSR_FOR_ALL_PROCESS_DUP_ENTRIES_END()
 #endif
 }

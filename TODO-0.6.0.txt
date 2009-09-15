@@ -1,4 +1,3 @@
-- duplicate_set timer per dup set entry
 - rewrite httpinfo server
 - documentation for txtinfo
 - strict parser validation flag Makefile ?
