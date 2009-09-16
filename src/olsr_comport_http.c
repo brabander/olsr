@@ -85,7 +85,8 @@ olsr_com_html2telnet_gate(struct comport_connection *con, char *path, int pCount
   if (strlen(path) > strlen(TELNET_PATH)) {
     char *cmd = &path[strlen(TELNET_PATH)];
     char *next;
-    int count = 0;
+    int count = 1;
+    enum olsr_txtcommand_result result;
 
     while (cmd) {
       next = strchr(cmd, '/');
@@ -93,8 +94,14 @@ olsr_com_html2telnet_gate(struct comport_connection *con, char *path, int pCount
         *next++ = 0;
       }
 
-      olsr_com_handle_txtcommand(con, cmd, pCount > count ? p[count] : NULL);
+      result = olsr_com_handle_txtcommand(con, cmd, pCount > count ? p[count] : NULL);
+
+      /* sorry, no continous output */
+      if (result == CONTINOUS) {
+        con->stop_handler(con);
+      }
       cmd = next;
+      count += 2;
     }
   }
 }
