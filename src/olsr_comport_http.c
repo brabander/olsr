@@ -46,9 +46,12 @@
 #include "olsr_cookie.h"
 #include "olsr_comport.h"
 #include "olsr_comport_http.h"
+#include "olsr_comport_txt.h"
 #include "olsr_cfg.h"
+#include "ipcalc.h"
 
-#define HTTP_VERSION "HTTP/1.1"
+static const char HTTP_VERSION[] = "HTTP/1.1";
+static const char TELNET_PATH[] = "/telnet/";
 
 static struct olsr_cookie_info *htmlsite_cookie;
 struct avl_tree http_handler_tree;
@@ -64,6 +67,7 @@ static char http_501_response[] = "Not Implemented";
 static char http_503_response[] = "Service Unavailable";
 
 /* sample for a static html page */
+#if 0
 static void init_test(void) {
   static char content[] = "<html><body>Yes, you got it !</body></html>";
   static char path[] = "/";
@@ -74,6 +78,26 @@ static void init_test(void) {
   site = olsr_com_add_htmlsite(path, content, strlen(content));
   olsr_com_set_htmlsite_acl_auth(site, NULL, 1, aclPtr);
 }
+#endif
+
+static void
+olsr_com_html2telnet_gate(struct comport_connection *con, char *path, int pCount, char *p[]) {
+  if (strlen(path) > strlen(TELNET_PATH)) {
+    char *cmd = &path[strlen(TELNET_PATH)];
+    char *next;
+    int count = 0;
+
+    while (cmd) {
+      next = strchr(cmd, '/');
+      if (next) {
+        *next++ = 0;
+      }
+
+      olsr_com_handle_txtcommand(con, cmd, pCount > count ? p[count] : NULL);
+      cmd = next;
+    }
+  }
+}
 
 void
 olsr_com_init_http(void) {
@@ -82,7 +106,9 @@ olsr_com_init_http(void) {
   htmlsite_cookie = olsr_alloc_cookie("comport http sites", OLSR_COOKIE_TYPE_MEMORY);
   olsr_cookie_set_memory_size(htmlsite_cookie, sizeof(struct olsr_html_site));
 
-  init_test();
+  /* activate telnet gateway */
+  olsr_com_add_htmlhandler(olsr_com_html2telnet_gate, "/telnet/");
+  //init_test();
 }
 
 void olsr_com_destroy_http(void) {
@@ -108,8 +134,8 @@ olsr_com_add_htmlsite(char *path, char *content, size_t length) {
 }
 
 struct olsr_html_site *
-olsr_com_add_htmlhandler(void(*sitehandler)(struct autobuf *buf, char *path, int parameter_count, char *parameters[]),
-    char *path) {
+olsr_com_add_htmlhandler(void(*sitehandler)(struct comport_connection *con, char *path, int parameter_count, char *parameters[]),
+    const char *path) {
   struct olsr_html_site *site;
 
   site = olsr_cookie_malloc(htmlsite_cookie);
@@ -148,6 +174,7 @@ olsr_com_handle_htmlsite(struct comport_connection *con, char *path,
 
   site = (struct olsr_html_site *)avl_find(&http_handler_tree, path);
   if (site == NULL) {
+    OLSR_DEBUG(LOG_COMPORT, "No httphandler found for path %s\n", path);
     return false;
   }
 
@@ -169,13 +196,18 @@ olsr_com_handle_htmlsite(struct comport_connection *con, char *path,
       }
     }
     if (con->send_as == HTTP_401_UNAUTHORIZED) {
+      OLSR_DEBUG(LOG_COMPORT, "Error, invalid authorization\n");
       return true;
     }
   }
 
   /* check if ip is allowed */
   if (site->acl != NULL && !ip_acl_acceptable(site->acl, &con->addr, olsr_cnf->ip_version)) {
+    struct ipaddr_str buf;
+
     con->send_as = HTTP_403_FORBIDDEN;
+    OLSR_DEBUG(LOG_COMPORT, "Error, access by IP %s is not allowed for path %s\n",
+        path, olsr_ip_to_string(&buf, &con->addr));
     return true;
   }
 
@@ -183,7 +215,7 @@ olsr_com_handle_htmlsite(struct comport_connection *con, char *path,
   if (site->static_site) {
     abuf_memcpy(&con->out, site->site_data, site->site_length);
   } else {
-    site->sitehandler(&con->out, fullpath, para_count, para);
+    site->sitehandler(con, fullpath, para_count, para);
   }
   con->send_as = HTTP_200_OK;
   return true;

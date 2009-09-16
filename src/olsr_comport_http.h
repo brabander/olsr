@@ -63,7 +63,7 @@ struct olsr_html_site {
   size_t site_length;
 
 	/* for non static, this is the handler */
-  void (*sitehandler)(struct autobuf *buf, char *path, int parameter_count, char *parameters[]);
+  void (*sitehandler)(struct comport_connection *con, char *path, int parameter_count, char *parameters[]);
 };
 
 AVLNODE2STRUCT(html_tree2site, olsr_html_site, node);
@@ -76,8 +76,8 @@ void olsr_com_destroy_http(void);
 struct olsr_html_site *EXPORT(olsr_com_add_htmlsite) (
     char *path, char *content, size_t length);
 struct olsr_html_site *EXPORT(olsr_com_add_htmlhandler) (
-    void (*sitehandler)(struct autobuf *buf, char *path, int parameter_count, char *parameters[]),
-    char *path);
+    void (*sitehandler)(struct comport_connection *con, char *path, int parameter_count, char *parameters[]),
+    const char *path);
 void EXPORT(olsr_com_remove_htmlsite) (struct olsr_html_site *site);
 void EXPORT(olsr_com_set_htmlsite_acl_auth) (struct olsr_html_site *site,
     struct ip_acl *acl, int auth_count, char **auth_entries);

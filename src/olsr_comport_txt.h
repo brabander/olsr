@@ -56,7 +56,7 @@ enum olsr_txtcommand_result {
 };
 
 typedef enum olsr_txtcommand_result (*olsr_txthandler)
-    (struct comport_connection *con, char *command, char *parameter);
+    (struct comport_connection *con, const char *command, const char *parameter);
 
 struct olsr_txtcommand {
   struct avl_node node;

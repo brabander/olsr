@@ -479,6 +479,8 @@ static void olsr_com_parse_http(struct comport_connection *con,
 
   /* we have everything to process the http request */
   con->state = SEND_AND_QUIT;
+  olsr_com_decode_url(filename);
+
   if (strcmp(req_type, "GET") == 0) {
     /* HTTP-GET request */
     para = strchr(filename, '?');
@@ -501,7 +503,6 @@ static void olsr_com_parse_http(struct comport_connection *con,
 
     /* we have null terminated key at *para. Now decode the key */
     para_keyvalue[para_count++] = para;
-    olsr_com_decode_url(para);
 
     /* split the string at the next '&' (the splitter of multiple key/value pairs */
     para = strchr(str, '&');
@@ -510,7 +511,6 @@ static void olsr_com_parse_http(struct comport_connection *con,
     }
 
     /* we have a null terminated value at *str, Now decode it */
-    olsr_com_decode_url(str);
     para_keyvalue[para_count++] = str;
   }
 
@@ -532,9 +532,14 @@ static void olsr_com_parse_http(struct comport_connection *con,
     }
 
     /* try to find a handler for a path prefix */
-    do {
+    if (i > 0 && filename[i] == '/') {
       filename[i--] = 0;
-    } while (i > 0 && filename[i] != '/');
+    }
+    else {
+      do {
+        filename[i--] = 0;
+      } while (i > 0 && filename[i] != '/');
+    }
   }
   con->send_as = HTTP_404_NOT_FOUND;
 }

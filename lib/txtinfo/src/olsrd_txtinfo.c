@@ -54,6 +54,7 @@
 #include "olsr_ip_prefix_list.h"
 #include "parser.h"
 #include "olsr_comport_txt.h"
+#include "olsr_comport_http.h"
 #include "common/string.h"
 #include "common/autobuf.h"
 #include "plugin_loader.h"
@@ -73,12 +74,18 @@ static bool txtinfo_pre_init(void);
 static bool txtinfo_post_init(void);
 static bool txtinfo_pre_cleanup(void);
 
-static enum olsr_txtcommand_result txtinfo_neigh(struct comport_connection *con, char *cmd, char *param);
-static enum olsr_txtcommand_result txtinfo_link(struct comport_connection *con,  char *cmd, char *param);
-static enum olsr_txtcommand_result txtinfo_routes(struct comport_connection *con,  char *cmd, char *param);
-static enum olsr_txtcommand_result txtinfo_topology(struct comport_connection *con,  char *cmd, char *param);
-static enum olsr_txtcommand_result txtinfo_hna(struct comport_connection *con,  char *cmd, char *param);
-static enum olsr_txtcommand_result txtinfo_mid(struct comport_connection *con,  char *cmd, char *param);
+static enum olsr_txtcommand_result txtinfo_neigh(struct comport_connection *con,
+    const char *cmd, const char *param);
+static enum olsr_txtcommand_result txtinfo_link(struct comport_connection *con,
+    const char *cmd, const char *param);
+static enum olsr_txtcommand_result txtinfo_routes(struct comport_connection *con,
+    const char *cmd, const char *param);
+static enum olsr_txtcommand_result txtinfo_topology(struct comport_connection *con,
+    const char *cmd, const char *param);
+static enum olsr_txtcommand_result txtinfo_hna(struct comport_connection *con,
+    const char *cmd, const char *param);
+static enum olsr_txtcommand_result txtinfo_mid(struct comport_connection *con,
+    const char *cmd, const char *param);
 
 /* plugin configuration */
 static struct ip_acl allowed_nets;
@@ -109,6 +116,9 @@ static struct txtinfo_cmd commands[] = {
     {"mid", &txtinfo_mid, NULL},
     {"routes", &txtinfo_routes, NULL},
 };
+
+/* base path for http access (should end with a '/') */
+static const char TXTINFO_HTTP_PATH[] = "/txtinfo/";
 
 /* constants and static storage for template engine */
 static const char KEY_LOCALIP[] = "localip";
@@ -292,17 +302,15 @@ txtinfo_post_init(void)
  * @param template
  */
 static char *
-parse_user_template(char *template) {
-  char *src = template;
-  char *dst = template;
-  bool changed = false;
+parse_user_template(const char *template) {
+  // TODO: dynamic buffer ?
+  static char buffer[1024];
+  char *dst = buffer;
 
-  while (*src) {
-    if (*src == '\\') {
-      changed = true;
-
-      src++;
-      switch (*src) {
+  while (*template && dst < &buffer[1023]) {
+    if (*template == '\\') {
+      template++;
+      switch (*template) {
         case 0:
           *dst = 0;
           break;
@@ -317,25 +325,26 @@ parse_user_template(char *template) {
           break;
         default:
           *dst++ = '\\';
-          *dst = *src;
+          *dst = *template;
           break;
       }
     }
-    else if (changed) {
-      *dst = *src;
+    else {
+      *dst = *template;
     }
-    src++;
+    template++;
     dst++;
   }
   *dst = 0;
-  return template;
+  return dst;
 }
 
 /**
  * Callback for neigh command
  */
 static enum olsr_txtcommand_result
-txtinfo_neigh(struct comport_connection *con,  char *cmd __attribute__ ((unused)), char *param)
+txtinfo_neigh(struct comport_connection *con,
+    const char *cmd __attribute__ ((unused)), const char *param)
 {
   struct nbr_entry *neigh;
   const char *template;
@@ -369,22 +378,12 @@ txtinfo_neigh(struct comport_connection *con,  char *cmd __attribute__ ((unused)
   return CONTINUE;
 }
 
-#if 0
-static char tmpl_link[256], link_template_csv[256];
-static const char *keys_link[4+16] = {
-  "localip",
-  "neighip",
-  "rawlinkcost",
-  "linkcost",
-  NULL
-};
-static size_t link_keys_static = 0, link_keys_count = 0;
-#endif
 /**
  * Callback for link command
  */
 static enum olsr_txtcommand_result
-txtinfo_link(struct comport_connection *con,  char *cmd __attribute__ ((unused)), char *param)
+txtinfo_link(struct comport_connection *con,
+    const char *cmd __attribute__ ((unused)), const char *param)
 {
   struct link_entry *lnk;
   size_t i;
@@ -429,7 +428,8 @@ txtinfo_link(struct comport_connection *con,  char *cmd __attribute__ ((unused))
  * Callback for routes command
  */
 static enum olsr_txtcommand_result
-txtinfo_routes(struct comport_connection *con,  char *cmd __attribute__ ((unused)), char *param __attribute__ ((unused)))
+txtinfo_routes(struct comport_connection *con,
+    const char *cmd __attribute__ ((unused)), const char *param __attribute__ ((unused)))
 {
   struct rt_entry *rt;
   const char *template;
@@ -470,7 +470,8 @@ txtinfo_routes(struct comport_connection *con,  char *cmd __attribute__ ((unused
  * Callback for topology command
  */
 static enum olsr_txtcommand_result
-txtinfo_topology(struct comport_connection *con,  char *cmd __attribute__ ((unused)), char *param __attribute__ ((unused)))
+txtinfo_topology(struct comport_connection *con,
+    const char *cmd __attribute__ ((unused)), const char *param __attribute__ ((unused)))
 {
   struct tc_entry *tc;
   const char *template;
@@ -529,7 +530,8 @@ txtinfo_topology(struct comport_connection *con,  char *cmd __attribute__ ((unus
  * Callback for hna command
  */
 static enum olsr_txtcommand_result
-txtinfo_hna(struct comport_connection *con,  char *cmd __attribute__ ((unused)), char *param __attribute__ ((unused)))
+txtinfo_hna(struct comport_connection *con,
+    const char *cmd __attribute__ ((unused)), const char *param __attribute__ ((unused)))
 {
   const struct ip_prefix_entry *hna;
   struct tc_entry *tc;
@@ -588,7 +590,8 @@ txtinfo_hna(struct comport_connection *con,  char *cmd __attribute__ ((unused)),
  * Callback for mid command
  */
 static enum olsr_txtcommand_result
-txtinfo_mid(struct comport_connection *con,  char *cmd __attribute__ ((unused)), char *param __attribute__ ((unused)))
+txtinfo_mid(struct comport_connection *con,
+    const char *cmd __attribute__ ((unused)), const char *param __attribute__ ((unused)))
 {
   struct tc_entry *tc;
   struct interface *interface;

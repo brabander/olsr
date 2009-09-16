@@ -62,21 +62,21 @@ static struct avl_tree txt_normal_tree, txt_help_tree;
 static struct olsr_cookie_info *txtcommand_cookie, *txt_repeattimer_cookie;
 
 static enum olsr_txtcommand_result olsr_txtcmd_quit(
-    struct comport_connection *con, char *cmd, char *param);
+    struct comport_connection *con, const char *cmd, const char *param);
 static enum olsr_txtcommand_result olsr_txtcmd_help(
-    struct comport_connection *con, char *cmd, char *param);
+    struct comport_connection *con, const char *cmd, const char *param);
 static enum olsr_txtcommand_result olsr_txtcmd_echo(
-    struct comport_connection *con, char *cmd, char *param);
+    struct comport_connection *con, const char *cmd, const char *param);
 static enum olsr_txtcommand_result olsr_txtcmd_repeat(
-    struct comport_connection *con, char *cmd, char *param);
+    struct comport_connection *con, const char *cmd, const char *param);
 static enum olsr_txtcommand_result olsr_txtcmd_timeout(
-    struct comport_connection *con, char *cmd, char *param);
+    struct comport_connection *con, const char *cmd, const char *param);
 static enum olsr_txtcommand_result olsr_txtcmd_version(
-    struct comport_connection *con, char *cmd, char *param);
+    struct comport_connection *con, const char *cmd, const char *param);
 static enum olsr_txtcommand_result olsr_txtcmd_plugin(
-    struct comport_connection *con, char *cmd, char *param);
+    struct comport_connection *con, const char *cmd, const char *param);
 static enum olsr_txtcommand_result olsr_txtcmd_displayhelp(
-    struct comport_connection *con, char *cmd, char *param);
+    struct comport_connection *con, const char *cmd, const char *param);
 
 
 static const char *txt_internal_names[] = {
@@ -201,13 +201,13 @@ olsr_com_handle_txtcommand(struct comport_connection *con, char *cmd, char *para
 
 static enum olsr_txtcommand_result
 olsr_txtcmd_quit(struct comport_connection *con __attribute__ ((unused)),
-    char *cmd __attribute__ ((unused)), char *param __attribute__ ((unused))) {
+    const char *cmd __attribute__ ((unused)), const char *param __attribute__ ((unused))) {
   return QUIT;
 }
 
 static enum olsr_txtcommand_result
 olsr_txtcmd_displayhelp(struct comport_connection *con,
-    char *cmd __attribute__ ((unused)), char *param __attribute__ ((unused))) {
+    const char *cmd __attribute__ ((unused)), const char *param __attribute__ ((unused))) {
   size_t i;
 
   for (i=0; i<ARRAYSIZE(txt_internal_names); i++) {
@@ -221,7 +221,7 @@ olsr_txtcmd_displayhelp(struct comport_connection *con,
 
 static enum olsr_txtcommand_result
 olsr_txtcmd_help(struct comport_connection *con,
-    char *cmd __attribute__ ((unused)), char *param) {
+    const char *cmd __attribute__ ((unused)), const char *param) {
   struct olsr_txtcommand *ptr;
 
   if (param != NULL) {
@@ -252,7 +252,7 @@ olsr_txtcmd_help(struct comport_connection *con,
 
 static enum olsr_txtcommand_result
 olsr_txtcmd_echo(struct comport_connection *con,
-    char *cmd __attribute__ ((unused)), char *param) {
+    const char *cmd __attribute__ ((unused)), const char *param) {
   if (strcasecmp(param, "on") == 0) {
     con->show_echo = true;
   }
@@ -269,7 +269,7 @@ olsr_txtcmd_echo(struct comport_connection *con,
 
 static enum olsr_txtcommand_result
 olsr_txtcmd_timeout(struct comport_connection *con,
-    char *cmd __attribute__ ((unused)), char *param) {
+    const char *cmd __attribute__ ((unused)), const char *param) {
   con->timeout_value = (uint32_t)strtoul(param, NULL, 10);
   return CONTINUE;
 }
@@ -294,7 +294,8 @@ static void olsr_txt_repeat_timer(void *data) {
 }
 
 static enum olsr_txtcommand_result
-olsr_txtcmd_repeat(struct comport_connection *con, char *cmd __attribute__ ((unused)), char *param) {
+olsr_txtcmd_repeat(struct comport_connection *con,
+    const char *cmd __attribute__ ((unused)), const char *param) {
   int interval = 0;
   char *ptr;
   struct timer_entry *timer;
@@ -335,14 +336,15 @@ olsr_txtcmd_repeat(struct comport_connection *con, char *cmd __attribute__ ((unu
 }
 
 static enum olsr_txtcommand_result
-olsr_txtcmd_version(struct comport_connection *con, char *cmd __attribute__ ((unused)), char *param __attribute__ ((unused))) {
+olsr_txtcmd_version(struct comport_connection *con,
+    const char *cmd __attribute__ ((unused)), const char *param __attribute__ ((unused))) {
   abuf_appendf(&con->out, " *** %s ***\n Build date: %s on %s\n http://www.olsr.org\n\n",
       olsrd_version, build_date, build_host);
   return CONTINUE;
 }
 
 static enum olsr_txtcommand_result
-olsr_txtcmd_plugin(struct comport_connection *con, char *cmd, char *param) {
+olsr_txtcmd_plugin(struct comport_connection *con, const char *cmd, const char *param) {
   struct olsr_plugin *plugin;
   char *para2 = NULL;
   if (param == NULL || strcasecmp(param, "list") == 0) {

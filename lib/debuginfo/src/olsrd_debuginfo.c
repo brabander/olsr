@@ -75,9 +75,12 @@ struct debuginfo_cmd {
 static void debuginfo_new(void) __attribute__ ((constructor));
 static void debuginfo_delete(void) __attribute__ ((destructor));
 
-static enum olsr_txtcommand_result debuginfo_msgstat(struct comport_connection *con,  char *cmd, char *param);
-static enum olsr_txtcommand_result debuginfo_pktstat(struct comport_connection *con,  char *cmd, char *param);
-static enum olsr_txtcommand_result debuginfo_cookies(struct comport_connection *con,  char *cmd, char *param);
+static enum olsr_txtcommand_result debuginfo_msgstat(struct comport_connection *con,
+    const char *cmd, const char *param);
+static enum olsr_txtcommand_result debuginfo_pktstat(struct comport_connection *con,
+    const char *cmd, const char *param);
+static enum olsr_txtcommand_result debuginfo_cookies(struct comport_connection *con,
+    const char *cmd, const char *param);
 
 static void update_statistics_ptr(void *);
 static void olsr_msg_statistics(union olsr_message *, struct interface *, union olsr_ip_addr *, enum duplicate_status);
@@ -406,7 +409,8 @@ static bool debuginfo_print_msgstat(struct autobuf *buf, union olsr_ip_addr *ip,
 }
 
 static enum olsr_txtcommand_result
-debuginfo_msgstat(struct comport_connection *con,  char *cmd __attribute__ ((unused)), char *param __attribute__ ((unused)))
+debuginfo_msgstat(struct comport_connection *con,
+    const char *cmd __attribute__ ((unused)), const char *param __attribute__ ((unused)))
 {
   struct debug_msgtraffic *tr;
 
@@ -478,7 +482,8 @@ static bool debuginfo_print_pktstat(struct autobuf *buf, union olsr_ip_addr *ip,
 }
 
 static enum olsr_txtcommand_result
-debuginfo_pktstat(struct comport_connection *con,  char *cmd __attribute__ ((unused)), char *param __attribute__ ((unused)))
+debuginfo_pktstat(struct comport_connection *con,
+    const char *cmd __attribute__ ((unused)), const char *param __attribute__ ((unused)))
 {
   struct debug_pkttraffic *tr;
 
@@ -572,7 +577,8 @@ static INLINE bool debuginfo_print_cookies_timer(struct autobuf *buf, const char
 }
 
 static enum olsr_txtcommand_result
-debuginfo_cookies(struct comport_connection *con,  char *cmd __attribute__ ((unused)), char *param __attribute__ ((unused)))
+debuginfo_cookies(struct comport_connection *con,
+    const char *cmd __attribute__ ((unused)), const char *param __attribute__ ((unused)))
 {
   if (abuf_puts(&con->out, "Memory cookies:\n") < 0) {
     return ABUF_ERROR;
