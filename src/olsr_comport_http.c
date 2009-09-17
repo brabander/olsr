@@ -100,6 +100,14 @@ olsr_com_html2telnet_gate(struct comport_connection *con, char *path, int pCount
       if (result == CONTINOUS) {
         con->stop_handler(con);
       }
+      else if (result != UNKNOWN) {
+        abuf_appendf(&con->out, "Unknown command %s\n", cmd);
+        con->send_as = HTTP_404_NOT_FOUND;
+      }
+      else if (result != CONTINUE) {
+        abuf_appendf(&con->out, "Http-Telnet gate had problems with command %s\n", cmd);
+        con->send_as = HTTP_400_BAD_REQ;
+      }
       cmd = next;
       count += 2;
     }
