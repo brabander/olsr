@@ -424,6 +424,13 @@ int main(int argc, char *argv[]) {
   if ((olsr_cnf->rttable < 253) & (olsr_cnf->rttable > 0)) {
     olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable, RTM_NEWRULE);
   }
+
+  /* Create rtnetlink socket to listen on interface change events RTMGRP_LINK and RTMGRP_IPV4_ROUTE */
+
+#if LINUX_RTNETLINK_LISTEN
+  rtnetlink_register_socket(RTMGRP_LINK);
+#endif /*LINUX_RTNETLINK_LISTEN*/
+
 #endif
 
   /* Start syslog entry */

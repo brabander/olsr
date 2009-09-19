@@ -44,6 +44,11 @@
 
 #include "olsr_types.h"
 
+/* set to 1 to enable a second rtnetlink socket 
+ * used for listening and reating on interface change events
+ * (requires LINUX_POLICY_ROUTING to be enabled aswell) */
+#define LINUX_RTNETLINK_LISTEN 1
+
 #define TESTLIB_PATH 0
 #define SYSLOG_NUMBERING 0
 #define SOURCE_IP_ROUTES 0

@@ -63,11 +63,114 @@ static int delete_all_inet_gws(void);
 #include <linux/types.h>
 #include <linux/rtnetlink.h>
 
+extern struct rtnl_handle rth;
+
 struct olsr_rtreq {
   struct nlmsghdr n;
   struct rtmsg r;
   char buf[512];
 };
+
+#if LINUX_RTNETLINK_LISTEN
+#include "ifnet.h"
+#include "socket_parser.h"
+
+int rtnetlink_register_socket(int rtnl_mgrp)
+{
+  int sock = socket(AF_NETLINK,SOCK_RAW,NETLINK_ROUTE);
+  struct sockaddr_nl addr;
+
+  if (sock<0) {
+    OLSR_PRINTF(1,"could not create rtnetlink socket! %d",sock);
+  }
+  else {
+    addr.nl_family = AF_NETLINK;
+    addr.nl_pid = 0; //kernel will assign appropiate number instead of pid (which is already used by primaray rtnetlink socket to add/delete routes)
+    addr.nl_groups = rtnl_mgrp;
+    if (bind(sock,(struct sockaddr *)&addr,sizeof(addr))<0) {
+      OLSR_PRINTF(1,"could not bind socket! (%d %s)",errno,strerror(errno));
+    }
+    else {
+      add_olsr_socket(sock, &rtnetlink_read);
+    }
+    fcntl(sock, F_SETFL, O_NONBLOCK);
+  }
+  return sock;
+}
+
+static void netlink_process_link(struct nlmsghdr *h)
+{
+  struct ifinfomsg *ifi = (struct ifinfomsg *) NLMSG_DATA(h);
+  struct interface *iface;
+  
+  //all IFF flags: LOOPBACK,BROADCAST;POINTOPOINT;MULTICAST;NOARP;ALLMULTI;PROMISC;MASTER;SLAVE;DEBUG;DYNAMIC;AUTOMEDIA;PORTSEL;NOTRAILERS;UP;LOWER_UP;DORMANT
+
+  /* check if interface is up and running? (a not running interface keeps its routes, so better not react like on ifdown!!??) */
+  if (ifi->ifi_flags&IFF_UP) {
+    OLSR_PRINTF(3,"interface %s changed but is still up! ", iface->int_name);
+    return; //we are currently only interested in interfaces that are/go down
+  } else {
+    OLSR_PRINTF(1,"interface %s is down! ", iface->int_name);
+  }
+
+  iface = if_ifwithindex(ifi->ifi_index);
+
+  //only for still configured interfaces (ifup has to be detected with regular interface polling)
+  if ( iface != NULL ) {
+    struct olsr_if *tmp_if;
+    for (tmp_if = olsr_cnf->interfaces; tmp_if != NULL; tmp_if = tmp_if->next) {
+      if (tmp_if->interf==iface) {
+        OLSR_PRINTF(1,"-> removing %s from olsr config! ", iface->int_name);
+        RemoveInterface(tmp_if,true);
+        break;
+      }
+    }
+  }
+}
+
+
+void rtnetlink_read(int sock)
+{
+  int len, plen;
+  struct iovec iov;
+  struct sockaddr_nl nladdr;
+  struct msghdr msg = {
+    &nladdr,
+    sizeof(nladdr),
+    &iov,
+    1,
+    NULL,
+    0,
+    0
+  };
+
+  char buffer[4096];
+  struct nlmsghdr *nlh = (struct nlmsghdr *)(ARM_NOWARN_ALIGN) buffer;
+  int ret;
+
+  iov.iov_base = (void *) buffer;
+  iov.iov_len = sizeof(buffer);
+
+  while (true) { //read until ret<0;
+    ret=recvmsg(sock, &msg, 0);
+    if (ret<0) {
+      if (errno != EAGAIN) OLSR_PRINTF(1,"\nnetlink listen error %u - %s",errno,strerror(errno));
+      return;
+    }
+    /*check message*/
+    len = nlh->nlmsg_len;
+    plen = len - sizeof(nlh);
+    if (len > ret || plen < 0) {
+      OLSR_PRINTF(1,"Malformed netlink message: "
+             "len=%d left=%d plen=%d",
+              len, ret, plen);
+      return;
+    }
+    if ( (nlh->nlmsg_type == RTM_NEWLINK) || ( nlh->nlmsg_type == RTM_DELLINK) ) netlink_process_link(nlh);
+  }
+}
+
+#endif /*linux_rtnetlink_listen*/
 
 static void
 olsr_netlink_addreq(struct olsr_rtreq *req, int type, const void *data, int len)

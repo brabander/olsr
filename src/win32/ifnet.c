@@ -118,7 +118,6 @@ char *StrError(unsigned int ErrNo);
 
 void ListInterfaces(void);
 int GetIntInfo(struct InterfaceInfo *Info, char *Name);
-void RemoveInterface(struct olsr_if *IntConf);
 
 #define MAX_INTERFACES 100
 
@@ -487,7 +486,7 @@ ListInterfaces(void)
 }
 
 void
-RemoveInterface(struct olsr_if *IntConf)
+RemoveInterface(struct olsr_if *IntConf, bool went_down)
 {
   struct interface *Int, *Prev;
 
@@ -496,6 +495,9 @@ RemoveInterface(struct olsr_if *IntConf)
   Int = IntConf->interf;
 
   run_ifchg_cbs(Int, IFCHG_IF_ADD);
+
+  /*remove all routes*/
+  if (went_down) OLSR_PRINTF(1,"Hint: ifdown handling unimplemented");
 
   if (Int == ifnet)
     ifnet = Int->int_next;
@@ -709,7 +711,7 @@ chk_if_changed(struct olsr_if *IntConf)
   Int = IntConf->interf;
 
   if (GetIntInfo(&Info, IntConf->name) < 0) {
-    RemoveInterface(IntConf);
+    RemoveInterface(IntConf,false);
     return 1;
   }
 

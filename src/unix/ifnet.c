@@ -144,7 +144,7 @@ check_interface_updates(void *foo __attribute__ ((unused)))
 int
 chk_if_changed(struct olsr_if *iface)
 {
-  struct interface *ifp, *tmp_ifp;
+  struct interface *ifp;
   struct ifreq ifr;
   struct sockaddr_in6 tmp_saddr6;
   int if_changes;
@@ -360,6 +360,20 @@ chk_if_changed(struct olsr_if *iface)
   return if_changes;
 
 remove_interface:
+
+RemoveInterface(iface, false);
+
+return 0;
+}
+
+/*should move to interfaces.c*/
+void 
+RemoveInterface(struct olsr_if * iface, bool went_down)
+{
+  struct interface *ifp, *tmp_ifp;
+  struct rt_entry *rt;
+  ifp = iface->interf;
+
   OLSR_PRINTF(1, "Removing interface %s\n", iface->name);
   olsr_syslog(OLSR_LOG_INFO, "Removing interface %s\n", iface->name);
 
@@ -369,6 +383,16 @@ remove_interface:
    *Call possible ifchange functions registered by plugins
    */
   run_ifchg_cbs(ifp, IFCHG_IF_REMOVE);
+
+  /*remove all routes*/
+    if (went_down) {
+    OLSR_FOR_ALL_RT_ENTRIES(rt) {
+      if (rt->rt_nexthop.iif_index == ifp->if_index) {
+	rt->rt_nexthop.iif_index=-1;//marks route as unexisting in kernel, do this better !?
+      }
+    }
+    OLSR_FOR_ALL_RT_ENTRIES_END(rt);
+  }
 
   /* Dequeue */
   if (ifp == ifnet) {
@@ -424,8 +448,6 @@ remove_interface:
     olsr_cnf->exit_value = EXIT_FAILURE;
     kill(getpid(), SIGINT);
   }
-
-  return 0;
 
 }
 
