@@ -647,9 +647,8 @@ static void olsr_com_parse_txt(struct comport_connection *con,
     }
   }
 
-  if (old_timeout != con->timeout_value) {
-    olsr_set_timer(&con->timeout, con->timeout_value, 0, false, &olsr_com_timeout_handler, con, connection_timeout);
-  }
+  /* reset timeout */
+  olsr_set_timer(&con->timeout, con->timeout_value, 0, false, &olsr_com_timeout_handler, con, connection_timeout);
 
   /* print prompt */
   if (processedCommand && con->state == INTERACTIVE && con->show_echo) {

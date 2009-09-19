@@ -277,7 +277,7 @@ olsr_txtcmd_echo(struct comport_connection *con,
 static enum olsr_txtcommand_result
 olsr_txtcmd_timeout(struct comport_connection *con,
     const char *cmd __attribute__ ((unused)), const char *param) {
-  con->timeout_value = (uint32_t)strtoul(param, NULL, 10);
+  con->timeout_value = (uint32_t)strtoul(param, NULL, 10) * 1000;
   return CONTINUE;
 }
 
