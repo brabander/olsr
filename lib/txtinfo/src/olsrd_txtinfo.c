@@ -296,7 +296,7 @@ txtinfo_post_init(void)
   return false;
 }
 
-/*
+/**
  * Parse user templates for \%, \n and \t
  *
  * @param template
@@ -336,7 +336,7 @@ parse_user_template(const char *template) {
     dst++;
   }
   *dst = 0;
-  return dst;
+  return buffer;
 }
 
 /**

@@ -253,6 +253,13 @@ olsr_txtcmd_help(struct comport_connection *con,
 static enum olsr_txtcommand_result
 olsr_txtcmd_echo(struct comport_connection *con,
     const char *cmd __attribute__ ((unused)), const char *param) {
+  if(param == NULL) {
+	if (abuf_appendf(&con->out, "Error, echo needs an argument. Try 'on' or 'off'\n") < 0) {
+      return ABUF_ERROR;
+    }
+	return CONTINUE;
+  }
+  
   if (strcasecmp(param, "on") == 0) {
     con->show_echo = true;
   }
