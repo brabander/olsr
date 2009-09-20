@@ -100,7 +100,7 @@ olsr_com_html2telnet_gate(struct comport_connection *con, char *path, int pCount
       if (result == CONTINOUS) {
         con->stop_handler(con);
       }
-      else if (result != UNKNOWN) {
+      else if (result == UNKNOWN) {
         abuf_appendf(&con->out, "Unknown command %s\n", cmd);
         con->send_as = HTTP_404_NOT_FOUND;
       }
@@ -122,7 +122,7 @@ olsr_com_init_http(void) {
   olsr_cookie_set_memory_size(htmlsite_cookie, sizeof(struct olsr_html_site));
 
   /* activate telnet gateway */
-  olsr_com_add_htmlhandler(olsr_com_html2telnet_gate, "/telnet/");
+  olsr_com_add_htmlhandler(olsr_com_html2telnet_gate, TELNET_PATH);
   //init_test();
 }
 
