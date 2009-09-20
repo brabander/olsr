@@ -59,7 +59,6 @@
 int yyget_lineno(void);
 FILE * yyget_in(void);
 FILE* yyget_out(void);
-int yyget_leng(void);
 char *yyget_text(void);
 void yyset_lineno(int);
 void yyset_in(FILE *);
