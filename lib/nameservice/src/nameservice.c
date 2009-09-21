@@ -36,6 +36,8 @@
  * Dynamic linked library for UniK OLSRd
  */
 
+#define _GNU_SOURCE 1
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
