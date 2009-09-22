@@ -87,7 +87,7 @@ olsr_alloc_cookie(const char *cookie_name, olsr_cookie_type cookie_type)
     ci->ci_membrand = 0;
   }
 
-  avl_insert(&olsr_cookie_tree, &ci->node, AVL_DUP);
+  avl_insert(&olsr_cookie_tree, &ci->node, true);
   return ci;
 }
 

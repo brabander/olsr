@@ -403,7 +403,7 @@ olsr_add_invalid_address(const union olsr_ip_addr *addr)
 
   filter->filter_addr = *addr;
   filter->filter_node.key = &filter->filter_addr;
-  avl_insert(&filter_tree, &filter->filter_node, AVL_DUP_NO);
+  avl_insert(&filter_tree, &filter->filter_node, false);
 
   OLSR_INFO(LOG_NETWORKING, "Added %s to filter set\n", olsr_ip_to_string(&buf, &filter->filter_addr));
 }

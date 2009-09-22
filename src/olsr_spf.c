@@ -89,7 +89,7 @@ olsr_spf_add_cand_tree(struct avl_tree *tree, struct tc_entry *tc)
   OLSR_DEBUG(LOG_ROUTING, "SPF: insert candidate %s, cost %s\n",
              olsr_ip_to_string(&buf, &tc->addr), olsr_get_linkcost_text(tc->path_cost, false, lqbuffer, sizeof(lqbuffer)));
 
-  avl_insert(tree, &tc->cand_tree_node, AVL_DUP);
+  avl_insert(tree, &tc->cand_tree_node, true);
 }
 
 /*

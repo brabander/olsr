@@ -80,7 +80,7 @@ olsr_hookup_plugin(struct olsr_plugin *pl_def) {
     plugin_tree_initialized = true;
   }
   pl_def->p_node.key = strdup(pl_def->name);
-  avl_insert(&plugin_tree, &pl_def->p_node, AVL_DUP_NO);
+  avl_insert(&plugin_tree, &pl_def->p_node, false);
 }
 
 struct olsr_plugin *olsr_get_plugin(const char *libname) {
@@ -210,7 +210,7 @@ olsr_load_legacy_plugin(const char *libname, void *dlhandle) {
   /* get parameters */
   get_plugin_parameters(&plugin->internal_param, &plugin->internal_param_cnt);
 
-  avl_insert(&plugin_tree, &plugin->p_node, AVL_DUP_NO);
+  avl_insert(&plugin_tree, &plugin->p_node, false);
   return plugin;
 }
 

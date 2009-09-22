@@ -78,6 +78,21 @@ int avl_comp_strcasecmp(const void *txt1, const void *txt2) {
   return strcasecmp(txt1, txt2);
 }
 
+int avl_comp_int(const void *p1, const void *p2) {
+  const int *i1 = p1, *i2 = p2;
+  return *i1 - *i2;
+}
+
+int avl_comp_interface_id(const void *p1, const void *p2) {
+  const struct olsr_interface_id *id1 = p1, *id2 = p2;
+  int diff;
+
+  diff = olsr_ipcmp(&id1->ip, &id2->ip);
+  if (diff != 0)
+    return diff;
+  return (int)(id1->if_index) - (int)(id2->if_index);
+}
+
 void
 avl_init(struct avl_tree *tree, avl_tree_comp comp)
 {
@@ -286,7 +301,7 @@ avl_remove(struct avl_tree *tree, struct avl_node *node)
 }
 
 int
-avl_insert(struct avl_tree *tree, struct avl_node *new, int allow_duplicates)
+avl_insert(struct avl_tree *tree, struct avl_node *new, bool allow_duplicates)
 {
   struct avl_node *node;
   struct avl_node *last;
@@ -339,7 +354,7 @@ avl_insert(struct avl_tree *tree, struct avl_node *new, int allow_duplicates)
     last = last->next;
 
   if (diff == 0) {
-    if (allow_duplicates == AVL_DUP_NO)
+    if (!allow_duplicates)
       return -1;
 
     new->leader = 0;

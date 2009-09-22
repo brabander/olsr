@@ -258,13 +258,13 @@ olsr_insert_mid_entry(const union olsr_ip_addr *main_addr,
    * Insert into the per-tc mid subtree.
    */
   alias->mid_tc_node.key = &alias->mid_alias_addr;
-  avl_insert(&tc->mid_tree, &alias->mid_tc_node, AVL_DUP_NO);
+  avl_insert(&tc->mid_tree, &alias->mid_tc_node, false);
 
   /*
    * Insert into the global mid tree.
    */
   alias->mid_node.key = &alias->mid_alias_addr;
-  avl_insert(&mid_tree, &alias->mid_node, AVL_DUP_NO);
+  avl_insert(&mid_tree, &alias->mid_node, false);
 
   /*
    * Add a rt_path for the alias.

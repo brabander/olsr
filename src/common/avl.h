@@ -66,12 +66,9 @@ struct avl_tree {
   avl_tree_comp comp;
 };
 
-#define AVL_DUP    1
-#define AVL_DUP_NO 0
-
 void EXPORT(avl_init)(struct avl_tree *, avl_tree_comp);
 struct avl_node *EXPORT(avl_find) (struct avl_tree *, const void *);
-int EXPORT(avl_insert)(struct avl_tree *, struct avl_node *, int);
+int EXPORT(avl_insert)(struct avl_tree *, struct avl_node *, bool);
 void EXPORT(avl_delete)(struct avl_tree *, struct avl_node *);
 
 static INLINE struct avl_node *
@@ -125,6 +122,8 @@ extern int avl_comp_ipv4(const void *, const void *);
 extern int avl_comp_ipv6(const void *, const void *);
 extern int avl_comp_mac(const void *, const void *);
 extern int avl_comp_strcasecmp(const void *, const void *);
+extern int avl_comp_int(const void *, const void *);
+extern int avl_comp_interface_id(const void *, const void *);
 
 /*
  * Macro to define an inline function to map from a list_node offset back to the

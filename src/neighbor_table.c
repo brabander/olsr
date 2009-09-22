@@ -125,7 +125,7 @@ olsr_add_nbr_entry(const union olsr_ip_addr *addr)
 
   /* Add to the global neighbor tree */
   nbr->nbr_node.key = &nbr->nbr_addr;
-  avl_insert(&nbr_tree, &nbr->nbr_node, AVL_DUP_NO);
+  avl_insert(&nbr_tree, &nbr->nbr_node, false);
 
   return nbr;
 }
@@ -273,7 +273,7 @@ olsr_add_nbr2_entry(const union olsr_ip_addr *addr) {
 
   /* Add to global neighbor 2 tree */
   nbr2->nbr2_node.key = &nbr2->nbr2_addr;
-  avl_insert(&nbr2_tree, &nbr2->nbr2_node, AVL_DUP_NO);
+  avl_insert(&nbr2_tree, &nbr2->nbr2_node, false);
 
   return nbr2;
 }
@@ -362,8 +362,8 @@ olsr_link_nbr_nbr2(struct nbr_entry *nbr, const union olsr_ip_addr *nbr2_addr, u
   connector->nbr_tree_node.key = &nbr2->nbr2_addr;
   connector->nbr2_tree_node.key = &nbr->nbr_addr;
 
-  avl_insert(&nbr->con_tree, &connector->nbr_tree_node, AVL_DUP_NO);
-  avl_insert(&nbr2->con_tree, &connector->nbr2_tree_node, AVL_DUP_NO);
+  avl_insert(&nbr->con_tree, &connector->nbr_tree_node, false);
+  avl_insert(&nbr2->con_tree, &connector->nbr2_tree_node, false);
 
   connector->path_linkcost = LINK_COST_BROKEN;
 

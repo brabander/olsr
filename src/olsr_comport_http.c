@@ -144,7 +144,7 @@ olsr_com_add_htmlsite(char *path, char *content, size_t length) {
   site->site_data = content;
   site->site_length = length;
 
-  avl_insert(&http_handler_tree, &site->node, AVL_DUP_NO);
+  avl_insert(&http_handler_tree, &site->node, false);
   return site;
 }
 
@@ -159,7 +159,7 @@ olsr_com_add_htmlhandler(void(*sitehandler)(struct comport_connection *con, char
   site->static_site = false;
   site->sitehandler = sitehandler;
 
-  avl_insert(&http_handler_tree, &site->node, AVL_DUP_NO);
+  avl_insert(&http_handler_tree, &site->node, false);
   return site;
 }
 

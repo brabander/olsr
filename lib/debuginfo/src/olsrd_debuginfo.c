@@ -219,7 +219,7 @@ static struct debug_msgtraffic *get_msgtraffic_entry(union olsr_ip_addr *ip) {
     memcpy(&tr->ip, ip, sizeof(union olsr_ip_addr));
     tr->node.key = &tr->ip;
 
-    avl_insert(&stat_msg_tree, &tr->node, AVL_DUP_NO);
+    avl_insert(&stat_msg_tree, &tr->node, false);
   }
   return tr;
 }
@@ -235,7 +235,7 @@ static struct debug_pkttraffic *get_pkttraffic_entry(union olsr_ip_addr *ip, str
 
     tr->int_name = strdup(in ? in->int_name : "---");
 
-    avl_insert(&stat_pkt_tree, &tr->node, AVL_DUP_NO);
+    avl_insert(&stat_pkt_tree, &tr->node, false);
   }
   return tr;
 }

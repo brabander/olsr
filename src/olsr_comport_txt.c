@@ -150,7 +150,7 @@ olsr_com_add_normal_txtcommand (const char *command, olsr_txthandler handler) {
   txt->node.key = strdup(command);
   txt->handler = handler;
 
-  avl_insert(&txt_normal_tree, &txt->node, AVL_DUP_NO);
+  avl_insert(&txt_normal_tree, &txt->node, false);
   return txt;
 }
 
@@ -162,7 +162,7 @@ olsr_com_add_help_txtcommand (const char *command, olsr_txthandler handler) {
   txt->node.key = strdup(command);
   txt->handler = handler;
 
-  avl_insert(&txt_help_tree, &txt->node, AVL_DUP_NO);
+  avl_insert(&txt_help_tree, &txt->node, false);
   return txt;
 }
 

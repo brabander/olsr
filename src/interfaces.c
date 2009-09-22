@@ -152,7 +152,7 @@ static void add_lost_interface_ip(union olsr_ip_addr *ip, uint32_t hello_timeout
   lost->node.key = &lost->ip;
   lost->ip = *ip;
   lost->valid_until = olsr_getTimestamp(hello_timeout * 2);
-  avl_insert(&interface_lost_tree, &lost->node, AVL_DUP_NO);
+  avl_insert(&interface_lost_tree, &lost->node, false);
 
   OLSR_DEBUG(LOG_INTERFACE, "Added %s to lost interface list for %d ms\n",
       olsr_ip_to_string(&buf, ip), hello_timeout*2);

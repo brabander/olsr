@@ -108,7 +108,7 @@ olsr_add_hna_net(struct tc_entry *tc, const struct olsr_ip_prefix *prefix)
    * Insert into the per-tc hna subtree.
    */
   new_net->hna_tc_node.key = &new_net->hna_prefix;
-  avl_insert(&tc->hna_tree, &new_net->hna_tc_node, AVL_DUP_NO);
+  avl_insert(&tc->hna_tree, &new_net->hna_tc_node, false);
 
   return new_net;
 }

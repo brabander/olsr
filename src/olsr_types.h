@@ -102,6 +102,11 @@ struct olsr_ip_prefix {
   uint8_t prefix_origin;
 };
 
+struct olsr_interface_id {
+  union olsr_ip_addr ip;
+  uint32_t if_index;
+};
+
 typedef uint32_t olsr_linkcost;
 
 #endif

@@ -343,7 +343,7 @@ olsr_alloc_rt_entry(struct olsr_ip_prefix *prefix)
   rt->rt_dst = *prefix;
 
   rt->rt_tree_node.key = &rt->rt_dst;
-  avl_insert(&routingtree, &rt->rt_tree_node, AVL_DUP_NO);
+  avl_insert(&routingtree, &rt->rt_tree_node, false);
 
   /* init the originator subtree */
   avl_init(&rt->rt_path_tree, avl_comp_addr_origin_default);
@@ -372,7 +372,7 @@ olsr_alloc_rt_path(struct tc_entry *tc, struct olsr_ip_prefix *prefix, uint8_t o
   rtp->rtp_prefix_tree_node.key = &rtp->rtp_dst;
 
   /* insert to the tc prefix tree */
-  avl_insert(&tc->prefix_tree, &rtp->rtp_prefix_tree_node, AVL_DUP_NO);
+  avl_insert(&tc->prefix_tree, &rtp->rtp_prefix_tree_node, false);
   olsr_lock_tc_entry(tc);
 
   /* backlink to the owning tc entry */
@@ -441,7 +441,7 @@ olsr_insert_rt_path(struct rt_path *rtp, struct tc_entry *tc, struct link_entry 
    * Insert to the route entry originator tree
    * The key has been initialized in olsr_alloc_rt_path().
    */
-  avl_insert(&rt->rt_path_tree, &rtp->rtp_tree_node, AVL_DUP_NO);
+  avl_insert(&rt->rt_path_tree, &rtp->rtp_tree_node, false);
 
   /* backlink to the owning route entry */
   rtp->rtp_rt = rt;
