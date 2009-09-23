@@ -40,9 +40,7 @@
  */
 
 #include <assert.h>
-#include <limits.h>
-#include <stdlib.h>
-#include <string.h>
+#include <ctype.h>
 
 #include "olsr_time.h"
 
@@ -157,35 +155,31 @@ olsr_milli_to_txt(struct millitxt_buf *buffer, uint32_t t) {
  * converts a floating point text into a unsigned integer representation
  * (multiplied by 1000)
  */
-uint32_t
-olsr_txt_to_milli(char *txt) {
-  uint32_t t1 = 0,t2 = 0;
-  char *fraction;
-  char *savePtr = NULL, save = 0;
+uint32_t olsr_txt_to_milli(char *txt) {
+  uint32_t t = 0;
+  int fractionDigits = 0;
+  bool frac = false;
 
-  fraction = strchr(txt, '.');
-  if (fraction != NULL) {
-    savePtr = fraction;
-    save = *savePtr;
-    *fraction++ = 0;
-
-    t2 = strtoul(fraction, NULL, 10);
-    if (t2 < 100) {
-      t2 *= 100;
+  while (fractionDigits < 3 && *txt) {
+    if (*txt == '.' && !frac) {
+      frac = true;
+      txt++;
     }
-    while (t2 > 999) {
-      t2 /= 10;
+
+    if (!isdigit(*txt)) {
+      break;
+    }
+
+    t = t * 10 + (*txt++ - '0');
+    if (frac) {
+      fractionDigits++;
     }
   }
-  t1 = strtoul(txt, NULL, 10);
-  if (t1 > UINT32_MAX / MSEC_PER_SEC) {
-    t1 = UINT32_MAX / MSEC_PER_SEC;
-  }
 
-  if (savePtr) {
-    *savePtr = save;
+  while (fractionDigits++ < 3) {
+    t *= 10;
   }
-  return t1*MSEC_PER_SEC + t2;
+  return t;
 }
 
 /*
