@@ -275,7 +275,10 @@ olsr_del_kernel_routes(struct list_node *head_node)
 
   while (!list_is_empty(head_node)) {
     rt = changelist2rt(head_node->prev);
-    olsr_delete_kernel_route(rt);
+#if LINUX_POLICY_ROUTING
+    if (rt->rt_nexthop.iif_index >= 0)
+#endif /*LINUX_POLICY_ROUTING*/
+      olsr_delete_kernel_route(rt);
 
     list_remove(&rt->rt_change_node);
     olsr_cookie_free(rt_mem_cookie, rt);
