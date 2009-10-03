@@ -101,10 +101,9 @@ int rtnetlink_register_socket(int rtnl_mgrp)
 static void netlink_process_link(struct nlmsghdr *h)
 {
   struct ifinfomsg *ifi = (struct ifinfomsg *) NLMSG_DATA(h);
-  struct interface *iface;
+  struct interface *iface = if_ifwithindex(ifi->ifi_index);
   
   //all IFF flags: LOOPBACK,BROADCAST;POINTOPOINT;MULTICAST;NOARP;ALLMULTI;PROMISC;MASTER;SLAVE;DEBUG;DYNAMIC;AUTOMEDIA;PORTSEL;NOTRAILERS;UP;LOWER_UP;DORMANT
-
   /* check if interface is up and running? (a not running interface keeps its routes, so better not react like on ifdown!!??) */
   if (ifi->ifi_flags&IFF_UP) {
     OLSR_PRINTF(3,"interface %s changed but is still up! ", iface->int_name);
@@ -112,8 +111,6 @@ static void netlink_process_link(struct nlmsghdr *h)
   } else {
     OLSR_PRINTF(1,"interface %s is down! ", iface->int_name);
   }
-
-  iface = if_ifwithindex(ifi->ifi_index);
 
   //only for still configured interfaces (ifup has to be detected with regular interface polling)
   if ( iface != NULL ) {
