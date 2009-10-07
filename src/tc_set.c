@@ -908,9 +908,11 @@ olsr_delete_all_tc_entries(void) {
 
 
   /* kill tc_myself */
-  olsr_delete_tc_entry(tc_myself);
-  olsr_unlock_tc_entry(tc_myself);
-  tc_myself = NULL;
+  if (tc_myself) {
+    olsr_delete_tc_entry(tc_myself);
+    olsr_unlock_tc_entry(tc_myself);
+    tc_myself = NULL;
+  }
 }
 
 static uint8_t
