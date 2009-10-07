@@ -757,6 +757,7 @@ olsr_start_timer(unsigned int rel_time,
   struct timer_entry *timer;
 
   assert(ci != 0);          /* we want timer cookies everywhere */
+  assert(cb_func);
 
   timer = olsr_cookie_malloc(timer_mem_cookie);
 
@@ -869,18 +870,17 @@ olsr_set_timer(struct timer_entry **timer_ptr,
                uint8_t jitter_pct, bool periodical, timer_cb_func cb_func, void *context, struct olsr_cookie_info *cookie)
 {
   assert(cookie);          /* we want timer cookies everywhere */
-  if (!*timer_ptr) {
+  if (rel_time == 0) {
+    /* No good future time provided, kill it. */
+    olsr_stop_timer(*timer_ptr);
+    *timer_ptr = NULL;
+  }
+  else if ((*timer_ptr) == NULL) {
     /* No timer running, kick it. */
     *timer_ptr = olsr_start_timer(rel_time, jitter_pct, periodical, cb_func, context, cookie);
-  } else {
-    if (!rel_time) {
-      /* No good future time provided, kill it. */
-      olsr_stop_timer(*timer_ptr);
-      *timer_ptr = NULL;
-    } else {
-      /* Time is ok and timer is running, change it ! */
-      olsr_change_timer(*timer_ptr, rel_time, jitter_pct, periodical);
-    }
+  }
+  else {
+    olsr_change_timer(*timer_ptr, rel_time, jitter_pct, periodical);
   }
 }
 
