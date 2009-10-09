@@ -139,20 +139,27 @@ static int
 SendOBAMPData(struct in_addr *addr, unsigned char *ipPacket, int nBytes)
 {
 
+  int b=0;
   struct sockaddr_in si_other;
-  struct OBAMP_data_message *data_msg;
-  data_msg = malloc(sizeof(struct OBAMP_data_message));
+  struct OBAMP_data_message4 *data_msg;
+  data_msg = malloc(sizeof(struct OBAMP_data_message4));
 
   data_msg->MessageID = OBAMP_DATA;
-  data_msg->router_id = myState->myipaddr;
-  data_msg->last_hop = myState->myipaddr;
+  data_msg->router_id = (u_int32_t) myState->myipaddr.v4.s_addr;
+  data_msg->last_hop = (u_int32_t) myState->myipaddr.v4.s_addr;
 
-  data_msg->CoreAddress = myState->CoreAddress;
+  data_msg->CoreAddress = (u_int32_t) myState->CoreAddress.v4.s_addr;
 
   data_msg->SequenceNumber = myState->DataSequenceNumber;
   myState->DataSequenceNumber++;
 
+  if (nBytes < 1471) {
   memcpy(&data_msg->data, ipPacket, nBytes);
+  } else {
+  OLSR_DEBUG(LOG_PLUGINS, "PACKET DROPPED: %d bytes are too much",nBytes);
+  free(data_msg);
+  return 1;
+  }
 
   data_msg->datalen = nBytes;
 
@@ -160,7 +167,13 @@ SendOBAMPData(struct in_addr *addr, unsigned char *ipPacket, int nBytes)
   si_other.sin_family = AF_INET;
   si_other.sin_port = htons(OBAMP_SIGNALLING_PORT);
   si_other.sin_addr = *addr;
-  sendto(sdudp, data_msg, sizeof(struct OBAMP_data_message), 0, (struct sockaddr *)&si_other, sizeof(si_other));
+  //sendto(sdudp, data_msg, sizeof(struct OBAMP_data_message), 0, (struct sockaddr *)&si_other, sizeof(si_other));
+  //TODO: this 15 magic number is okay only for IPv4, we do not worry about this now
+  b = sendto(sdudp, data_msg, 6+15+data_msg->datalen, 0, (struct sockaddr *)&si_other, sizeof(si_other));
+
+
+  OLSR_DEBUG(LOG_PLUGINS, "SENT %d bytes 21 + %d",b,data_msg->datalen);
+  if (b < 6+15+data_msg->datalen) OLSR_DEBUG(LOG_PLUGINS, "SEND ERROR SENT %d INSTEAD OF %d",b,6+15+data_msg->datalen);
   free(data_msg);
   return 0;
 
@@ -692,10 +705,10 @@ decap_data(char *buffer)
   int stripped_len;
   struct ip *ipHeader;
   struct ip6_hdr *ip6Header;
-  struct OBAMP_data_message *msg;
+  struct OBAMP_data_message4 *msg;
   int nBytesWritten;
   struct sockaddr_ll dest;
-  msg = (struct OBAMP_data_message *)buffer;
+  msg = (struct OBAMP_data_message4 *)buffer;
 
   ipPacket = msg->data;
 
@@ -757,9 +770,9 @@ CheckDupData(char *buffer)
 
   struct ObampNode *tmp;               //temp pointers used when parsing the list
   struct list_head *pos;
-  struct OBAMP_data_message *data_msg;
+  struct OBAMP_data_message4 *data_msg;
 
-  data_msg = (struct OBAMP_data_message *)buffer;
+  data_msg = (struct OBAMP_data_message4 *)buffer;
 
 
   //Check duplicate data packet
@@ -769,7 +782,7 @@ CheckDupData(char *buffer)
     list_for_each(pos, &ListOfObampNodes) {
       tmp = list_entry(pos, struct ObampNode, list);
 
-      if (memcmp(&tmp->neighbor_ip_addr.v4, &data_msg->router_id.v4, sizeof(struct in_addr)) == 0) {
+      if (memcmp(&tmp->neighbor_ip_addr.v4, &data_msg->router_id, sizeof(struct in_addr)) == 0) {
 
 
         if (tmp->DataSeqNumber == 0) {  //First packet received from this host
@@ -796,12 +809,12 @@ forward_obamp_data(char *buffer)
   struct ipaddr_str buf;               //buf to print debug infos
   struct ObampNode *tmp;               //temp pointers used when parsing the list
   struct list_head *pos;
-  struct OBAMP_data_message *data_msg;
+  struct OBAMP_data_message4 *data_msg;
 
   struct sockaddr_in si_other;
 
 
-  data_msg = (struct OBAMP_data_message *)buffer;
+  data_msg = (struct OBAMP_data_message4 *)buffer;
 
   if (list_empty(&ListOfObampNodes) == 0) {     //if the list is NOT empty
 
@@ -809,17 +822,18 @@ forward_obamp_data(char *buffer)
     list_for_each(pos, &ListOfObampNodes) {
       tmp = list_entry(pos, struct ObampNode, list);
 
-      if (tmp->isTree == 1 && memcmp(&tmp->neighbor_ip_addr.v4, &data_msg->last_hop.v4, sizeof(struct in_addr)) != 0) {
+      if (tmp->isTree == 1 && memcmp(&tmp->neighbor_ip_addr.v4, &data_msg->last_hop, sizeof(struct in_addr)) != 0) {
 
         //FORWARD DATA
-        data_msg->last_hop = myState->myipaddr;
+        data_msg->last_hop = myState->myipaddr.v4.s_addr;
 
 
         memset((char *)&si_other, 0, sizeof(si_other));
         si_other.sin_family = AF_INET;
         si_other.sin_port = htons(OBAMP_SIGNALLING_PORT);
         si_other.sin_addr = tmp->neighbor_ip_addr.v4;
-        sendto(sdudp, data_msg, sizeof(struct OBAMP_data_message), 0, (struct sockaddr *)&si_other, sizeof(si_other));
+        //sendto(sdudp, data_msg, sizeof(struct OBAMP_data_message), 0, (struct sockaddr *)&si_other, sizeof(si_other));
+	sendto(sdudp, data_msg, 6+15+data_msg->datalen, 0, (struct sockaddr *)&si_other, sizeof(si_other));
 
         OLSR_DEBUG(LOG_PLUGINS, "FORWARDING OBAMP DATA TO node %s ", ip4_to_string(&buf, tmp->neighbor_ip_addr.v4));
 

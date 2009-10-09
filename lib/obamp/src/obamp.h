@@ -182,15 +182,21 @@ struct ObampNodeState {
 // OBAMP message types
 
 
-struct OBAMP_data_message {
+struct OBAMP_data_message4 {
 
   u_int8_t MessageID;
-  union olsr_ip_addr router_id;
-  union olsr_ip_addr last_hop;
-  u_int8_t SequenceNumber;
-  union olsr_ip_addr CoreAddress;
-  u_int8_t datalen;
-  unsigned char data[1280];            //TODO:fix me
+  u_int32_t router_id;
+  u_int32_t last_hop;
+  u_int16_t SequenceNumber;
+  u_int32_t CoreAddress;
+  u_int16_t datalen;
+  unsigned char data[1471];            //Considering 1492 MTU
+
+};
+
+struct OBAMP_data_message6 {
+
+//TODO
 
 };
 
