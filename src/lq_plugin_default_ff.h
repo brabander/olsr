@@ -62,7 +62,8 @@ struct default_lq_ff_hello {
   struct default_lq_ff lq;
   uint8_t windowSize, activePtr;
   uint16_t last_seq_nr;
-  uint16_t received[LQ_FF_WINDOW], lost[LQ_FF_WINDOW];
+  uint16_t missed_hellos;
+  uint16_t received[LQ_FF_WINDOW], total[LQ_FF_WINDOW];
 };
 
 void default_lq_initialize_ff(void);

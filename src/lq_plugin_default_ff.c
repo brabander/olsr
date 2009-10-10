@@ -118,9 +118,10 @@ default_lq_parser_ff(struct olsr *olsr, struct interface *in_if, union olsr_ip_a
   }
 
   lq->received[lq->activePtr]++;
-  lq->lost[lq->activePtr] += (seq_diff - 1);
+  lq->total[lq->activePtr] += seq_diff;
 
   lq->last_seq_nr = olsr->olsr_seqno;
+  lq->missed_hellos = 0;
 }
 
 static void
@@ -130,10 +131,10 @@ default_lq_ff_timer(void __attribute__ ((unused)) * context)
   OLSR_FOR_ALL_LINK_ENTRIES(link) {
     struct default_lq_ff_hello *tlq = (struct default_lq_ff_hello *)link->linkquality;
     fpm ratio;
-    uint16_t i, received, lost;
+    int i, received, total;
 
     received = 0;
-    lost = 0;
+    total = 0;
 
     /* enlarge window if still in quickstart phase */
     if (tlq->windowSize < LQ_FF_WINDOW) {
@@ -141,19 +142,31 @@ default_lq_ff_timer(void __attribute__ ((unused)) * context)
     }
     for (i = 0; i < tlq->windowSize; i++) {
       received += tlq->received[i];
-      lost += tlq->lost[i];
+      total += tlq->total[i];
     }
 
     /* calculate link quality */
-    if (received + lost == 0) {
+    if (received + total == 0) {
       tlq->lq.valueLq = 0;
     } else {
       // start with link-loss-factor
       ratio = fpmidiv(itofpm(link->loss_link_multiplier), LINK_LOSS_MULTIPLIER);
 
-      // calculate received/(received + loss) factor
-      ratio = fpmmuli(ratio, (int)received);
-      ratio = fpmidiv(ratio, (int)(received + lost));
+      /* keep missed hello periods in mind (round up hello interval to seconds) */
+      if (tlq->missed_hellos > 1) {
+        int penalty = received * tlq->missed_hellos * link->inter->hello_etime/1000 / LQ_FF_WINDOW;
+
+        if (penalty < 0) {
+          received = 0;
+        }
+        else {
+          received -= penalty;
+        }
+      }
+
+      // calculate received/total factor
+      ratio = fpmmuli(ratio, received);
+      ratio = fpmidiv(ratio, total);
       ratio = fpmmuli(ratio, 255);
 
       tlq->lq.valueLq = (uint8_t) (fpmtoi(ratio));
@@ -162,7 +175,7 @@ default_lq_ff_timer(void __attribute__ ((unused)) * context)
 
     // shift buffer
     tlq->activePtr = (tlq->activePtr + 1) % LQ_FF_WINDOW;
-    tlq->lost[tlq->activePtr] = 0;
+    tlq->total[tlq->activePtr] = 0;
     tlq->received[tlq->activePtr] = 0;
   } OLSR_FOR_ALL_LINK_ENTRIES_END(link);
 }
@@ -240,10 +253,14 @@ default_lq_deserialize_tc_lq_pair_ff(const uint8_t ** curr, void *ptr)
 }
 
 olsr_linkcost
-default_lq_packet_loss_worker_ff(struct link_entry
-                                 __attribute__ ((unused)) * link, void
-                                 __attribute__ ((unused)) * ptr, bool __attribute__ ((unused)) lost)
+default_lq_packet_loss_worker_ff(struct link_entry *link,
+    void __attribute__ ((unused)) *ptr, bool lost)
 {
+  struct default_lq_ff_hello *tlq = (struct default_lq_ff_hello *)link->linkquality;
+
+  if (lost) {
+    tlq->missed_hellos++;
+  }
   return link->linkcost;
 }
 
@@ -281,7 +298,7 @@ default_lq_clear_ff_hello(void *target)
   default_lq_clear_ff(&local->lq);
   local->windowSize = LQ_FF_QUICKSTART_INIT;
   for (i = 0; i < LQ_FF_WINDOW; i++) {
-    local->lost[i] = 3;
+    local->total[i] = 3;
   }
 }
 
