@@ -725,23 +725,17 @@ void
 olsr_set_timer(struct timer_entry **timer_ptr, unsigned int rel_time, uint8_t jitter_pct, bool periodical,
                void (*timer_cb_function) (void *), void *context, olsr_cookie_t cookie)
 {
-
-  if (!*timer_ptr) {
-
+  if (rel_time == 0) {
+    /* No good future time provided, kill it. */
+    olsr_stop_timer(*timer_ptr);
+    *timer_ptr = NULL;
+  }
+  else if ((*timer_ptr) == NULL) {
     /* No timer running, kick it. */
     *timer_ptr = olsr_start_timer(rel_time, jitter_pct, periodical, timer_cb_function, context, cookie);
-  } else {
-
-    if (!rel_time) {
-
-      /* No good future time provided, kill it. */
-      olsr_stop_timer(*timer_ptr);
-      *timer_ptr = NULL;
-    } else {
-
-      /* Time is ok and timer is running, change it ! */
-      olsr_change_timer(*timer_ptr, rel_time, jitter_pct, periodical);
-    }
+  }
+  else {
+    olsr_change_timer(*timer_ptr, rel_time, jitter_pct, periodical);
   }
 }
 
