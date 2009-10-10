@@ -192,7 +192,7 @@ struct OBAMP_data_message4 {
   u_int16_t datalen;
   unsigned char data[1471];            //Considering 1492 MTU
 
-};
+} __attribute__((__packed__));
 
 struct OBAMP_data_message6 {
 

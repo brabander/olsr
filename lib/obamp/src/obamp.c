@@ -139,7 +139,6 @@ static int
 SendOBAMPData(struct in_addr *addr, unsigned char *ipPacket, int nBytes)
 {
 
-  int b=0;
   struct sockaddr_in si_other;
   struct OBAMP_data_message4 *data_msg;
   data_msg = malloc(sizeof(struct OBAMP_data_message4));
@@ -168,12 +167,8 @@ SendOBAMPData(struct in_addr *addr, unsigned char *ipPacket, int nBytes)
   si_other.sin_port = htons(OBAMP_SIGNALLING_PORT);
   si_other.sin_addr = *addr;
   //sendto(sdudp, data_msg, sizeof(struct OBAMP_data_message), 0, (struct sockaddr *)&si_other, sizeof(si_other));
-  //TODO: this 15 magic number is okay only for IPv4, we do not worry about this now
-  b = sendto(sdudp, data_msg, 6+15+data_msg->datalen, 0, (struct sockaddr *)&si_other, sizeof(si_other));
-
-
-  OLSR_DEBUG(LOG_PLUGINS, "SENT %d bytes 21 + %d",b,data_msg->datalen);
-  if (b < 6+15+data_msg->datalen) OLSR_DEBUG(LOG_PLUGINS, "SEND ERROR SENT %d INSTEAD OF %d",b,6+15+data_msg->datalen);
+  //TODO: this 17 magic number is okay only for IPv4, we do not worry about this now
+  sendto(sdudp, data_msg, 17+data_msg->datalen, 0, (struct sockaddr *)&si_other, sizeof(si_other));
   free(data_msg);
   return 0;
 
@@ -833,7 +828,7 @@ forward_obamp_data(char *buffer)
         si_other.sin_port = htons(OBAMP_SIGNALLING_PORT);
         si_other.sin_addr = tmp->neighbor_ip_addr.v4;
         //sendto(sdudp, data_msg, sizeof(struct OBAMP_data_message), 0, (struct sockaddr *)&si_other, sizeof(si_other));
-	sendto(sdudp, data_msg, 6+15+data_msg->datalen, 0, (struct sockaddr *)&si_other, sizeof(si_other));
+	sendto(sdudp, data_msg, 17+data_msg->datalen, 0, (struct sockaddr *)&si_other, sizeof(si_other));
 
         OLSR_DEBUG(LOG_PLUGINS, "FORWARDING OBAMP DATA TO node %s ", ip4_to_string(&buf, tmp->neighbor_ip_addr.v4));
 
