@@ -132,8 +132,6 @@ strscpy(char *dest, const char *src, size_t size)
 {
   register size_t l = 0;
 #if !defined(NODEBUG) && defined(DEBUG)
-  if (sizeof(dest) == size)
-    fprintf(stderr, "Warning: probably sizeof(pointer) in strscpy(%p, %s, %zd)!\n", dest, src, size);
   if (NULL == dest)
     fprintf(stderr, "Warning: dest is NULL in strscpy!\n");
   if (NULL == src)
