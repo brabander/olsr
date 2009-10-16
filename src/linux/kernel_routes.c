@@ -101,7 +101,13 @@ int rtnetlink_register_socket(int rtnl_mgrp)
 static void netlink_process_link(struct nlmsghdr *h)
 {
   struct ifinfomsg *ifi = (struct ifinfomsg *) NLMSG_DATA(h);
-  struct interface *iface = if_ifwithindex(ifi->ifi_index);
+  struct interface *iface;
+  struct olsr_if *tmp_if;
+
+  iface = if_ifwithindex(ifi->ifi_index);
+  if (iface == NULL) {
+    return;
+  }
   
   //all IFF flags: LOOPBACK,BROADCAST;POINTOPOINT;MULTICAST;NOARP;ALLMULTI;PROMISC;MASTER;SLAVE;DEBUG;DYNAMIC;AUTOMEDIA;PORTSEL;NOTRAILERS;UP;LOWER_UP;DORMANT
   /* check if interface is up and running? (a not running interface keeps its routes, so better not react like on ifdown!!??) */
@@ -113,14 +119,11 @@ static void netlink_process_link(struct nlmsghdr *h)
   }
 
   //only for still configured interfaces (ifup has to be detected with regular interface polling)
-  if ( iface != NULL ) {
-    struct olsr_if *tmp_if;
-    for (tmp_if = olsr_cnf->interfaces; tmp_if != NULL; tmp_if = tmp_if->next) {
-      if (tmp_if->interf==iface) {
-        OLSR_PRINTF(1,"-> removing %s from olsr config! ", iface->int_name);
-        RemoveInterface(tmp_if,true);
-        break;
-      }
+  for (tmp_if = olsr_cnf->interfaces; tmp_if != NULL; tmp_if = tmp_if->next) {
+    if (tmp_if->interf==iface) {
+      OLSR_PRINTF(1,"-> removing %s from olsr config! ", iface->int_name);
+      RemoveInterface(tmp_if,true);
+      break;
     }
   }
 }
