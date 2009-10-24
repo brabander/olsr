@@ -42,6 +42,7 @@
 #include <signal.h>
 #include <sys/stat.h>
 #include <assert.h>
+#include <fcntl.h>
 
 #include "ipcalc.h"
 #include "defs.h"
@@ -56,7 +57,6 @@
 #include "net_os.h"
 #include "build_msg.h"
 #include "net_olsr.h"
-#include <fcntl.h>
 
 #if LINUX_POLICY_ROUTING
 #include <linux/types.h>
@@ -112,7 +112,7 @@ static void olsr_create_lock_file(void) {
   struct flock lck;
 
   /* create file for lock */
-  lock_fd = open(lock_file_name, O_WRONLY | O_CREAT);
+  lock_fd = open(lock_file_name, O_WRONLY | O_CREAT, S_IRWXU);
   if (lock_fd == 0) {
     close(lock_fd);
     fprintf(stderr,
