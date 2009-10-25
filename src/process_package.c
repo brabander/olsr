@@ -440,7 +440,7 @@ olsr_hello_tap(struct hello_message *message, struct interface *in_if, const uni
     olsr_memorize_foreign_hello_lq(lnk, walker);
 
     /* update packet loss for link quality calculation */
-    olsr_update_packet_loss(lnk);
+    olsr_received_hello_handler(lnk);
   }
 
   neighbor = lnk->neighbor;

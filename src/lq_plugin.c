@@ -217,22 +217,8 @@ olsr_deserialize_tc_lq_pair(const uint8_t ** curr, struct tc_edge_entry *edge)
 void
 olsr_update_packet_loss_worker(struct link_entry *entry, bool lost)
 {
-  olsr_linkcost lq;
   assert((const char *)entry + sizeof(*entry) >= (const char *)entry->linkquality);
-  lq = active_lq_handler->packet_loss_handler(entry, entry->linkquality, lost);
-
-  entry->linkcost = lq;
-
-  if (olsr_cnf->lq_dlimit > 0) {
-    changes_neighborhood = true;
-    changes_topology = true;
-  }
-  else {
-    OLSR_PRINTF(3, "Skipping Dijkstra (1)\n");
-  }
-
-  /* XXX - we should check whether we actually announce this neighbour */
-  signal_link_changes(true);
+  active_lq_handler->packet_loss_handler(entry, entry->linkquality, lost);
 }
 
 /*
@@ -337,7 +323,7 @@ olsr_copy_hello_lq(struct lq_hello_neighbor *target, struct link_entry *source)
 {
   assert((const char *)target + sizeof(*target) >= (const char *)target->linkquality);
   assert((const char *)source + sizeof(*source) >= (const char *)source->linkquality);
-  memcpy(target->linkquality, source->linkquality, active_lq_handler->hello_lq_size);
+  active_lq_handler->copy_link_lq_into_neigh(target->linkquality, source->linkquality);
 }
 
 /*
@@ -474,6 +460,26 @@ olsr_malloc_link_entry(const char *id)
   assert((const char *)h + sizeof(*h) >= (const char *)h->linkquality);
   active_lq_handler->clear_hello(h->linkquality);
   return h;
+}
+
+/**
+ * This function should be called whenever the current linkcost
+ * value changed in a relevant way.
+ *
+ * @param link pointer to current link
+ * @param newcost new cost of this link
+ */
+void olsr_relevant_linkcost_change(void) {
+  if (olsr_cnf->lq_dlimit > 0) {
+    changes_neighborhood = true;
+    changes_topology = true;
+  }
+  else {
+    OLSR_PRINTF(3, "Skipping Dijkstra (1)\n");
+  }
+
+  /* XXX - we should check whether we actually announce this neighbour */
+  signal_link_changes(true);
 }
 
 /*

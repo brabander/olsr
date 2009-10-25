@@ -48,6 +48,20 @@
 #include "olsr.h"
 #include "lq_plugin_default_fpm.h"
 
+static void default_lq_initialize_fpm(void);
+static olsr_linkcost default_lq_calc_cost_fpm(const void *lq);
+static void default_lq_packet_loss_worker_fpm(struct link_entry *link, void *lq, bool lost);
+static void default_lq_memorize_foreign_hello_fpm(void *local, void *foreign);
+static int default_lq_serialize_hello_lq_pair_fpm(unsigned char *buff, void *lq);
+static void default_lq_deserialize_hello_lq_pair_fpm(const uint8_t ** curr, void *lq);
+static int default_lq_serialize_tc_lq_pair_fpm(unsigned char *buff, void *lq);
+static void default_lq_deserialize_tc_lq_pair_fpm(const uint8_t ** curr, void *lq);
+static void default_lq_copy_link2tc_fpm(void *target, void *source);
+static void default_lq_clear_fpm(void *target);
+static const char *default_lq_print_fpm(void *ptr, char separator, struct lqtextbuffer *buffer);
+static const char *default_lq_print_cost_fpm(olsr_linkcost cost, struct lqtextbuffer *buffer);
+
+
 /* etx lq plugin (fpm version) settings */
 struct lq_handler lq_etx_fpm_handler = {
   &default_lq_initialize_fpm,
@@ -57,6 +71,7 @@ struct lq_handler lq_etx_fpm_handler = {
 
   &default_lq_packet_loss_worker_fpm,
   &default_lq_memorize_foreign_hello_fpm,
+  &default_lq_copy_link2tc_fpm,
   &default_lq_copy_link2tc_fpm,
   &default_lq_clear_fpm,
   &default_lq_clear_fpm,
@@ -77,7 +92,7 @@ struct lq_handler lq_etx_fpm_handler = {
 uint32_t aging_factor_new, aging_factor_old;
 uint32_t aging_quickstart_new, aging_quickstart_old;
 
-void
+static void
 default_lq_initialize_fpm(void)
 {
   aging_factor_new = (uint32_t) (olsr_cnf->lq_aging * LQ_FPM_INTERNAL_MULTIPLIER);
@@ -87,7 +102,7 @@ default_lq_initialize_fpm(void)
   aging_quickstart_old = LQ_FPM_INTERNAL_MULTIPLIER - aging_quickstart_new;
 }
 
-olsr_linkcost
+static olsr_linkcost
 default_lq_calc_cost_fpm(const void *ptr)
 {
   const struct default_lq_fpm *lq = ptr;
@@ -106,7 +121,7 @@ default_lq_calc_cost_fpm(const void *ptr)
   return cost;
 }
 
-int
+static int
 default_lq_serialize_hello_lq_pair_fpm(unsigned char *buff, void *ptr)
 {
   struct default_lq_fpm *lq = ptr;
@@ -119,7 +134,7 @@ default_lq_serialize_hello_lq_pair_fpm(unsigned char *buff, void *ptr)
   return 4;
 }
 
-void
+static void
 default_lq_deserialize_hello_lq_pair_fpm(const uint8_t ** curr, void *ptr)
 {
   struct default_lq_fpm *lq = ptr;
@@ -129,7 +144,7 @@ default_lq_deserialize_hello_lq_pair_fpm(const uint8_t ** curr, void *ptr)
   pkt_ignore_u16(curr);
 }
 
-int
+static int
 default_lq_serialize_tc_lq_pair_fpm(unsigned char *buff, void *ptr)
 {
   struct default_lq_fpm *lq = ptr;
@@ -142,7 +157,7 @@ default_lq_serialize_tc_lq_pair_fpm(unsigned char *buff, void *ptr)
   return 4;
 }
 
-void
+static void
 default_lq_deserialize_tc_lq_pair_fpm(const uint8_t ** curr, void *ptr)
 {
   struct default_lq_fpm *lq = ptr;
@@ -152,7 +167,7 @@ default_lq_deserialize_tc_lq_pair_fpm(const uint8_t ** curr, void *ptr)
   pkt_ignore_u16(curr);
 }
 
-olsr_linkcost
+static void
 default_lq_packet_loss_worker_fpm(struct link_entry *link __attribute__ ((unused)), void *ptr, bool lost)
 {
   struct default_lq_fpm *tlq = ptr;
@@ -179,10 +194,11 @@ default_lq_packet_loss_worker_fpm(struct link_entry *link __attribute__ ((unused
   }
   tlq->valueLq = (value * 255 + LQ_FPM_INTERNAL_MULTIPLIER - 1) / LQ_FPM_INTERNAL_MULTIPLIER;
 
-  return default_lq_calc_cost_fpm(ptr);
+  link->linkcost = default_lq_calc_cost_fpm(ptr);
+  olsr_relevant_linkcost_change();
 }
 
-void
+static void
 default_lq_memorize_foreign_hello_fpm(void *ptrLocal, void *ptrForeign)
 {
   struct default_lq_fpm *local = ptrLocal;
@@ -195,19 +211,19 @@ default_lq_memorize_foreign_hello_fpm(void *ptrLocal, void *ptrForeign)
   }
 }
 
-void
+static void
 default_lq_copy_link2tc_fpm(void *target, void *source)
 {
   memcpy(target, source, sizeof(struct default_lq_fpm));
 }
 
-void
+static void
 default_lq_clear_fpm(void *target)
 {
   memset(target, 0, sizeof(struct default_lq_fpm));
 }
 
-const char *
+static const char *
 default_lq_print_fpm(void *ptr, char separator, struct lqtextbuffer *buffer)
 {
   struct default_lq_fpm *lq = ptr;
@@ -217,7 +233,7 @@ default_lq_print_fpm(void *ptr, char separator, struct lqtextbuffer *buffer)
   return buffer->buf;
 }
 
-const char *
+static const char *
 default_lq_print_cost_fpm(olsr_linkcost cost, struct lqtextbuffer *buffer)
 {
   snprintf(buffer->buf, sizeof(buffer->buf), "%.3f", (float)(cost) / LQ_FPM_LINKCOST_MULTIPLIER);

@@ -58,24 +58,6 @@ struct default_lq_fpm {
   uint16_t quickstart;
 };
 
-void default_lq_initialize_fpm(void);
-
-olsr_linkcost default_lq_calc_cost_fpm(const void *lq);
-
-olsr_linkcost default_lq_packet_loss_worker_fpm(struct link_entry *link, void *lq, bool lost);
-void default_lq_memorize_foreign_hello_fpm(void *local, void *foreign);
-
-int default_lq_serialize_hello_lq_pair_fpm(unsigned char *buff, void *lq);
-void default_lq_deserialize_hello_lq_pair_fpm(const uint8_t ** curr, void *lq);
-int default_lq_serialize_tc_lq_pair_fpm(unsigned char *buff, void *lq);
-void default_lq_deserialize_tc_lq_pair_fpm(const uint8_t ** curr, void *lq);
-
-void default_lq_copy_link2tc_fpm(void *target, void *source);
-void default_lq_clear_fpm(void *target);
-
-const char *default_lq_print_fpm(void *ptr, char separator, struct lqtextbuffer *buffer);
-const char *default_lq_print_cost_fpm(olsr_linkcost cost, struct lqtextbuffer *buffer);
-
 extern struct lq_handler lq_etx_fpm_handler;
 
 #endif /*LQ_ETX_FPM_ */

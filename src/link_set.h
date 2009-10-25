@@ -123,7 +123,6 @@ void olsr_set_link_timer(struct link_entry *, unsigned int);
 void olsr_init_link_set(void);
 void olsr_delete_link_entry_by_ip(const union olsr_ip_addr *);
 void olsr_expire_link_hello_timer(void *);
-void olsr_update_packet_loss_worker(struct link_entry *, bool);
 void signal_link_changes(bool);        /* XXX ugly */
 
 struct link_entry *get_best_link_to_neighbor(const union olsr_ip_addr *);
@@ -137,7 +136,7 @@ int check_neighbor_link(const union olsr_ip_addr *);
 int replace_neighbor_link_set(const struct neighbor_entry *, struct neighbor_entry *);
 int lookup_link_status(const struct link_entry *);
 void olsr_update_packet_loss_hello_int(struct link_entry *, olsr_reltime);
-void olsr_update_packet_loss(struct link_entry *entry);
+void olsr_received_hello_handler(struct link_entry *entry);
 void olsr_print_link_set(void);
 
 #endif

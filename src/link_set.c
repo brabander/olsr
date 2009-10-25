@@ -359,7 +359,6 @@ olsr_delete_link_entry(struct link_entry *link)
   link->link_hello_timer = NULL;
   olsr_stop_timer(link->link_loss_timer);
   link->link_loss_timer = NULL;
-
   list_remove(&link->link_list);
 
   free(link->if_name);
@@ -388,6 +387,7 @@ olsr_delete_link_entry_by_ip(const union olsr_ip_addr *int_addr)
   OLSR_FOR_ALL_LINK_ENTRIES_END(link);
 }
 
+
 /**
  * Callback for the link loss timer.
  */
@@ -404,6 +404,7 @@ olsr_expire_link_loss_timer(void *context)
   /* next timeout in 1.0 x htime */
   olsr_change_timer(link->link_loss_timer, link->loss_helloint, OLSR_LINK_LOSS_JITTER, OLSR_TIMER_PERIODIC);
 }
+
 
 /**
  * Callback for the link SYM timer.
@@ -563,7 +564,6 @@ add_link_entry(const union olsr_ip_addr *local, const union olsr_ip_addr *remote
 
     olsr_set_timer(&new_link->link_loss_timer, htime + htime / 2, OLSR_LINK_LOSS_JITTER, OLSR_TIMER_PERIODIC,
                    &olsr_expire_link_loss_timer, new_link, 0);
-
 
     set_loss_link_multiplier(new_link);
   }
@@ -803,7 +803,7 @@ olsr_update_packet_loss_hello_int(struct link_entry *entry, olsr_reltime loss_he
 }
 
 void
-olsr_update_packet_loss(struct link_entry *entry)
+olsr_received_hello_handler(struct link_entry *entry)
 {
   olsr_update_packet_loss_worker(entry, false);
 

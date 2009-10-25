@@ -66,12 +66,13 @@ struct lqtextbuffer {
 struct lq_handler {
   void (*initialize) (void);
 
-    olsr_linkcost(*calc_hello_cost) (const void *lq);
-    olsr_linkcost(*calc_tc_cost) (const void *lq);
+  olsr_linkcost (*calc_hello_cost) (const void *lq);
+  olsr_linkcost (*calc_tc_cost) (const void *lq);
 
-    olsr_linkcost(*packet_loss_handler) (struct link_entry * entry, void *lq, bool lost);
+  void (*packet_loss_handler) (struct link_entry * entry, void *lq, bool lost);
 
   void (*memorize_foreign_hello) (void *local, void *foreign);
+  void (*copy_link_lq_into_neigh) (void *target, void *source);
   void (*copy_link_lq_into_tc) (void *target, void *source);
   void (*clear_hello) (void *target);
   void (*clear_tc) (void *target);
@@ -135,6 +136,8 @@ struct hello_neighbor *olsr_malloc_hello_neighbor(const char *id);
 struct tc_mpr_addr *olsr_malloc_tc_mpr_addr(const char *id);
 struct lq_hello_neighbor *olsr_malloc_lq_hello_neighbor(const char *id);
 struct link_entry *olsr_malloc_link_entry(const char *id);
+
+void olsr_relevant_linkcost_change(void);
 
 /* Externals. */
 extern struct lq_handler *active_lq_handler;
