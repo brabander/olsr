@@ -267,7 +267,7 @@ ipc_action(int fd __attribute__ ((unused)))
     return;
   }
 #ifndef _WRS_KERNEL
-  if (!ip4equal(&pin.sin_addr, &ipc_accept_ip.v4) && pin.sin_addr.s_addr != INADDR_ANY) {
+  if (!ip4equal(&pin.sin_addr, &ipc_accept_ip.v4) && ipc_accept_ip.v4.s_addr != INADDR_ANY) {
     olsr_printf(0, "Front end-connection from foreign host (%s) not allowed!\n", inet_ntoa(pin.sin_addr));
     CLOSE(ipc_connection);
     return;
