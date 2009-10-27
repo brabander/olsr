@@ -194,7 +194,6 @@ struct olsr_config {
 
   struct plugin_entry *plugins;        /* List of plugins to load with plparams */
   struct list_node hna_entries;        /* List of manually configured HNA entries */
-  struct ip_acl ipc_nets;              /* List of allowed IPC peer IPs */
   struct olsr_if_config *if_configs;   /* List of devices to be used by olsrd */
 
   uint32_t pollrate;               /* Main loop poll rate, in milliseconds */

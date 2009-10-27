@@ -569,94 +569,6 @@ parse_cfg_interface(char *argstr, struct olsr_config *rcfg, char *rmsg)
 }
 
 /*
- * Parses a single ipc option block
- * @argstr:     arguments string
- * @rcfg:       config struct to write/change values into
- * @rmsg:   a buf[FILENAME_MAX + 256] to sprint err msgs
- * @returns configuration status as defined in olsr_parse_cfg_result
- */
-static olsr_parse_cfg_result
-parse_cfg_ipc(char *argstr, struct olsr_config *rcfg, char *rmsg)
-{
-  char **tok;
-  const char *nxt;
-#ifdef DEBUG
-  struct ipaddr_str buf;
-#endif
-  if ('{' != *argstr) {
-    sprintf(rmsg, "No {}\n");
-    return CFG_ERROR;
-  }
-  if (NULL != (tok = parse_tok(argstr + 1, &nxt))) {
-    char **p = tok;
-    while (p[0]) {
-      if (!p[1]) {
-        sprintf(rmsg, "Odd args in %s\n", argstr);
-        parse_tok_free(tok);
-        return CFG_ERROR;
-      }
-      if (0 == strcasecmp("Host", p[0])) {
-        union olsr_ip_addr ipaddr;
-        if (inet_pton(rcfg->ip_version, p[1], &ipaddr) <= 0) {
-          sprintf(rmsg, "Failed converting IP address %s\n", p[0]);
-          parse_tok_free(tok);
-          return CFG_ERROR;
-        }
-
-        ip_acl_add(&rcfg->ipc_nets, &ipaddr, 8 * rcfg->ipsize, false);
-        PARSER_DEBUG_PRINTF("\tIPC host: %s\n", ip_to_string(rcfg->ip_version, &buf, &ipaddr));
-      } else if (0 == strcasecmp("Net", p[0])) {
-        union olsr_ip_addr ipaddr;
-        if (!p[2]) {
-          sprintf(rmsg, "Odd args in %s\n", nxt);
-          parse_tok_free(tok);
-          return CFG_ERROR;
-        }
-        if (inet_pton(rcfg->ip_version, p[1], &ipaddr) <= 0) {
-          sprintf(rmsg, "Failed converting IP address %s\n", p[0]);
-          parse_tok_free(tok);
-          return CFG_ERROR;
-        }
-        if (AF_INET == rcfg->ip_version) {
-          union olsr_ip_addr netmask;
-          if (inet_pton(AF_INET, p[2], &netmask) <= 0) {
-            sprintf(rmsg, "Failed converting IP address %s\n", p[2]);
-            parse_tok_free(tok);
-            return CFG_ERROR;
-          }
-          if ((ipaddr.v4.s_addr & ~netmask.v4.s_addr) != 0) {
-            sprintf(rmsg, "The IP address %s/%s is not a network address!\n", p[1], p[2]);
-            parse_tok_free(tok);
-            return CFG_ERROR;
-          }
-          ip_acl_add(&rcfg->ipc_nets, &ipaddr, netmask_to_prefix(netmask.v6.s6_addr, rcfg->ipsize), false);
-          PARSER_DEBUG_PRINTF("\tIPC net: %s/%d\n", ip_to_string(rcfg->ip_version, &buf, &ipaddr),
-                              netmask_to_prefix(netmask.v6.s6_addr, rcfg->ipsize));
-        } else {
-          int prefix = -1;
-          sscanf('/' == *p[2] ? p[2] + 1 : p[2], "%d", &prefix);
-          if (0 > prefix || 128 < prefix) {
-            sprintf(rmsg, "Illegal IPv6 prefix %s\n", p[2]);
-            parse_tok_free(tok);
-            return CFG_ERROR;
-          }
-          ip_acl_add(&rcfg->ipc_nets, &ipaddr, prefix, false);
-          PARSER_DEBUG_PRINTF("\tIPC net: %s/%d\n", ip_to_string(rcfg->ip_version, &buf, &ipaddr), prefix);
-        }
-        p++;
-      } else {
-        sprintf(rmsg, "Unknown arg: %s %s\n", p[0], p[1]);
-        parse_tok_free(tok);
-        return CFG_ERROR;
-      }
-      p += 2;
-    }
-    parse_tok_free(tok);
-  }
-  return CFG_OK;
-}
-
-/*
  * Parses a single loadplugin option block
  * @argstr:     arguments string
  * @rcfg:       config struct to write/change values into
@@ -894,9 +806,6 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
     break;
   case 'I':                    /* Interface if1 if2 { ifbody } */
     return parse_cfg_interface(argstr, rcfg, rmsg);
-    break;
-  case 'Q':                    /* IpcConnect (Host,Net,MaxConnections) */
-    return parse_cfg_ipc(argstr, rcfg, rmsg);
     break;
   case 'V':                    /* IpVersion (i) */
     {
@@ -1585,11 +1494,6 @@ olsr_free_cfg(struct olsr_config *cfg)
   ip_prefix_list_flush(&cfg->hna_entries);
 
   /*
-   * Free IPCs.
-   */
-  ip_acl_flush(&cfg->ipc_nets);
-
-  /*
    * Free Interfaces - remove_interface() already called
    */
   while (in) {
@@ -1667,7 +1571,6 @@ olsr_get_default_cfg(void)
 
   assert(cfg->plugins == NULL);
   list_head_init(&cfg->hna_entries);
-  ip_acl_init(&cfg->ipc_nets);
   assert(cfg->if_configs == NULL);
 
   cfg->pollrate = DEF_POLLRATE;

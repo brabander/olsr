@@ -116,21 +116,6 @@ olsr_write_cnf_buf(struct autobuf *abuf, struct olsr_config *cnf, bool write_mor
                "# dynammically based on battery/power status\n"
                "%sWillingness\t%d\n\n", cnf->willingness_auto ? "#" : "", cnf->willingness_auto ? 4 : cnf->willingness);
 
-  if (list_is_empty(&cnf->ipc_nets.accept)) {
-    struct ip_prefix_entry *ie;
-    OLSR_FOR_ALL_IPPREFIX_ENTRIES(&cnf->ipc_nets.accept, ie) {
-      if (ie->net.prefix_len == 8 * cnf->ipsize) {
-        struct ipaddr_str strbuf;
-        abuf_appendf(abuf, "    Host\t\t%s\n", ip_to_string(cnf->ip_version, &strbuf, &ie->net.prefix));
-      } else {
-        struct ipprefix_str strbuf;
-        abuf_appendf(abuf, "    Net\t\t\t%s\n", ip_prefix_to_string(cnf->ip_version, &strbuf, &ie->net));
-      }
-    } OLSR_FOR_ALL_IPPREFIX_ENTRIES_END()
-  }
-
-  abuf_appendf(abuf, "}\n");
-
   /* Pollrate */
   abuf_appendf(abuf, "# Polling rate in seconds(float).\n"
                "# Auto uses default value 0.05 sec\n" "Pollrate\t%s\n",
