@@ -44,7 +44,6 @@
 
 #include "defs.h"
 #include "olsr_types.h"
-#include "plugin.h"
 #include "common/list.h"
 
 struct ip_acl {

@@ -44,6 +44,7 @@
 
 #include "olsr_types.h"
 #include "lq_plugin.h"
+#include "plugin.h"
 
 #define LQ_ALGORITHM_ETX_FLOAT_NAME "etx_float"
 

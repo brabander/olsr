@@ -44,6 +44,7 @@
 
 #include "olsr_types.h"
 #include "lq_plugin.h"
+#include "plugin.h"
 
 #define LQ_ALGORITHM_ETX_FPM_NAME "etx_fpm"
 

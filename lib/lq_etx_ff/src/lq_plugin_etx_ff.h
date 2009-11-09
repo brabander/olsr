@@ -47,6 +47,7 @@
 #include "link_set.h"
 #include "lq_packet.h"
 #include "lq_plugin.h"
+#include "plugin.h"
 
 /* 16,32,64 and max. 128 */
 #define LQ_FF_WINDOW 64
