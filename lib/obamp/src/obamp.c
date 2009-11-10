@@ -779,16 +779,22 @@ CheckDupData(char *buffer)
 
       if (memcmp(&tmp->neighbor_ip_addr.v4, &data_msg->router_id, sizeof(struct in_addr)) == 0) {
 
-
+	OLSR_DEBUG(LOG_PLUGINS, "Processing Data Packet %d - Last seen was %d",data_msg->SequenceNumber, tmp->DataSeqNumber);
+	
         if (tmp->DataSeqNumber == 0) {  //First packet received from this host
           tmp->DataSeqNumber = data_msg->SequenceNumber;
           return 1;
         }
-        if (data_msg->SequenceNumber < tmp->DataSeqNumber) {
 
+	if ( ((data_msg->SequenceNumber > tmp->DataSeqNumber) && ((data_msg->SequenceNumber - tmp->DataSeqNumber ) <= 127)) || ((tmp->DataSeqNumber > data_msg->SequenceNumber) && ((tmp->DataSeqNumber - data_msg->SequenceNumber) > 127 ))) //data_msg->SequenceNumber > tmp->DataSeqNumber
+	{
+	tmp->DataSeqNumber = data_msg->SequenceNumber;
+	return 1;
+	}
+	else{
           OLSR_DEBUG(LOG_PLUGINS, "DISCARDING DUP PACKET");
           return 0;
-        }
+	}
       }
     }
   }
