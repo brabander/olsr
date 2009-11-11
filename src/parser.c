@@ -261,7 +261,7 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
   if (count < MIN_PACKET_SIZE(olsr_cnf->ip_version))
     return;
 
-  if (ntohs(olsr->olsr_packlen) != size) {
+  if (ntohs(olsr->olsr_packlen) !=(uint16_t) size) {
     struct ipaddr_str buf;
     OLSR_PRINTF(1, "Size error detected in received packet.\nRecieved %d, in packet %d\n", size, ntohs(olsr->olsr_packlen));
 
