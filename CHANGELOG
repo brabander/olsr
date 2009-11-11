@@ -34,6 +34,8 @@ PATCHES and BUGFIXES from Henning Rogge <rogge@fgan.de>
 - fix some bugs with lq-mult
 - fix bug in duplicate set sequencenumber handling
 - add Debian/KFreeBSD support (Thanks to Holger Levsen and friends for help)
+- fix segfault in 'interface lost' monitor
+- add LQ hysteresis to etx-ff metric
 
 PATCH from Markus Kittenberger <Markus.Kittenberger@gmx.at>:
 - txtinfo plugin: add more http options
@@ -61,6 +63,9 @@ OLSR network.
 - more RT-Netlink cleanups and fixes
 - backport of timejump patch from TIP
 - Add detection for vanishing interfaces to Linux netlink code
+- fix incorret route sorting on new neighbours. use only delete and add/change avl tree,
+  instead of 3 trees
+- learn neighbours interface alias adress from received hellos
 
 PATCHES from Hannes Gredler <hannes@gredler.at>:
 - add small valgrind howto
