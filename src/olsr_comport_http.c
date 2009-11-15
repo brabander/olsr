@@ -319,7 +319,7 @@ void olsr_com_decode_url(char *str) {
   char *dst = str;
 
   while (*str) {
-    if (*str == '%') {
+    if (*str == '%' && str[1] && str[2]) {
       int value = 0;
 
       str++;
