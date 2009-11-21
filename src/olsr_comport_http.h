@@ -46,6 +46,22 @@
 #include "olsr_ip_acl.h"
 #include "olsr_comport.h"
 
+#define MAX_HTTP_PARA 10
+#define MAX_HTTP_HEADERS 32
+
+/* this is the data about the http header delivered to the html site handler */
+struct http_header_data {
+  char *para_key[MAX_HTTP_PARA];
+  char *para_value[MAX_HTTP_PARA];
+  char *header_key[MAX_HTTP_HEADERS];
+  char *header_value[MAX_HTTP_HEADERS];
+  char *req_type;
+  char *filename;
+  char *http_version;
+  size_t para_count;
+  size_t header_count;
+};
+
 /* this is a html site datastructure for each site */
 /* it is stored in an AVL tree */
 struct olsr_html_site {
@@ -59,11 +75,11 @@ struct olsr_html_site {
   struct ip_acl *acl; /* allow only certain IPs ? */
 
 	/* for static sites... */
-  char *site_data;
+  const char *site_data;
   size_t site_length;
 
 	/* for non static, this is the handler */
-  void (*sitehandler)(struct comport_connection *con, char *path, int parameter_count, char *parameters[]);
+  void (*sitehandler)(struct comport_connection *con, struct http_header_data *data);
 };
 
 AVLNODE2STRUCT(html_tree2site, olsr_html_site, node);
@@ -74,17 +90,16 @@ void olsr_com_init_http(void);
 void olsr_com_destroy_http(void);
 
 struct olsr_html_site *EXPORT(olsr_com_add_htmlsite) (
-    char *path, char *content, size_t length);
+    const char *path, const char *content, size_t length);
 struct olsr_html_site *EXPORT(olsr_com_add_htmlhandler) (
-    void (*sitehandler)(struct comport_connection *con, char *path, int parameter_count, char *parameters[]),
+    void (*sitehandler)(struct comport_connection *con, struct http_header_data *data),
     const char *path);
 void EXPORT(olsr_com_remove_htmlsite) (struct olsr_html_site *site);
 void EXPORT(olsr_com_set_htmlsite_acl_auth) (struct olsr_html_site *site,
     struct ip_acl *acl, int auth_count, char **auth_entries);
 
-bool olsr_com_handle_htmlsite(struct comport_connection *con, char *path,
-    char *filename, int para_count, char **para);
-
+void olsr_com_parse_http(struct comport_connection *con,
+    unsigned int flags  __attribute__ ((unused)));
 void EXPORT(olsr_com_build_httpheader) (struct comport_connection *con);
 void EXPORT(olsr_com_create_httperror) (struct comport_connection *con);
 char *EXPORT(olsr_com_get_http_message) (enum http_header_type type);

@@ -199,6 +199,118 @@ olsr_com_handle_txtcommand(struct comport_connection *con, char *cmd, char *para
   return ptr->handler(con, cmd, param);
 }
 
+void olsr_com_parse_txt(struct comport_connection *con,
+    unsigned int flags  __attribute__ ((unused))) {
+  static char defaultCommand[] = "/link/neigh/topology/hna/mid/routes";
+  static char tmpbuf[128];
+
+  enum olsr_txtcommand_result res;
+  char *eol;
+  int len;
+  bool processedCommand = false, chainCommands = false;
+  uint32_t old_timeout;
+
+  old_timeout = con->timeout_value;
+
+  /* loop over input */
+  while (con->in.len > 0 && con->state == INTERACTIVE) {
+    char *para = NULL, *cmd = NULL, *next = NULL;
+
+    /* search for end of line */
+    eol = memchr(con->in.buf, '\n', con->in.len);
+
+    if (eol == NULL) {
+      break;
+    }
+
+    /* terminate line with a 0 */
+    if (eol != con->in.buf && eol[-1] == '\r') {
+      eol[-1] = 0;
+    }
+    *eol++ = 0;
+
+    /* handle line */
+    OLSR_DEBUG(LOG_COMPORT, "Interactive console: %s\n", con->in.buf);
+    cmd = &con->in.buf[0];
+    processedCommand = true;
+
+    /* apply default command */
+    if (strcmp(cmd, "/") == 0) {
+      strcpy(tmpbuf, defaultCommand);
+      cmd = tmpbuf;
+    }
+
+    if (cmd[0] == '/') {
+      cmd++;
+      chainCommands = true;
+    }
+    while (cmd) {
+      len = con->out.len;
+
+      /* handle difference between multicommand and singlecommand mode */
+      if (chainCommands) {
+        next = strchr(cmd, '/');
+        if (next) {
+          *next++ = 0;
+        }
+      }
+      para = strchr(cmd, ' ');
+      if (para != NULL) {
+        *para++ = 0;
+      }
+
+      /* if we are doing continous output, stop it ! */
+      if (con->stop_handler) {
+        con->stop_handler(con);
+        con->stop_handler = NULL;
+      }
+
+      if (strlen(cmd) != 0) {
+        res = olsr_com_handle_txtcommand(con, cmd, para);
+        switch (res) {
+          case CONTINUE:
+            break;
+          case CONTINOUS:
+            break;
+          case ABUF_ERROR:
+            con->out.len = len;
+            abuf_appendf(&con->out,
+                "Error in autobuffer during command '%s'.\n", cmd);
+            break;
+          case UNKNOWN:
+            con->out.len = len;
+            abuf_appendf(&con->out, "Error, unknown command '%s'\n", cmd);
+            break;
+          case QUIT:
+            con->state = SEND_AND_QUIT;
+            break;
+        }
+        /* put an empty line behind each command */
+        if (con->show_echo) {
+          abuf_puts(&con->out, "\n");
+        }
+      }
+      cmd = next;
+    }
+
+    /* remove line from input buffer */
+    abuf_pull(&con->in, eol - con->in.buf);
+
+    if (con->in.buf[0] == '/') {
+      /* end of multiple command line */
+      con->state = SEND_AND_QUIT;
+    }
+  }
+
+  /* reset timeout */
+  olsr_change_timer(con->timeout, con->timeout_value, 0, false);
+
+  /* print prompt */
+  if (processedCommand && con->state == INTERACTIVE && con->show_echo) {
+    abuf_puts(&con->out, "> ");
+  }
+}
+
 static enum olsr_txtcommand_result
 olsr_txtcmd_quit(struct comport_connection *con __attribute__ ((unused)),
     const char *cmd __attribute__ ((unused)), const char *param __attribute__ ((unused))) {
