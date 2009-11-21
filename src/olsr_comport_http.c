@@ -631,7 +631,10 @@ olsr_com_build_httpheader(struct comport_connection *con) {
   abuf_puts(&buf, "Connection: closed\r\n");
 
   /* MIME type */
-  abuf_appendf(&buf, "Content-type: text/%s\r\n", con->send_as != HTTP_PLAIN ? "html" : "plain");
+  if (con->http_contenttype == NULL) {
+    con->http_contenttype = con->send_as != HTTP_PLAIN ? "text/html" : "text/plain";
+  }
+  abuf_appendf(&buf, "Content-type: text/%s\r\n", con->http_contenttype);
 
   /* Content length */
   if (con->out.len > 0) {
