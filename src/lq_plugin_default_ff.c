@@ -244,13 +244,12 @@ default_lq_ff_timer(void __attribute__ ((unused)) * context)
 
       /* keep missed hello periods in mind (round up hello interval to seconds) */
       if (tlq->missed_hellos > 1) {
-        int penalty = received * tlq->missed_hellos * link->inter->hello_etime/1000 / LQ_FF_WINDOW;
-
-        if (penalty < 0) {
+        int factor = tlq->missed_hellos * link->inter->hello_etime/1000;
+        if (factor >= LQ_FF_WINDOW) {
           received = 0;
         }
         else {
-          received -= penalty;
+          received = received - received * factor / LQ_FF_WINDOW;
         }
       }
 
