@@ -284,8 +284,9 @@ IsMulticast(union olsr_ip_addr *ipAddress)
 static void
 activate_tree_link(struct OBAMP_tree_link_ack *ack)
 {
-
+#if !defined(REMOVE_LOG_DEBUG)
   struct ipaddr_str buf;
+#endif
   struct ObampNode *tmp;
   struct list_head *pos;
 
@@ -382,7 +383,9 @@ tree_link_ack(struct OBAMP_tree_link_req *req)
 
   struct ObampNode *tmp;
   struct list_head *pos;
+#if !defined(REMOVE_LOG_DEBUG)
   struct ipaddr_str buf;
+#endif
 
   struct OBAMP_tree_link_ack *ack;
 
@@ -498,7 +501,9 @@ printObampNodesList(void)
 {
 
   int i = 1;
+#if !defined(REMOVE_LOG_DEBUG)
   struct ipaddr_str buf;
+#endif
   struct ObampNode *tmp;
   struct list_head *pos;
 
@@ -596,8 +601,9 @@ reset_tree_links(void)
 static void
 CoreElection(void)
 {
-
+#if !defined(REMOVE_LOG_DEBUG)
   struct ipaddr_str buf;
+#endif
   struct ObampNode *tmp;
   struct list_head *pos;
   u_int32_t smallestIP = 0xFFFFFFFF;
@@ -807,7 +813,9 @@ static void
 forward_obamp_data(char *buffer)
 {
 
-  struct ipaddr_str buf;               //buf to print debug infos
+#if !defined(REMOVE_LOG_DEBUG)
+  struct ipaddr_str buf;
+#endif
   struct ObampNode *tmp;               //temp pointers used when parsing the list
   struct list_head *pos;
   struct OBAMP_data_message4 *data_msg;
@@ -888,8 +896,10 @@ manage_tree_create(char *packet)
 
   struct OBAMP_tree_create *msg;
 
-  struct ipaddr_str buf;               //buf to print debug infos
+#if !defined(REMOVE_LOG_DEBUG)
+  struct ipaddr_str buf;
   struct ipaddr_str buf2;              //buf to print debug infos
+#endif
 
   struct ObampNode *tmp;               //temp pointers used when parsing the list
   struct list_head *pos;
@@ -1030,8 +1040,9 @@ If a new node is added CoreElection is called to update the current core
 int
 addObampNode4(struct in_addr *ipv4, u_int8_t status)
 {
-
-  struct ipaddr_str buf;               //Printf stuff
+#if !defined(REMOVE_LOG_DEBUG)
+  struct ipaddr_str buf;
+#endif
   struct ObampNode *neighbor_to_add;
   struct ObampNode *tmp;
   struct list_head *pos;
@@ -1094,7 +1105,9 @@ PacketReceivedFromOLSR(void *originator, unsigned char *obamp_message, int len)
 {
   u_int8_t MessageID = obamp_message[0];
   struct OBAMP_alive *alive;
+#if !defined(REMOVE_LOG_DEBUG)
   struct ipaddr_str buf;
+#endif
 
   struct in_addr *myOriginator = (struct in_addr *)originator;
 
@@ -1266,8 +1279,9 @@ outer_tree_create(void *x)
 void
 tree_create(void *x)
 {
-
-  struct ipaddr_str buf;               //buf to print debug infos
+#if !defined(REMOVE_LOG_DEBUG)
+  struct ipaddr_str buf;
+#endif
   struct ObampNode *tmp;               //temp pointers used when parsing the list
   struct list_head *pos;
 
@@ -1305,8 +1319,9 @@ tree_create(void *x)
 void
 mesh_create(void *x)
 {
-
-  struct ipaddr_str buf;               //buf to print debug infos
+#if !defined(REMOVE_LOG_DEBUG)
+  struct ipaddr_str buf;
+#endif
   struct ObampNode *tmp;               //temp pointers used when parsing the list
   struct list_head *pos;
 
@@ -1402,8 +1417,9 @@ mesh_create(void *x)
 void
 purge_nodes(void *x)
 {
-
+#if !defined(REMOVE_LOG_DEBUG)
   struct ipaddr_str buf;
+#endif
   struct ObampNode *tmp;
   struct list_head *pos;
 
@@ -1479,7 +1495,9 @@ EncapFlowInObamp(int skfd, void *data __attribute__ ((unused)), unsigned int fla
 {
   unsigned char ipPacket[1500];        //TODO: optimize me
 
+#if !defined(REMOVE_LOG_DEBUG)
   struct ipaddr_str buf;
+#endif
   struct ObampNode *tmp;
   struct list_head *pos;
 
@@ -1620,7 +1638,9 @@ PreInitOBAMP(void)
 int
 InitOBAMP(void)
 {
-  struct ipaddr_str buf;               //Buffer to print debug to screen
+#if !defined(REMOVE_LOG_DEBUG)
+  struct ipaddr_str buf;
+#endif
 
 //Structs necessary for timers
 

@@ -218,8 +218,9 @@ olsr_com_handle_htmlsite(struct comport_connection *con, char *path,
 
   /* check if ip is allowed */
   if (site->acl != NULL && !ip_acl_acceptable(site->acl, &con->addr, olsr_cnf->ip_version)) {
+#if !defined(REMOVE_LOG_DEBUG)
     struct ipaddr_str buf;
-
+#endif
     con->send_as = HTTP_403_FORBIDDEN;
     OLSR_DEBUG(LOG_COMPORT, "Error, access by IP %s is not allowed for path %s\n",
         path, olsr_ip_to_string(&buf, &con->addr));
