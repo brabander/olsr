@@ -55,7 +55,7 @@
 
 #define HTTP_TESTSITE
 
-static const char HTTP_VERSION[] = "HTTP/1.1";
+static const char HTTP_VERSION[] = "HTTP/1.0";
 static const char TELNET_PATH[] = "/telnet/";
 
 static struct olsr_cookie_info *htmlsite_cookie;
@@ -71,25 +71,25 @@ static char http_413_response[] = "Request Entity Too Large";
 static char http_501_response[] = "Not Implemented";
 static char http_503_response[] = "Service Unavailable";
 
-static bool parse_http_header(char *message, size_t message_len, struct http_header_data *data);
+static bool parse_http_header(char *message, size_t message_len, struct http_request *request);
 
 /* sample for a static html page */
 #ifdef HTTP_TESTSITE
 
 static void
-test_handler(struct comport_connection *con, struct http_header_data *data) {
+test_handler(struct comport_connection *con, struct http_request *request) {
   size_t i;
 
   abuf_puts(&con->out, "<html><body>");
-  abuf_appendf(&con->out, "<br>Request: %s</br>\n", data->req_type);
-  abuf_appendf(&con->out, "<br>Filename: %s</br>\n", data->filename);
-  abuf_appendf(&con->out, "<br>Http-Version: %s</br>\n", data->http_version);
+  abuf_appendf(&con->out, "<br>Request: %s</br>\n", request->method);
+  abuf_appendf(&con->out, "<br>Filename: %s</br>\n", request->request_uri);
+  abuf_appendf(&con->out, "<br>Http-Version: %s</br>\n", request->http_version);
 
-  for (i=0; i<data->para_count; i++) {
-    abuf_appendf(&con->out, "<br>URL-Parameter: %s = %s</br>\n", data->para_key[i], data->para_value[i]);
+  for (i=0; i<request->query_count; i++) {
+    abuf_appendf(&con->out, "<br>URL-Parameter: %s = %s</br>\n", request->query_name[i], request->query_value[i]);
   }
-  for (i=0; i<data->header_count; i++) {
-    abuf_appendf(&con->out, "<br>Header: %s = %s</br>\n", data->header_key[i], data->header_value[i]);
+  for (i=0; i<request->header_count; i++) {
+    abuf_appendf(&con->out, "<br>Header: %s = %s</br>\n", request->header_name[i], request->header_value[i]);
   }
   abuf_puts(&con->out, "</body></html>");
 }
@@ -108,9 +108,9 @@ static void init_test(void) {
 #endif
 
 static void
-olsr_com_html2telnet_gate(struct comport_connection *con, struct http_header_data *data) {
-  if (strlen(data->filename) > strlen(TELNET_PATH)) {
-    char *cmd = &data->filename[strlen(TELNET_PATH)];
+olsr_com_html2telnet_gate(struct comport_connection *con, struct http_request *request) {
+  if (strlen(request->request_uri) > strlen(TELNET_PATH)) {
+    char *cmd = &request->request_uri[strlen(TELNET_PATH)];
     char *next;
     size_t count = 1;
     enum olsr_txtcommand_result result;
@@ -121,7 +121,7 @@ olsr_com_html2telnet_gate(struct comport_connection *con, struct http_header_dat
         *next++ = 0;
       }
 
-      result = olsr_com_handle_txtcommand(con, cmd, data->para_count > count ? data->para_value[count] : NULL);
+      result = olsr_com_handle_txtcommand(con, cmd, request->query_count > count ? request->query_value[count] : NULL);
 
       /* sorry, no continous output */
       if (result == CONTINOUS) {
@@ -178,7 +178,7 @@ olsr_com_add_htmlsite(const char *path, const char *content, size_t length) {
 }
 
 struct olsr_html_site *
-olsr_com_add_htmlhandler(void(*sitehandler)(struct comport_connection *con, struct http_header_data *data),
+olsr_com_add_htmlhandler(void(*sitehandler)(struct comport_connection *con, struct http_request *request),
     const char *path) {
   struct olsr_html_site *site;
 
@@ -211,7 +211,7 @@ olsr_com_set_htmlsite_acl_auth(struct olsr_html_site *site, struct ip_acl *ipacl
 */
 static bool
 olsr_com_handle_htmlsite(struct comport_connection *con, char *path,
-    struct http_header_data *data) {
+    struct http_request *request) {
   char *str;
   int i;
   struct olsr_html_site *site;
@@ -259,51 +259,42 @@ olsr_com_handle_htmlsite(struct comport_connection *con, char *path,
   if (site->static_site) {
     abuf_memcpy(&con->out, site->site_data, site->site_length);
   } else {
-    site->sitehandler(con, data);
+    site->sitehandler(con, request);
   }
   con->send_as = HTTP_200_OK;
   return true;
 }
 
-static bool parse_http_header(char *message, size_t message_len, struct http_header_data *data)
-{
+static bool parse_http_header(char *message, size_t message_len, struct http_request *request) {
   size_t header_index;
-  char *start;
-  bool was_space = false;
 
   assert(message);
-  assert(data);
+  assert(request);
 
-  memset(data, 0, sizeof(struct http_header_data));
-  data->req_type = message;
+  memset(request, 0, sizeof(struct http_request));
+  request->method = message;
 
-  start = message;
-  while(true)
-  {
-    if(message_len < 1) {
-      OLSR_DEBUG(LOG_COMPORT, "Error, http-header too small (%zu)\n", message - start);
-      return true;
+  while(true) {
+    if(message_len < 2) {
+      goto bad_request;
     }
 
-    if (was_space) {
-      if (data->filename == NULL) {
-        data->filename = message;
-      }
-      else if (data->http_version == NULL) {
-        data->http_version = message;
-      }
-      was_space = false;
-    }
-    if(*message == ' ' && data->http_version == NULL) {
+    if(*message == ' ' && request->http_version == NULL) {
       *message = '\0';
-      was_space = true;
+
+      if (request->request_uri == NULL) {
+        request->request_uri = &message[1];
+      }
+      else if (request->http_version == NULL) {
+        request->http_version = &message[1];
+      }
     }
     else if(*message == '\r') {
       *message = '\0';
     }
-    else if(*message == '\n')
-    {
+    else if(*message == '\n') {
       *message = '\0';
+
       message++; message_len--;
       break;
     }
@@ -311,87 +302,70 @@ static bool parse_http_header(char *message, size_t message_len, struct http_hea
     message++; message_len--;
   }
 
-  for(header_index = 0; true; header_index++)
-  {
+  if(request->http_version == NULL) {
+    goto bad_request;
+  }
+
+  for(header_index = 0; true; header_index++) {
     if(message_len < 1) {
-      OLSR_DEBUG(LOG_COMPORT, "Error, http-header too small (%zu)\n", message - start);
-      return true;
+      goto bad_request;
     }
 
-    if(*message == '\n')
-    {
+    if(*message == '\n') {
       break;
     }
-    else if(*message == '\r')
-    {
+    else if(*message == '\r') {
       if(message_len < 2) return true;
 
-      if(message[1] == '\n')
-      {
+      if(message[1] == '\n') {
         break;
       }
     }
 
     if(header_index >= MAX_HTTP_HEADERS) {
-      OLSR_DEBUG(LOG_COMPORT, "Error, too many http header entries (%zu)\n", message - start);
-      return true;
+      goto too_many_fields;
     }
 
-    data->header_key[header_index] = message;
+    request->header_name[header_index] = message;
 
-    while(true)
-    {
+    while(true) {
       if(message_len < 1) {
-        OLSR_DEBUG(LOG_COMPORT, "Error, http-header too small (%zu)\n", message - start);
-        return true;
+        goto bad_request;
       }
 
-      if(*message == ':')
-      {
+      if(*message == ':') {
         *message = '\0';
 
         message++; message_len--;
         break;
       }
-      else if(*message == ' ' || *message == '\t')
-      {
+      else if(*message == ' ' || *message == '\t') {
         *message = '\0';
       }
-      else if(*message == '\n' || *message == '\r')
-      {
-        OLSR_DEBUG(LOG_COMPORT, "Error, http-header has wrong ending (%zu)\n", message - start);
-        return true;
+      else if(*message == '\n' || *message == '\r') {
+        goto bad_request;
       }
 
       message++; message_len--;
     }
 
-    data->header_value[header_index] = NULL;
-
-    while(true)
-    {
+    while(true) {
       if(message_len < 1) {
-        OLSR_DEBUG(LOG_COMPORT, "Error, http-header too small (%zu)\n", message - start);
-        return true;
+        goto bad_request;
       }
 
-      if(data->header_value[header_index] == NULL)
-      {
-        if(*message != ' ' && *message != '\t')
-        {
-          data->header_value[header_index] = message;
+      if(request->header_value[header_index] == NULL) {
+        if(*message != ' ' && *message != '\t') {
+          request->header_value[header_index] = message;
         }
       }
 
-      if(*message == '\n')
-      {
+      if(*message == '\n') {
         if(message_len < 2) {
-          OLSR_DEBUG(LOG_COMPORT, "Error, http-header too small (%zu)\n", message - start);
-          return true;
+          goto bad_request;
         }
 
-        if(message[1] == ' ' || message[1] == '\t')
-        {
+        if(message[1] == ' ' || message[1] == '\t') {
           *message = ' ';
           message[1] = ' ';
 
@@ -401,30 +375,24 @@ static bool parse_http_header(char *message, size_t message_len, struct http_hea
 
         *message = '\0';
 
-        if(data->header_value[header_index] == NULL)
-        {
-          data->header_value[header_index] = message;
+        if(request->header_value[header_index] == NULL) {
+          request->header_value[header_index] = message;
         }
 
         message++; message_len--;
         break;
       }
-      else if(*message == '\r')
-      {
+      else if(*message == '\r') {
         if(message_len < 2) {
-          OLSR_DEBUG(LOG_COMPORT, "Error, http-header too small (%zu)\n", message - start);
-          return true;
+          goto bad_request;
         }
 
-        if(message[1] == '\n')
-        {
+        if(message[1] == '\n') {
           if(message_len < 3) {
-            OLSR_DEBUG(LOG_COMPORT, "Error, http-header too small (%zu)\n", message - start);
-            return true;
+            goto bad_request;
           }
 
-          if(message[2] == ' ' || message[2] == '\t')
-          {
+          if(message[2] == ' ' || message[2] == '\t') {
             *message = ' ';
             message[1] = ' ';
             message[2] = ' ';
@@ -435,9 +403,8 @@ static bool parse_http_header(char *message, size_t message_len, struct http_hea
 
           *message = '\0';
 
-          if(data->header_value[header_index] == NULL)
-          {
-            data->header_value[header_index] = message;
+          if(request->header_value[header_index] == NULL) {
+            request->header_value[header_index] = message;
           }
 
           message += 2; message_len -= 2;
@@ -449,13 +416,48 @@ static bool parse_http_header(char *message, size_t message_len, struct http_hea
     }
   }
 
-  data->header_count = header_index;
+  request->header_count = header_index;
   return false;
+
+too_many_fields:
+  OLSR_DEBUG(LOG_COMPORT, "Error, too many HTTP header fields\n");
+  return true;
+
+bad_request:
+  OLSR_DEBUG(LOG_COMPORT, "Error, bad HTTP request\n");
+  return true;
+}
+
+static void parse_query_string(char *ptr, char **name, char **value, size_t *count, size_t max) {
+  char *str;
+
+  /* handle HTTP GET & POST including parameters */
+  while (*count < max) {
+    /* split the string at the next '=' (the key/value splitter) */
+    str = strchr(ptr, '=');
+    if (!str) {
+      break;
+    }
+    *str++ = 0;
+
+    /* we have null terminated key at *para. Now decode the key */
+    name[*count] = ptr;
+
+    /* split the string at the next '&' (the splitter of multiple key/value pairs */
+    ptr = strchr(str, '&');
+    if (ptr) {
+      *ptr++ = 0;
+    }
+
+    /* we have a null terminated value at *str, Now decode it */
+    value[*count] = str;
+    (*count)++;
+  }
 }
 
 void olsr_com_parse_http(struct comport_connection *con,
     unsigned int flags  __attribute__ ((unused))) {
-  struct http_header_data data;
+  struct http_request request;
   char *para = NULL, *str = NULL;
   char processed_filename[256];
   int idx = 0;
@@ -496,31 +498,31 @@ void olsr_com_parse_http(struct comport_connection *con,
 
   /* got http header */
 
-  if (parse_http_header(con->in.buf, con->in.len, &data)) {
+  if (parse_http_header(con->in.buf, con->in.len, &request)) {
     OLSR_DEBUG(LOG_COMPORT, "Error, illegal http header.\n");
     con->send_as = HTTP_400_BAD_REQ;
     con->state = SEND_AND_QUIT;
     return;
   }
 
-  if (strcmp(data.http_version, "HTTP/1.1") != 0 && strcmp(data.http_version, "HTTP/1.0") != 0) {
-    OLSR_DEBUG(LOG_COMPORT, "Unknown Http-Version: '%s'\n", data.http_version);
+  if (strcmp(request.http_version, "HTTP/1.1") != 0 && strcmp(request.http_version, "HTTP/1.0") != 0) {
+    OLSR_DEBUG(LOG_COMPORT, "Unknown Http-Version: '%s'\n", request.http_version);
     con->send_as = HTTP_400_BAD_REQ;
     con->state = SEND_AND_QUIT;
     return;
   }
 
-  OLSR_DEBUG(LOG_COMPORT, "HTTP Request: %s %s %s\n", data.req_type, data.filename, data.http_version);
+  OLSR_DEBUG(LOG_COMPORT, "HTTP Request: %s %s %s\n", request.method, request.request_uri, request.http_version);
 
   /* store a copy for the http_handlers */
-  strscpy(processed_filename, data.filename, sizeof(processed_filename));
-  if (strcmp(data.req_type, "POST") == 0) {
+  strscpy(processed_filename, request.request_uri, sizeof(processed_filename));
+  if (strcmp(request.method, "POST") == 0) {
     /* load the rest of the header for POST commands */
     int clen;
 
-    for (i=0, clen=-1; i<data.header_count; i++) {
-      if (strcasecmp(data.header_key[i], "Content-Length") == 0) {
-        clen = atoi(data.header_value[i]);
+    for (i=0, clen=-1; i<request.header_count; i++) {
+      if (strcasecmp(request.header_name[i], "Content-Length") == 0) {
+        clen = atoi(request.header_value[i]);
         break;
       }
     }
@@ -535,7 +537,8 @@ void olsr_com_parse_http(struct comport_connection *con,
       /* we still need more data */
       return;
     }
-    para = &con->in.buf[idx];
+
+    parse_query_string(&con->in.buf[idx], request.form_name, request.form_value, &request.form_count, MAX_HTTP_FORM);
   }
 
   /* strip the URL marker away */
@@ -548,38 +551,16 @@ void olsr_com_parse_http(struct comport_connection *con,
   con->state = SEND_AND_QUIT;
   olsr_com_decode_url(processed_filename);
 
-  if (strcmp(data.req_type, "GET") == 0) {
+  if (strcmp(request.method, "GET") == 0) {
     /* HTTP-GET request */
     para = strchr(processed_filename, '?');
     if (para != NULL) {
       *para++ = 0;
+      parse_query_string(para, request.query_name, request.query_value, &request.query_count, MAX_HTTP_QUERY);
     }
-  } else if (strcmp(data.req_type, "POST") != 0) {
+  } else if (strcmp(request.method, "POST") != 0) {
     con->send_as = HTTP_501_NOT_IMPLEMENTED;
     return;
-  }
-
-  /* handle HTTP GET & POST including parameters */
-  while (para && data.para_count < MAX_HTTP_PARA) {
-    /* split the string at the next '=' (the key/value splitter) */
-    str = strchr(para, '=');
-    if (!str) {
-      break;
-    }
-    *str++ = 0;
-
-    /* we have null terminated key at *para. Now decode the key */
-    data.para_key[data.para_count] = para;
-
-    /* split the string at the next '&' (the splitter of multiple key/value pairs */
-    para = strchr(str, '&');
-    if (para) {
-      *para++ = 0;
-    }
-
-    /* we have a null terminated value at *str, Now decode it */
-    data.para_value[data.para_count] = str;
-    data.para_count++;
   }
 
   /* create body */
@@ -589,12 +570,12 @@ void olsr_com_parse_http(struct comport_connection *con,
    * add a '/' at the end if it's not there to detect
    *  paths without terminating '/' from the browser
    */
-  if (processed_filename[i - 1] != '/' && data.para_count == 0) {
+  if (processed_filename[i - 1] != '/' && request.query_count == 0) {
     strcat(processed_filename, "/");
   }
 
   while (i > 0) {
-    if (olsr_com_handle_htmlsite(con, processed_filename, &data)) {
+    if (olsr_com_handle_htmlsite(con, processed_filename, &request)) {
       return;
     }
 

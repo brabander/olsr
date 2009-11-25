@@ -46,21 +46,33 @@
 #include "olsr_ip_acl.h"
 #include "olsr_comport.h"
 
-#define MAX_HTTP_PARA 10
+#define MAX_HTTP_FORM 8
+#define MAX_HTTP_QUERY 8
 #define MAX_HTTP_HEADERS 32
 
 /* this is the data about the http header delivered to the html site handler */
-struct http_header_data {
-  char *para_key[MAX_HTTP_PARA];
-  char *para_value[MAX_HTTP_PARA];
-  char *header_key[MAX_HTTP_HEADERS];
-  char *header_value[MAX_HTTP_HEADERS];
-  char *req_type;
-  char *filename;
+struct http_request {
+  char *method; /* get/post/... */
+  char *request_uri;
   char *http_version;
-  size_t para_count;
+
+  /* fields of the http header */
+  char *header_name[MAX_HTTP_HEADERS];
+  char *header_value[MAX_HTTP_HEADERS];
   size_t header_count;
+
+  /* parameter of the URI for GET */
+  char *query_name[MAX_HTTP_QUERY];
+  char *query_value[MAX_HTTP_QUERY];
+  size_t query_count;
+
+  /* parameter of the URI for POST */
+  char *form_name[MAX_HTTP_FORM];
+  char *form_value[MAX_HTTP_FORM];
+
+  size_t form_count;
 };
+
 
 /* this is a html site datastructure for each site */
 /* it is stored in an AVL tree */
@@ -79,7 +91,7 @@ struct olsr_html_site {
   size_t site_length;
 
 	/* for non static, this is the handler */
-  void (*sitehandler)(struct comport_connection *con, struct http_header_data *data);
+  void (*sitehandler)(struct comport_connection *con, struct http_request *request);
 };
 
 AVLNODE2STRUCT(html_tree2site, olsr_html_site, node);
@@ -92,7 +104,7 @@ void olsr_com_destroy_http(void);
 struct olsr_html_site *EXPORT(olsr_com_add_htmlsite) (
     const char *path, const char *content, size_t length);
 struct olsr_html_site *EXPORT(olsr_com_add_htmlhandler) (
-    void (*sitehandler)(struct comport_connection *con, struct http_header_data *data),
+    void (*sitehandler)(struct comport_connection *con, struct http_request *request),
     const char *path);
 void EXPORT(olsr_com_remove_htmlsite) (struct olsr_html_site *site);
 void EXPORT(olsr_com_set_htmlsite_acl_auth) (struct olsr_html_site *site,
