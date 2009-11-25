@@ -428,11 +428,14 @@ bad_request:
   return true;
 }
 
-static void parse_query_string(char *ptr, char **name, char **value, size_t *count, size_t max) {
-  char *str;
+static size_t parse_query_string(char *ptr, char **name, char **value, size_t max) {
+  size_t count = 0;
+  char *str = NULL;
+
+  assert(ptr);
 
   /* handle HTTP GET & POST including parameters */
-  while (*count < max) {
+  while (ptr != NULL && count < max) {
     /* split the string at the next '=' (the key/value splitter) */
     str = strchr(ptr, '=');
     if (!str) {
@@ -441,7 +444,7 @@ static void parse_query_string(char *ptr, char **name, char **value, size_t *cou
     *str++ = 0;
 
     /* we have null terminated key at *para. Now decode the key */
-    name[*count] = ptr;
+    name[count] = ptr;
 
     /* split the string at the next '&' (the splitter of multiple key/value pairs */
     ptr = strchr(str, '&');
@@ -450,9 +453,10 @@ static void parse_query_string(char *ptr, char **name, char **value, size_t *cou
     }
 
     /* we have a null terminated value at *str, Now decode it */
-    value[*count] = str;
-    (*count)++;
+    value[count] = str;
+    count++;
   }
+  return count;
 }
 
 void olsr_com_parse_http(struct comport_connection *con,
@@ -538,7 +542,7 @@ void olsr_com_parse_http(struct comport_connection *con,
       return;
     }
 
-    parse_query_string(&con->in.buf[idx], request.form_name, request.form_value, &request.form_count, MAX_HTTP_FORM);
+    request.form_count = parse_query_string(&con->in.buf[idx], request.form_name, request.form_value, MAX_HTTP_FORM);
   }
 
   /* strip the URL marker away */
@@ -556,7 +560,7 @@ void olsr_com_parse_http(struct comport_connection *con,
     para = strchr(processed_filename, '?');
     if (para != NULL) {
       *para++ = 0;
-      parse_query_string(para, request.query_name, request.query_value, &request.query_count, MAX_HTTP_QUERY);
+      request.query_count = parse_query_string(para, request.query_name, request.query_value, MAX_HTTP_QUERY);
     }
   } else if (strcmp(request.method, "POST") != 0) {
     con->send_as = HTTP_501_NOT_IMPLEMENTED;
@@ -615,7 +619,7 @@ olsr_com_build_httpheader(struct comport_connection *con) {
   if (con->http_contenttype == NULL) {
     con->http_contenttype = con->send_as != HTTP_PLAIN ? "text/html" : "text/plain";
   }
-  abuf_appendf(&buf, "Content-type: text/%s\r\n", con->http_contenttype);
+  abuf_appendf(&buf, "Content-type: %s\r\n", con->http_contenttype);
 
   /* Content length */
   if (con->out.len > 0) {
