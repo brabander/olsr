@@ -101,7 +101,7 @@ struct comport_connection {
 
 LISTNODE2STRUCT(comport_node2con, struct comport_connection, node);
 
-void olsr_com_init(void);
+void olsr_com_init(bool);
 void olsr_com_destroy(void);
 
 void EXPORT(olsr_com_activate_output) (struct comport_connection *con);

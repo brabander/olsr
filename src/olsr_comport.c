@@ -94,7 +94,7 @@ static void olsr_com_parse_txt(struct comport_connection *con,
 
 static void olsr_com_timeout_handler(void *);
 
-void olsr_com_init(void) {
+void olsr_com_init(bool failfast) {
   connection_cookie = olsr_alloc_cookie("comport connections",
       OLSR_COOKIE_TYPE_MEMORY);
   olsr_cookie_set_memory_size(connection_cookie,
@@ -103,23 +103,6 @@ void olsr_com_init(void) {
   connection_timeout = olsr_alloc_cookie("comport timout",
       OLSR_COOKIE_TYPE_TIMER);
 
-  if (olsr_cnf->comport_http > 0) {
-    if ((comsocket_http = olsr_com_openport(olsr_cnf->comport_http)) == -1) {
-      return;
-    }
-
-    add_olsr_socket(comsocket_http, &olsr_com_parse_request, NULL, NULL,
-        SP_PR_READ);
-  }
-  if (olsr_cnf->comport_txt > 0) {
-    if ((comsocket_txt = olsr_com_openport(olsr_cnf->comport_txt)) == -1) {
-      return;
-    }
-
-    add_olsr_socket(comsocket_txt, &olsr_com_parse_request, NULL, NULL,
-        SP_PR_READ);
-  }
-
   connection_http_count = 0;
   connection_txt_count = 0;
 
@@ -127,6 +110,29 @@ void olsr_com_init(void) {
 
   olsr_com_init_http();
   olsr_com_init_txt();
+
+  if (olsr_cnf->comport_http > 0) {
+    if ((comsocket_http = olsr_com_openport(olsr_cnf->comport_http)) == -1) {
+      if (failfast) {
+        olsr_exit(1);
+      }
+    }
+    else {
+      add_olsr_socket(comsocket_http, &olsr_com_parse_request, NULL, NULL,
+          SP_PR_READ);
+    }
+  }
+  if (olsr_cnf->comport_txt > 0) {
+    if ((comsocket_txt = olsr_com_openport(olsr_cnf->comport_txt)) == -1) {
+      if (failfast) {
+        olsr_exit(1);
+      }
+    }
+    else {
+      add_olsr_socket(comsocket_txt, &olsr_com_parse_request, NULL, NULL,
+          SP_PR_READ);
+    }
+  }
 }
 
 void olsr_com_destroy(void) {

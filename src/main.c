@@ -236,7 +236,7 @@ main(int argc, char *argv[])
   olsr_init_tables();
 
   /* initialize built in server services */
-  olsr_com_init();
+  olsr_com_init(true);
 
   /* Load plugins */
   olsr_init_pluginsystem(true);
