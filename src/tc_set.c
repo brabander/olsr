@@ -241,8 +241,9 @@ olsr_delete_tc_entry(struct tc_entry *tc)
 static void
 olsr_cleanup_tc_entry(struct tc_entry *tc) {
   struct rt_path *rtp;
+#if !defined(REMOVE_LOG_DEBUG)
   struct ipaddr_str buf;
-
+#endif
   OLSR_DEBUG(LOG_TC, "TC: del entry %s %u\n", olsr_ip_to_string(&buf, &tc->addr), tc->refcount);
   assert (tc->edge_tree.count == 0);
 
