@@ -510,7 +510,7 @@ void olsr_com_parse_http(struct comport_connection *con,
     return;
   }
 
-  if (strcmp(request.http_version, "HTTP/1.1") != 0 && strcmp(request.http_version, "HTTP/1.0") != 0) {
+  if (strcasecmp(request.http_version, "HTTP/1.1") != 0 && strcasecmp(request.http_version, "HTTP/1.0") != 0) {
     OLSR_DEBUG(LOG_COMPORT, "Unknown Http-Version: '%s'\n", request.http_version);
     con->send_as = HTTP_400_BAD_REQ;
     con->state = SEND_AND_QUIT;
