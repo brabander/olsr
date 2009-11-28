@@ -1101,10 +1101,10 @@ addObampNode4(struct in_addr *ipv4, u_int8_t status)
  * Return     : none
  * ------------------------------------------------------------------------- */
 static void
-PacketReceivedFromOLSR(void *originator, unsigned char *obamp_message, int len)
+PacketReceivedFromOLSR(union olsr_ip_addr *originator, const uint8_t *obamp_message, int len)
 {
   u_int8_t MessageID = obamp_message[0];
-  struct OBAMP_alive *alive;
+  const struct OBAMP_alive *alive;
 #if !defined(REMOVE_LOG_DEBUG)
   struct ipaddr_str buf;
 #endif
@@ -1119,7 +1119,7 @@ PacketReceivedFromOLSR(void *originator, unsigned char *obamp_message, int len)
 
   case OBAMP_ALIVE:
     OLSR_DEBUG(LOG_PLUGINS, "OBAMP Received OBAMP_ALIVE from %s\n", ip4_to_string(&buf, *myOriginator));
-    alive = (struct OBAMP_alive *)obamp_message;
+    alive = (const struct OBAMP_alive *)obamp_message;
     addObampNode4(myOriginator, alive->status);
     printObampNodesList();
 
@@ -1132,28 +1132,18 @@ PacketReceivedFromOLSR(void *originator, unsigned char *obamp_message, int len)
 
 //OLSR parser, received OBAMP messages
 void
-olsr_parser(union olsr_message *m, struct interface *in_if
+olsr_parser(struct olsr_message *msg, const uint8_t *payload, const uint8_t*end, struct interface *in_if
             __attribute__ ((unused)), union olsr_ip_addr *ipaddr, enum duplicate_status status __attribute__ ((unused)))
 {
-  union olsr_ip_addr originator;
-  int size;
-  uint32_t vtime;
   //OLSR_DEBUG(LOG_PLUGINS, "OBAMP PLUGIN: Received msg in parser\n");
 
-  /* Fetch the originator of the messsage */
-  if (olsr_cnf->ip_version == AF_INET) {
-    memcpy(&originator, &m->v4.originator, olsr_cnf->ipsize);
-    vtime = me_to_reltime(m->v4.olsr_vtime);
-    size = ntohs(m->v4.olsr_msgsize);
-  } else {
-    memcpy(&originator, &m->v6.originator, olsr_cnf->ipsize);
-    vtime = me_to_reltime(m->v6.olsr_vtime);
-    size = ntohs(m->v6.olsr_msgsize);
+  if (msg->type != MESSAGE_TYPE) {
+    return;
   }
 
   /* Check if message originated from this node.
    *         If so - back off */
-  if (olsr_ipcmp(&originator, &olsr_cnf->router_id) == 0)
+  if (olsr_ipcmp(&msg->originator, &olsr_cnf->router_id) == 0)
     return;
 
   /* Check that the neighbor this message was received from is symmetric.
@@ -1163,15 +1153,7 @@ olsr_parser(union olsr_message *m, struct interface *in_if
     return;
   }
 
-  if (olsr_cnf->ip_version == AF_INET) {
-
-    //IPv4 Case, process your OBAMP packet here:
-    PacketReceivedFromOLSR(&m->v4.originator, (unsigned char *)&m->v4.message, size - 12);
-  } else {
-    //IPv6 Case, process your OBAMP packet here:
-    PacketReceivedFromOLSR(&m->v6.originator, (unsigned char *)&m->v6.message, size - 12 - 96);
-  }
-
+  PacketReceivedFromOLSR(&msg->originator, payload, end - payload);
 }
 
 //Sends a packet in the OLSR network
@@ -1179,44 +1161,31 @@ void
 olsr_obamp_gen(unsigned char *packet, int len)
 {
   /* send buffer: huge */
-  char buffer[10240];
-  union olsr_message *message = (union olsr_message *)buffer;
+  uint8_t buffer[10240];
+  struct olsr_message msg;
   struct interface *ifn;
+  uint8_t *curr, *sizeptr;
 
   /* fill message */
-  if (olsr_cnf->ip_version == AF_INET) {
-    /* IPv4 */
-    message->v4.olsr_msgtype = MESSAGE_TYPE;
-    message->v4.olsr_vtime = reltime_to_me(OBAMP_VALID_TIME * MSEC_PER_SEC);
-    memcpy(&message->v4.originator, &olsr_cnf->router_id, olsr_cnf->ipsize);
-    message->v4.ttl = MAX_TTL;
-    message->v4.hopcnt = 0;
-    message->v4.seqno = htons(get_msg_seqno());
+  msg.type = MESSAGE_TYPE;
+  msg.vtime = OBAMP_VALID_TIME * MSEC_PER_SEC;
+  msg.originator = olsr_cnf->router_id;
+  msg.ttl = MAX_TTL;
+  msg.hopcnt = 0;
+  msg.seqno = get_msg_seqno();
+  msg.size = 0; /* put in later */
 
-    message->v4.olsr_msgsize = htons(len + 12);
-
-    memcpy(&message->v4.message, packet, len);
-    len = len + 12;
-  } else {
-    /* IPv6 */
-    message->v6.olsr_msgtype = MESSAGE_TYPE;
-    message->v6.olsr_vtime = reltime_to_me(OBAMP_VALID_TIME * MSEC_PER_SEC);
-    memcpy(&message->v6.originator, &olsr_cnf->router_id, olsr_cnf->ipsize);
-    message->v6.ttl = MAX_TTL;
-    message->v6.hopcnt = 0;
-    message->v6.seqno = htons(get_msg_seqno());
-
-    message->v6.olsr_msgsize = htons(len + 12 + 96);
-    memcpy(&message->v6.message, packet, len);
-    len = len + 12 + 96;
-  }
+  curr = buffer;
+  sizeptr = olsr_put_msg_hdr(&curr, &msg);
+  memcpy(curr, packet, len);
+  pkt_put_u16(&sizeptr, curr - buffer + len);
 
   /* looping trough interfaces */
   OLSR_FOR_ALL_INTERFACES(ifn) {
-    if (net_outbuffer_push(ifn, message, len) != len) {
+    if (net_outbuffer_push(ifn, buffer, len) != len) {
       /* send data and try again */
       net_output(ifn);
-      if (net_outbuffer_push(ifn, message, len) != len) {
+      if (net_outbuffer_push(ifn, buffer, len) != len) {
         OLSR_DEBUG(LOG_PLUGINS, "OBAMP PLUGIN: could not send on interface: %s\n", ifn->int_name);
       }
     }
@@ -1658,6 +1627,10 @@ InitOBAMP(void)
   struct olsr_cookie_info *tree_create_timer_cookie = NULL;
   struct olsr_cookie_info *outer_tree_create_timer_cookie = NULL;
 
+  if (olsr_cnf->ip_version == AF_INET6) {
+    OLSR_ERROR(LOG_PLUGINS, "OBAMP does not support IPv6 at the moment.");
+    return 1;
+  }
 
 //Setting OBAMP node state
   myState = malloc(sizeof(struct ObampNodeState));

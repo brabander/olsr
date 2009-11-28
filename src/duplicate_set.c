@@ -141,15 +141,12 @@ olsr_flush_duplicate_entries(void)
 }
 
 bool
-olsr_is_duplicate_message(union olsr_message *m, bool forwarding, enum duplicate_status *status)
+olsr_is_duplicate_message(struct olsr_message *m, bool forwarding, enum duplicate_status *status)
 {
   struct avl_tree *tree;
   struct dup_entry *entry;
   int diff;
-  union olsr_ip_addr *mainIp;
   uint32_t valid_until;
-  uint16_t seqnr;
-  union olsr_ip_addr *ip;
   enum duplicate_status dummy = 0;
 
 #if !defined(REMOVE_LOG_DEBUG)
@@ -161,26 +158,13 @@ olsr_is_duplicate_message(union olsr_message *m, bool forwarding, enum duplicate
   }
 
   tree = forwarding ? &forward_set : &processing_set;
-  if (olsr_cnf->ip_version == AF_INET) {
-    seqnr = ntohs(m->v4.seqno);
-    ip = (union olsr_ip_addr *)&m->v4.originator;
-  } else {
-    seqnr = ntohs(m->v6.seqno);
-    ip = (union olsr_ip_addr *)&m->v6.originator;
-  }
-
-  // get main address
-  mainIp = olsr_lookup_main_addr_by_alias(ip);
-  if (mainIp == NULL) {
-    mainIp = ip;
-  }
 
   valid_until = GET_TIMESTAMP(DUPLICATE_VTIME);
 
   /* Check if entry exists */
-  entry = (struct dup_entry *)avl_find(tree, ip);
+  entry = (struct dup_entry *)avl_find(tree, &m->originator);
   if (entry == NULL) {
-    entry = olsr_create_duplicate_entry(ip, seqnr);
+    entry = olsr_create_duplicate_entry(&m->originator, m->seqno);
     if (entry != NULL) {
       avl_insert(tree, &entry->avl, 0);
       entry->tree = tree;
@@ -198,7 +182,7 @@ olsr_is_duplicate_message(union olsr_message *m, bool forwarding, enum duplicate
     olsr_change_timer(entry->validity_timer, DUPLICATE_CLEANUP_INTERVAL, DUPLICATE_CLEANUP_JITTER, OLSR_TIMER_ONESHOT);
   }
 
-  diff = olsr_seqno_diff(seqnr, entry->seqnr);
+  diff = olsr_seqno_diff(m->seqno, entry->seqnr);
 
   if (diff < -31) {
     entry->too_low_counter++;
@@ -206,14 +190,14 @@ olsr_is_duplicate_message(union olsr_message *m, bool forwarding, enum duplicate
     // client did restart with a lower number ?
     if (entry->too_low_counter > 16) {
       entry->too_low_counter = 0;
-      entry->seqnr = seqnr;
+      entry->seqnr = m->seqno;
       entry->array = 1;
 
       /* start with a new sequence number, so NO duplicate */
       *status = RESET_SEQNO_OLSR_MESSAGE;
       return false;
     }
-    OLSR_DEBUG(LOG_DUPLICATE_SET, "blocked %x from %s\n", seqnr, olsr_ip_to_string(&buf, mainIp));
+    OLSR_DEBUG(LOG_DUPLICATE_SET, "blocked %x from %s\n", m->seqno, olsr_ip_to_string(&buf, &m->originator));
 
     /* much too old */
     *status = TOO_OLD_OLSR_MESSAGE;
@@ -225,15 +209,15 @@ olsr_is_duplicate_message(union olsr_message *m, bool forwarding, enum duplicate
     uint32_t bitmask = 1 << ((uint32_t) (-diff));
 
     if ((entry->array & bitmask) != 0) {
-      OLSR_DEBUG(LOG_DUPLICATE_SET, "blocked %x (diff=%d,mask=%08x) from %s\n", seqnr, diff,
-                 entry->array, olsr_ip_to_string(&buf, mainIp));
+      OLSR_DEBUG(LOG_DUPLICATE_SET, "blocked %x (diff=%d,mask=%08x) from %s\n", m->seqno, diff,
+                 entry->array, olsr_ip_to_string(&buf, &m->originator));
 
       /* duplicate ! */
       *status = DUPLICATE_OLSR_MESSAGE;
       return true;
     }
     entry->array |= bitmask;
-    OLSR_DEBUG(LOG_DUPLICATE_SET, "processed %x from %s\n", seqnr, olsr_ip_to_string(&buf, mainIp));
+    OLSR_DEBUG(LOG_DUPLICATE_SET, "processed %x from %s\n", m->seqno, olsr_ip_to_string(&buf, &m->originator));
 
     /* no duplicate */
     *status = OLD_OLSR_MESSAGE;
@@ -244,8 +228,8 @@ olsr_is_duplicate_message(union olsr_message *m, bool forwarding, enum duplicate
     entry->array = 0;
   }
   entry->array |= 1;
-  entry->seqnr = seqnr;
-  OLSR_DEBUG(LOG_DUPLICATE_SET, "processed %x from %s\n", seqnr, olsr_ip_to_string(&buf, mainIp));
+  entry->seqnr = m->seqno;
+  OLSR_DEBUG(LOG_DUPLICATE_SET, "processed %x from %s\n", m->seqno, olsr_ip_to_string(&buf, &m->originator));
 
   /* no duplicate */
   *status = NEW_OLSR_MESSAGE;

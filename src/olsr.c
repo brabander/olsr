@@ -62,6 +62,7 @@
 #include "lq_plugin.h"
 #include "olsr_logging.h"
 
+#include <assert.h>
 #include <stdarg.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -241,6 +242,28 @@ olsr_init_tables(void)
 }
 
 /**
+ * Shared code to write the message header
+ */
+uint8_t *olsr_put_msg_hdr(uint8_t **curr, struct olsr_message *msg)
+{
+  uint8_t *sizeptr;
+
+  assert(msg);
+  assert(curr);
+
+  pkt_put_u8(curr, msg->type);
+  pkt_put_reltime(curr, msg->vtime);
+  sizeptr = *curr;
+  pkt_put_u16(curr, msg->size);
+  pkt_put_ipaddress(curr, &msg->originator);
+  pkt_put_u8(curr, msg->ttl);
+  pkt_put_u8(curr, msg->hopcnt);
+  pkt_put_u16(curr, msg->seqno);
+
+  return sizeptr;
+}
+
+/**
  *Check if a message is to be forwarded and forward
  *it if necessary.
  *
@@ -249,28 +272,15 @@ olsr_init_tables(void)
  *@returns positive if forwarded
  */
 int
-olsr_forward_message(union olsr_message *m, struct interface *in_if, union olsr_ip_addr *from_addr)
+olsr_forward_message(struct olsr_message *msg, uint8_t *binary, struct interface *in_if, union olsr_ip_addr *from_addr)
 {
   union olsr_ip_addr *src;
   struct nbr_entry *neighbor;
-  int msgsize;
   struct interface *ifn;
+  uint8_t *tmp;
 #if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
 #endif
-
-  /*
-   * Sven-Ola: We should not flood the mesh with overdue messages. Because
-   * of a bug in parser.c:parse_packet, we have a lot of messages because
-   * all older olsrd's have lq_fish enabled.
-   */
-  if (AF_INET == olsr_cnf->ip_version) {
-    if (m->v4.ttl < 2 || 255 < (int)m->v4.hopcnt + (int)m->v4.ttl)
-      return 0;
-  } else {
-    if (m->v6.ttl < 2 || 255 < (int)m->v6.hopcnt + (int)m->v6.ttl)
-      return 0;
-  }
 
   /* Lookup sender address */
   src = olsr_lookup_main_addr_by_alias(from_addr);
@@ -280,46 +290,43 @@ olsr_forward_message(union olsr_message *m, struct interface *in_if, union olsr_
   neighbor = olsr_lookup_nbr_entry(src, true);
   if (!neighbor) {
     OLSR_DEBUG(LOG_PACKET_PARSING, "Not forwarding message type %d because no nbr entry found for %s\n",
-        m->v4.olsr_msgtype, olsr_ip_to_string(&buf, src));
+        msg->type, olsr_ip_to_string(&buf, src));
     return 0;
   }
   if (!neighbor->is_sym) {
     OLSR_DEBUG(LOG_PACKET_PARSING, "Not forwarding message type %d because received by non-symmetric neighbor %s\n",
-        m->v4.olsr_msgtype, olsr_ip_to_string(&buf, src));
+        msg->type, olsr_ip_to_string(&buf, src));
     return 0;
   }
 
   /* Check MPR */
   if (neighbor->mprs_count == 0) {
     OLSR_DEBUG(LOG_PACKET_PARSING, "Not forwarding message type %d because we are no MPR for %s\n",
-        m->v4.olsr_msgtype, olsr_ip_to_string(&buf, src));
+        msg->type, olsr_ip_to_string(&buf, src));
     /* don't forward packages if not a MPR */
     return 0;
   }
 
   /* check if we already forwarded this message */
-  if (olsr_is_duplicate_message(m, true, NULL)) {
+  if (olsr_is_duplicate_message(msg, true, NULL)) {
     OLSR_DEBUG(LOG_PACKET_PARSING, "Not forwarding message type %d from %s because we already forwarded it.\n",
-        m->v4.olsr_msgtype, olsr_ip_to_string(&buf, src));
+        msg->type, olsr_ip_to_string(&buf, src));
     return 0;                   /* it's a duplicate, forget about it */
   }
 
   /* Treat TTL hopcnt */
-  if (olsr_cnf->ip_version == AF_INET) {
-    /* IPv4 */
-    m->v4.hopcnt++;
-    m->v4.ttl--;
-  } else {
-    /* IPv6 */
-    m->v6.hopcnt++;
-    m->v6.ttl--;
+  msg->hopcnt++;
+  msg->ttl--;
+  tmp = binary;
+  olsr_put_msg_hdr(&tmp, msg);
+
+  if (msg->ttl == 0) {
+    OLSR_DEBUG(LOG_PACKET_PARSING, "Not forwarding message type %d from %s because TTL is 0.\n",
+        msg->type, olsr_ip_to_string(&buf, src));
+    return 0;                   /* TTL 0, forget about it */
   }
-
-  /* Update packet data */
-  msgsize = ntohs(m->v4.olsr_msgsize);
-
   OLSR_DEBUG(LOG_PACKET_PARSING, "Forwarding message type %d from %s.\n",
-      m->v4.olsr_msgtype, olsr_ip_to_string(&buf, src));
+      msg->type, olsr_ip_to_string(&buf, src));
 
   /* looping trough interfaces */
   OLSR_FOR_ALL_INTERFACES(ifn) {
@@ -331,22 +338,22 @@ olsr_forward_message(union olsr_message *m, struct interface *in_if, union olsr_
       /*
        * Check if message is to big to be piggybacked
        */
-      if (net_outbuffer_push(ifn, m, msgsize) != msgsize) {
+      if (net_outbuffer_push(ifn, binary, msg->size) != msg->size) {
         /* Send */
         net_output(ifn);
         /* Buffer message */
         set_buffer_timer(ifn);
 
-        if (net_outbuffer_push(ifn, m, msgsize) != msgsize) {
-          OLSR_WARN(LOG_NETWORKING, "Received message to big to be forwarded in %s(%d bytes)!", ifn->int_name, msgsize);
+        if (net_outbuffer_push(ifn, binary, msg->size) != msg->size) {
+          OLSR_WARN(LOG_NETWORKING, "Received message to big to be forwarded in %s(%d bytes)!", ifn->int_name, msg->size);
         }
       }
     } else {
       /* No forwarding pending */
       set_buffer_timer(ifn);
 
-      if (net_outbuffer_push(ifn, m, msgsize) != msgsize) {
-        OLSR_WARN(LOG_NETWORKING, "Received message to big to be forwarded in %s(%d bytes)!", ifn->int_name, msgsize);
+      if (net_outbuffer_push(ifn, binary, msg->size) != msg->size) {
+        OLSR_WARN(LOG_NETWORKING, "Received message to big to be forwarded in %s(%d bytes)!", ifn->int_name, msg->size);
       }
     }
   }

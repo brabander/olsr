@@ -62,8 +62,10 @@ void
 
 uint16_t EXPORT(get_msg_seqno) (void);
 
+uint8_t *olsr_put_msg_hdr(uint8_t **curr, struct olsr_message *msg);
+
 int
-  olsr_forward_message(union olsr_message *, struct interface *, union olsr_ip_addr *);
+  olsr_forward_message(struct olsr_message *, uint8_t *binary, struct interface *, union olsr_ip_addr *);
 
 void
   set_buffer_timer(struct interface *);

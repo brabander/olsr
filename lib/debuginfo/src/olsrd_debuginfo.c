@@ -83,8 +83,11 @@ static enum olsr_txtcommand_result debuginfo_cookies(struct comport_connection *
     const char *cmd, const char *param);
 
 static void update_statistics_ptr(void *);
-static void olsr_msg_statistics(union olsr_message *, struct interface *, union olsr_ip_addr *, enum duplicate_status);
-static char *olsr_packet_statistics(char *packet, struct interface *interface, union olsr_ip_addr *, int *length);
+static void olsr_msg_statistics(struct olsr_message *, const uint8_t *, const uint8_t *,
+    struct interface *, union olsr_ip_addr *, enum duplicate_status);
+static uint8_t *olsr_packet_statistics(uint8_t *binary,
+    struct interface *interface, union olsr_ip_addr *ip, int *length);
+
 static void update_statistics_ptr(void *data __attribute__ ((unused)));
 
 /* plugin configuration */
@@ -308,29 +311,18 @@ update_statistics_ptr(void *data __attribute__ ((unused)))
 
 /* update message statistics */
 static void
-olsr_msg_statistics(union olsr_message *msg, struct interface *input_if __attribute__ ((unused)),
+olsr_msg_statistics(struct olsr_message *msg,
+    const uint8_t *payload  __attribute__ ((unused)), const uint8_t *end  __attribute__ ((unused)),
+    struct interface *input_if __attribute__ ((unused)),
     union olsr_ip_addr *from_addr __attribute__ ((unused)), enum duplicate_status status  __attribute__ ((unused)))
 {
-  int msgtype, msgsize;
-  union olsr_ip_addr origaddr;
   enum debug_msgtraffic_type type;
   struct debug_msgtraffic *tr;
 #if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
 #endif
 
-  memset(&origaddr, 0, sizeof(origaddr));
-  if (olsr_cnf->ip_version == AF_INET) {
-    msgtype = msg->v4.olsr_msgtype;
-    msgsize = ntohs(msg->v4.olsr_msgsize);
-    origaddr.v4.s_addr = msg->v4.originator;
-  } else {
-    msgtype = msg->v6.olsr_msgtype;
-    msgsize = ntohs(msg->v6.olsr_msgsize);
-    origaddr.v6 = msg->v6.originator;
-  }
-
-  switch (msgtype) {
+  switch (msg->type) {
   case HELLO_MESSAGE:
     type = DTR_HELLO;
     break;
@@ -355,10 +347,10 @@ olsr_msg_statistics(union olsr_message *msg, struct interface *input_if __attrib
   }
 
   /* input data for specific node */
-  tr = get_msgtraffic_entry(&origaddr);
+  tr = get_msgtraffic_entry(&msg->originator);
   tr->current.data[type]++;
   tr->current.data[DTR_MESSAGES]++;
-  tr->current.data[DTR_MSG_TRAFFIC] += msgsize;
+  tr->current.data[DTR_MSG_TRAFFIC] += msg->size;
 
   OLSR_DEBUG(LOG_PLUGINS, "Added message type %d to statistics of %s: %d\n",
       type, olsr_ip_to_string(&buf, &tr->ip), tr->current.data[type]);
@@ -367,14 +359,12 @@ olsr_msg_statistics(union olsr_message *msg, struct interface *input_if __attrib
   tr = get_msgtraffic_entry(&total_ip_addr);
   tr->current.data[type]++;
   tr->current.data[DTR_MESSAGES]++;
-  tr->current.data[DTR_MSG_TRAFFIC] += msgsize;
+  tr->current.data[DTR_MSG_TRAFFIC] += msg->size;
 }
 
 /* update traffic statistics */
-static char *
-olsr_packet_statistics(char *packet __attribute__ ((unused)),
-                       struct interface *interface,
-                       union olsr_ip_addr *ip, int *length)
+static uint8_t *
+olsr_packet_statistics(uint8_t *binary, struct interface *interface, union olsr_ip_addr *ip, int *length)
 {
   struct debug_pkttraffic *tr;
   tr = get_pkttraffic_entry(ip, interface);
@@ -384,7 +374,7 @@ olsr_packet_statistics(char *packet __attribute__ ((unused)),
   tr = get_pkttraffic_entry(&total_ip_addr, NULL);
   tr->current.data[DTR_PACK_TRAFFIC] += *length;
   tr->current.data[DTR_PACKETS] ++;
-  return packet;
+  return binary;
 }
 
 static const char *debuginfo_print_trafficip(struct ipaddr_str *buf, union olsr_ip_addr *ip) {

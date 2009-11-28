@@ -129,7 +129,8 @@ void olsr_expire_write_file_timer(void *);
 void olsr_namesvc_delete_db_entry(struct db_entry *);
 
 /* Parser function to register with the sceduler */
-void olsr_parser(union olsr_message *, struct interface *, union olsr_ip_addr *, enum duplicate_status);
+void olsr_parser(struct olsr_message *, const uint8_t *, const uint8_t *,
+    struct interface *, union olsr_ip_addr *, enum duplicate_status);
 
 /* callback for periodic timer */
 void olsr_namesvc_gen(void *);
@@ -145,15 +146,15 @@ void
   free_all_list_entries(struct list_node *);
 
 void
-  decap_namemsg(struct name *from_packet, struct name_entry **to, bool * this_table_changed);
+  decap_namemsg(const struct name *from_packet, struct name_entry **to, bool * this_table_changed);
 
 void
-  insert_new_name_in_list(union olsr_ip_addr *, struct list_node *, struct name *, bool *, uint32_t);
+  insert_new_name_in_list(union olsr_ip_addr *, struct list_node *, const struct name *, bool *, uint32_t);
 
 bool allowed_hostname_or_ip_in_service(const char *service_line, const regmatch_t * hostname_or_ip);
 
 void
-  update_name_entry(union olsr_ip_addr *, struct namemsg *, int, uint32_t);
+  update_name_entry(union olsr_ip_addr *, const struct namemsg *, const uint8_t *, uint32_t);
 
 void
   write_hosts_file(void);

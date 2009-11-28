@@ -152,7 +152,8 @@ static bool lq_etxff_post_init(void) {
 }
 
 static void
-lq_etxff_packet_parser(struct olsr *olsr, struct interface *in_if, union olsr_ip_addr *from_addr)
+lq_etxff_packet_parser(struct olsr_packet *pkt, uint8_t *binary __attribute__ ((unused)),
+    struct interface *in_if, union olsr_ip_addr *from_addr)
 {
   const union olsr_ip_addr *main_addr;
   struct lq_etxff_link_entry *lnk;
@@ -167,17 +168,17 @@ lq_etxff_packet_parser(struct olsr *olsr, struct interface *in_if, union olsr_ip
     return;
   }
 
-  if (lnk->last_seq_nr == olsr->olsr_seqno) {
+  if (lnk->last_seq_nr == pkt->seqno) {
 #ifndef REMOVE_LOG_WARN
     struct ipaddr_str buf;
 #endif
     OLSR_WARN(LOG_LQ_PLUGINS, "Got package with same sequence number from %s\n", olsr_ip_to_string(&buf, from_addr));
     return;
   }
-  if (lnk->last_seq_nr > olsr->olsr_seqno) {
-    seq_diff = (uint32_t) olsr->olsr_seqno + 65536 - lnk->last_seq_nr;
+  if (lnk->last_seq_nr > pkt->seqno) {
+    seq_diff = (uint32_t) pkt->seqno + 65536 - lnk->last_seq_nr;
   } else {
-    seq_diff = olsr->olsr_seqno - lnk->last_seq_nr;
+    seq_diff = pkt->seqno - lnk->last_seq_nr;
   }
 
   /* Jump in sequence numbers ? */
@@ -188,7 +189,7 @@ lq_etxff_packet_parser(struct olsr *olsr, struct interface *in_if, union olsr_ip
   lnk->received[lnk->activePtr]++;
   lnk->lost[lnk->activePtr] += (seq_diff - 1);
 
-  lnk->last_seq_nr = olsr->olsr_seqno;
+  lnk->last_seq_nr = pkt->seqno;
   lnk->missed_seconds = 0;
 }
 

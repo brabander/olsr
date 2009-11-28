@@ -610,11 +610,11 @@ update_link_entry(const union olsr_ip_addr *local,
   struct link_entry *entry;
 
   /* Add if not registered */
-  entry = add_link_entry(local, remote, &message->comm.orig, message->comm.vtime, message->htime, in_if);
+  entry = add_link_entry(local, remote, &message->comm->originator, message->comm->vtime, message->htime, in_if);
 
   /* Update ASYM_time */
-  entry->vtime = message->comm.vtime;
-  entry->ASYM_time = GET_TIMESTAMP(message->comm.vtime);
+  entry->vtime = message->comm->vtime;
+  entry->ASYM_time = GET_TIMESTAMP(message->comm->vtime);
 
   entry->status = check_link_status(message, in_if);
 
@@ -627,11 +627,11 @@ update_link_entry(const union olsr_ip_addr *local,
   case (ASYM_LINK):
 
     /* L_SYM_time = current time + validity time */
-    olsr_set_timer(&entry->link_sym_timer, message->comm.vtime,
+    olsr_set_timer(&entry->link_sym_timer, message->comm->vtime,
                    OLSR_LINK_SYM_JITTER, OLSR_TIMER_ONESHOT, &olsr_expire_link_sym_timer, entry, link_sym_timer_cookie);
 
     /* L_time = L_SYM_time + NEIGHB_HOLD_TIME */
-    olsr_set_link_timer(entry, message->comm.vtime + NEIGHB_HOLD_TIME * MSEC_PER_SEC);
+    olsr_set_link_timer(entry, message->comm->vtime + NEIGHB_HOLD_TIME * MSEC_PER_SEC);
     break;
   default:;
   }
@@ -817,23 +817,22 @@ void
 generate_hello(void *p) {
   struct interface *ifp = p;
   uint8_t msg_buffer[MAXMESSAGESIZE - OLSR_HEADERSIZE] __attribute__ ((aligned));
+  struct olsr_message msg;
   uint8_t *curr = msg_buffer;
   uint8_t *length_field, *last;
   struct link_entry *link;
   uint8_t writeLinkType, writeNeighType;
   OLSR_INFO(LOG_PACKET_CREATION, "Building Hello for %s\n-------------------\n", ifp->int_name);
 
-  pkt_put_u8(&curr, olsr_get_Hello_MessageId());
-  pkt_put_reltime(&curr, ifp->hello_validity);
+  msg.type = olsr_get_Hello_MessageId();
+  msg.vtime = ifp->hello_validity;
+  msg.size = 0; /* fill in later */
+  msg.originator = olsr_cnf->router_id;
+  msg.ttl = 1;
+  msg.hopcnt = 0;
+  msg.seqno = get_msg_seqno();
 
-  length_field = curr;
-  pkt_put_u16(&curr, 0); /* put in real messagesize later */
-
-  pkt_put_ipaddress(&curr, &olsr_cnf->router_id);
-
-  pkt_put_u8(&curr, 1);
-  pkt_put_u8(&curr, 0);
-  pkt_put_u16(&curr, get_msg_seqno());
+  length_field = olsr_put_msg_hdr(&curr, &msg);
 
   pkt_put_u16(&curr, 0);
   pkt_put_reltime(&curr, ifp->hello_interval);
@@ -888,7 +887,8 @@ generate_hello(void *p) {
 
       /* fix length field of hello block */
       if (linkstart != NULL) {
-        pkt_put_u16(&linkstart, curr + 2 - linkstart);
+        fprintf(stderr, "curr: %zu   linkstart: %zu    size: %u\n", (size_t)curr, (size_t)linkstart, (uint16_t)(curr + 2 - linkstart));
+        pkt_put_u16(&linkstart, (uint16_t)(curr + 2 - linkstart));
       }
     }
   }

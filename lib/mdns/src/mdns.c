@@ -85,16 +85,16 @@ int my_DNS_TTL=0;
  * Data Used  : BmfInterfaces
  * ------------------------------------------------------------------------- */
 static void
-PacketReceivedFromOLSR(unsigned char *encapsulationUdpData, int len)
+PacketReceivedFromOLSR(const uint8_t *encapsulationUdpData, int len)
 {
-  struct ip *ipHeader;                 /* IP header inside the encapsulated IP packet */
-  struct ip6_hdr *ip6Header;                 /* IP header inside the encapsulated IP packet */
+  const struct ip *ipHeader;                 /* IP header inside the encapsulated IP packet */
+  const struct ip6_hdr *ip6Header;                 /* IP header inside the encapsulated IP packet */
   //union olsr_ip_addr mcSrc;            /* Original source of the encapsulated multicast packet */
   //union olsr_ip_addr mcDst;            /* Multicast destination of the encapsulated packet */
   struct TBmfInterface *walker;
   int stripped_len = 0;
-  ipHeader = (struct ip *)(ARM_NOWARN_ALIGN)encapsulationUdpData;
-  ip6Header = (struct ip6_hdr *)(ARM_NOWARN_ALIGN)encapsulationUdpData;
+  ipHeader = (const struct ip *)(ARM_CONST_NOWARN_ALIGN)encapsulationUdpData;
+  ip6Header = (const struct ip6_hdr *)(ARM_CONST_NOWARN_ALIGN)encapsulationUdpData;
   //mcSrc.v4 = ipHeader->ip_src;
   //mcDst.v4 = ipHeader->ip_dst;
   OLSR_DEBUG(LOG_PLUGINS, "MDNS PLUGIN got packet from OLSR message\n");
@@ -153,28 +153,16 @@ PacketReceivedFromOLSR(unsigned char *encapsulationUdpData, int len)
 
 
 void
-olsr_parser(union olsr_message *m, struct interface *in_if __attribute__ ((unused)),
+olsr_parser(struct olsr_message *msg,
+    const uint8_t *payload, const uint8_t *end,
+    struct interface *in_if __attribute__ ((unused)),
     union olsr_ip_addr *ipaddr, enum duplicate_status status __attribute__ ((unused)))
 {
-  union olsr_ip_addr originator;
-  int size;
-  uint32_t vtime;
   OLSR_DEBUG(LOG_PLUGINS, "MDNS PLUGIN: Received msg in parser\n");
-  /* Fetch the originator of the messsage */
-  if (olsr_cnf->ip_version == AF_INET) {
-    memcpy(&originator, &m->v4.originator, olsr_cnf->ipsize);
-    vtime = me_to_reltime(m->v4.olsr_vtime);
-    size = ntohs(m->v4.olsr_msgsize);
-  } else {
-    memcpy(&originator, &m->v6.originator, olsr_cnf->ipsize);
-    vtime = me_to_reltime(m->v6.olsr_vtime);
-    size = ntohs(m->v6.olsr_msgsize);
-  }
 
-  /* Check if message originated from this node.
-   *         If so - back off */
-  if (olsr_ipcmp(&originator, &olsr_cnf->router_id) == 0)
+  if (msg->type != MESSAGE_TYPE) {
     return;
+  }
 
   /* Check that the neighbor this message was received from is symmetric.
    *         If not - back off*/
@@ -184,11 +172,7 @@ olsr_parser(union olsr_message *m, struct interface *in_if __attribute__ ((unuse
     return;
   }
 
-  if (olsr_cnf->ip_version == AF_INET) {
-    PacketReceivedFromOLSR((unsigned char *)&m->v4.message, size - 12);
-  } else {
-    PacketReceivedFromOLSR((unsigned char *)&m->v6.message, size - 12 - 96);
-  }
+  PacketReceivedFromOLSR(payload, end - payload);
 }
 
 //Sends a packet in the OLSR network
@@ -196,59 +180,51 @@ void
 olsr_mdns_gen(unsigned char *packet, int len)
 {
   /* send buffer: huge */
-  char buffer[10240];
+  uint8_t buffer[10240];
   int aligned_size;
-  union olsr_message *message = (union olsr_message *)buffer;
+  struct olsr_message msg;
   struct interface *ifn;
+  uint8_t *sizeptr, *curr;
   
   aligned_size=len;
 
-if ((aligned_size % 4) != 0) {
+  if ((aligned_size % 4) != 0) {
     aligned_size = (aligned_size - (aligned_size % 4)) + 4;
   }
 
   /* fill message */
-  if (olsr_cnf->ip_version == AF_INET) {
-    /* IPv4 */
-    message->v4.olsr_msgtype = MESSAGE_TYPE;
-    message->v4.olsr_vtime = reltime_to_me(MDNS_VALID_TIME * MSEC_PER_SEC);
-    memcpy(&message->v4.originator, &olsr_cnf->router_id, olsr_cnf->ipsize);
-    //message->v4.ttl = MAX_TTL;
-    if (my_MDNS_TTL) message->v4.ttl = my_MDNS_TTL;
-    else message->v4.ttl = MAX_TTL;
-    message->v4.hopcnt = 0;
-    message->v4.seqno = htons(get_msg_seqno());
+  msg.type = MESSAGE_TYPE;
+  msg.vtime = MDNS_VALID_TIME * MSEC_PER_SEC;
+  msg.originator = olsr_cnf->router_id;
+  if (my_MDNS_TTL) {
+    msg.ttl = my_MDNS_TTL;
+  }
+  else {
+    msg.ttl = MAX_TTL;
+  }
+  msg.hopcnt = 0;
+  msg.seqno = get_msg_seqno();
+  msg.size = 0; /* put in later ! */
 
-    message->v4.olsr_msgsize = htons(aligned_size + 12);
+  curr = buffer;
+  sizeptr = olsr_put_msg_hdr(&curr, &msg);
 
-    memset(&message->v4.message, 0, aligned_size);
-    memcpy(&message->v4.message, packet, len);
-    aligned_size = aligned_size + 12;
-  } else {
-    /* IPv6 */
-    message->v6.olsr_msgtype = MESSAGE_TYPE;
-    message->v6.olsr_vtime = reltime_to_me(MDNS_VALID_TIME * MSEC_PER_SEC);
-    memcpy(&message->v6.originator, &olsr_cnf->router_id, olsr_cnf->ipsize);
-    //message->v6.ttl = MAX_TTL;
-    if (my_MDNS_TTL) message->v6.ttl = my_MDNS_TTL;
-    else message->v6.ttl = MAX_TTL;
-    message->v6.hopcnt = 0;
-    message->v6.seqno = htons(get_msg_seqno());
+  /* put in real size of message */
+  pkt_put_u16(&sizeptr, curr - buffer + aligned_size);
 
-    message->v6.olsr_msgsize = htons(aligned_size + 12 + 96);
-    memset(&message->v6.message, 0, aligned_size);
-    memcpy(&message->v6.message, packet, len);
-    aligned_size = aligned_size + 12 + 96;
+  memcpy(curr, packet, len);
+  if (len != aligned_size) {
+    memset(curr + len, 0, aligned_size - len);
   }
 
   /* looping trough interfaces */
   OLSR_FOR_ALL_INTERFACES(ifn) {
     //OLSR_PRINTF(1, "MDNS PLUGIN: Generating packet - [%s]\n", ifn->int_name);
 
-    if (net_outbuffer_push(ifn, message, aligned_size) != aligned_size) {
+    if (net_outbuffer_push(ifn, buffer, aligned_size) != aligned_size) {
       /* send data and try again */
       net_output(ifn);
-      if (net_outbuffer_push(ifn, message, aligned_size) != aligned_size) {
+      if (net_outbuffer_push(ifn, buffer, aligned_size) != aligned_size) {
         //OLSR_PRINTF(1, "MDNS PLUGIN: could not send on interface: %s\n", ifn->int_name);
       }
     }

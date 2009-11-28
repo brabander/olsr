@@ -320,7 +320,7 @@ net_output(struct interface *ifp)
   } dstaddr;
   int dstaddr_size;
   struct ptf *tmp_ptf;
-  union olsr_packet *outmsg;
+  struct olsr_packet *outmsg;
   int retval;
 
   if (ifp->netbuf.pending == 0) {
@@ -331,11 +331,11 @@ net_output(struct interface *ifp)
 
   retval = ifp->netbuf.pending;
 
-  outmsg = (union olsr_packet *)ifp->netbuf.buff;
+  outmsg = (struct olsr_packet *)ifp->netbuf.buff;
   /* Add the Packet seqno */
-  outmsg->v4.olsr_seqno = htons(ifp->olsr_seqnum++);
+  outmsg->seqno = htons(ifp->olsr_seqnum++);
   /* Set the packetlength */
-  outmsg->v4.olsr_packlen = htons(ifp->netbuf.pending);
+  outmsg->size = htons(ifp->netbuf.pending);
 
   if (olsr_cnf->ip_version == AF_INET) {
     /* IP version 4 */

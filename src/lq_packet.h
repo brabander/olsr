@@ -45,22 +45,11 @@
 #include "olsr_types.h"
 #include "olsr_time.h"
 #include "ipcalc.h"
+#include "olsr_protocol.h"
 
 #define LQ_HELLO_MESSAGE      201
 #define LQ_TC_MESSAGE         202
 
-
-/* deserialized OLSR header */
-
-struct olsr_common {
-  uint8_t type;
-  uint16_t size;
-  uint32_t vtime;
-  union olsr_ip_addr orig;
-  uint8_t ttl;
-  uint8_t hops;
-  uint16_t seqno;
-};
 
 /* deserialized LQ_HELLO */
 
@@ -73,18 +62,10 @@ struct lq_hello_neighbor {
 };
 
 struct lq_hello_message {
-  struct olsr_common comm;
+  struct olsr_message *comm;
   uint32_t htime;
   uint8_t will;
   struct lq_hello_neighbor *neigh;
-};
-
-/* serialized LQ_HELLO */
-
-struct lq_hello_info_header {
-  uint8_t link_code;
-  uint8_t reserved;
-  uint16_t size;
 };
 
 static INLINE void

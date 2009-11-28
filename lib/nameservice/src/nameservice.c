@@ -616,48 +616,36 @@ void
 olsr_namesvc_gen(void *foo __attribute__ ((unused)))
 {
   /* send buffer: huge */
-  char buffer[10240];
-  union olsr_message *message = (union olsr_message *)buffer;
+  uint8_t buffer[10240];
+  struct olsr_message msg;
   struct interface *ifn;
   int namesize;
+  uint8_t *curr, *sizeptr;
 
   /* fill message */
-  if (olsr_cnf->ip_version == AF_INET) {
-    /* IPv4 */
-    message->v4.olsr_msgtype = MESSAGE_TYPE;
-    message->v4.olsr_vtime = reltime_to_me(my_timeout * MSEC_PER_SEC);
-    memcpy(&message->v4.originator, &olsr_cnf->router_id, olsr_cnf->ipsize);
-    message->v4.ttl = MAX_TTL;
-    message->v4.hopcnt = 0;
-    message->v4.seqno = htons(get_msg_seqno());
+  msg.type = MESSAGE_TYPE;
+  msg.vtime = my_timeout * MSEC_PER_SEC;
+  msg.originator = olsr_cnf->router_id;
+  msg.ttl = MAX_TTL;
+  msg.hopcnt = 0;
+  msg.seqno = get_msg_seqno();
+  msg.size = 0; /* fill in later */
 
-    namesize = encap_namemsg((struct namemsg *)(ARM_NOWARN_ALIGN)&message->v4.message);
-    namesize = namesize + sizeof(struct olsrmsg);
+  curr = buffer;
+  sizeptr = olsr_put_msg_hdr(&curr, &msg);
 
-    message->v4.olsr_msgsize = htons(namesize);
-  } else {
-    /* IPv6 */
-    message->v6.olsr_msgtype = MESSAGE_TYPE;
-    message->v6.olsr_vtime = reltime_to_me(my_timeout * MSEC_PER_SEC);
-    memcpy(&message->v6.originator, &olsr_cnf->router_id, olsr_cnf->ipsize);
-    message->v6.ttl = MAX_TTL;
-    message->v6.hopcnt = 0;
-    message->v6.seqno = htons(get_msg_seqno());
-
-    namesize = encap_namemsg((struct namemsg *)(ARM_NOWARN_ALIGN)&message->v6.message);
-    namesize = namesize + sizeof(struct olsrmsg6);
-
-    message->v6.olsr_msgsize = htons(namesize);
-  }
+  namesize = encap_namemsg((struct namemsg *)(ARM_NOWARN_ALIGN)curr);
+  namesize += (curr-buffer);
+  pkt_put_u16(&sizeptr, namesize);
 
   /* looping trough interfaces */
   OLSR_FOR_ALL_INTERFACES(ifn) {
     OLSR_DEBUG(LOG_PLUGINS, "NAME PLUGIN: Generating packet - [%s]\n", ifn->int_name);
 
-    if (net_outbuffer_push(ifn, message, namesize) != namesize) {
+    if (net_outbuffer_push(ifn, buffer, namesize) != namesize) {
       /* send data and try again */
       net_output(ifn);
-      if (net_outbuffer_push(ifn, message, namesize) != namesize) {
+      if (net_outbuffer_push(ifn, buffer, namesize) != namesize) {
         OLSR_WARN(LOG_PLUGINS, "NAME PLUGIN: could not send on interface: %s\n", ifn->int_name);
       }
     }
@@ -670,37 +658,15 @@ olsr_namesvc_gen(void *foo __attribute__ ((unused)))
  * Parse name olsr message of NAME type
  */
 void
-olsr_parser(union olsr_message *m, struct interface *in_if __attribute__ ((unused)),
+olsr_parser(struct olsr_message *msg, const uint8_t *payload, const uint8_t *end,
+    struct interface *in_if __attribute__ ((unused)),
     union olsr_ip_addr *ipaddr, enum duplicate_status status __attribute__ ((unused)))
 {
-  struct namemsg *namemessage;
-  union olsr_ip_addr originator;
-  uint32_t vtime;
-  int size;
+  const struct namemsg *namemessage;
 
-  /* Fetch the originator of the messsage */
-  if (olsr_cnf->ip_version == AF_INET) {
-    memcpy(&originator, &m->v4.originator, olsr_cnf->ipsize);
-  } else {
-    memcpy(&originator, &m->v6.originator, olsr_cnf->ipsize);
-  }
-
-  /* Fetch the message based on IP version */
-  if (olsr_cnf->ip_version == AF_INET) {
-    vtime = me_to_reltime(m->v4.olsr_vtime);
-    size = ntohs(m->v4.olsr_msgsize);
-    namemessage = (struct namemsg *)(ARM_NOWARN_ALIGN)&m->v4.message;
-  } else {
-    vtime = me_to_reltime(m->v6.olsr_vtime);
-    size = ntohs(m->v6.olsr_msgsize);
-    namemessage = (struct namemsg *)(ARM_NOWARN_ALIGN)&m->v6.message;
-  }
-
-  /* Check if message originated from this node.
-     If so - back off */
-  if (olsr_ipcmp(&originator, &olsr_cnf->router_id) == 0)
+  if (msg->type != MESSAGE_TYPE) {
     return;
-
+  }
   /* Check that the neighbor this message was received from is symmetric.
      If not - back off */
   if (check_neighbor_link(ipaddr) != SYM_LINK) {
@@ -711,7 +677,8 @@ olsr_parser(union olsr_message *m, struct interface *in_if __attribute__ ((unuse
     return;
   }
 
-  update_name_entry(&originator, namemessage, size, vtime);
+  namemessage = (const struct namemsg *)(ARM_CONST_NOWARN_ALIGN)payload;
+  update_name_entry(&msg->originator, namemessage, end, msg->vtime);
 }
 
 /**
@@ -812,14 +779,14 @@ create_packet(struct name *to, struct name_entry *from)
  * decapsulate a received name, service or forwarder and update the corresponding hash table if necessary
  */
 void
-decap_namemsg(struct name *from_packet, struct name_entry **to, bool * this_table_changed)
+decap_namemsg(const struct name *from_packet, struct name_entry **to, bool * this_table_changed)
 {
 #if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str strbuf;
 #endif
   struct name_entry *tmp;
   struct name_entry *already_saved_name_entries;
-  char *name = (char *)from_packet + sizeof(struct name);
+  const char *name = (const char *)from_packet + sizeof(struct name);
   int type_of_from_packet = ntohs(from_packet->type);
   unsigned int len_of_name = ntohs(from_packet->len);
   OLSR_DEBUG(LOG_PLUGINS, "NAME PLUGIN: decap type=%d, len=%u, name=%s\n", type_of_from_packet, len_of_name, name);
@@ -909,13 +876,13 @@ decap_namemsg(struct name *from_packet, struct name_entry **to, bool * this_tabl
  * name/service/forwarder entry in the message
  */
 void
-update_name_entry(union olsr_ip_addr *originator, struct namemsg *msg, int msg_size, uint32_t vtime)
+update_name_entry(union olsr_ip_addr *originator, const struct namemsg *msg, const uint8_t *end, uint32_t vtime)
 {
 #if !defined REMOVE_LOG_WARN
   struct ipaddr_str strbuf;
 #endif
-  char *pos, *end_pos;
-  struct name *from_packet;
+  const uint8_t *pos;
+  const struct name *from_packet;
   int i;
 
   OLSR_DEBUG(LOG_PLUGINS, "NAME PLUGIN: Received Message from %s\n", olsr_ip_to_string(&strbuf, originator));
@@ -926,11 +893,10 @@ update_name_entry(union olsr_ip_addr *originator, struct namemsg *msg, int msg_s
   }
 
   /* now add the names from the message */
-  pos = (char *)msg + sizeof(struct namemsg);
-  end_pos = pos + msg_size - sizeof(struct name *);     // at least one struct name has to be left
+  pos = (const uint8_t *)msg + sizeof(struct namemsg);
 
-  for (i = ntohs(msg->nr_names); i > 0 && pos < end_pos; i--) {
-    from_packet = (struct name *)(ARM_NOWARN_ALIGN)pos;
+  for (i = ntohs(msg->nr_names); i > 0 && pos < end; i--) {
+    from_packet = (const struct name *)(ARM_CONST_NOWARN_ALIGN)pos;
 
     switch (ntohs(from_packet->type)) {
     case NAME_HOST:
@@ -969,7 +935,7 @@ update_name_entry(union olsr_ip_addr *originator, struct namemsg *msg, int msg_s
  */
 void
 insert_new_name_in_list(union olsr_ip_addr *originator,
-                        struct list_node *this_list, struct name *from_packet, bool * this_table_changed, uint32_t vtime)
+                        struct list_node *this_list, const struct name *from_packet, bool * this_table_changed, uint32_t vtime)
 {
   int hash;
   struct db_entry *entry;

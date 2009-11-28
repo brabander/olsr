@@ -139,7 +139,8 @@ void olsr_print_tc_table(void);
 void olsr_time_out_tc_set(void);
 
 /* tc msg input parser */
-void olsr_input_tc(union olsr_message *, struct interface *, union olsr_ip_addr *, enum duplicate_status);
+void olsr_input_tc(struct olsr_message *, const uint8_t *payload,
+    const uint8_t *end, struct interface *, union olsr_ip_addr *, enum duplicate_status);
 
 /* tc_entry manipulation */
 struct tc_entry *EXPORT(olsr_lookup_tc_entry) (const union olsr_ip_addr *);

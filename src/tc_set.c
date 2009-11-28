@@ -704,6 +704,7 @@ olsr_print_tc_table(void)
  * @param pointer to upper border ip
  * @result 1 if lower/upper border ip have been set
  */
+#if 0
 static int
 olsr_calculate_tc_border(uint8_t lower_border,
                          union olsr_ip_addr *lower_border_ip, uint8_t upper_border, union olsr_ip_addr *upper_border_ip)
@@ -712,7 +713,7 @@ olsr_calculate_tc_border(uint8_t lower_border,
     return 0;
   }
   if (lower_border == 0xff) {
-    memset(lower_border_ip, 0, sizeof(lower_border_ip));
+    memset(lower_border_ip, 0, sizeof(*lower_border_ip));
   } else {
     int i;
 
@@ -725,7 +726,7 @@ olsr_calculate_tc_border(uint8_t lower_border,
   }
 
   if (upper_border == 0xff) {
-    memset(upper_border_ip, 0xff, sizeof(upper_border_ip));
+    memset(upper_border_ip, 0xff, sizeof(*upper_border_ip));
   } else {
     int i;
 
@@ -739,7 +740,7 @@ olsr_calculate_tc_border(uint8_t lower_border,
   }
   return 1;
 }
-
+#endif
 /*
  * Process an incoming TC or TC_LQ message.
  *
@@ -750,15 +751,15 @@ olsr_calculate_tc_border(uint8_t lower_border,
  * as every call to pkt_get increases the packet offset and
  * hence the spot we are looking at.
  */
+
 void
-olsr_input_tc(union olsr_message * msg, struct interface * input_if __attribute__ ((unused)),
+olsr_input_tc(struct olsr_message * msg, const uint8_t *payload, const uint8_t *end,
+    struct interface * input_if __attribute__ ((unused)),
     union olsr_ip_addr * from_addr, enum duplicate_status status)
 {
-  uint16_t size, msg_seq, ansn;
-  uint8_t type, ttl, msg_hops, lower_border, upper_border;
-  uint32_t vtime;
-  union olsr_ip_addr originator;
-  const unsigned char *limit, *curr;
+  uint16_t ansn;
+  uint8_t lower_border, upper_border;
+  const uint8_t *curr;
   struct tc_entry *tc;
   bool relevantTc;
 #if !defined REMOVE_LOG_DEBUG
@@ -767,11 +768,8 @@ olsr_input_tc(union olsr_message * msg, struct interface * input_if __attribute_
   union olsr_ip_addr lower_border_ip, upper_border_ip;
   int borderSet = 0;
 
-  curr = (void *)msg;
-
   /* We are only interested in TC message types. */
-  pkt_get_u8(&curr, &type);
-  if (type != olsr_get_TC_MessageId()) {
+  if (msg->type != olsr_get_TC_MessageId()) {
     return;
   }
 
@@ -785,22 +783,14 @@ olsr_input_tc(union olsr_message * msg, struct interface * input_if __attribute_
     return;
   }
 
-  pkt_get_reltime(&curr, &vtime);
-  pkt_get_u16(&curr, &size);
-
-  pkt_get_ipaddress(&curr, &originator);
-
-  /* Copy header values */
-  pkt_get_u8(&curr, &ttl);
-  pkt_get_u8(&curr, &msg_hops);
-  pkt_get_u16(&curr, &msg_seq);
+  curr = payload;
   pkt_get_u16(&curr, &ansn);
 
   /* Get borders */
   pkt_get_u8(&curr, &lower_border);
   pkt_get_u8(&curr, &upper_border);
 
-  tc = olsr_lookup_tc_entry(&originator);
+  tc = olsr_lookup_tc_entry(&msg->originator);
 
   /* TCs can be splitted, so we are looking for ANSNs equal or higher */
   if (tc && status != RESET_SEQNO_OLSR_MESSAGE && tc->tc_seq != -1 && olsr_seqno_diff(ansn, tc->ansn) < 0) {
@@ -812,29 +802,28 @@ olsr_input_tc(union olsr_message * msg, struct interface * input_if __attribute_
    * Generate a new tc_entry in the lsdb and store the sequence number.
    */
   if (!tc) {
-    tc = olsr_add_tc_entry(&originator);
+    tc = olsr_add_tc_entry(&msg->originator);
   }
 
   /*
    * Update the tc entry.
    */
-  tc->msg_hops = msg_hops;
-  tc->tc_seq = msg_seq;
+  tc->msg_hops = msg->hopcnt;
+  tc->tc_seq = msg->seqno;
   tc->ansn = ansn;
   tc->ignored = 0;
   tc->err_seq_valid = false;
   tc->is_virtual = false;
 
-  OLSR_DEBUG(LOG_TC, "Processing TC from %s, seq 0x%04x\n", olsr_ip_to_string(&buf, &originator), tc->tc_seq);
+  OLSR_DEBUG(LOG_TC, "Processing TC from %s, seq 0x%04x\n", olsr_ip_to_string(&buf, &msg->originator), tc->tc_seq);
 
   /*
    * Now walk the edge advertisements contained in the packet.
    */
 
-  limit = (unsigned char *)msg + size;
   borderSet = 0;
   relevantTc = false;
-  while (curr + olsr_cnf->ipsize + olsr_sizeof_TCLQ() <= limit) {
+  while (curr + olsr_cnf->ipsize + olsr_sizeof_TCLQ() <= end) {
     if (olsr_tc_update_edge(tc, ansn, &curr, &upper_border_ip)) {
       relevantTc = true;
     }
@@ -853,14 +842,16 @@ olsr_input_tc(union olsr_message * msg, struct interface * input_if __attribute_
   /*
    * Calculate real border IPs.
    */
+  assert(msg);
   if (borderSet) {
-    borderSet = olsr_calculate_tc_border(lower_border, &lower_border_ip, upper_border, &upper_border_ip);
+    // borderSet = olsr_calculate_tc_border(lower_border, &lower_border_ip, upper_border, &upper_border_ip);
   }
 
   /*
    * Set or change the expiration timer accordingly.
    */
-  olsr_set_timer(&tc->validity_timer, vtime,
+  assert(msg);
+  olsr_set_timer(&tc->validity_timer, msg->vtime,
                  OLSR_TC_VTIME_JITTER, OLSR_TIMER_ONESHOT, &olsr_expire_tc_entry, tc, tc_validity_timer_cookie);
 
   if (borderSet) {

@@ -52,7 +52,8 @@
 #define MIN_MESSAGE_SIZE()	((int)(8 + olsr_cnf->ipsize))
 
 /* Function returns false if the message should not be forwarded */
-typedef void parse_function(union olsr_message *, struct interface *, union olsr_ip_addr *, enum duplicate_status);
+typedef void parse_function(struct olsr_message *, const uint8_t *payload, const uint8_t *end,
+    struct interface *, union olsr_ip_addr *, enum duplicate_status);
 
 struct parse_function_entry {
   uint32_t type;                       /* If set to PROMISCUOUS all messages will be received */
@@ -60,14 +61,14 @@ struct parse_function_entry {
   struct parse_function_entry *next;
 };
 
-typedef char *preprocessor_function(char *packet, struct interface *, union olsr_ip_addr *, int *length);
+typedef uint8_t *preprocessor_function(uint8_t *packet, struct interface *, union olsr_ip_addr *, int *length);
 
 struct preprocessor_function_entry {
   preprocessor_function *function;
   struct preprocessor_function_entry *next;
 };
 
-typedef void packetparser_function(struct olsr *olsr, struct interface *in_if, union olsr_ip_addr *from_addr);
+typedef void packetparser_function(struct olsr_packet *pkt, uint8_t *binary, struct interface *in_if, union olsr_ip_addr *from_addr);
 
 struct packetparser_function_entry {
   packetparser_function *function;
@@ -75,37 +76,31 @@ struct packetparser_function_entry {
 };
 
 void
-  olsr_init_parser(void);
+olsr_init_parser(void);
 
 void
-  olsr_deinit_parser(void);
+olsr_deinit_parser(void);
 
 void
-  olsr_input(int, void *, unsigned int);
+olsr_input(int, void *, unsigned int);
 
 void
-  olsr_input_hostemu(int, void *, unsigned int);
-
-void
-  EXPORT(olsr_parser_add_function) (parse_function, uint32_t);
+EXPORT(olsr_parser_add_function) (parse_function, uint32_t);
 
 int
-  EXPORT(olsr_parser_remove_function) (parse_function);
+EXPORT(olsr_parser_remove_function) (parse_function);
 
 void
-  EXPORT(olsr_preprocessor_add_function) (preprocessor_function);
+EXPORT(olsr_preprocessor_add_function) (preprocessor_function);
 
 int
-  EXPORT(olsr_preprocessor_remove_function) (preprocessor_function);
+EXPORT(olsr_preprocessor_remove_function) (preprocessor_function);
 
 void
-  EXPORT(olsr_packetparser_add_function) (packetparser_function * function);
+EXPORT(olsr_packetparser_add_function) (packetparser_function * function);
 
 int
-  EXPORT(olsr_packetparser_remove_function) (packetparser_function * function);
-
-const unsigned char *olsr_parse_msg_hdr(const union olsr_message *, struct olsrmsg_hdr *);
-
+EXPORT(olsr_packetparser_remove_function) (packetparser_function * function);
 #endif
 
 /*

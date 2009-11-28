@@ -48,8 +48,8 @@
 #include "parser.h"
 #include "olsr_logging.h"
 
-static void olsr_input_hello(union olsr_message *, struct interface *, union olsr_ip_addr *,
-    enum duplicate_status);
+static void olsr_input_hello(struct olsr_message *msg, const uint8_t *payload, const uint8_t *end,
+    struct interface *, union olsr_ip_addr *, enum duplicate_status);
 
 static void process_message_neighbors(struct nbr_entry *, const struct lq_hello_message *);
 
@@ -99,7 +99,7 @@ process_message_neighbors(struct nbr_entry *neighbor, const struct lq_hello_mess
       continue;
     }
 
-    olsr_link_nbr_nbr2(neighbor, &message_neighbors->addr, message->comm.vtime);
+    olsr_link_nbr_nbr2(neighbor, &message_neighbors->addr, message->comm->vtime);
   }
 
   /* Second pass */
@@ -205,38 +205,29 @@ olsr_deinit_package_process(void)
 }
 
 static bool
-deserialize_hello(struct lq_hello_message *hello, const void *ser)
+deserialize_hello(struct lq_hello_message *hello, struct olsr_message *msg, const uint8_t *payload, const uint8_t *end)
 {
-  const unsigned char *limit;
-  uint8_t type;
-  uint16_t size;
+  const uint8_t *curr = payload;
+  hello->comm = msg;
 
-  const unsigned char *curr = ser;
-  pkt_get_u8(&curr, &type);
-  if (type != olsr_get_Hello_MessageId()) {
-    /* No need to do anything more */
-    return true;
-  }
-  pkt_get_reltime(&curr, &hello->comm.vtime);
-  pkt_get_u16(&curr, &size);
-  pkt_get_ipaddress(&curr, &hello->comm.orig);
-
-  pkt_get_u8(&curr, &hello->comm.ttl);
-  pkt_get_u8(&curr, &hello->comm.hops);
-  pkt_get_u16(&curr, &hello->comm.seqno);
+  /* parse HELLO specific header */
   pkt_ignore_u16(&curr);
-
   pkt_get_reltime(&curr, &hello->htime);
   pkt_get_u8(&curr, &hello->will);
 
   hello->neigh = NULL;
-  limit = ((const unsigned char *)ser) + size;
-  while (curr < limit) {
-    const struct lq_hello_info_header *info_head = (const struct lq_hello_info_header *)(const ARM_NOWARN_ALIGN)curr;
-    const unsigned char *limit2 = curr + ntohs(info_head->size);
+  while (curr < end) {
+    const uint8_t *ptr, *limit2;
+    uint8_t link_code;
+    uint16_t size;
 
-    curr = (const unsigned char *)(info_head + 1);
-    while (curr < limit2) {
+    ptr = curr;
+    pkt_get_u8(&curr, &link_code);
+    pkt_ignore_u8(&curr);
+    pkt_get_u16(&curr, &size);
+
+    limit2 = ptr + size;
+    while (curr + olsr_cnf->ipsize + olsr_sizeof_HelloLQ() <= limit2) {
       struct lq_hello_neighbor *neigh = olsr_malloc_lq_hello_neighbor();
       pkt_get_ipaddress(&curr, &neigh->addr);
 
@@ -247,8 +238,8 @@ deserialize_hello(struct lq_hello_message *hello, const void *ser)
         continue;
       }
 
-      neigh->link_type = EXTRACT_LINK(info_head->link_code);
-      neigh->neigh_type = EXTRACT_STATUS(info_head->link_code);
+      neigh->link_type = EXTRACT_LINK(link_code);
+      neigh->neigh_type = EXTRACT_STATUS(link_code);
 
       neigh->next = hello->neigh;
       hello->neigh = neigh;
@@ -332,11 +323,12 @@ hello_tap(struct lq_hello_message *message, struct interface *in_if, const union
 }
 
 static void
-olsr_input_hello(union olsr_message *msg, struct interface *inif, union olsr_ip_addr *from,
+olsr_input_hello(struct olsr_message *msg, const uint8_t *payload, const uint8_t *end,
+    struct interface *inif, union olsr_ip_addr *from,
     enum duplicate_status status __attribute__ ((unused)))
 {
   struct lq_hello_message hello;
-  if (!deserialize_hello(&hello, msg)) {
+  if (!deserialize_hello(&hello, msg, payload, end)) {
     hello_tap(&hello, inif, from);
   }
 }

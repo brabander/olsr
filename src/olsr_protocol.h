@@ -326,29 +326,7 @@ struct hnamsg6 {
  * OLSR message (several can exist in one OLSR packet)
  */
 
-struct olsrmsg {
-  uint8_t olsr_msgtype;
-  uint8_t olsr_vtime;
-  uint16_t olsr_msgsize;
-  uint32_t originator;
-  uint8_t ttl;
-  uint8_t hopcnt;
-  uint16_t seqno;
-
-  union {
-    struct hellomsg hello;
-    struct olsr_tcmsg tc;
-    struct hnamsg hna;
-    struct midmsg mid;
-  } message;
-
-} __attribute__ ((packed));
-
-/*
- * Internal representation of the header.
- * Used for some code sharing between message parsers.
- */
-struct olsrmsg_hdr {
+struct olsr_message {
   uint8_t type;
   uint32_t vtime;
   uint16_t size;
@@ -356,63 +334,16 @@ struct olsrmsg_hdr {
   uint8_t ttl;
   uint8_t hopcnt;
   uint16_t seqno;
-} __attribute__ ((packed));
-
-/*
- *IPv6
- */
-
-struct olsrmsg6 {
-  uint8_t olsr_msgtype;
-  uint8_t olsr_vtime;
-  uint16_t olsr_msgsize;
-  struct in6_addr originator;
-  uint8_t ttl;
-  uint8_t hopcnt;
-  uint16_t seqno;
-
-  union {
-    struct hellomsg6 hello;
-    struct olsr_tcmsg6 tc;
-    struct hnamsg6 hna;
-    struct midmsg6 mid;
-  } message;
-
-} __attribute__ ((packed));
-
-
+};
 
 /*
  * Generic OLSR packet
  */
 
-struct olsr {
-  uint16_t olsr_packlen;               /* packet length */
-  uint16_t olsr_seqno;
-  struct olsrmsg olsr_msg[1];          /* variable messages */
-} __attribute__ ((packed));
-
-
-struct olsr6 {
-  uint16_t olsr_packlen;               /* packet length */
-  uint16_t olsr_seqno;
-  struct olsrmsg6 olsr_msg[1];         /* variable messages */
-} __attribute__ ((packed));
-
-
-/* IPv4 <-> IPv6 compability */
-
-union olsr_message {
-  struct olsrmsg v4;
-  struct olsrmsg6 v6;
-} __attribute__ ((packed));
-
-union olsr_packet {
-  struct olsr v4;
-  struct olsr6 v6;
-} __attribute__ ((packed));
-
-
+struct olsr_packet {
+  uint16_t size;               /* packet length */
+  uint16_t seqno;
+}  __attribute__ ((packed));
 #endif
 
 /*

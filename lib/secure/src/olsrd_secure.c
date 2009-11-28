@@ -147,16 +147,16 @@ static void olsr_event(void);
 static int send_challenge(struct interface *olsr_if_config, const union olsr_ip_addr *);
 static int send_cres(struct interface *olsr_if_config, union olsr_ip_addr *, union olsr_ip_addr *, uint32_t, struct stamp *);
 static int send_rres(struct interface *olsr_if_config, union olsr_ip_addr *, union olsr_ip_addr *, uint32_t);
-static int parse_challenge(struct interface *olsr_if_config, char *);
-static int parse_cres(struct interface *olsr_if_config, char *);
-static int parse_rres(char *);
-static int check_auth(struct interface *olsr_if_config, char *, int *);
+static int parse_challenge(struct interface *olsr_if_config, uint8_t *);
+static int parse_cres(struct interface *olsr_if_config, uint8_t *);
+static int parse_rres(uint8_t *);
+static int check_auth(struct interface *olsr_if_config, uint8_t *, int *);
 #if 0
 static int ipc_send(char *, int);
 #endif
 static int add_signature(uint8_t *, int *);
-static int validate_packet(struct interface *olsr_if_config, const char *, int *);
-static char *secure_preprocessor(char *packet, struct interface *olsr_if_config, union olsr_ip_addr *from_addr, int *length);
+static int validate_packet(struct interface *olsr_if_config, const uint8_t *, int *);
+static uint8_t *secure_preprocessor(uint8_t *packet, struct interface *olsr_if_config, union olsr_ip_addr *from_addr, int *length);
 static void timeout_timestamps(void *);
 static int check_timestamp(struct interface *olsr_if_config, const union olsr_ip_addr *, time_t);
 static struct stamp *lookup_timestamp_entry(const union olsr_ip_addr *);
@@ -247,11 +247,11 @@ ipc_send(char *data __attribute__ ((unused)), int size __attribute__ ((unused)))
 }
 #endif
 
-static char *
-secure_preprocessor(char *packet, struct interface *olsr_if_config, union olsr_ip_addr *from_addr
+static uint8_t *
+secure_preprocessor(uint8_t *packet, struct interface *olsr_if_config, union olsr_ip_addr *from_addr
                     __attribute__ ((unused)), int *length)
 {
-  struct olsr *olsr = (struct olsr *)packet;
+  struct olsr_packet *olsr = (struct olsr_packet *)packet;
 #if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
 #endif
@@ -272,7 +272,7 @@ secure_preprocessor(char *packet, struct interface *olsr_if_config, union olsr_i
   OLSR_DEBUG(LOG_PLUGINS, "[ENC]Packet from %s OK size %d\n", olsr_ip_to_string(&buf, from_addr), *length);
 
   /* Fix OLSR packet header */
-  olsr->olsr_packlen = htons(*length);
+  olsr->size = htons(*length);
   return packet;
 }
 
@@ -286,7 +286,7 @@ secure_preprocessor(char *packet, struct interface *olsr_if_config, union olsr_i
  *
  */
 static int
-check_auth(struct interface *olsr_if_config, char *pck, int *size __attribute__ ((unused)))
+check_auth(struct interface *olsr_if_config, uint8_t *pck, int *size __attribute__ ((unused)))
 {
 
   OLSR_DEBUG(LOG_PLUGINS, "[ENC]Checking packet for challenge response message...\n");
@@ -332,7 +332,7 @@ add_signature(uint8_t * pck, int *size)
 
   msg = (struct s_olsrmsg *)(ARM_NOWARN_ALIGN)&pck[*size];
   /* Update size */
-  ((struct olsr *)pck)->olsr_packlen = htons(*size + sizeof(struct s_olsrmsg));
+  ((struct olsr_packet *)pck)->size = htons(*size + sizeof(struct s_olsrmsg));
 
   /* Fill packet header */
   msg->olsr_msgtype = MESSAGE_TYPE;
@@ -396,7 +396,7 @@ add_signature(uint8_t * pck, int *size)
 
 
 static int
-validate_packet(struct interface *olsr_if_config, const char *pck, int *size)
+validate_packet(struct interface *olsr_if_config, const uint8_t *pck, int *size)
 {
   int packetsize;
   uint8_t sha1_hash[SIGNATURE_SIZE];
@@ -647,7 +647,7 @@ send_challenge(struct interface *olsr_if_config, const union olsr_ip_addr *new_h
 }
 
 int
-parse_cres(struct interface *olsr_if_config, char *in_msg)
+parse_cres(struct interface *olsr_if_config, uint8_t *in_msg)
 {
   struct c_respmsg *msg;
   uint8_t sha1_hash[SIGNATURE_SIZE];
@@ -741,7 +741,7 @@ parse_cres(struct interface *olsr_if_config, char *in_msg)
 
 
 int
-parse_rres(char *in_msg)
+parse_rres(uint8_t *in_msg)
 {
   struct r_respmsg *msg;
   uint8_t sha1_hash[SIGNATURE_SIZE];
@@ -830,7 +830,7 @@ parse_rres(char *in_msg)
 
 
 int
-parse_challenge(struct interface *olsr_if_config, char *in_msg)
+parse_challenge(struct interface *olsr_if_config, uint8_t *in_msg)
 {
   struct challengemsg *msg;
   uint8_t sha1_hash[SIGNATURE_SIZE];

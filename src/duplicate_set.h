@@ -72,7 +72,7 @@ enum duplicate_status {
 
 int EXPORT(olsr_seqno_diff) (uint16_t reference, uint16_t other);
 void olsr_init_duplicate_set(void);
-bool olsr_is_duplicate_message(union olsr_message *m, bool forward_set, enum duplicate_status *status);
+bool olsr_is_duplicate_message(struct olsr_message *m, bool forward_set, enum duplicate_status *status);
 void olsr_print_duplicate_table(void);
 void olsr_flush_duplicate_entries(void);
 

@@ -52,6 +52,7 @@
 #include "olsr_logging.h"
 #include "olsr_protocol.h"
 
+#include <assert.h>
 #include <stdlib.h>
 
 static struct mid_entry *olsr_lookup_mid_entry(const union olsr_ip_addr *);
@@ -248,6 +249,7 @@ olsr_insert_mid_entry(const union olsr_ip_addr *main_addr,
    * Locate first the hookup point
    */
   tc = olsr_locate_tc_entry(main_addr);
+  assert(tc);
 
   alias = olsr_cookie_malloc(mid_address_mem_cookie);
   alias->mid_alias_addr = *alias_addr;
@@ -469,38 +471,19 @@ olsr_print_mid_set(void)
  * Process an incoming MID message.
  */
 void
-olsr_input_mid(union olsr_message *msg, struct interface *input_if __attribute__ ((unused)),
+olsr_input_mid(struct olsr_message *msg, const uint8_t *payload, const uint8_t *end,
+    struct interface *input_if __attribute__ ((unused)),
     union olsr_ip_addr *from_addr, enum duplicate_status status)
 {
-  uint16_t msg_size, msg_seq;
-  uint8_t type, ttl, msg_hops;
-  const unsigned char *curr, *end;
-  uint32_t vtime;
-  union olsr_ip_addr originator, alias;
+  const uint8_t *curr;
+  union olsr_ip_addr alias;
   struct tc_entry *tc;
 #if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
 #endif
 
-  curr = (void *)msg;
-
   /* We are only interested in MID message types. */
-  pkt_get_u8(&curr, &type);
-  if (type != MID_MESSAGE) {
-    return;
-  }
-
-  pkt_get_reltime(&curr, &vtime);
-  pkt_get_u16(&curr, &msg_size);
-
-  pkt_get_ipaddress(&curr, &originator);
-
-  /* Copy header values */
-  pkt_get_u8(&curr, &ttl);
-  pkt_get_u8(&curr, &msg_hops);
-  pkt_get_u16(&curr, &msg_seq);
-
-  if (!olsr_validate_address(&originator)) {
+  if (msg->type != MID_MESSAGE) {
     return;
   }
 
@@ -514,29 +497,29 @@ olsr_input_mid(union olsr_message *msg, struct interface *input_if __attribute__
     return;
   }
 
-  tc = olsr_locate_tc_entry(&originator);
+  tc = olsr_locate_tc_entry(&msg->originator);
 
-  if (status != RESET_SEQNO_OLSR_MESSAGE && tc->mid_seq != -1 && olsr_seqno_diff(msg_seq, tc->mid_seq) <= 0) {
+  if (status != RESET_SEQNO_OLSR_MESSAGE && tc->mid_seq != -1 && olsr_seqno_diff(msg->seqno, tc->mid_seq) <= 0) {
     /* this MID is too old, discard it */
     OLSR_DEBUG(LOG_MID, "Received too old mid from %s: %d < %d\n",
-        olsr_ip_to_string(&buf, from_addr), msg_seq, tc->mid_seq);
+        olsr_ip_to_string(&buf, from_addr), msg->seqno, tc->mid_seq);
     return;
   }
-  tc->mid_seq = msg_seq;
+  tc->mid_seq = msg->seqno;
 
   OLSR_DEBUG(LOG_MID, "Processing MID from %s with %d aliases, seq 0x%04x\n",
-             olsr_ip_to_string(&buf, &originator), (int)((msg_size-12)/olsr_cnf->ipsize), msg_seq);
+             olsr_ip_to_string(&buf, &msg->originator), (int)((end - payload)/olsr_cnf->ipsize), msg->seqno);
 
 
-  /* calculate end of message */
-  end = (uint8_t *)msg + msg_size;
+  curr = payload;
+
 
   /*
    * Now walk the list of alias advertisements one by one.
    */
   while (curr + olsr_cnf->ipsize <= end) {
     pkt_get_ipaddress(&curr, &alias);
-    olsr_update_mid_entry(&originator, &alias, vtime, msg_seq);
+    olsr_update_mid_entry(&msg->originator, &alias, msg->vtime, msg->seqno);
   }
 
   /*
@@ -548,6 +531,7 @@ olsr_input_mid(union olsr_message *msg, struct interface *input_if __attribute__
 void
 generate_mid(void *p  __attribute__ ((unused))) {
   struct interface *ifp, *allif;
+  struct olsr_message msg;
   uint8_t msg_buffer[MAXMESSAGESIZE - OLSR_HEADERSIZE] __attribute__ ((aligned));
   uint8_t *curr = msg_buffer;
   uint8_t *length_field, *last;
@@ -555,17 +539,17 @@ generate_mid(void *p  __attribute__ ((unused))) {
 
   OLSR_INFO(LOG_PACKET_CREATION, "Building MID\n-------------------\n");
 
-  pkt_put_u8(&curr, MID_MESSAGE);
-  pkt_put_reltime(&curr, olsr_cnf->mid_params.validity_time);
+  msg.type = MID_MESSAGE;
+  msg.vtime = olsr_cnf->mid_params.validity_time;
+  msg.size = 0; // fill in later
+  msg.originator = olsr_cnf->router_id;
+  msg.ttl = MAX_TTL;
+  msg.hopcnt = 0;
+  msg.seqno = get_msg_seqno();
 
-  length_field = curr;
-  pkt_put_u16(&curr, 0); /* put in real messagesize later */
+  curr = msg_buffer;
 
-  pkt_put_ipaddress(&curr, &olsr_cnf->router_id);
-
-  pkt_put_u8(&curr, 255);
-  pkt_put_u8(&curr, 0);
-  pkt_put_u16(&curr, get_msg_seqno());
+  length_field = olsr_put_msg_hdr(&curr, &msg);
 
   last = msg_buffer + sizeof(msg_buffer) - olsr_cnf->ipsize;
   OLSR_FOR_ALL_INTERFACES(allif) {

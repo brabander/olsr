@@ -267,39 +267,20 @@ olsr_prune_hna_entries(struct tc_entry *tc)
  * Forwards the message if that is to be done.
  */
 void
-olsr_input_hna(union olsr_message *msg, struct interface *in_if __attribute__ ((unused)),
+olsr_input_hna(struct olsr_message *msg, const uint8_t *payload, const uint8_t *end,
+    struct interface *in_if __attribute__ ((unused)),
     union olsr_ip_addr *from_addr, enum duplicate_status status)
 {
-  uint16_t msg_size, msg_seq;
-  uint8_t type, ttl, msg_hops;
-  uint32_t vtime;
-  union olsr_ip_addr originator;
   struct tc_entry *tc;
   struct olsr_ip_prefix prefix;
-  const uint8_t *curr, *curr_end;
+  const uint8_t *curr;
 #if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
 #endif
 
-  curr = (void *)msg;
 
   /* We are only interested in MID message types. */
-  pkt_get_u8(&curr, &type);
-  if (type != HNA_MESSAGE) {
-    return;
-  }
-
-  pkt_get_reltime(&curr, &vtime);
-  pkt_get_u16(&curr, &msg_size);
-
-  pkt_get_ipaddress(&curr, &originator);
-
-  /* Copy header values */
-  pkt_get_u8(&curr, &ttl);
-  pkt_get_u8(&curr, &msg_hops);
-  pkt_get_u16(&curr, &msg_seq);
-
-  if (!olsr_validate_address(&originator)) {
+  if (msg->type != HNA_MESSAGE) {
     return;
   }
 
@@ -313,22 +294,20 @@ olsr_input_hna(union olsr_message *msg, struct interface *in_if __attribute__ ((
     return;
   }
 
-  tc = olsr_locate_tc_entry(&originator);
-  if (status != RESET_SEQNO_OLSR_MESSAGE && tc->hna_seq != -1 && olsr_seqno_diff(msg_seq, tc->hna_seq) <= 0) {
+  tc = olsr_locate_tc_entry(&msg->originator);
+  if (status != RESET_SEQNO_OLSR_MESSAGE && tc->hna_seq != -1 && olsr_seqno_diff(msg->seqno, tc->hna_seq) <= 0) {
     /* this HNA is too old, discard it */
     return;
   }
-  tc->hna_seq = msg_seq;
+  tc->hna_seq = msg->seqno;
 
-  OLSR_DEBUG(LOG_HNA, "Processing HNA from %s, seq 0x%04x\n", olsr_ip_to_string(&buf, &originator), msg_seq);
+  OLSR_DEBUG(LOG_HNA, "Processing HNA from %s, seq 0x%04x\n", olsr_ip_to_string(&buf, &msg->originator), msg->seqno);
 
   /*
    * Now walk the list of HNA advertisements.
    */
-  curr_end = (uint8_t *)msg + msg_size;
-
-  while (curr + 2*olsr_cnf->ipsize <= curr_end) {
-
+  curr = payload;
+  while (curr + 2*olsr_cnf->ipsize <= end) {
     pkt_get_ipaddress(&curr, &prefix.prefix);
     pkt_get_prefixlen(&curr, &prefix.prefix_len);
 
@@ -336,7 +315,7 @@ olsr_input_hna(union olsr_message *msg, struct interface *in_if __attribute__ ((
       /*
        * Only update if it's not from us.
        */
-      olsr_update_hna_entry(&originator, &prefix, vtime, msg_seq);
+      olsr_update_hna_entry(&msg->originator, &prefix, msg->vtime, msg->seqno);
     }
   }
 

@@ -93,6 +93,7 @@ extern FILE *EXPORT(debug_handle);
  * we add an additional cast to (void *) to prevent the warning.
  */
 #define ARM_NOWARN_ALIGN void *
+#define ARM_CONST_NOWARN_ALIGN const void *
 
 #define ROUND_UP_TO_POWER_OF_2(val, pow2) (((val) + (pow2) - 1) & ~((pow2) - 1))
 
