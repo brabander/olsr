@@ -256,7 +256,10 @@ parse_packet(uint8_t *binary, int size, struct interface *in_if, union olsr_ip_a
 
   for (;curr <= end - MIN_MESSAGE_SIZE(); curr += msg.size) {
     const uint8_t *msg_payload = curr;
+    const uint8_t *msg_end;
+
     olsr_parse_msg_hdr(&msg_payload, &msg);
+    msg_end = curr + msg.size;
 
     /* Check size of message */
     if (curr + msg.size > end) {
@@ -298,7 +301,7 @@ parse_packet(uint8_t *binary, int size, struct interface *in_if, union olsr_ip_a
         /* Should be the same for IPv4 and IPv6 */
         /* Promiscuous or exact match */
         if ((entry->type == PROMISCUOUS) || (entry->type == msg.type)) {
-          entry->function(&msg, curr, end, in_if, from_addr, dup_status);
+          entry->function(&msg, msg_payload, msg_end, in_if, from_addr, dup_status);
         }
       }
     }

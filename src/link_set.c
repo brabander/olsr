@@ -887,7 +887,6 @@ generate_hello(void *p) {
 
       /* fix length field of hello block */
       if (linkstart != NULL) {
-        fprintf(stderr, "curr: %zu   linkstart: %zu    size: %u\n", (size_t)curr, (size_t)linkstart, (uint16_t)(curr + 2 - linkstart));
         pkt_put_u16(&linkstart, (uint16_t)(curr + 2 - linkstart));
       }
     }
