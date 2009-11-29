@@ -61,7 +61,7 @@
 
 #define LQ_PLUGIN_RELEVANT_COSTCHANGE_FF 16
 
-static bool lq_etxff_post_init(void);
+static bool lq_etxff_enable(void);
 
 static void lq_etxff_initialize(void);
 static void lq_etxff_deinitialize(void);
@@ -93,7 +93,8 @@ static struct olsr_cookie_info *default_lq_ff_timer_cookie = NULL;
 OLSR_PLUGIN6_NP() {
   .descr = PLUGIN_DESCR,
   .author = PLUGIN_AUTHOR,
-  .post_init = lq_etxff_post_init
+  .enable = lq_etxff_enable,
+  .type = PLUGIN_TYPE_LQ
 };
 
 /* etx lq plugin (freifunk fpm version) settings */
@@ -146,7 +147,7 @@ struct lq_handler lq_etxff_handler = {
   4,4
 };
 
-static bool lq_etxff_post_init(void) {
+static bool lq_etxff_enable(void) {
   active_lq_handler = &lq_etxff_handler;
   return false;
 }

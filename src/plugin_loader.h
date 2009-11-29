@@ -68,6 +68,12 @@ static void hookup_plugin_definition (void) { \
 } \
 static struct olsr_plugin olsr_internal_plugin_definition =
 
+enum plugin_type {
+  PLUGIN_TYPE_ALL = -1,
+  PLUGIN_TYPE_DEFAULT = 0,
+  PLUGIN_TYPE_LQ = 1
+};
+
 /* version 5 */
 typedef int (*plugin_init_func) (void);
 typedef int (*get_interface_version_func) (void);
@@ -81,12 +87,13 @@ struct olsr_plugin {
   const char *descr;
   const char *author;
   bool deactivate;    /* plugin can be deactivated */
+  enum plugin_type type;
 
   /* function pointers */
-  bool (*pre_init) (void);
-  bool (*post_init) (void);
-  bool (*pre_cleanup) (void);
-  bool (*post_cleanup) (void);
+  bool (*init) (void);
+  bool (*enable) (void);
+  bool (*disable) (void);
+  bool (*exit) (void);
   int  (*internal_legacy_init) (void);
 
   /* plugin interface version */
@@ -113,14 +120,16 @@ struct olsr_plugin *EXPORT(olsr_get_plugin)(const char *libname);
 void EXPORT(olsr_hookup_plugin) (struct olsr_plugin *plugin);
 void EXPORT(olsr_unhookup_plugin) (struct olsr_plugin *plugin);
 
-void EXPORT(olsr_init_pluginsystem)(bool);
-void EXPORT(olsr_destroy_pluginsystem)(void);
+void olsr_init_pluginsystem(void);
+void olsr_plugins_init(bool);
+void olsr_plugins_enable(enum plugin_type type, bool fail_fast);
+void olsr_destroy_pluginsystem(void);
 
-struct olsr_plugin *EXPORT(olsr_load_plugin)(const char *);
-bool EXPORT(olsr_unload_plugin)(struct olsr_plugin *);
+struct olsr_plugin *EXPORT(olsr_init_plugin)(const char *);
+bool EXPORT(olsr_exit_plugin)(struct olsr_plugin *);
 
-bool EXPORT(olsr_activate_plugin)(struct olsr_plugin *);
-bool EXPORT(olsr_deactivate_plugin)(struct olsr_plugin *);
+bool EXPORT(olsr_enable_plugin)(struct olsr_plugin *);
+bool EXPORT(olsr_disable_plugin)(struct olsr_plugin *);
 
 extern struct avl_tree EXPORT(plugin_tree);
 

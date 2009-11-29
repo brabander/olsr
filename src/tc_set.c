@@ -704,7 +704,6 @@ olsr_print_tc_table(void)
  * @param pointer to upper border ip
  * @result 1 if lower/upper border ip have been set
  */
-#if 0
 static int
 olsr_calculate_tc_border(uint8_t lower_border,
                          union olsr_ip_addr *lower_border_ip, uint8_t upper_border, union olsr_ip_addr *upper_border_ip)
@@ -740,7 +739,7 @@ olsr_calculate_tc_border(uint8_t lower_border,
   }
   return 1;
 }
-#endif
+
 /*
  * Process an incoming TC or TC_LQ message.
  *
@@ -844,7 +843,7 @@ olsr_input_tc(struct olsr_message * msg, const uint8_t *payload, const uint8_t *
    */
   assert(msg);
   if (borderSet) {
-    // borderSet = olsr_calculate_tc_border(lower_border, &lower_border_ip, upper_border, &upper_border_ip);
+    borderSet = olsr_calculate_tc_border(lower_border, &lower_border_ip, upper_border, &upper_border_ip);
   }
 
   /*

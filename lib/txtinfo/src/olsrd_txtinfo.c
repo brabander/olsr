@@ -70,9 +70,10 @@ struct txtinfo_cmd {
   struct olsr_txtcommand *cmd;
 };
 
-static bool txtinfo_pre_init(void);
-static bool txtinfo_post_init(void);
-static bool txtinfo_pre_cleanup(void);
+static bool txtinfo_init(void);
+static bool txtinfo_enable(void);
+static bool txtinfo_disable(void);
+static bool txtinfo_exit(void);
 
 static enum olsr_txtcommand_result txtinfo_neigh(struct comport_connection *con,
     const char *cmd, const char *param);
@@ -101,9 +102,10 @@ static const struct olsrd_plugin_parameters plugin_parameters[] = {
 OLSR_PLUGIN6(plugin_parameters) {
   .descr = PLUGIN_DESCR,
   .author = PLUGIN_AUTHOR,
-  .pre_init = txtinfo_pre_init,
-  .post_init = txtinfo_post_init,
-  .pre_cleanup = txtinfo_pre_cleanup,
+  .init = txtinfo_init,
+  .enable = txtinfo_enable,
+  .disable = txtinfo_disable,
+  .exit = txtinfo_exit,
   .deactivate = true
 };
 
@@ -214,7 +216,7 @@ static char *values_mid[] = {
  * Constructor of plugin, called before parameters are initialized
  */
 static bool
-txtinfo_pre_init(void)
+txtinfo_init(void)
 {
   ip_acl_init(&allowed_nets);
 
@@ -235,7 +237,7 @@ txtinfo_pre_init(void)
  * Destructor of plugin
  */
 static bool
-txtinfo_pre_cleanup(void)
+txtinfo_disable(void)
 {
   size_t i;
 
@@ -245,7 +247,6 @@ txtinfo_pre_cleanup(void)
   for (i=link_keys_static; i<link_keys_count; i++) {
     free(values_link[i]);
   }
-  ip_acl_flush(&allowed_nets);
   return false;
 }
 
@@ -253,7 +254,7 @@ txtinfo_pre_cleanup(void)
  * Initialization of plugin AFTER parameters have been read
  */
 static bool
-txtinfo_post_init(void)
+txtinfo_enable(void)
 {
   size_t i;
 
@@ -293,6 +294,12 @@ txtinfo_post_init(void)
     commands[i].cmd = olsr_com_add_normal_txtcommand(commands[i].name, commands[i].handler);
     commands[i].cmd->acl = &allowed_nets;
   }
+  return false;
+}
+
+static bool
+txtinfo_exit(void) {
+  ip_acl_flush(&allowed_nets);
   return false;
 }
 

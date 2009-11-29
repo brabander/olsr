@@ -61,9 +61,9 @@
 static void __attribute__ ((constructor)) my_init(void);
 static void __attribute__ ((destructor)) my_fini(void);
 
-static bool obamp_pre_init(void);
-static bool obamp_post_init(void);
-static bool obamp_pre_cleanup(void);
+static bool obamp_init(void);
+static bool obamp_enable(void);
+static bool obamp_disable(void);
 
 static const struct olsrd_plugin_parameters plugin_parameters[] = {
   {.name = "NonOlsrIf",.set_plugin_parameter = &AddObampSniffingIf,.data = NULL},
@@ -71,14 +71,18 @@ static const struct olsrd_plugin_parameters plugin_parameters[] = {
 
 OLSR_PLUGIN6(plugin_parameters)
 {
-.descr = PLUGIN_DESCR,.author = PLUGIN_AUTHOR,.pre_init = obamp_pre_init,.post_init = obamp_post_init,.pre_cleanup =
-    obamp_pre_cleanup,};
+  .descr = PLUGIN_DESCR,
+  .author = PLUGIN_AUTHOR,
+  .init = obamp_init,
+  .enable = obamp_enable,
+  .disable = obamp_disable
+};
 
 /**
  * Constructor of plugin, called before parameters are initialized
  */
 static bool
-obamp_pre_init(void)
+obamp_init(void)
 {
   PreInitOBAMP();
 
@@ -87,7 +91,7 @@ obamp_pre_init(void)
 }
 
 static bool
-obamp_post_init(void)
+obamp_enable(void)
 {
   olsrd_plugin_init();
 
@@ -101,7 +105,7 @@ obamp_post_init(void)
  * Destructor of plugin
  */
 static bool
-obamp_pre_cleanup(void)
+obamp_disable(void)
 {
   //return 0;
   return false;

@@ -232,14 +232,18 @@ main(int argc, char *argv[])
   /* Initialize timers and scheduler part */
   olsr_init_timers();
 
-  /* Initialisation of different tables to be used. */
+  /* initialize plugin system */
+  olsr_init_pluginsystem();
+  olsr_plugins_init(true);
+
+  /* initialisation of different tables to be used. */
   olsr_init_tables();
+
+  /* enable lq-plugins */
+  olsr_plugins_enable(PLUGIN_TYPE_LQ, true);
 
   /* initialize built in server services */
   olsr_com_init(true);
-
-  /* Load plugins */
-  olsr_init_pluginsystem(true);
 
   /* Initialize net */
   init_net();
@@ -407,7 +411,11 @@ main(int argc, char *argv[])
     olsr_start_timer(olsr_cnf->hna_params.emission_interval,
                      HNA_JITTER, OLSR_TIMER_PERIODIC, &generate_hna, NULL, hna_gen_timer_cookie);
 
+  /* enable default plugins */
+  olsr_plugins_enable(PLUGIN_TYPE_DEFAULT, true);
+
   /* Starting scheduler */
+
   app_state = STATE_RUNNING;
   olsr_scheduler();
 
