@@ -276,11 +276,11 @@ static bool parse_http_header(char *message, size_t message_len, struct http_req
   request->method = message;
 
   while(true) {
-    if(message_len < 2) {
-      goto bad_request;
+    if (message_len < 2) {
+      goto unexpected_end;
     }
 
-    if(*message == ' ' && request->http_version == NULL) {
+    if (*message == ' ' && request->http_version == NULL) {
       *message = '\0';
 
       if (request->request_uri == NULL) {
@@ -290,10 +290,10 @@ static bool parse_http_header(char *message, size_t message_len, struct http_req
         request->http_version = &message[1];
       }
     }
-    else if(*message == '\r') {
+    else if (*message == '\r') {
       *message = '\0';
     }
-    else if(*message == '\n') {
+    else if (*message == '\n') {
       *message = '\0';
 
       message++; message_len--;
@@ -303,70 +303,70 @@ static bool parse_http_header(char *message, size_t message_len, struct http_req
     message++; message_len--;
   }
 
-  if(request->http_version == NULL) {
-    goto bad_request;
+  if (request->http_version == NULL) {
+    goto unexpected_end;
   }
 
   for(header_index = 0; true; header_index++) {
-    if(message_len < 1) {
-      goto bad_request;
+    if (message_len < 1) {
+      goto unexpected_end;
     }
 
-    if(*message == '\n') {
+    if (*message == '\n') {
       break;
     }
-    else if(*message == '\r') {
-      if(message_len < 2) return true;
+    else if (*message == '\r') {
+      if (message_len < 2) return true;
 
-      if(message[1] == '\n') {
+      if (message[1] == '\n') {
         break;
       }
     }
 
-    if(header_index >= MAX_HTTP_HEADERS) {
+    if (header_index >= MAX_HTTP_HEADERS) {
       goto too_many_fields;
     }
 
     request->header_name[header_index] = message;
 
     while(true) {
-      if(message_len < 1) {
-        goto bad_request;
+      if (message_len < 1) {
+        goto unexpected_end;
       }
 
-      if(*message == ':') {
+      if (*message == ':') {
         *message = '\0';
 
         message++; message_len--;
         break;
       }
-      else if(*message == ' ' || *message == '\t') {
+      else if (*message == ' ' || *message == '\t') {
         *message = '\0';
       }
-      else if(*message == '\n' || *message == '\r') {
-        goto bad_request;
+      else if (*message == '\n' || *message == '\r') {
+        goto unexpected_end;
       }
 
       message++; message_len--;
     }
 
     while(true) {
-      if(message_len < 1) {
-        goto bad_request;
+      if (message_len < 1) {
+        goto unexpected_end;
       }
 
-      if(request->header_value[header_index] == NULL) {
-        if(*message != ' ' && *message != '\t') {
+      if (request->header_value[header_index] == NULL) {
+        if (*message != ' ' && *message != '\t') {
           request->header_value[header_index] = message;
         }
       }
 
-      if(*message == '\n') {
-        if(message_len < 2) {
-          goto bad_request;
+      if (*message == '\n') {
+        if (message_len < 2) {
+          goto unexpected_end;
         }
 
-        if(message[1] == ' ' || message[1] == '\t') {
+        if (message[1] == ' ' || message[1] == '\t') {
           *message = ' ';
           message[1] = ' ';
 
@@ -376,24 +376,24 @@ static bool parse_http_header(char *message, size_t message_len, struct http_req
 
         *message = '\0';
 
-        if(request->header_value[header_index] == NULL) {
+        if (request->header_value[header_index] == NULL) {
           request->header_value[header_index] = message;
         }
 
         message++; message_len--;
         break;
       }
-      else if(*message == '\r') {
-        if(message_len < 2) {
-          goto bad_request;
+      else if (*message == '\r') {
+        if (message_len < 2) {
+          goto unexpected_end;
         }
 
-        if(message[1] == '\n') {
-          if(message_len < 3) {
-            goto bad_request;
+        if (message[1] == '\n') {
+          if (message_len < 3) {
+            goto unexpected_end;
           }
 
-          if(message[2] == ' ' || message[2] == '\t') {
+          if (message[2] == ' ' || message[2] == '\t') {
             *message = ' ';
             message[1] = ' ';
             message[2] = ' ';
@@ -404,7 +404,7 @@ static bool parse_http_header(char *message, size_t message_len, struct http_req
 
           *message = '\0';
 
-          if(request->header_value[header_index] == NULL) {
+          if (request->header_value[header_index] == NULL) {
             request->header_value[header_index] = message;
           }
 
@@ -424,40 +424,41 @@ too_many_fields:
   OLSR_DEBUG(LOG_COMPORT, "Error, too many HTTP header fields\n");
   return true;
 
-bad_request:
-  OLSR_DEBUG(LOG_COMPORT, "Error, bad HTTP request\n");
+unexpected_end:
+  OLSR_DEBUG(LOG_COMPORT, "Error, unexpected end of HTTP header\n");
   return true;
 }
 
-static size_t parse_query_string(char *ptr, char **name, char **value, size_t max) {
-  size_t count = 0;
-  char *str = NULL;
+static size_t parse_query_string(char *s, char **name, char **value, size_t count) {
+  char *ptr;
+  size_t i = 0;
 
-  assert(ptr);
+  assert(s);
+  assert(name);
+  assert(value);
 
-  /* handle HTTP GET & POST including parameters */
-  while (ptr != NULL && count < max) {
-    /* split the string at the next '=' (the key/value splitter) */
-    str = strchr(ptr, '=');
-    if (!str) {
-      break;
-    }
-    *str++ = 0;
+  while (s != NULL && i < count) {
+    name[i] = s;
 
-    /* we have null terminated key at *para. Now decode the key */
-    name[count] = ptr;
-
-    /* split the string at the next '&' (the splitter of multiple key/value pairs */
-    ptr = strchr(str, '&');
-    if (ptr) {
-      *ptr++ = 0;
+    s = strchr(s, '&');
+    if (s != NULL) {
+      *s++ = '\0';
     }
 
-    /* we have a null terminated value at *str, Now decode it */
-    value[count] = str;
-    count++;
+    ptr = strchr(name[i], '=');
+    if (ptr != NULL) {
+      *ptr++ = '\0';
+      value[i] = ptr;
+    } else {
+      value[i] = &name[i][strlen(name[i])];
+    }
+
+    if(name[i][0] != '\0') {
+      i++;
+    }
   }
-  return count;
+
+  return i;
 }
 
 void olsr_com_parse_http(struct comport_connection *con,
