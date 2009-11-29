@@ -451,7 +451,7 @@ InitMDNS(struct interface *skipThisIntf)
   //Creates captures sockets and register them to the OLSR scheduler
   CreateBmfNetworkInterfaces(skipThisIntf);
 
-  return 0;
+  return 1;
 }                               /* InitMDNS */
 
 /* -------------------------------------------------------------------------

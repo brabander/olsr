@@ -140,27 +140,26 @@ SendOBAMPData(struct in_addr *addr, unsigned char *ipPacket, int nBytes)
 {
 
   struct sockaddr_in si_other;
-  struct OBAMP_data_message4 *data_msg;
-  data_msg = malloc(sizeof(struct OBAMP_data_message4));
+  struct OBAMP_data_message4 data_msg;
 
-  data_msg->MessageID = OBAMP_DATA;
-  data_msg->router_id = (u_int32_t) myState->myipaddr.v4.s_addr;
-  data_msg->last_hop = (u_int32_t) myState->myipaddr.v4.s_addr;
+  memset(&data_msg, 0, sizeof(data_msg));
+  data_msg.MessageID = OBAMP_DATA;
+  data_msg.router_id = (u_int32_t) myState->myipaddr.v4.s_addr;
+  data_msg.last_hop = (u_int32_t) myState->myipaddr.v4.s_addr;
 
-  data_msg->CoreAddress = (u_int32_t) myState->CoreAddress.v4.s_addr;
+  data_msg.CoreAddress = (u_int32_t) myState->CoreAddress.v4.s_addr;
 
-  data_msg->SequenceNumber = myState->DataSequenceNumber;
+  data_msg.SequenceNumber = myState->DataSequenceNumber;
   myState->DataSequenceNumber++;
 
-  if (nBytes < 1471) {
-  memcpy(&data_msg->data, ipPacket, nBytes);
-  } else {
-  OLSR_DEBUG(LOG_PLUGINS, "PACKET DROPPED: %d bytes are too much",nBytes);
-  free(data_msg);
-  return 1;
+  if (nBytes >= 1471) {
+    OLSR_DEBUG(LOG_PLUGINS, "PACKET DROPPED: %d bytes are too much",nBytes);
+    return 1;
   }
 
-  data_msg->datalen = nBytes;
+  memcpy(data_msg.data, ipPacket, nBytes);
+
+  data_msg.datalen = nBytes;
 
   memset((char *)&si_other, 0, sizeof(si_other));
   si_other.sin_family = AF_INET;
@@ -168,8 +167,7 @@ SendOBAMPData(struct in_addr *addr, unsigned char *ipPacket, int nBytes)
   si_other.sin_addr = *addr;
   //sendto(sdudp, data_msg, sizeof(struct OBAMP_data_message), 0, (struct sockaddr *)&si_other, sizeof(si_other));
   //TODO: this 17 magic number is okay only for IPv4, we do not worry about this now
-  sendto(sdudp, data_msg, 17+data_msg->datalen, 0, (struct sockaddr *)&si_other, sizeof(si_other));
-  free(data_msg);
+  sendto(sdudp, &data_msg, 17+data_msg.datalen, 0, (struct sockaddr *)&si_other, sizeof(si_other));
   return 0;
 
 }
@@ -324,15 +322,14 @@ static void
 obamp_hello(struct in_addr *addr)
 {
 
-  struct OBAMP_hello *hello;
+  struct OBAMP_hello hello;
   struct sockaddr_in si_other;
 
-  hello = malloc(sizeof(struct OBAMP_hello));
-
-  hello->MessageID = OBAMP_HELLO;
+  memset(&hello, 0, sizeof(hello));
+  hello.MessageID = OBAMP_HELLO;
   //TODO: refresh IP address
-  hello->router_id = myState->myipaddr;
-  hello->CoreAddress = myState->CoreAddress;
+  hello.router_id = myState->myipaddr;
+  hello.CoreAddress = myState->CoreAddress;
 
   //TODO: implement sequence number
   //hello->HelloSequenceNumber = myState->something;
@@ -342,9 +339,7 @@ obamp_hello(struct in_addr *addr)
   si_other.sin_family = AF_INET;
   si_other.sin_port = htons(OBAMP_SIGNALLING_PORT);
   si_other.sin_addr = *addr;
-  sendto(sdudp, hello, sizeof(struct OBAMP_hello), 0, (struct sockaddr *)&si_other, sizeof(si_other));
-
-  free(hello);
+  sendto(sdudp, &hello, sizeof(struct OBAMP_hello), 0, (struct sockaddr *)&si_other, sizeof(si_other));
 }
 
 //Request a Tree Link
@@ -352,26 +347,23 @@ static void
 tree_link_req(struct in_addr *addr)
 {
 
-  struct OBAMP_tree_link_req *req;
+  struct OBAMP_tree_link_req req;
   struct sockaddr_in si_other;
 
-  req = malloc(sizeof(struct OBAMP_tree_link_req));
-
-  req->MessageID = OBAMP_TREE_REQ;
+  memset(&req, 0, sizeof(req));
+  req.MessageID = OBAMP_TREE_REQ;
   //TODO: refresh IP address
-  req->router_id = myState->myipaddr;
-  req->CoreAddress = myState->CoreAddress;
+  req.router_id = myState->myipaddr;
+  req.CoreAddress = myState->CoreAddress;
 
-  req->SequenceNumber = myState->tree_req_sn;
+  req.SequenceNumber = myState->tree_req_sn;
   myState->tree_req_sn++;
 
   memset((char *)&si_other, 0, sizeof(si_other));
   si_other.sin_family = AF_INET;
   si_other.sin_port = htons(OBAMP_SIGNALLING_PORT);
   si_other.sin_addr = *addr;
-  sendto(sdudp, req, sizeof(struct OBAMP_tree_link_req), 0, (struct sockaddr *)&si_other, sizeof(si_other));
-
-  free(req);
+  sendto(sdudp, &req, sizeof(struct OBAMP_tree_link_req), 0, (struct sockaddr *)&si_other, sizeof(si_other));
 }
 
 static void
@@ -387,7 +379,7 @@ tree_link_ack(struct OBAMP_tree_link_req *req)
   struct ipaddr_str buf;
 #endif
 
-  struct OBAMP_tree_link_ack *ack;
+  struct OBAMP_tree_link_ack ack;
 
   //Check Core Address
   if (memcmp(&myState->CoreAddress.v4, &req->CoreAddress.v4, sizeof(struct in_addr)) != 0) {
@@ -397,13 +389,13 @@ tree_link_ack(struct OBAMP_tree_link_req *req)
   //TODO: other checks ?
 
 
-  ack = malloc(sizeof(struct OBAMP_tree_link_ack));
-  ack->MessageID = OBAMP_TREE_ACK;
+  memset(&ack, 0, sizeof(ack));
+  ack.MessageID = OBAMP_TREE_ACK;
   //TODO: refresh IP address
-  ack->router_id = myState->myipaddr;
-  ack->CoreAddress = myState->CoreAddress;
+  ack.router_id = myState->myipaddr;
+  ack.CoreAddress = myState->CoreAddress;
 
-  ack->SequenceNumber = req->SequenceNumber;
+  ack.SequenceNumber = req->SequenceNumber;
 
   addr = req->router_id.v4;
 
@@ -422,10 +414,7 @@ tree_link_ack(struct OBAMP_tree_link_req *req)
   si_other.sin_family = AF_INET;
   si_other.sin_port = htons(OBAMP_SIGNALLING_PORT);
   si_other.sin_addr = addr;
-  sendto(sdudp, ack, sizeof(struct OBAMP_tree_link_req), 0, (struct sockaddr *)&si_other, sizeof(si_other));
-
-  free(ack);
-
+  sendto(sdudp, &ack, sizeof(struct OBAMP_tree_link_req), 0, (struct sockaddr *)&si_other, sizeof(si_other));
 }
 
 
@@ -447,52 +436,47 @@ tree_create_forward_to(struct in_addr *addr, struct OBAMP_tree_create *mytc)
 {
 
   struct sockaddr_in si_other;
-  struct OBAMP_tree_create *temptc;
+  struct OBAMP_tree_create temptc;
 
-  temptc = malloc(sizeof(struct OBAMP_tree_create));
-  memcpy(temptc, mytc, sizeof(struct OBAMP_tree_create));
+  memset(&temptc, 0, sizeof(temptc));
+  memcpy(&temptc, mytc, sizeof(struct OBAMP_tree_create));
 
   //Check Core Address
-  if (memcmp(&myState->CoreAddress.v4, &temptc->CoreAddress.v4, sizeof(struct in_addr)) != 0) {
+  if (memcmp(&myState->CoreAddress.v4, &temptc.CoreAddress.v4, sizeof(struct in_addr)) != 0) {
     OLSR_DEBUG(LOG_PLUGINS, "Discarding message with no coherent core address");
     return;
   }
   //Update router id
-  temptc->router_id = myState->myipaddr;
+  temptc.router_id = myState->myipaddr;
 
   memset((char *)&si_other, 0, sizeof(si_other));
   si_other.sin_family = AF_INET;
   si_other.sin_port = htons(OBAMP_SIGNALLING_PORT);
   si_other.sin_addr = *addr;
 
-  sendto(sdudp, temptc, sizeof(struct OBAMP_tree_create), 0, (struct sockaddr *)&si_other, sizeof(si_other));
-  free(temptc);
-
+  sendto(sdudp, &temptc, sizeof(struct OBAMP_tree_create), 0, (struct sockaddr *)&si_other, sizeof(si_other));
 }
 
 static void
 tree_create_gen(struct in_addr *addr)
 {
-  struct OBAMP_tree_create *mytc;
+  struct OBAMP_tree_create mytc;
   struct sockaddr_in si_other;
 
   OLSR_DEBUG(LOG_PLUGINS, "Calling tree_create_gen\n");
 
-  mytc = malloc(sizeof(struct OBAMP_tree_create));
-
-  mytc->MessageID = OBAMP_TREECREATE;
-  mytc->router_id = myState->myipaddr;
-  mytc->CoreAddress = myState->CoreAddress;
+  memset(&mytc, 0, sizeof(mytc));
+  mytc.MessageID = OBAMP_TREECREATE;
+  mytc.router_id = myState->myipaddr;
+  mytc.CoreAddress = myState->CoreAddress;
   myState->TreeCreateSequenceNumber++;
-  mytc->SequenceNumber = myState->TreeCreateSequenceNumber;
+  mytc.SequenceNumber = myState->TreeCreateSequenceNumber;
 
   memset((char *)&si_other, 0, sizeof(si_other));
   si_other.sin_family = AF_INET;
   si_other.sin_port = htons(OBAMP_SIGNALLING_PORT);
   si_other.sin_addr = *addr;
-  sendto(sdudp, mytc, sizeof(struct OBAMP_tree_create), 0, (struct sockaddr *)&si_other, sizeof(si_other));
-
-  free(mytc);
+  sendto(sdudp, &mytc, sizeof(struct OBAMP_tree_create), 0, (struct sockaddr *)&si_other, sizeof(si_other));
 }
 
 
@@ -965,26 +949,25 @@ ObampSignalling(int skfd, void *data __attribute__ ((unused)), unsigned int flag
 
   char buffer[1500];
   char text_buffer[300];
-  struct sockaddr_in *addr;
+  struct sockaddr_in addr;
   int n = 0;
   socklen_t len;
   u_int8_t MessageID;
 
-  addr = malloc(sizeof(struct sockaddr_in));
-  memset((void *)addr, 0, sizeof(struct sockaddr_in));
-  len = sizeof(struct sockaddr_in);
+  memset(&addr, 0, sizeof(struct sockaddr_in));
+  len = sizeof(addr);
 
   if (skfd > 0) {
 
     //OLSR_DEBUG(LOG_PLUGINS,"INCOMING OBAMP SIGNALLING");
 
-    n = recvfrom(skfd, buffer, 1500, 0, (struct sockaddr *)addr, &len);
+    n = recvfrom(skfd, buffer, 1500, 0, (struct sockaddr *)&addr, &len);
 
     if (n < 0) {
       OLSR_DEBUG(LOG_PLUGINS, "recvfrom error");
     }
 
-    inet_ntop(AF_INET, &addr->sin_addr, text_buffer, sizeof(text_buffer));
+    inet_ntop(AF_INET, &addr.sin_addr, text_buffer, sizeof(text_buffer));
     //OLSR_DEBUG(LOG_PLUGINS,"Request from host %s, port %d\n", text_buffer, ntohs(addr->sin_port));
 
     MessageID = buffer[0];
@@ -992,7 +975,7 @@ ObampSignalling(int skfd, void *data __attribute__ ((unused)), unsigned int flag
     switch (MessageID) {
 
     case OBAMP_DATA:
-      OLSR_DEBUG(LOG_PLUGINS, "OBAMP Received OBAMP_DATA from host %s, port %d\n", text_buffer, ntohs(addr->sin_port));
+      OLSR_DEBUG(LOG_PLUGINS, "OBAMP Received OBAMP_DATA from host %s, port %d\n", text_buffer, ntohs(addr.sin_port));
 
       if (CheckDupData(buffer)) {
         forward_obamp_data(buffer);
@@ -1002,25 +985,25 @@ ObampSignalling(int skfd, void *data __attribute__ ((unused)), unsigned int flag
       break;
 
     case OBAMP_HELLO:
-      OLSR_DEBUG(LOG_PLUGINS, "OBAMP Received OBAMP_HELLO from host %s, port %d\n", text_buffer, ntohs(addr->sin_port));
+      OLSR_DEBUG(LOG_PLUGINS, "OBAMP Received OBAMP_HELLO from host %s, port %d\n", text_buffer, ntohs(addr.sin_port));
       manage_hello(buffer);
       break;
 
     case OBAMP_TREECREATE:
       //do here
-      OLSR_DEBUG(LOG_PLUGINS, "OBAMP Received OBAMP_TREECREATE from host %s, port %d\n", text_buffer, ntohs(addr->sin_port));
+      OLSR_DEBUG(LOG_PLUGINS, "OBAMP Received OBAMP_TREECREATE from host %s, port %d\n", text_buffer, ntohs(addr.sin_port));
       manage_tree_create(buffer);
 
       break;
 
     case OBAMP_TREE_REQ:
-      OLSR_DEBUG(LOG_PLUGINS, "OBAMP Received OBAMP_TREE_REQ from host %s, port %d\n", text_buffer, ntohs(addr->sin_port));
+      OLSR_DEBUG(LOG_PLUGINS, "OBAMP Received OBAMP_TREE_REQ from host %s, port %d\n", text_buffer, ntohs(addr.sin_port));
       tree_link_ack((struct OBAMP_tree_link_req *)buffer);
       break;
 
     case OBAMP_TREE_ACK:
       //do here
-      OLSR_DEBUG(LOG_PLUGINS, "OBAMP Received OBAMP_TREE_ACK from host %s, port %d\n", text_buffer, ntohs(addr->sin_port));
+      OLSR_DEBUG(LOG_PLUGINS, "OBAMP Received OBAMP_TREE_ACK from host %s, port %d\n", text_buffer, ntohs(addr.sin_port));
       activate_tree_link((struct OBAMP_tree_link_ack *)buffer);
       break;
 
@@ -1047,7 +1030,7 @@ addObampNode4(struct in_addr *ipv4, u_int8_t status)
   struct ObampNode *tmp;
   struct list_head *pos;
 
-  neighbor_to_add = malloc(sizeof(struct ObampNode));
+  neighbor_to_add = olsr_malloc(sizeof(struct ObampNode), "OBAMPNode");
 
 //OLSR_DEBUG(LOG_PLUGINS,"Adding to list node - %s\n",ip4_to_string(&buf,*ipv4));
 
@@ -1158,7 +1141,7 @@ olsr_parser(struct olsr_message *msg, const uint8_t *payload, const uint8_t*end,
 
 //Sends a packet in the OLSR network
 void
-olsr_obamp_gen(unsigned char *packet, int len)
+olsr_obamp_gen(void *packet, int len)
 {
   /* send buffer: huge */
   uint8_t buffer[10240];
@@ -1178,7 +1161,9 @@ olsr_obamp_gen(unsigned char *packet, int len)
   curr = buffer;
   sizeptr = olsr_put_msg_hdr(&curr, &msg);
   memcpy(curr, packet, len);
-  pkt_put_u16(&sizeptr, curr - buffer + len);
+
+  len = curr - buffer + len;
+  pkt_put_u16(&sizeptr, len);
 
   /* looping trough interfaces */
   OLSR_FOR_ALL_INTERFACES(ifn) {
@@ -1439,17 +1424,15 @@ purge_nodes(void *x)
 
 
 void
-obamp_alive_gen(void *x)
+obamp_alive_gen(void *x  __attribute__ ((unused)))
 {
-  struct OBAMP_alive *myAlive;
+  struct OBAMP_alive myAlive;
   OLSR_DEBUG(LOG_PLUGINS, "Calling obamp_alive_gen\n");
-  myAlive = malloc(sizeof(struct OBAMP_alive));
-  myAlive->MessageID = OBAMP_ALIVE;
-  myAlive->status = DoIHaveATreeLink();
-  olsr_obamp_gen((unsigned char *)myAlive, sizeof(struct OBAMP_alive));
-  free(myAlive);
-  x = NULL;
 
+  memset(&myAlive, 0, sizeof(myAlive));
+  myAlive.MessageID = OBAMP_ALIVE;
+  myAlive.status = DoIHaveATreeLink();
+  olsr_obamp_gen(&myAlive, sizeof(struct OBAMP_alive));
 }
 
 
@@ -1579,7 +1562,7 @@ AddObampSniffingIf(const char *ifName,
 
   assert(ifName != NULL);
 
-  ifToAdd = malloc(sizeof(struct ObampSniffingIf));
+  ifToAdd = olsr_malloc(sizeof(struct ObampSniffingIf), "OBAMPSniffingIf");
 
   strncpy(ifToAdd->ifName, ifName, 16); //TODO: 16 fix this
   ifToAdd->ifName[15] = '\0';   /* Ensures null termination */
@@ -1633,7 +1616,7 @@ InitOBAMP(void)
   }
 
 //Setting OBAMP node state
-  myState = malloc(sizeof(struct ObampNodeState));
+  myState = olsr_malloc(sizeof(struct ObampNodeState), "OBAMPNodeState");
   myState->iamcore = 1;
   myState->TreeHeartBeat = 0;
   memcpy(&myState->myipaddr.v4, &olsr_cnf->router_id, olsr_cnf->ipsize);

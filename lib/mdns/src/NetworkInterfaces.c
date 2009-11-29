@@ -190,7 +190,7 @@ CreateInterface(const char *ifName, struct interface *olsrIntf)
   int ioctlSkfd;
   struct ifreq ifr;
   int nOpened = 0;
-  struct TBmfInterface *newIf = malloc(sizeof(struct TBmfInterface));
+  struct TBmfInterface *newIf = olsr_malloc(sizeof(struct TBmfInterface), "TBMFInterface (mdns)");
 
   assert(ifName != NULL);
 

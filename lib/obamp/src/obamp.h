@@ -111,7 +111,7 @@ int InitOBAMP(void);
 int PreInitOBAMP(void);
 void CloseOBAMP(void);
 
-void olsr_obamp_gen(unsigned char *packet, int len);
+void olsr_obamp_gen(void *packet, int len);
 
 void obamp_hello_gen(void *para);
 void obamp_alive_gen(void *para);
