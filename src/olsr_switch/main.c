@@ -129,6 +129,7 @@ ohs_init_new_connection(int s)
 {
   struct ohs_connection *oc;
   int i;
+  uint32_t addr[4];
 
   if (logbits & LOG_CONNECT) {
     printf("ohs_init_new_connection\n");
@@ -152,7 +153,7 @@ ohs_init_new_connection(int s)
   /* Get "fake IP" */
   for (i = 0; i < 20; i++) {
     /* Win32 needs that cast. */
-    if (recv(oc->socket, (void *)&oc->ip_addr, olsr_cnf->ipsize, 0) == (int)olsr_cnf->ipsize) {
+    if (recv(oc->socket, (void *)addr, olsr_cnf->ipsize, 0) == (int)olsr_cnf->ipsize) {
       break;
     }
 #if defined WIN32
@@ -165,6 +166,12 @@ ohs_init_new_connection(int s)
     return -1;
   }
 
+  addr[0] = ntohl(addr[0]);
+  addr[1] = ntohl(addr[1]);
+  addr[2] = ntohl(addr[2]);
+  addr[3] = ntohl(addr[3]);
+  memcpy(oc->ip_addr.v6.s6_addr, addr, olsr_cnf->ipsize);
+  
   if (logbits & LOG_CONNECT) {
     struct ipaddr_str addrstr;
     printf("IP: %s\n", olsr_ip_to_string(&addrstr, &oc->ip_addr));

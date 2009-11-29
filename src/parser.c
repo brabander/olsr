@@ -59,6 +59,7 @@
 #define EWOULDBLOCK WSAEWOULDBLOCK
 #undef errno
 #define errno WSAGetLastError()
+char *StrError(unsigned int ErrNo);
 #undef strerror
 #define strerror(x) StrError(x)
 #endif

@@ -65,6 +65,7 @@
 #endif
 
 #ifdef WIN32
+#include <winbase.h>
 #define close(x) closesocket(x)
 int __stdcall SignalHandler(unsigned long signo) __attribute__ ((noreturn));
 void ListInterfaces(void);
@@ -109,6 +110,23 @@ static char lock_file_name[FILENAME_MAX];
  * locking file.
  */
 static void olsr_create_lock_file(void) {
+#ifdef WIN32
+  HANDLE lck = CreateEvent(NULL, TRUE, FALSE, lock_file_name);
+  if (NULL == lck || ERROR_ALREADY_EXISTS == GetLastError()) {
+    if (NULL == lck) {
+      fprintf(stderr,
+          "Error, cannot create OLSR lock '%s'.\n",
+          lock_file_name);
+    } else {
+      CloseHandle(lck);
+      fprintf(stderr,
+          "Error, cannot aquire OLSR lock '%s'.\n"
+          "Another OLSR instance might be running.\n",
+          lock_file_name);
+    }
+    olsr_exit("", EXIT_FAILURE);
+  }
+#else
   struct flock lck;
 
   /* create file for lock */
@@ -136,6 +154,7 @@ static void olsr_create_lock_file(void) {
         lock_file_name);
     olsr_exit("", EXIT_FAILURE);
   }
+#endif
   return;
 }
 

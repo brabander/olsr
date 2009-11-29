@@ -56,6 +56,12 @@
 #include "olsr_spf.h"
 #include "link_set.h"
 #include "olsr_cookie.h"
+#ifdef WIN32
+/* Need stdlib for rand() */
+#include <stdlib.h>
+#define random() rand()
+#define srandom(x) srand(x)
+#endif
 
 /* Timer data, global. Externed in defs.h */
 uint32_t now_times;                    /* relative time compared to startup (in milliseconds */

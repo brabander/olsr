@@ -60,7 +60,7 @@
 #if defined WINCE
 #define WIDE_STRING(s) L##s
 #else
-#define WIDE_STRING(s) s
+#define WIDE_STRING(s) TEXT(s)
 #endif
 
 void WinSockPError(const char *Str);
@@ -184,7 +184,7 @@ getsocket6(int BuffSize, char *Int __attribute__ ((unused)))
 
   memset(&Addr6, 0, sizeof(Addr6));
   Addr6.sin6_family = AF_INET6;
-  Addr6.sin6_port = htons(OLSRPORT);
+  Addr6.sin6_port = htons(olsr_cnf->olsrport);
   //Addr6.sin6_addr.s_addr = IN6ADDR_ANY_INIT;
   if (bind(Sock, (struct sockaddr *)&Addr6, sizeof(Addr6)) < 0) {
     WinSockPError("getsocket6/bind()");
@@ -201,7 +201,7 @@ int
 enable_ip_forwarding(int Ver)
 {
   HMODULE Lib;
-  unsigned int __stdcall(*EnableRouter) (HANDLE * Hand, OVERLAPPED * Over);
+  unsigned int __stdcall(*enable_router)(HANDLE *, OVERLAPPED *);
   HANDLE Hand;
 
   Ver = Ver;
@@ -211,9 +211,9 @@ enable_ip_forwarding(int Ver)
   if (Lib == NULL)
     return 0;
 
-  EnableRouter = (unsigned int __stdcall(*)(HANDLE *, OVERLAPPED *))GetProcAddress(Lib, WIDE_STRING("EnableRouter"));
+  enable_router = (unsigned int __stdcall(*)(HANDLE *, OVERLAPPED *))GetProcAddress(Lib, WIDE_STRING("EnableRouter"));
 
-  if (EnableRouter == NULL)
+  if (enable_router == NULL)
     return 0;
 
   memset(&RouterOver, 0, sizeof(OVERLAPPED));
@@ -225,7 +225,7 @@ enable_ip_forwarding(int Ver)
     return -1;
   }
 
-  if (EnableRouter(&Hand, &RouterOver) != ERROR_IO_PENDING) {
+  if (enable_router(&Hand, &RouterOver) != ERROR_IO_PENDING) {
     PError("EnableRouter()");
     return -1;
   }
@@ -239,7 +239,7 @@ int
 disable_ip_forwarding(int Ver)
 {
   HMODULE Lib;
-  unsigned int __stdcall(*UnenableRouter) (OVERLAPPED * Over, unsigned int *Count);
+  unsigned int __stdcall(*unenable_router)(OVERLAPPED *, unsigned int *);
   unsigned int Count;
 
   Ver = Ver;
@@ -249,12 +249,12 @@ disable_ip_forwarding(int Ver)
   if (Lib == NULL)
     return 0;
 
-  UnenableRouter = (unsigned int __stdcall(*)(OVERLAPPED *, unsigned int *))GetProcAddress(Lib, WIDE_STRING("UnenableRouter"));
+  unenable_router = (unsigned int __stdcall(*)(OVERLAPPED *, unsigned int *))GetProcAddress(Lib, WIDE_STRING("UnenableRouter"));
 
-  if (UnenableRouter == NULL)
+  if (unenable_router == NULL)
     return 0;
 
-  if (UnenableRouter(&RouterOver, &Count) != NO_ERROR) {
+  if (unenable_router(&RouterOver, &Count) != NO_ERROR) {
     PError("UnenableRouter()");
     return -1;
   }
