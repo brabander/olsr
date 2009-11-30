@@ -348,7 +348,7 @@ restore_settings(int version)
  *@return the FD of the socket or -1 on error.
  */
 int
-getsocket(int bufspace, char *int_name)
+getsocket(int bufspace, struct interface *ifp)
 {
   struct sockaddr_in sin4;
   int on;
@@ -373,14 +373,16 @@ getsocket(int bufspace, char *int_name)
     olsr_exit(EXIT_FAILURE);
   }
 #ifdef SO_RCVBUF
-  for (on = bufspace;; on -= 1024) {
-    if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, &on, sizeof(on)) == 0) {
-      OLSR_DEBUG(LOG_NETWORKING, "Set socket buffer space to %d\n", on);
-      break;
-    }
-    if (on <= 8 * 1024) {
-      OLSR_WARN(LOG_NETWORKING, "Could not set a socket buffer space for OLSR PDUs (%s)\n", strerror(errno));
-      break;
+  if(bufspace > 0) {
+    for (on = bufspace;; on -= 1024) {
+      if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, &on, sizeof(on)) == 0) {
+        OLSR_DEBUG(LOG_NETWORKING, "Set socket buffer space to %d\n", on);
+        break;
+      }
+      if (on <= 8 * 1024) {
+        OLSR_WARN(LOG_NETWORKING, "Could not set a socket buffer space for OLSR PDUs (%s)\n", strerror(errno));
+        break;
+      }
     }
   }
 #endif
@@ -390,7 +392,7 @@ getsocket(int bufspace, char *int_name)
    */
 
   /* Bind to device */
-  if (bind_socket_to_device(sock, int_name) < 0) {
+  if (bind_socket_to_device(sock, ifp->int_name) < 0) {
     OLSR_ERROR(LOG_NETWORKING, "Could not bind socket for OLSR PDUs to device (%s)\n", strerror(errno));
     close(sock);
     olsr_exit(EXIT_FAILURE);
@@ -399,7 +401,13 @@ getsocket(int bufspace, char *int_name)
   memset(&sin4, 0, sizeof(sin4));
   sin4.sin_family = AF_INET;
   sin4.sin_port = htons(olsr_cnf->olsr_port);
-  assert(sin4.sin_addr.s_addr == INADDR_ANY);
+
+  if(bufspace <= 0) {
+    sin4.sin_addr.s_addr = ifp->int_addr.sin_addr.s_addr;
+  }
+  else {
+    assert(sin4.sin_addr.s_addr == INADDR_ANY);
+  }
   if (bind(sock, (struct sockaddr *)&sin4, sizeof(sin4)) < 0) {
     OLSR_ERROR(LOG_NETWORKING, "Coult not bind socket for OLSR PDUs to port (%s)\n", strerror(errno));
     close(sock);
@@ -417,7 +425,7 @@ getsocket(int bufspace, char *int_name)
  *@return the FD of the socket or -1 on error.
  */
 int
-getsocket6(int bufspace, char *int_name)
+getsocket6(int bufspace, struct interface *ifp)
 {
   struct sockaddr_in6 sin6;
   int on;
@@ -447,14 +455,16 @@ getsocket6(int bufspace, char *int_name)
   //#endif
 
 #ifdef SO_RCVBUF
-  for (on = bufspace;; on -= 1024) {
-    if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, &on, sizeof(on)) == 0) {
-      OLSR_DEBUG(LOG_NETWORKING, "Set socket buffer space to %d\n", on);
-      break;
-    }
-    if (on <= 8 * 1024) {
-      OLSR_WARN(LOG_NETWORKING, "Could not set a socket buffer space for OLSR PDUs (%s)\n", strerror(errno));
-      break;
+  if(bufspace > 0) {
+    for (on = bufspace;; on -= 1024) {
+      if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, &on, sizeof(on)) == 0) {
+        OLSR_DEBUG(LOG_NETWORKING, "Set socket buffer space to %d\n", on);
+        break;
+      }
+      if (on <= 8 * 1024) {
+        OLSR_WARN(LOG_NETWORKING, "Could not set a socket buffer space for OLSR PDUs (%s)\n", strerror(errno));
+        break;
+      }
     }
   }
 #endif
@@ -482,8 +492,8 @@ getsocket6(int bufspace, char *int_name)
    */
 
   /* Bind to device */
-  if (bind_socket_to_device(sock, int_name) < 0) {
-    OLSR_ERROR(LOG_NETWORKING, "Cannot bind socket for OLSR PDUs to interface %s (%s)\n", int_name, strerror(errno));
+  if (bind_socket_to_device(sock, ifp->int_name) < 0) {
+    OLSR_ERROR(LOG_NETWORKING, "Cannot bind socket for OLSR PDUs to interface %s (%s)\n", ifp->int_name, strerror(errno));
     close(sock);
     olsr_exit(EXIT_FAILURE);
   }
@@ -491,7 +501,13 @@ getsocket6(int bufspace, char *int_name)
   memset(&sin6, 0, sizeof(sin6));
   sin6.sin6_family = AF_INET6;
   sin6.sin6_port = htons(olsr_cnf->olsr_port);
-  assert(0 == memcmp(&sin6.sin6_addr, &in6addr_any, sizeof(sin6.sin6_addr)));   /* == IN6ADDR_ANY_INIT */
+
+  if(bufspace <= 0) {
+    memcpy(&sin6.sin6_addr, &ifp->int6_addr.sin6_addr, sizeof(struct in6_addr));
+  }
+  else {
+    assert(0 == memcmp(&sin6.sin6_addr, &in6addr_any, sizeof(sin6.sin6_addr)));   /* == IN6ADDR_ANY_INIT */
+  }
   if (bind(sock, (struct sockaddr *)&sin6, sizeof(sin6)) < 0) {
     OLSR_ERROR(LOG_NETWORKING, "Cannot bind socket for OLSR PDUs (%s)\n", strerror(errno));
     close(sock);

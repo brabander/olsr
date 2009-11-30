@@ -136,6 +136,7 @@ struct interface {
   /* IP independent */
   union olsr_ip_addr ip_addr;
   int olsr_socket;                     /* The broadcast socket for this interface */
+  int send_socket;                     /* The send socket for this interface */
   int int_metric;                      /* metric of interface */
   int int_mtu;                         /* MTU of interface */
   int int_flags;                       /* see below */

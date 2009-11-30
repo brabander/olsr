@@ -296,6 +296,7 @@ remove_interface(struct interface **pinterf)
   /* Close olsr socket */
   remove_olsr_socket(ifp->olsr_socket, &olsr_input, NULL);
   CLOSESOCKET(ifp->olsr_socket);
+  CLOSESOCKET(ifp->send_socket);
   ifp->olsr_socket = -1;
 
 //  free(ifp->int_name);

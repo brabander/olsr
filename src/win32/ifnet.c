@@ -706,6 +706,7 @@ chk_if_up(struct olsr_if_config *IntConf)
   OLSR_INFO(LOG_NETWORKING, "\tKernel index: %08x\n", New->if_index);
 
   New->olsr_socket = getsocket(BUFSPACE, New->int_name);
+  New->send_socket = getsocket(0, New->int_name);
 
   if (New->olsr_socket < 0) {
     OLSR_ERROR(LOG_NETWORKING, "Could not initialize socket... exiting!\n\n");

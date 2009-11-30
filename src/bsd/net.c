@@ -294,7 +294,7 @@ restore_settings(int version)
 
 
 int
-getsocket(int bufspace, char *int_name __attribute__ ((unused)))
+getsocket(int bufspace, struct interface *ifp __attribute__ ((unused)))
 {
   struct sockaddr_in sin4;
   int on;
@@ -329,21 +329,29 @@ getsocket(int bufspace, char *int_name __attribute__ ((unused)))
     olsr_exit(EXIT_FAILURE);
   }
 
-  for (on = bufspace;; on -= 1024) {
-    if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, (char *)&on, sizeof(on)) == 0) {
-      OLSR_DEBUG(LOG_NETWORKING, "Set socket buffer space to %d\n", on);
-      break;
-    }
-    if (on <= 8 * 1024) {
-      OLSR_WARN(LOG_NETWORKING, "Could not set a socket buffer space for OLSR PDUs (%s)\n", strerror(errno));
-      break;
+  if (bufspace > 0) {
+    for (on = bufspace;; on -= 1024) {
+      if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, (char *)&on, sizeof(on)) == 0) {
+        OLSR_DEBUG(LOG_NETWORKING, "Set socket buffer space to %d\n", on);
+        break;
+      }
+      if (on <= 8 * 1024) {
+        OLSR_WARN(LOG_NETWORKING, "Could not set a socket buffer space for OLSR PDUs (%s)\n", strerror(errno));
+        break;
+      }
     }
   }
-
   memset(&sin4, 0, sizeof(sin4));
   sin4.sin_family = AF_INET;
   sin4.sin_port = htons(OLSRPORT);
-  sin4.sin_addr.s_addr = INADDR_ANY;
+
+  if(bufspace <= 0) {
+    sin.sin_addr.s_addr = ifp->int_addr.sin_addr.s_addr;
+  }
+  else {
+    sin4.sin_addr.s_addr = INADDR_ANY;
+  }
+
   if (bind(sock, (struct sockaddr *)&sin4, sizeof(sin4)) < 0) {
     OLSR_ERROR(LOG_NETWORKING, "Coult not bind socket for OLSR PDUs to port (%s)\n", strerror(errno));
     close(sock);
@@ -355,7 +363,7 @@ getsocket(int bufspace, char *int_name __attribute__ ((unused)))
 }
 
 int
-getsocket6(int bufspace, char *int_name __attribute__ ((unused)))
+getsocket6(int bufspace, struct interface *ifp __attribute__ ((unused)))
 {
   struct sockaddr_in6 sin6;
   int on;
@@ -366,14 +374,16 @@ getsocket6(int bufspace, char *int_name __attribute__ ((unused)))
     olsr_exit(EXIT_FAILURE);
   }
 
-  for (on = bufspace;; on -= 1024) {
-    if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, (char *)&on, sizeof(on)) == 0) {
-      OLSR_DEBUG(LOG_NETWORKING, "Set socket buffer space to %d\n", on);
-      break;
-    }
-    if (on <= 8 * 1024) {
-      OLSR_WARN(LOG_NETWORKING, "Could not set a socket buffer space for OLSR PDUs (%s)\n", strerror(errno));
-      break;
+  if (bufspace > 0) {
+    for (on = bufspace;; on -= 1024) {
+      if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, (char *)&on, sizeof(on)) == 0) {
+        OLSR_DEBUG(LOG_NETWORKING, "Set socket buffer space to %d\n", on);
+        break;
+      }
+      if (on <= 8 * 1024) {
+        OLSR_WARN(LOG_NETWORKING, "Could not set a socket buffer space for OLSR PDUs (%s)\n", strerror(errno));
+        break;
+      }
     }
   }
 
@@ -405,6 +415,11 @@ getsocket6(int bufspace, char *int_name __attribute__ ((unused)))
   memset(&sin6, 0, sizeof(sin6));
   sin6.sin6_family = AF_INET6;
   sin6.sin6_port = htons(OLSRPORT);
+
+  if(bufspace <= 0) {
+    memcpy(&sin.sin6_addr, &ifp->int6_addr.sin6_addr, sizeof(struct in6_addr));
+  }
+
   if (bind(sock, (struct sockaddr *)&sin6, sizeof(sin6)) < 0) {
     OLSR_ERROR(LOG_NETWORKING, "Coult not bind socket for OLSR PDUs to port (%s)\n", strerror(errno));
     close(sock);
