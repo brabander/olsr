@@ -557,8 +557,10 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
   }
 
   /* OLSR sockets */
-  for (ifn = ifnet; ifn; ifn = ifn->int_next)
+  for (ifn = ifnet; ifn; ifn = ifn->int_next) {
     close(ifn->olsr_socket);
+    close(ifn->send_socket);
+  }
 
   /* Closing plug-ins */
   olsr_close_plugins();

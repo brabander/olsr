@@ -135,6 +135,7 @@ struct interface {
   int is_hcif;                         /* Is this a emulated host-client if? */
 
   int olsr_socket;                     /* The broadcast socket for this interface */
+  int send_socket;                     /* The send socket for this interface */
 
   int int_metric;                      /* metric of interface */
   int int_mtu;                         /* MTU of interface */

@@ -824,7 +824,8 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__ ((unused)))
      *on what interface the message is transmitted
      */
 
-    ifp->olsr_socket = getsocket(BUFSPACE, ifp->int_name);
+    ifp->olsr_socket = getsocket(BUFSPACE, ifp);
+    ifp->send_socket = getsocket(0, ifp);
 
     if (ifp->olsr_socket < 0) {
       fprintf(stderr, "Could not initialize socket... exiting!\n\n");
@@ -843,7 +844,8 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__ ((unused)))
      *on what interface the message is transmitted
      */
 
-    ifp->olsr_socket = getsocket6(BUFSPACE, ifp->int_name);
+    ifp->olsr_socket = getsocket6(BUFSPACE, ifp);
+    ifp->send_socket = getsocket6(0, ifp);
 
     join_mcast(ifp, ifp->olsr_socket);
 

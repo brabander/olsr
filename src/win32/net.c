@@ -97,7 +97,7 @@ gethemusocket(struct sockaddr_in *pin)
 }
 
 int
-getsocket(int BuffSize, char *Int __attribute__ ((unused)))
+getsocket(int BuffSize, struct interface *ifp __attribute__ ((unused)))
 {
   struct sockaddr_in Addr;
   int On = 1;
@@ -133,7 +133,11 @@ getsocket(int BuffSize, char *Int __attribute__ ((unused)))
   memset(&Addr, 0, sizeof(Addr));
   Addr.sin_family = AF_INET;
   Addr.sin_port = htons(olsr_cnf->olsrport);
-  Addr.sin_addr.s_addr = INADDR_ANY;
+
+  if(bufspace <= 0) {
+    sin.sin_addr.s_addr = ifp->int_addr.sin_addr.s_addr;
+  }
+
   if (bind(Sock, (struct sockaddr *)&Addr, sizeof(Addr)) < 0) {
     WinSockPError("getsocket/bind()");
     closesocket(Sock);
@@ -150,7 +154,7 @@ getsocket(int BuffSize, char *Int __attribute__ ((unused)))
 }
 
 int
-getsocket6(int BuffSize, char *Int __attribute__ ((unused)))
+getsocket6(int BuffSize, struct interface *ifp __attribute__ ((unused)))
 {
   struct sockaddr_in6 Addr6;
   int On = 1;
@@ -185,7 +189,11 @@ getsocket6(int BuffSize, char *Int __attribute__ ((unused)))
   memset(&Addr6, 0, sizeof(Addr6));
   Addr6.sin6_family = AF_INET6;
   Addr6.sin6_port = htons(olsr_cnf->olsrport);
-  //Addr6.sin6_addr.s_addr = IN6ADDR_ANY_INIT;
+
+  if(bufspace <= 0) {
+    memcpy(&Addr6.sin6_addr, &ifp->int6_addr.sin6_addr, sizeof(struct in6_addr));
+  }
+
   if (bind(Sock, (struct sockaddr *)&Addr6, sizeof(Addr6)) < 0) {
     WinSockPError("getsocket6/bind()");
     closesocket(Sock);

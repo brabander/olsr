@@ -329,7 +329,7 @@ gethemusocket(struct sockaddr_in *pin)
 }
 
 int
-getsocket(int bufspace, char *int_name __attribute__ ((unused)))
+getsocket(int bufspace, struct interface *ifp __attribute__ ((unused)))
 {
   struct sockaddr_in sin;
   int on;
@@ -366,20 +366,26 @@ getsocket(int bufspace, char *int_name __attribute__ ((unused)))
     return -1;
   }
 
-  for (on = bufspace;; on -= 1024) {
-    if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, (char *)&on, sizeof(on)) == 0)
-      break;
-    if (on <= 8 * 1024) {
-      perror("setsockopt");
-      syslog(LOG_ERR, "setsockopt SO_RCVBUF: %m");
-      break;
+  if(bufspace > 0) {
+    for (on = bufspace;; on -= 1024) {
+      if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, (char *)&on, sizeof(on)) == 0)
+        break;
+      if (on <= 8 * 1024) {
+        perror("setsockopt");
+        syslog(LOG_ERR, "setsockopt SO_RCVBUF: %m");
+        break;
+      }
     }
   }
 
   memset(&sin, 0, sizeof(sin));
   sin.sin_family = AF_INET;
   sin.sin_port = htons(olsr_cnf->olsrport);
-  sin.sin_addr.s_addr = INADDR_ANY;
+
+  if(bufspace <= 0) {
+    sin.sin_addr.s_addr = ifp->int_addr.sin_addr.s_addr;
+  }
+
   if (bind(sock, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
     perror("bind");
     syslog(LOG_ERR, "bind: %m");
@@ -399,7 +405,7 @@ getsocket(int bufspace, char *int_name __attribute__ ((unused)))
 }
 
 int
-getsocket6(int bufspace, char *int_name __attribute__ ((unused)))
+getsocket6(int bufspace, struct interface *ifp __attribute__ ((unused)))
 {
   struct sockaddr_in6 sin;
   int on;
@@ -411,13 +417,15 @@ getsocket6(int bufspace, char *int_name __attribute__ ((unused)))
     return -1;
   }
 
-  for (on = bufspace;; on -= 1024) {
-    if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, (char *)&on, sizeof(on)) == 0)
-      break;
-    if (on <= 8 * 1024) {
-      perror("setsockopt");
-      syslog(LOG_ERR, "setsockopt SO_RCVBUF: %m");
-      break;
+  if(bufspace > 0) {
+    for (on = bufspace;; on -= 1024) {
+      if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, (char *)&on, sizeof(on)) == 0)
+        break;
+      if (on <= 8 * 1024) {
+        perror("setsockopt");
+        syslog(LOG_ERR, "setsockopt SO_RCVBUF: %m");
+        break;
+      }
     }
   }
 
@@ -449,6 +457,11 @@ getsocket6(int bufspace, char *int_name __attribute__ ((unused)))
   memset(&sin, 0, sizeof(sin));
   sin.sin6_family = AF_INET6;
   sin.sin6_port = htons(olsr_cnf->olsrport);
+
+  if(bufspace <= 0) {
+    memcpy(&sin.sin6_addr, &ifp->int6_addr.sin6_addr, sizeof(struct in6_addr));
+  }
+
   if (bind(sock, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
     perror("bind");
     syslog(LOG_ERR, "bind: %m");

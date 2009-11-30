@@ -379,7 +379,7 @@ gethemusocket(struct sockaddr_in *pin)
  *@return the FD of the socket or -1 on error.
  */
 int
-getsocket(int bufspace, char *int_name)
+getsocket(int bufspace, struct interface *ifp)
 {
   struct sockaddr_in sin;
   int on;
@@ -406,13 +406,15 @@ getsocket(int bufspace, char *int_name)
     return -1;
   }
 #ifdef SO_RCVBUF
-  for (on = bufspace;; on -= 1024) {
-    if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, &on, sizeof(on)) == 0)
-      break;
-    if (on <= 8 * 1024) {
-      perror("setsockopt");
-      syslog(LOG_ERR, "setsockopt SO_RCVBUF: %m");
-      break;
+  if(bufspace > 0) {
+    for (on = bufspace;; on -= 1024) {
+      if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, &on, sizeof(on)) == 0)
+        break;
+      if (on <= 8 * 1024) {
+        perror("setsockopt");
+        syslog(LOG_ERR, "setsockopt SO_RCVBUF: %m");
+        break;
+      }
     }
   }
 #endif
@@ -422,7 +424,7 @@ getsocket(int bufspace, char *int_name)
    */
 
   /* Bind to device */
-  if (bind_socket_to_device(sock, int_name) < 0) {
+  if (bind_socket_to_device(sock, ifp->int_name) < 0) {
     fprintf(stderr, "Could not bind socket to device... exiting!\n\n");
     syslog(LOG_ERR, "Could not bind socket to device... exiting!\n\n");
     close(sock);
@@ -432,7 +434,11 @@ getsocket(int bufspace, char *int_name)
   memset(&sin, 0, sizeof(sin));
   sin.sin_family = AF_INET;
   sin.sin_port = htons(olsr_cnf->olsrport);
-  sin.sin_addr.s_addr = INADDR_ANY;
+
+  if(bufspace <= 0) {
+    sin.sin_addr.s_addr = ifp->int_addr.sin_addr.s_addr;
+  }
+
   if (bind(sock, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
     perror("bind");
     syslog(LOG_ERR, "bind: %m");
@@ -457,7 +463,7 @@ getsocket(int bufspace, char *int_name)
  *@return the FD of the socket or -1 on error.
  */
 int
-getsocket6(int bufspace, char *int_name)
+getsocket6(int bufspace, struct interface *ifp)
 {
   struct sockaddr_in6 sin;
   int on;
@@ -488,13 +494,15 @@ getsocket6(int bufspace, char *int_name)
   //#endif
 
 #ifdef SO_RCVBUF
-  for (on = bufspace;; on -= 1024) {
-    if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, &on, sizeof(on)) == 0)
-      break;
-    if (on <= 8 * 1024) {
-      perror("setsockopt");
-      syslog(LOG_ERR, "setsockopt SO_RCVBUF: %m");
-      break;
+  if(bufspace > 0) {
+    for (on = bufspace;; on -= 1024) {
+      if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, &on, sizeof(on)) == 0)
+        break;
+      if (on <= 8 * 1024) {
+        perror("setsockopt");
+        syslog(LOG_ERR, "setsockopt SO_RCVBUF: %m");
+        break;
+      }
     }
   }
 #endif
@@ -510,7 +518,7 @@ getsocket6(int bufspace, char *int_name)
    */
 
   /* Bind to device */
-  if (bind_socket_to_device(sock, int_name) < 0) {
+  if (bind_socket_to_device(sock, ifp->int_name) < 0) {
     fprintf(stderr, "Could not bind socket to device... exiting!\n\n");
     syslog(LOG_ERR, "Could not bind socket to device... exiting!\n\n");
     close(sock);
@@ -520,7 +528,11 @@ getsocket6(int bufspace, char *int_name)
   memset(&sin, 0, sizeof(sin));
   sin.sin6_family = AF_INET6;
   sin.sin6_port = htons(olsr_cnf->olsrport);
-  //(addrsock6.sin6_addr).s_addr = IN6ADDR_ANY_INIT;
+
+  if(bufspace <= 0) {
+    memcpy(&sin.sin6_addr, &ifp->int6_addr.sin6_addr, sizeof(struct in6_addr));
+  }
+
   if (bind(sock, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
     perror("bind");
     syslog(LOG_ERR, "bind: %m");
