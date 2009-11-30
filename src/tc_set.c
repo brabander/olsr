@@ -752,7 +752,7 @@ olsr_calculate_tc_border(uint8_t lower_border,
  */
 
 void
-olsr_input_tc(struct olsr_message * msg, const uint8_t *payload, const uint8_t *end,
+olsr_input_tc(struct olsr_message * msg,
     struct interface * input_if __attribute__ ((unused)),
     union olsr_ip_addr * from_addr, enum duplicate_status status)
 {
@@ -782,7 +782,7 @@ olsr_input_tc(struct olsr_message * msg, const uint8_t *payload, const uint8_t *
     return;
   }
 
-  curr = payload;
+  curr = msg->payload;
   pkt_get_u16(&curr, &ansn);
 
   /* Get borders */
@@ -822,7 +822,7 @@ olsr_input_tc(struct olsr_message * msg, const uint8_t *payload, const uint8_t *
 
   borderSet = 0;
   relevantTc = false;
-  while (curr + olsr_cnf->ipsize + olsr_sizeof_TCLQ() <= end) {
+  while (curr + olsr_cnf->ipsize + olsr_sizeof_TCLQ() <= msg->end) {
     if (olsr_tc_update_edge(tc, ansn, &curr, &upper_border_ip)) {
       relevantTc = true;
     }

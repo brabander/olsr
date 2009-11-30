@@ -63,8 +63,7 @@ AVLNODE2STRUCT(hna_tc_tree2hna, hna_net, hna_tc_node)
 #define OLSR_FOR_ALL_TC_HNA_ENTRIES_END() OLSR_FOR_ALL_AVL_ENTRIES_END()
 
 /* HNA msg input parser */
-void olsr_input_hna(struct olsr_message *, const uint8_t *, const uint8_t *,
-    struct interface *, union olsr_ip_addr *, enum duplicate_status);
+void olsr_input_hna(struct olsr_message *, struct interface *, union olsr_ip_addr *, enum duplicate_status);
 
 void olsr_init_hna_set(void);
 void olsr_flush_hna_nets(struct tc_entry *tc);

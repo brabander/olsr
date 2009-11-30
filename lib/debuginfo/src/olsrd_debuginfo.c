@@ -83,7 +83,7 @@ static enum olsr_txtcommand_result debuginfo_cookies(struct comport_connection *
     const char *cmd, const char *param);
 
 static void update_statistics_ptr(void *);
-static void olsr_msg_statistics(struct olsr_message *, const uint8_t *, const uint8_t *,
+static void olsr_msg_statistics(struct olsr_message *,
     struct interface *, union olsr_ip_addr *, enum duplicate_status);
 static uint8_t *olsr_packet_statistics(uint8_t *binary,
     struct interface *interface, union olsr_ip_addr *ip, int *length);
@@ -312,7 +312,6 @@ update_statistics_ptr(void *data __attribute__ ((unused)))
 /* update message statistics */
 static void
 olsr_msg_statistics(struct olsr_message *msg,
-    const uint8_t *payload  __attribute__ ((unused)), const uint8_t *end  __attribute__ ((unused)),
     struct interface *input_if __attribute__ ((unused)),
     union olsr_ip_addr *from_addr __attribute__ ((unused)), enum duplicate_status status  __attribute__ ((unused)))
 {

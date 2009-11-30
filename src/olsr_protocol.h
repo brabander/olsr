@@ -334,6 +334,11 @@ struct olsr_message {
   uint8_t ttl;
   uint8_t hopcnt;
   uint16_t seqno;
+
+  /* pointer to original data, they are initialized by the header_read function */
+  const uint8_t *header;
+  const uint8_t *payload;
+  const uint8_t *end;
 };
 
 /*

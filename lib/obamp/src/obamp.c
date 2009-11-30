@@ -1115,7 +1115,7 @@ PacketReceivedFromOLSR(union olsr_ip_addr *originator, const uint8_t *obamp_mess
 
 //OLSR parser, received OBAMP messages
 void
-olsr_parser(struct olsr_message *msg, const uint8_t *payload, const uint8_t*end, struct interface *in_if
+olsr_parser(struct olsr_message *msg, struct interface *in_if
             __attribute__ ((unused)), union olsr_ip_addr *ipaddr, enum duplicate_status status __attribute__ ((unused)))
 {
   //OLSR_DEBUG(LOG_PLUGINS, "OBAMP PLUGIN: Received msg in parser\n");
@@ -1136,7 +1136,7 @@ olsr_parser(struct olsr_message *msg, const uint8_t *payload, const uint8_t*end,
     return;
   }
 
-  PacketReceivedFromOLSR(&msg->originator, payload, end - payload);
+  PacketReceivedFromOLSR(&msg->originator, msg->payload, msg->end - msg->payload);
 }
 
 //Sends a packet in the OLSR network

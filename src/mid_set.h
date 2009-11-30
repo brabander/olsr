@@ -69,8 +69,7 @@ AVLNODE2STRUCT(alias_tree2mid, mid_entry, mid_tc_node);
 extern struct avl_tree mid_tree;
 
 /* MID msg input parser */
-void olsr_input_mid(struct olsr_message *, const uint8_t *payload, const uint8_t *end,
-    struct interface *, union olsr_ip_addr *, enum duplicate_status);
+void olsr_input_mid(struct olsr_message *, struct interface *, union olsr_ip_addr *, enum duplicate_status);
 
 void olsr_init_mid_set(void);
 void olsr_delete_mid_entry(struct mid_entry *);

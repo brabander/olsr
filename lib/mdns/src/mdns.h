@@ -84,8 +84,7 @@ void CloseMDNS(void);
 void olsr_mdns_gen(unsigned char *packet, int len);
 
 /* Parser function to register with the scheduler */
-void olsr_parser(struct olsr_message *, const uint8_t *, const uint8_t *,
-    struct interface *, union olsr_ip_addr *, enum duplicate_status);
+void olsr_parser(struct olsr_message *, struct interface *, union olsr_ip_addr *, enum duplicate_status);
 
 #endif /* _MDNS_MDNS_H */
 

@@ -52,8 +52,7 @@
 #define MIN_MESSAGE_SIZE()	((int)(8 + olsr_cnf->ipsize))
 
 /* Function returns false if the message should not be forwarded */
-typedef void parse_function(struct olsr_message *, const uint8_t *payload, const uint8_t *end,
-    struct interface *, union olsr_ip_addr *, enum duplicate_status);
+typedef void parse_function(struct olsr_message *, struct interface *, union olsr_ip_addr *, enum duplicate_status);
 
 struct parse_function_entry {
   uint32_t type;                       /* If set to PROMISCUOUS all messages will be received */

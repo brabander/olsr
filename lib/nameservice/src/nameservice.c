@@ -658,8 +658,7 @@ olsr_namesvc_gen(void *foo __attribute__ ((unused)))
  * Parse name olsr message of NAME type
  */
 void
-olsr_parser(struct olsr_message *msg, const uint8_t *payload, const uint8_t *end,
-    struct interface *in_if __attribute__ ((unused)),
+olsr_parser(struct olsr_message *msg, struct interface *in_if __attribute__ ((unused)),
     union olsr_ip_addr *ipaddr, enum duplicate_status status __attribute__ ((unused)))
 {
   const struct namemsg *namemessage;
@@ -677,8 +676,8 @@ olsr_parser(struct olsr_message *msg, const uint8_t *payload, const uint8_t *end
     return;
   }
 
-  namemessage = (const struct namemsg *)(ARM_CONST_NOWARN_ALIGN)payload;
-  update_name_entry(&msg->originator, namemessage, end, msg->vtime);
+  namemessage = (const struct namemsg *)(ARM_CONST_NOWARN_ALIGN)msg->payload;
+  update_name_entry(&msg->originator, namemessage, msg->end, msg->vtime);
 }
 
 /**

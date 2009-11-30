@@ -48,7 +48,7 @@
 #include "parser.h"
 #include "olsr_logging.h"
 
-static void olsr_input_hello(struct olsr_message *msg, const uint8_t *payload, const uint8_t *end,
+static void olsr_input_hello(struct olsr_message *msg,
     struct interface *, union olsr_ip_addr *, enum duplicate_status);
 
 static void process_message_neighbors(struct nbr_entry *, const struct lq_hello_message *);
@@ -205,9 +205,9 @@ olsr_deinit_package_process(void)
 }
 
 static bool
-deserialize_hello(struct lq_hello_message *hello, struct olsr_message *msg, const uint8_t *payload, const uint8_t *end)
+deserialize_hello(struct lq_hello_message *hello, struct olsr_message *msg)
 {
-  const uint8_t *curr = payload;
+  const uint8_t *curr = msg->payload;
   hello->comm = msg;
 
   /* parse HELLO specific header */
@@ -216,7 +216,7 @@ deserialize_hello(struct lq_hello_message *hello, struct olsr_message *msg, cons
   pkt_get_u8(&curr, &hello->will);
 
   hello->neigh = NULL;
-  while (curr < end) {
+  while (curr < msg->end) {
     const uint8_t *ptr, *limit2;
     uint8_t link_code;
     uint16_t size;
@@ -323,12 +323,11 @@ hello_tap(struct lq_hello_message *message, struct interface *in_if, const union
 }
 
 static void
-olsr_input_hello(struct olsr_message *msg, const uint8_t *payload, const uint8_t *end,
-    struct interface *inif, union olsr_ip_addr *from,
+olsr_input_hello(struct olsr_message *msg, struct interface *inif, union olsr_ip_addr *from,
     enum duplicate_status status __attribute__ ((unused)))
 {
   struct lq_hello_message hello;
-  if (!deserialize_hello(&hello, msg, payload, end)) {
+  if (!deserialize_hello(&hello, msg)) {
     hello_tap(&hello, inif, from);
   }
 }

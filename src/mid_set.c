@@ -471,7 +471,7 @@ olsr_print_mid_set(void)
  * Process an incoming MID message.
  */
 void
-olsr_input_mid(struct olsr_message *msg, const uint8_t *payload, const uint8_t *end,
+olsr_input_mid(struct olsr_message *msg,
     struct interface *input_if __attribute__ ((unused)),
     union olsr_ip_addr *from_addr, enum duplicate_status status)
 {
@@ -508,16 +508,16 @@ olsr_input_mid(struct olsr_message *msg, const uint8_t *payload, const uint8_t *
   tc->mid_seq = msg->seqno;
 
   OLSR_DEBUG(LOG_MID, "Processing MID from %s with %d aliases, seq 0x%04x\n",
-             olsr_ip_to_string(&buf, &msg->originator), (int)((end - payload)/olsr_cnf->ipsize), msg->seqno);
+             olsr_ip_to_string(&buf, &msg->originator), (int)((msg->end - msg->payload)/olsr_cnf->ipsize), msg->seqno);
 
 
-  curr = payload;
+  curr = msg->payload;
 
 
   /*
    * Now walk the list of alias advertisements one by one.
    */
-  while (curr + olsr_cnf->ipsize <= end) {
+  while (curr + olsr_cnf->ipsize <= msg->end) {
     pkt_get_ipaddress(&curr, &alias);
     olsr_update_mid_entry(&msg->originator, &alias, msg->vtime, msg->seqno);
   }

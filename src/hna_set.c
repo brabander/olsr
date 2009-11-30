@@ -267,7 +267,7 @@ olsr_prune_hna_entries(struct tc_entry *tc)
  * Forwards the message if that is to be done.
  */
 void
-olsr_input_hna(struct olsr_message *msg, const uint8_t *payload, const uint8_t *end,
+olsr_input_hna(struct olsr_message *msg,
     struct interface *in_if __attribute__ ((unused)),
     union olsr_ip_addr *from_addr, enum duplicate_status status)
 {
@@ -306,8 +306,8 @@ olsr_input_hna(struct olsr_message *msg, const uint8_t *payload, const uint8_t *
   /*
    * Now walk the list of HNA advertisements.
    */
-  curr = payload;
-  while (curr + 2*olsr_cnf->ipsize <= end) {
+  curr = msg->payload;
+  while (curr + 2*olsr_cnf->ipsize <= msg->end) {
     pkt_get_ipaddress(&curr, &prefix.prefix);
     pkt_get_prefixlen(&curr, &prefix.prefix_len);
 

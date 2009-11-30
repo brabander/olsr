@@ -154,7 +154,6 @@ PacketReceivedFromOLSR(const uint8_t *encapsulationUdpData, int len)
 
 void
 olsr_parser(struct olsr_message *msg,
-    const uint8_t *payload, const uint8_t *end,
     struct interface *in_if __attribute__ ((unused)),
     union olsr_ip_addr *ipaddr, enum duplicate_status status __attribute__ ((unused)))
 {
@@ -172,7 +171,7 @@ olsr_parser(struct olsr_message *msg,
     return;
   }
 
-  PacketReceivedFromOLSR(payload, end - payload);
+  PacketReceivedFromOLSR(msg->payload, msg->end - msg->payload);
 }
 
 //Sends a packet in the OLSR network

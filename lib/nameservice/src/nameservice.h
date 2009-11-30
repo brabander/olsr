@@ -129,8 +129,7 @@ void olsr_expire_write_file_timer(void *);
 void olsr_namesvc_delete_db_entry(struct db_entry *);
 
 /* Parser function to register with the sceduler */
-void olsr_parser(struct olsr_message *, const uint8_t *, const uint8_t *,
-    struct interface *, union olsr_ip_addr *, enum duplicate_status);
+void olsr_parser(struct olsr_message *, struct interface *, union olsr_ip_addr *, enum duplicate_status);
 
 /* callback for periodic timer */
 void olsr_namesvc_gen(void *);
