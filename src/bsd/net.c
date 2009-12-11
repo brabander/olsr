@@ -346,7 +346,7 @@ getsocket(int bufspace, struct interface *ifp __attribute__ ((unused)))
   sin4.sin_port = htons(OLSRPORT);
 
   if(bufspace <= 0) {
-    sin.sin_addr.s_addr = ifp->int_addr.sin_addr.s_addr;
+    sin4.sin_addr.s_addr = ifp->int_addr.sin_addr.s_addr;
   }
   else {
     sin4.sin_addr.s_addr = INADDR_ANY;
@@ -417,7 +417,7 @@ getsocket6(int bufspace, struct interface *ifp __attribute__ ((unused)))
   sin6.sin6_port = htons(OLSRPORT);
 
   if(bufspace <= 0) {
-    memcpy(&sin.sin6_addr, &ifp->int6_addr.sin6_addr, sizeof(struct in6_addr));
+    memcpy(&sin6.sin6_addr, &ifp->int6_addr.sin6_addr, sizeof(struct in6_addr));
   }
 
   if (bind(sock, (struct sockaddr *)&sin6, sizeof(sin6)) < 0) {
@@ -511,7 +511,7 @@ get_ipv6_address(char *ifname, struct sockaddr_in6 *saddr6, int addrtype6)
         break;
       }
       ifr6.ifr_addr = *sin6;
-      if (ioctl(s6, SIOCGIFAFLAG_IN6, (int)&ifr6) < 0) {
+      if (ioctl(s6, SIOCGIFAFLAG_IN6, &ifr6) < 0) {
         OLSR_WARN(LOG_NETWORKING, "ioctl(SIOCGIFAFLAG_IN6) failed (%s)", strerror(errno));
         close(s6);
         break;
