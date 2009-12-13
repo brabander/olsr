@@ -478,15 +478,26 @@ ipc_print_mid(struct autobuf *abuf)
   struct mid_entry *entry;
   struct mid_address *alias;
 
+#ifdef ACTIVATE_VTIME_TXTINFO
+  abuf_puts(abuf, "Table: MID\nIP address\tVTime\tAliases\n");
+#else
   abuf_puts(abuf, "Table: MID\nIP address\tAliases\n");
-
+#endif
   /* MID */
   for (idx = 0; idx < HASHSIZE; idx++) {
     entry = mid_set[idx].next;
 
     while (entry != &mid_set[idx]) {
       struct ipaddr_str buf;
-      abuf_puts(abuf, olsr_ip_to_string(&buf, &entry->main_addr));
+#ifdef ACTIVATE_VTIME_TXTINFO
+        uint32_t vt = entry->mid_timer != NULL ? (entry->mid_timer->timer_clock - now_times) : 0;
+        int diff = (int)(vt);
+#endif
+        abuf_puts(abuf, olsr_ip_to_string(&buf, &entry->main_addr));
+#ifdef ACTIVATE_VTIME_TXTINFO
+        abuf_appendf(abuf, "\t%d.%03d", diff/1000, diff%1000);
+#endif
+
       alias = entry->aliases;
       is_first = 1;
 
