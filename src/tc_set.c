@@ -205,6 +205,14 @@ olsr_init_tc(void)
   tc_myself = olsr_add_tc_entry(&olsr_cnf->main_addr);
 }
 
+void olsr_delete_all_tc_entries(void) {
+  struct tc_entry *tc;
+
+  OLSR_FOR_ALL_TC_ENTRIES(tc) {
+    olsr_delete_tc_entry(tc);
+  } OLSR_FOR_ALL_TC_ENTRIES_END(tc)
+}
+
 /**
  * The main ip address has changed.
  * Do the needful.

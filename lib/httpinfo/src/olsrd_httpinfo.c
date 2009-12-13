@@ -673,8 +673,15 @@ build_tabs(struct autobuf *abuf, int active)
 void
 olsr_plugin_exit(void)
 {
+  struct allowed_net *a, *next;
   if (http_socket >= 0) {
     CLOSE(http_socket);
+  }
+
+  for (a = allowed_nets; a != NULL; a = next) {
+    next = a->next;
+
+    free(a);
   }
 }
 

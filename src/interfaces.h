@@ -187,6 +187,7 @@ struct interface {
 extern struct interface *ifnet;
 
 int ifinit(void);
+void olsr_delete_interfaces(void);
 
 void run_ifchg_cbs(struct interface *, int);
 

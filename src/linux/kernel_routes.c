@@ -84,6 +84,8 @@ int rtnetlink_register_socket(int rtnl_mgrp)
     OLSR_PRINTF(1,"could not create rtnetlink socket! %d",sock);
   }
   else {
+    memset(&addr, 0, sizeof(addr));
+
     addr.nl_family = AF_NETLINK;
     addr.nl_pid = 0; //kernel will assign appropiate number instead of pid (which is already used by primaray rtnetlink socket to add/delete routes)
     addr.nl_groups = rtnl_mgrp;

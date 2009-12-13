@@ -75,7 +75,7 @@ extern struct mid_address reverse_mid_set[HASHSIZE];
 struct mid_alias;
 
 int olsr_init_mid_set(void);
-void insert_mid_tuple(union olsr_ip_addr *, struct mid_address *, olsr_reltime);
+void olsr_delete_all_mid_entries(void);
 void insert_mid_alias(union olsr_ip_addr *, const union olsr_ip_addr *, olsr_reltime);
 union olsr_ip_addr *mid_lookup_main_addr(const union olsr_ip_addr *);
 struct mid_address *mid_lookup_aliases(const union olsr_ip_addr *);
