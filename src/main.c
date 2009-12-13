@@ -57,6 +57,7 @@
 #include "net_os.h"
 #include "build_msg.h"
 #include "net_olsr.h"
+#include "mid_set.h"
 
 #if LINUX_POLICY_ROUTING
 #include <linux/types.h>
@@ -533,6 +534,7 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
 #endif
 {
   struct interface *ifn;
+  int exit_value;
 
   OLSR_PRINTF(1, "Received signal %d - shutting down\n", (int)signo);
 
@@ -548,6 +550,12 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
 #endif
 
   olsr_delete_all_kernel_routes();
+
+  olsr_delete_all_tc_entries();
+
+  olsr_delete_all_mid_entries();
+
+  olsr_destroy_parser();
 
   OLSR_PRINTF(1, "Closing sockets...\n");
 
@@ -586,13 +594,17 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
 #endif
 
   /* Free cookies and memory pools attached. */
+  OLSR_PRINTF(0, "Free all memory...\n");
   olsr_delete_all_cookies();
 
   olsr_syslog(OLSR_LOG_INFO, "%s stopped", olsrd_version);
 
   OLSR_PRINTF(1, "\n <<<< %s - terminating >>>>\n           http://www.olsr.org\n", olsrd_version);
 
-  exit(olsr_cnf->exit_value);
+  exit_value = olsr_cnf->exit_value;
+  free (olsr_cnf);
+
+  exit(exit_value);
 }
 
 /**

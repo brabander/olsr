@@ -272,7 +272,7 @@ LoadPlugin "olsrd_txtinfo.so.0.1"
 #   PlParam     "Keyfile"   "/etc/olsr-keyfile.txt"
 #}
 
-#LoadPlugin "olsrd_dyn_gw.so.0.1"
+#LoadPlugin "olsrd_dyn_gw.so.0.4"
 #{
     # Here parameters are set to be sent to the
     # plugin. Theese are on the form "key" "value".

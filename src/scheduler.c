@@ -40,6 +40,8 @@
  *
  */
 
+#include <assert.h>
+
 #include "defs.h"
 #include "scheduler.h"
 #include "log.h"

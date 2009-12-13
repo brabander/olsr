@@ -103,6 +103,26 @@ olsr_init_parser(void)
 }
 
 void
+olsr_destroy_parser(void) {
+  struct parse_function_entry *pe, *pe_next;
+  struct preprocessor_function_entry *ppe, *ppe_next;
+  struct packetparser_function_entry *pae, *pae_next;
+
+  for (pe = parse_functions; pe; pe = pe_next) {
+    pe_next = pe->next;
+    free (pe);
+  }
+  for (ppe = preprocessor_functions; ppe; ppe = ppe_next) {
+    ppe_next = ppe->next;
+    free (ppe);
+  }
+  for (pae = packetparser_functions; pae; pae = pae_next) {
+    pae_next = pae->next;
+    free(pae);
+  }
+}
+
+void
 olsr_parser_add_function(parse_function * function, uint32_t type)
 {
   struct parse_function_entry *new_entry;
