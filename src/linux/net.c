@@ -45,6 +45,7 @@
 
 #include "../net_os.h"
 #include "../ipcalc.h"
+#include "../olsr.h"
 
 #include <net/if.h>
 
@@ -122,7 +123,7 @@ enable_ip_forwarding(int version)
               "WARNING! Could not open the %s file to check/enable IP forwarding!\nAre you using the procfile filesystem?\nDoes your system support IPv6?\nI will continue(in 3 sec) - but you should mannually ensure that IP forwarding is enabeled!\n\n",
               procfile);
 
-    sleep(3);
+    olsr_startup_sleep(3);
     return 0;
   }
 
@@ -134,7 +135,7 @@ enable_ip_forwarding(int version)
     if ((proc_fwd = fopen(procfile, "w")) == NULL) {
       fprintf(stderr, "Could not open %s for writing!\n", procfile);
       fprintf(stderr, "I will continue(in 3 sec) - but you should mannually ensure that IP forwarding is enabeled!\n\n");
-      sleep(3);
+      olsr_startup_sleep(3);
       return 0;
     } else {
       syslog(LOG_INFO, "Writing \"1\" to %s\n", procfile);
@@ -159,7 +160,7 @@ disable_redirects_global(int version)
             "WARNING! Could not open the %s file to check/disable ICMP redirects!\nAre you using the procfile filesystem?\nDoes your system support IPv4?\nI will continue(in 3 sec) - but you should mannually ensure that ICMP redirects are disabled!\n\n",
             procfile);
 
-    sleep(3);
+    olsr_startup_sleep(3);
     return -1;
   }
   orig_global_redirect_state = fgetc(proc_redirect);
@@ -171,7 +172,7 @@ disable_redirects_global(int version)
   if ((proc_redirect = fopen(procfile, "w")) == NULL) {
     fprintf(stderr, "Could not open %s for writing!\n", procfile);
     fprintf(stderr, "I will continue(in 3 sec) - but you should mannually ensure that ICMP redirect is disabeled!\n\n");
-    sleep(3);
+    olsr_startup_sleep(3);
     return 0;
   }
   syslog(LOG_INFO, "Writing \"0\" to %s", procfile);
@@ -200,7 +201,7 @@ disable_redirects(const char *if_name, struct interface *iface, int version)
     fprintf(stderr,
             "WARNING! Could not open the %s file to check/disable ICMP redirects!\nAre you using the procfile filesystem?\nDoes your system support IPv4?\nI will continue(in 3 sec) - but you should mannually ensure that ICMP redirects are disabled!\n\n",
             procfile);
-    sleep(3);
+    olsr_startup_sleep(3);
     return 0;
   }
   iface->nic_state.redirect = fgetc(proc_redirect);
@@ -209,7 +210,7 @@ disable_redirects(const char *if_name, struct interface *iface, int version)
   if ((proc_redirect = fopen(procfile, "w")) == NULL) {
     fprintf(stderr, "Could not open %s for writing!\n", procfile);
     fprintf(stderr, "I will continue(in 3 sec) - but you should mannually ensure that ICMP redirect is disabeled!\n\n");
-    sleep(3);
+    olsr_startup_sleep(3);
     return 0;
   }
   syslog(LOG_INFO, "Writing \"0\" to %s", procfile);
@@ -239,7 +240,7 @@ deactivate_spoof(const char *if_name, struct interface *iface, int version)
             "WARNING! Could not open the %s file to check/disable the IP spoof filter!\nAre you using the procfile filesystem?\nDoes your system support IPv4?\nI will continue(in 3 sec) - but you should mannually ensure that IP spoof filtering is disabled!\n\n",
             procfile);
 
-    sleep(3);
+    olsr_startup_sleep(3);
     return 0;
   }
   iface->nic_state.spoof = fgetc(proc_spoof);
@@ -248,7 +249,7 @@ deactivate_spoof(const char *if_name, struct interface *iface, int version)
   if ((proc_spoof = fopen(procfile, "w")) == NULL) {
     fprintf(stderr, "Could not open %s for writing!\n", procfile);
     fprintf(stderr, "I will continue(in 3 sec) - but you should mannually ensure that IP spoof filtering is disabeled!\n\n");
-    sleep(3);
+    olsr_startup_sleep(3);
     return 0;
   }
   syslog(LOG_INFO, "Writing \"0\" to %s", procfile);

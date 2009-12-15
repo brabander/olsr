@@ -394,12 +394,14 @@ int main(int argc, char *argv[]) {
       fprintf(
           stderr,
           "No interfaces detected! This might be intentional, but it also might mean that your configuration is fubar.\nI will continue after 5 seconds...\n");
-      sleep(5);
+      olsr_startup_sleep(5);
     } else {
       fprintf(stderr, "No interfaces detected!\nBailing out!\n");
       olsr_exit(__func__, EXIT_FAILURE);
     }
   }
+
+  olsr_do_startup_sleep();
 
   /* Print heartbeat to stdout */
 
