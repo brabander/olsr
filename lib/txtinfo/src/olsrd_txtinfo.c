@@ -258,9 +258,15 @@ ipc_action(int fd)
     if (inet_ntop(olsr_cnf->ip_version, &sin4->sin_addr, addr, INET6_ADDRSTRLEN) == NULL)
       addr[0] = '\0';
     if (!ip4equal(&sin4->sin_addr, &txtinfo_accept_ip.v4) && txtinfo_accept_ip.v4.s_addr != INADDR_ANY) {
-      olsr_printf(1, "(TXTINFO) From host(%s) not allowed!\n", addr);
-      close(ipc_connection);
-      return;
+#ifdef TXTINFO_ALLOW_LOCALHOST
+      if (sin4->sin_addr.s_addr!=INADDR_LOOPBACK) {
+#endif
+        olsr_printf(1, "(TXTINFO) From host(%s) not allowed!\n", addr);
+        close(ipc_connection);
+        return;
+#ifdef TXTINFO_ALLOW_LOCALHOST
+      }
+#endif
     }
   } else {
     sin6 = (struct sockaddr_in6 *)&pin;
