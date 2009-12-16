@@ -785,7 +785,7 @@ serialize_tc6(struct tc_message *message, struct interface *ifp)
 static bool
 serialize_mid4(struct interface *ifp)
 {
-  uint16_t remainsize, curr_size;
+  uint16_t remainsize, curr_size, needsize;
   /* preserve existing data in output buffer */
   union olsr_message *m;
   struct midaddr *addrs;
@@ -800,8 +800,14 @@ serialize_mid4(struct interface *ifp)
 
   curr_size = OLSR_MID_IPV4_HDRSIZE;
 
+  /* calculate size needed for HNA */
+  needsize = curr_size;
+  for (ifs = ifnet; ifs != NULL; ifs = ifs->int_next) {
+    needsize += olsr_cnf->ipsize*2;
+  }
+
   /* Send pending packet if not room in buffer */
-  if (curr_size > remainsize) {
+  if (needsize > remainsize) {
     net_output(ifp);
     remainsize = net_outbuffer_bytes_left(ifp);
   }
@@ -873,7 +879,7 @@ serialize_mid4(struct interface *ifp)
 static bool
 serialize_mid6(struct interface *ifp)
 {
-  uint16_t remainsize, curr_size;
+  uint16_t remainsize, curr_size, needsize;
   /* preserve existing data in output buffer */
   union olsr_message *m;
   struct midaddr6 *addrs6;
@@ -888,8 +894,14 @@ serialize_mid6(struct interface *ifp)
 
   curr_size = OLSR_MID_IPV6_HDRSIZE;
 
+  /* calculate size needed for HNA */
+  needsize = curr_size;
+  for (ifs = ifnet; ifs != NULL; ifs = ifs->int_next) {
+    needsize += olsr_cnf->ipsize*2;
+  }
+
   /* Send pending packet if not room in buffer */
-  if (curr_size > remainsize) {
+  if (needsize > remainsize) {
     net_output(ifp);
     remainsize = net_outbuffer_bytes_left(ifp);
   }
@@ -960,7 +972,7 @@ serialize_mid6(struct interface *ifp)
 static bool
 serialize_hna4(struct interface *ifp)
 {
-  uint16_t remainsize, curr_size;
+  uint16_t remainsize, curr_size, needsize;
   /* preserve existing data in output buffer */
   union olsr_message *m;
   struct hnapair *pair;
@@ -982,8 +994,17 @@ serialize_hna4(struct interface *ifp)
 
   curr_size = OLSR_HNA_IPV4_HDRSIZE;
 
+  /* calculate size needed for HNA */
+  needsize = curr_size;
+  while (h) {
+    needsize += olsr_cnf->ipsize*2;
+    h = h->next;
+  }
+
+  h = olsr_cnf->hna_entries;
+
   /* Send pending packet if not room in buffer */
-  if (curr_size > remainsize) {
+  if (needsize > remainsize) {
     net_output(ifp);
     remainsize = net_outbuffer_bytes_left(ifp);
   }
@@ -1046,7 +1067,7 @@ serialize_hna4(struct interface *ifp)
 static bool
 serialize_hna6(struct interface *ifp)
 {
-  uint16_t remainsize, curr_size;
+  uint16_t remainsize, curr_size, needsize;
   /* preserve existing data in output buffer */
   union olsr_message *m;
   struct hnapair6 *pair6;
@@ -1061,8 +1082,17 @@ serialize_hna6(struct interface *ifp)
 
   curr_size = OLSR_HNA_IPV6_HDRSIZE;
 
+  /* calculate size needed for HNA */
+  needsize = curr_size;
+  while (h) {
+    needsize += olsr_cnf->ipsize*2;
+    h = h->next;
+  }
+
+  h = olsr_cnf->hna_entries;
+
   /* Send pending packet if not room in buffer */
-  if (curr_size > remainsize) {
+  if (needsize > remainsize) {
     net_output(ifp);
     remainsize = net_outbuffer_bytes_left(ifp);
   }
