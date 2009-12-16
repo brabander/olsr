@@ -399,9 +399,11 @@ olsr_update_mid_table(const union olsr_ip_addr *adr, olsr_reltime vtime)
  * @param declared_aliases the list of declared aliases for the MID entry
  * @return nada
  */
-void
-olsr_prune_aliases(const union olsr_ip_addr *m_addr, struct mid_alias *declared_aliases)
+static void
+olsr_prune_aliases(struct mid_message *message)
 {
+  const union olsr_ip_addr *m_addr = &message->mid_origaddr;
+  struct mid_alias * declared_aliases = message->mid_addr;
   struct mid_entry *entry;
   uint32_t hash;
   struct mid_address *registered_aliases;
@@ -433,6 +435,12 @@ olsr_prune_aliases(const union olsr_ip_addr *m_addr, struct mid_alias *declared_
     while (declared_aliases != 0 && !ipequal(&current_alias->alias, &declared_aliases->alias_addr)) {
       declared_aliases = declared_aliases->next;
     }
+
+    if (declared_aliases == NULL) {
+      /*do not remove alias if vtime still valid (so we assigned something != NULL to declared_aliases)*/
+      if (!olsr_isTimedOut(current_alias->vtime)) declared_aliases = save_declared_aliases;
+    }
+    else current_alias->vtime=olsr_getTimestamp(message->vtime);
 
     if (declared_aliases == NULL) {
       struct ipaddr_str buf;
@@ -585,7 +593,7 @@ olsr_input_mid(union olsr_message *m, struct interface *in_if __attribute__ ((un
     tmp_adr = tmp_adr->next;
   }
 
-  olsr_prune_aliases(&message.mid_origaddr, message.mid_addr);
+  olsr_prune_aliases(&message);
   olsr_free_mid_packet(&message);
 
   /* Forward the message */
