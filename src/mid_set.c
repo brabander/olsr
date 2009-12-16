@@ -89,16 +89,15 @@ olsr_init_mid_set(void)
 static void
 olsr_expire_mid_entries(void *context)
 {
-  struct tc_entry *tc = context;
+  struct mid_entry *mid = context;
 #if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
 #endif
 
-  OLSR_DEBUG(LOG_MID, "MID aliases for %s timed out\n", olsr_ip_to_string(&buf, &tc->addr));
+  OLSR_DEBUG(LOG_MID, "MID aliases for %s timed out\n", olsr_ip_to_string(&buf, &mid->mid_alias_addr));
 
-  tc->mid_timer = NULL;
-  olsr_flush_mid_entries(tc);
-  olsr_unlock_tc_entry(tc);
+  olsr_unlock_tc_entry(mid->mid_tc);
+  olsr_delete_mid_entry(mid);
 }
 
 /**
@@ -108,15 +107,15 @@ olsr_expire_mid_entries(void *context)
  * The timer param is a relative timer expressed in milliseconds.
  */
 static void
-olsr_set_mid_timer(struct tc_entry *tc, uint32_t rel_timer)
+olsr_set_mid_timer(struct mid_entry *mid, uint32_t rel_timer)
 {
-  if (tc->mid_timer) {
-    olsr_change_timer(tc->mid_timer, rel_timer, OLSR_MID_JITTER, OLSR_TIMER_ONESHOT);
+  if (mid->mid_timer) {
+    olsr_change_timer(mid->mid_timer, rel_timer, OLSR_MID_JITTER, OLSR_TIMER_ONESHOT);
   }
   else {
-    tc->mid_timer = olsr_start_timer(rel_timer, OLSR_MID_JITTER, OLSR_TIMER_ONESHOT,
-        &olsr_expire_mid_entries, tc, mid_validity_timer_cookie);
-    olsr_lock_tc_entry(tc);
+    mid->mid_timer = olsr_start_timer(rel_timer, OLSR_MID_JITTER, OLSR_TIMER_ONESHOT,
+        &olsr_expire_mid_entries, mid, mid_validity_timer_cookie);
+    olsr_lock_tc_entry(mid->mid_tc);
   }
 }
 
@@ -273,7 +272,7 @@ olsr_insert_mid_entry(const union olsr_ip_addr *main_addr,
    */
   olsr_insert_routing_table(&alias->mid_alias_addr, 8 * olsr_cnf->ipsize, main_addr, OLSR_RT_ORIGIN_MID);
 
-  olsr_set_mid_timer(alias->mid_tc, vtime);
+  olsr_set_mid_timer(alias, vtime);
 
   return alias;
 }
@@ -290,7 +289,7 @@ olsr_insert_mid_entry(const union olsr_ip_addr *main_addr,
  */
 static void
 olsr_update_mid_entry(const union olsr_ip_addr *main_addr,
-                      const union olsr_ip_addr *alias_addr, uint32_t vtime, uint16_t msg_seq)
+                      const union olsr_ip_addr *alias_addr, uint32_t vtime)
 {
   struct mid_entry *alias;
 
@@ -303,10 +302,8 @@ olsr_update_mid_entry(const union olsr_ip_addr *main_addr,
    */
   alias = olsr_lookup_mid_entry(alias_addr);
   if (alias) {
-    alias->mid_entry_seqno = msg_seq;
-
     /* Refresh the timer. */
-    olsr_set_mid_timer(alias->mid_tc, vtime);
+    olsr_set_mid_timer(alias, vtime);
     return;
   }
 
@@ -314,8 +311,6 @@ olsr_update_mid_entry(const union olsr_ip_addr *main_addr,
    * This is a fresh alias.
    */
   alias = olsr_insert_mid_entry(main_addr, alias_addr, vtime);
-
-  alias->mid_entry_seqno = msg_seq;
 
   /*
    * Do the needful if one of our neighbors has changed its main address.
@@ -384,6 +379,10 @@ olsr_delete_mid_entry(struct mid_entry *alias)
 
   tc = alias->mid_tc;
 
+  /* kill timer */
+  olsr_stop_timer(alias->mid_timer);
+  olsr_unlock_tc_entry(tc);
+
   /*
    * Delete the rt_path for the alias.
    */
@@ -417,32 +416,6 @@ olsr_flush_mid_entries(struct tc_entry *tc)
   OLSR_FOR_ALL_TC_MID_ENTRIES(tc, alias) {
     olsr_delete_mid_entry(alias);
   } OLSR_FOR_ALL_TC_MID_ENTRIES_END(tc, alias);
-
-  if (tc->mid_timer) {
-    olsr_stop_timer(tc->mid_timer);
-    olsr_unlock_tc_entry(tc);
-    tc->mid_timer = NULL;
-  }
-}
-
-/**
- * Remove aliases from 'entry' which are not matching
- * the most recent message sequence number. This gets
- * called after receiving a MID message for garbage
- * collection of the old entries.
- *
- * @param main_addr the root of MID entries.
- */
-static void
-olsr_prune_mid_entries(struct tc_entry *tc)
-{
-  struct mid_entry *alias;
-  OLSR_FOR_ALL_TC_MID_ENTRIES(tc, alias) {
-    if (alias->mid_entry_seqno != tc->mid_seq) {
-      olsr_delete_mid_entry(alias);
-    }
-  }
-  OLSR_FOR_ALL_TC_MID_ENTRIES_END(tc, alias);
 }
 
 /**
@@ -519,13 +492,8 @@ olsr_input_mid(struct olsr_message *msg,
    */
   while (curr + olsr_cnf->ipsize <= msg->end) {
     pkt_get_ipaddress(&curr, &alias);
-    olsr_update_mid_entry(&msg->originator, &alias, msg->vtime, msg->seqno);
+    olsr_update_mid_entry(&msg->originator, &alias, msg->vtime);
   }
-
-  /*
-   * Prune the aliases that did not get refreshed by this advertisment.
-   */
-  olsr_prune_mid_entries(tc);
 }
 
 void

@@ -53,7 +53,7 @@ struct mid_entry {
   struct avl_node mid_node;            /* node in the global mid tree */
   union olsr_ip_addr mid_alias_addr;   /* key for both trees */
   struct tc_entry *mid_tc;             /* backpointer to owning tc entry */
-  uint16_t mid_entry_seqno;            /* msg seq number for change tracking */
+  struct timer_entry *mid_timer;       /* Vtime */
 };
 
 AVLNODE2STRUCT(global_tree2mid, mid_entry, mid_node);
