@@ -506,14 +506,10 @@ ipc_print_mid(struct autobuf *abuf)
     entry = mid_set[idx].next;
 
     while (entry != &mid_set[idx]) {
-      struct ipaddr_str buf;
 #ifdef ACTIVATE_VTIME_TXTINFO
-      uint32_t vt = entry->mid_timer != NULL ? (entry->mid_timer->timer_clock - now_times) : 0;
-      int diff = (int)(vt);
-      abuf_appendf(abuf, "%s\t\t%d.%03d\n",
-                     olsr_ip_to_string(&buf, &entry->main_addr),
-                     diff/1000, abs(diff%1000));
+      struct ipaddr_str buf, buf2;
 #else
+      struct ipaddr_str buf;
       abuf_puts(abuf, olsr_ip_to_string(&buf, &entry->main_addr));
 #endif /*vtime txtinfo*/
       alias = entry->aliases;
@@ -521,7 +517,6 @@ ipc_print_mid(struct autobuf *abuf)
 
       while (alias) {
 #ifdef ACTIVATE_VTIME_TXTINFO
-        struct ipaddr_str buf2;
         uint32_t vt = alias->vtime - now_times;
         int diff = (int)(vt);
 

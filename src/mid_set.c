@@ -123,7 +123,7 @@ olsr_set_mid_timer(struct mid_entry *mid, olsr_reltime rel_timer)
   if (mid->mid_timer != NULL) willFireIn = olsr_getTimeDue(mid->mid_timer->timer_clock);
   
   if (willFireIn < 0 || (olsr_reltime)willFireIn < rel_timer) {
-    olsr_set_timer(&mid->mid_timer, rel_timer, OLSR_MID_JITTER, OLSR_TIMER_ONESHOT, &olsr_expire_mid_entry, mid, 0);
+    olsr_set_timer(&mid->mid_timer, rel_timer, 0, OLSR_TIMER_ONESHOT, &olsr_expire_mid_entry, mid, 0);
   }
 }
 
