@@ -351,7 +351,7 @@ ipc_print_link(struct autobuf *abuf)
   struct link_entry *my_link = NULL;
 
 #ifdef ACTIVATE_VTIME_TXTINFO
-  abuf_puts(abuf, "Table: Links\nLocal IP\tRemote IP\tVtime\tLQ\tNLQ\tCost\n");
+  abuf_puts(abuf, "Table: Links\nLocal IP\tRemote IP\tVTime\tLQ\tNLQ\tCost\n");
 #else
   abuf_puts(abuf, "Table: Links\nLocal IP\tRemote IP\tHyst.\tLQ\tNLQ\tCost\n");
 #endif
@@ -446,7 +446,11 @@ ipc_print_hna(struct autobuf *abuf)
 
   size = 0;
 
+#ifdef ACTIVATE_VTIME_TXTINFO
+  abuf_puts(abuf, "Table: HNA\nDestination\tGateway\tVTime\n");
+#else
   abuf_puts(abuf, "Table: HNA\nDestination\tGateway\n");
+#endif /*vtime txtinfo*/
 
   /* Announced HNA entries */
   if (olsr_cnf->ip_version == AF_INET) {
@@ -466,9 +470,16 @@ ipc_print_hna(struct autobuf *abuf)
 
     /* Check all networks */
     for (tmp_net = tmp_hna->networks.next; tmp_net != &tmp_hna->networks; tmp_net = tmp_net->next) {
-
+#ifdef ACTIVATE_VTIME_TXTINFO
+      uint32_t vt = tmp_net->hna_net_timer != NULL ? (tmp_net->hna_net_timer->timer_clock - now_times) : 0;
+      int diff = (int)(vt);
+      abuf_appendf(abuf, "%s/%d\t%s\t\%d.%03d\n", olsr_ip_to_string(&buf, &tmp_net->A_network_addr), tmp_net->prefixlen,
+                   olsr_ip_to_string(&mainaddrbuf, &tmp_hna->A_gateway_addr),
+                   diff/1000, abs(diff%1000));
+#else
       abuf_appendf(abuf, "%s/%d\t%s\n", olsr_ip_to_string(&buf, &tmp_net->A_network_addr), tmp_net->prefixlen,
                 olsr_ip_to_string(&mainaddrbuf, &tmp_hna->A_gateway_addr));
+#endif /*vtime txtinfo*/
     }
   }
   OLSR_FOR_ALL_HNA_ENTRIES_END(tmp_hna);
@@ -483,8 +494,12 @@ ipc_print_mid(struct autobuf *abuf)
   unsigned short is_first;
   struct mid_entry *entry;
   struct mid_address *alias;
-
+#ifdef ACTIVATE_VTIME_TXTINFO
+  abuf_puts(abuf, "Table: MID\nIP address\tAlias\tVTime\n");
+#else
   abuf_puts(abuf, "Table: MID\nIP address\tAliases\n");
+#endif /*vtime txtinfo*/
+
 
   /* MID */
   for (idx = 0; idx < HASHSIZE; idx++) {
@@ -492,18 +507,38 @@ ipc_print_mid(struct autobuf *abuf)
 
     while (entry != &mid_set[idx]) {
       struct ipaddr_str buf;
+#ifdef ACTIVATE_VTIME_TXTINFO
+      uint32_t vt = entry->mid_timer != NULL ? (entry->mid_timer->timer_clock - now_times) : 0;
+      int diff = (int)(vt);
+      abuf_appendf(abuf, "%s\t\t%d.%03d\n",
+                     olsr_ip_to_string(&buf, &entry->main_addr),
+                     diff/1000, abs(diff%1000));
+#else
       abuf_puts(abuf, olsr_ip_to_string(&buf, &entry->main_addr));
+#endif /*vtime txtinfo*/
       alias = entry->aliases;
       is_first = 1;
 
       while (alias) {
-        abuf_appendf(abuf, "%s%s", (is_first ? "\t" : ";"), olsr_ip_to_string(&buf, &alias->alias));
+#ifdef ACTIVATE_VTIME_TXTINFO
+        struct ipaddr_str buf2;
+        uint32_t vt = alias->vtime - now_times;
+        int diff = (int)(vt);
 
+        abuf_appendf(abuf, "%s\t%s\t%d.%03d\n", 
+                     olsr_ip_to_string(&buf, &entry->main_addr), 
+                     olsr_ip_to_string(&buf2, &alias->alias),
+                     diff/1000, abs(diff%1000));
+#else
+        abuf_appendf(abuf, "%s%s", (is_first ? "\t" : ";"), olsr_ip_to_string(&buf, &alias->alias));
+#endif /*vtime txtinfo*/
         alias = alias->next_alias;
         is_first = 0;
       }
       entry = entry->next;
+#ifndef ACTIVATE_VTIME_TXTINFO
       abuf_puts(abuf,"\n");
+#endif /*vtime txtinfo*/
     }
   }
   abuf_puts(abuf, "\n");
