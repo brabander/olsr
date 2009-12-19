@@ -81,6 +81,7 @@ struct hna_entry {
 extern struct hna_entry hna_set[HASHSIZE];
 
 int olsr_init_hna_set(void);
+void olsr_cleanup_hna(union olsr_ip_addr *orig);
 
 struct hna_net *olsr_lookup_hna_net(const struct hna_net *, const union olsr_ip_addr *, uint8_t);
 

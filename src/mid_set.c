@@ -89,6 +89,15 @@ void olsr_delete_all_mid_entries(void) {
     }
   }
 }
+
+void olsr_cleanup_mid(union olsr_ip_addr *orig) {
+  struct mid_entry *mid;
+  mid = mid_lookup_entry_bymain(orig);
+  if (mid) {
+    olsr_delete_mid_entry(mid);
+  }
+}
+
 /**
  * Wrapper for the timer callback.
  */

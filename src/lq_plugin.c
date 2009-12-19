@@ -360,6 +360,11 @@ olsr_copylq_link_entry_2_tc_edge_entry(struct tc_edge_entry *target, struct link
   active_lq_handler->copy_link_lq_into_tc(target->linkquality, source->linkquality);
 }
 
+/* clear the lq of a link set entry */
+void olsr_clear_hello_lq(struct link_entry *link) {
+  active_lq_handler->clear_hello(link->linkquality);
+}
+
 /*
  * olsr_clear_tc_lq
  *

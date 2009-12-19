@@ -250,7 +250,7 @@ serialize_hello4(struct hello_message *message, struct interface *ifp)
   union olsr_message *m;
   struct hellomsg *h;
   struct hellinfo *hinfo;
-  union olsr_ip_addr *haddr;
+  char *haddr;
   int i, j;
   bool first_entry;
 
@@ -273,7 +273,7 @@ serialize_hello4(struct hello_message *message, struct interface *ifp)
 
   h = &m->v4.message.hello;
   hinfo = h->hell_info;
-  haddr = (union olsr_ip_addr *)hinfo->neigh_addr;
+  haddr = (char *)hinfo->neigh_addr;
 
   /* Fill message header */
   m->v4.ttl = message->ttl;
@@ -292,10 +292,10 @@ serialize_hello4(struct hello_message *message, struct interface *ifp)
 
   /*
    *Loops trough all possible neighbor statuses
-   *The negbor list is grouped by status
+   *The neighbor list is grouped by status
    *
    */
-  /* Nighbor statuses */
+  /* Neighbor statuses */
   for (i = 0; i <= MAX_NEIGH; i++) {
     /* Link statuses */
     for (j = 0; j <= MAX_LINK; j++) {
@@ -314,6 +314,7 @@ serialize_hello4(struct hello_message *message, struct interface *ifp)
       for (nb = message->neighbors; nb != NULL; nb = nb->next) {
         if ((nb->status != i) || (nb->link != j))
           continue;
+
 
 #ifdef DEBUG
         OLSR_PRINTF(BMSG_DBGLVL, "\t%s - ", olsr_ip_to_string(&buf, &nb->address));
@@ -349,7 +350,7 @@ serialize_hello4(struct hello_message *message, struct interface *ifp)
 
             h = &m->v4.message.hello;
             hinfo = h->hell_info;
-            haddr = (union olsr_ip_addr *)hinfo->neigh_addr;
+            haddr = (char *)hinfo->neigh_addr;
             /* Make sure typeheader is added */
             first_entry = true;
           }
@@ -369,10 +370,10 @@ serialize_hello4(struct hello_message *message, struct interface *ifp)
           curr_size += 4;       /* HELLO type section header */
         }
 
-        *haddr = nb->address;
+        *((union olsr_ip_addr *)haddr) = nb->address;
 
         /* Point to next address */
-        haddr += sizeof(haddr->v4);
+        haddr += olsr_cnf->ipsize;
         curr_size += olsr_cnf->ipsize;  /* IP address added */
 
         first_entry = false;
@@ -380,8 +381,10 @@ serialize_hello4(struct hello_message *message, struct interface *ifp)
 
       if (!first_entry) {
         hinfo->size = htons((char *)haddr - (char *)hinfo);
+
         hinfo = (struct hellinfo *)((char *)haddr);
-        haddr = (union olsr_ip_addr *)&hinfo->neigh_addr;
+        haddr = (char *)hinfo->neigh_addr;
+
       }
     }                           /* for j */
   }                             /* for i */
