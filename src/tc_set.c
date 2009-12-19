@@ -792,6 +792,7 @@ olsr_input_tc(union olsr_message * msg, struct interface * input_if __attribute_
   union olsr_ip_addr originator;
   const unsigned char *limit, *curr;
   struct tc_entry *tc;
+  bool emptyTC;
 
   union olsr_ip_addr lower_border_ip, upper_border_ip;
   int borderSet = 0;
@@ -894,6 +895,7 @@ olsr_input_tc(union olsr_message * msg, struct interface * input_if __attribute_
 
   limit = (unsigned char *)msg + size;
   borderSet = 0;
+  emptyTC = curr >= limit;
   while (curr < limit) {
     if (olsr_tc_update_edge(tc, ansn, &curr, &upper_border_ip)) {
       changes_topology = true;
@@ -918,6 +920,13 @@ olsr_input_tc(union olsr_message * msg, struct interface * input_if __attribute_
   olsr_set_timer(&tc->validity_timer, vtime, OLSR_TC_VTIME_JITTER, OLSR_TIMER_ONESHOT, &olsr_expire_tc_entry, tc,
                  tc_validity_timer_cookie->ci_id);
 
+  if (emptyTC && lower_border == 0xff && upper_border == 0xff) {
+    /* handle empty TC with border flags 0xff */
+    memset(&lower_border_ip, 0x00, sizeof(lower_border_ip));
+    memset(&upper_border_ip, 0xff, sizeof(upper_border_ip));
+    borderSet = 1;
+  }
+
   if (borderSet) {
 
     /*
@@ -934,6 +943,11 @@ olsr_input_tc(union olsr_message * msg, struct interface * input_if __attribute_
                    tc, tc_edge_gc_timer_cookie->ci_id);
   }
 
+  if (emptyTC && borderSet) {
+    /* cleanup MIDs and HNAs if all edges have been erased by an empty TC */
+    olsr_cleanup_mid(&originator);
+    olsr_cleanup_hna(&originator);
+  }
   /* Forward the message */
   return true;
 }

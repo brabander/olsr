@@ -44,6 +44,9 @@
 
 #include "olsr_types.h"
 
+/*set to 1 to collect all startup sleep into one sleep (just as long as the longest sleep) useful if many errors on many interfaces*/
+#define OLSR_COLLECT_STARTUP_SLEEP 1
+
 /* set to 1 to enable a second rtnetlink socket 
  * used for listening and reating on interface change events
  * (requires LINUX_POLICY_ROUTING to be enabled aswell) */

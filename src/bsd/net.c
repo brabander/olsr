@@ -49,6 +49,7 @@
 #include "../parser.h"          /* dnc: needed for call to packet_parser() */
 #include "../olsr_protocol.h"
 #include "../olsr_cfg.h"
+#include "../olsr.h"
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -185,7 +186,7 @@ enable_ip_forwarding(int version)
   gateway = set_sysctl_int(name, 1);
   if (gateway < 0) {
     fprintf(stderr, "Cannot enable IP forwarding. Please enable IP forwarding manually." " Continuing in 3 seconds...\n");
-    sleep(3);
+    olsr_startup_sleep(3);
   }
 
   return 1;
@@ -225,7 +226,7 @@ disable_redirects_global(int version)
   if (ignore_redir < 0) {
     fprintf(stderr,
             "Cannot disable incoming ICMP redirect messages. " "Please disable them manually. Continuing in 3 seconds...\n");
-    sleep(3);
+    olsr_startup_sleep(3);
   }
 
   /* do not send ICMP redirects */
@@ -239,7 +240,7 @@ disable_redirects_global(int version)
   if (send_redir < 0) {
     fprintf(stderr,
             "Cannot disable outgoing ICMP redirect messages. " "Please disable them manually. Continuing in 3 seconds...\n");
-    sleep(3);
+    olsr_startup_sleep(3);
   }
 
   return 1;

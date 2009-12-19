@@ -52,6 +52,8 @@ struct olsr_cookie_info *hna_net_timer_cookie = NULL;
 struct olsr_cookie_info *hna_entry_mem_cookie = NULL;
 struct olsr_cookie_info *hna_net_mem_cookie = NULL;
 
+static bool olsr_delete_hna_net_entry(struct hna_net *net_to_delete);
+
 /**
  * Initialize the HNA set
  */
@@ -74,6 +76,17 @@ olsr_init_hna_set(void)
   olsr_cookie_set_memory_size(hna_entry_mem_cookie, sizeof(struct hna_entry));
 
   return 1;
+}
+
+void
+olsr_cleanup_hna(union olsr_ip_addr *orig) {
+  struct hna_entry *hna;
+
+  OLSR_FOR_ALL_HNA_ENTRIES(hna) {
+    if (ipequal(&hna->A_gateway_addr, orig)) {
+      while (!olsr_delete_hna_net_entry(hna->networks.next));
+    }
+  } OLSR_FOR_ALL_HNA_ENTRIES_END(hna)
 }
 
 /**
@@ -193,19 +206,15 @@ olsr_add_hna_net(struct hna_entry *hna_gw, const union olsr_ip_addr *net, uint8_
   return new_net;
 }
 
-/**
- * Callback for the hna_net timer.
- */
-static void
-olsr_expire_hna_net_entry(void *context)
-{
+static bool
+olsr_delete_hna_net_entry(struct hna_net *net_to_delete) {
 #ifdef DEBUG
   struct ipaddr_str buf1, buf2;
 #endif
-  struct hna_net *net_to_delete;
   struct hna_entry *hna_gw;
+  bool removed_entry = false;
 
-  net_to_delete = (struct hna_net *)context;
+  olsr_stop_timer(net_to_delete->hna_net_timer);
   net_to_delete->hna_net_timer = NULL;  /* be pedandic */
   hna_gw = net_to_delete->hna_gw;
 
@@ -223,10 +232,21 @@ olsr_expire_hna_net_entry(void *context)
   if (hna_gw->networks.next == &hna_gw->networks) {
     DEQUEUE_ELEM(hna_gw);
     olsr_cookie_free(hna_entry_mem_cookie, hna_gw);
+    removed_entry = true;
   }
 
   DEQUEUE_ELEM(net_to_delete);
   olsr_cookie_free(hna_net_mem_cookie, net_to_delete);
+  return removed_entry;
+}
+
+/**
+ * Callback for the hna_net timer.
+ */
+static void
+olsr_expire_hna_net_entry(void *context)
+{
+  olsr_delete_hna_net_entry(context);
 }
 
 /**

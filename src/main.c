@@ -58,6 +58,7 @@
 #include "build_msg.h"
 #include "net_olsr.h"
 #include "mid_set.h"
+#include "mpr_selector_set.h"
 
 #if LINUX_POLICY_ROUTING
 #include <linux/types.h>
@@ -394,12 +395,14 @@ int main(int argc, char *argv[]) {
       fprintf(
           stderr,
           "No interfaces detected! This might be intentional, but it also might mean that your configuration is fubar.\nI will continue after 5 seconds...\n");
-      sleep(5);
+      olsr_startup_sleep(5);
     } else {
       fprintf(stderr, "No interfaces detected!\nBailing out!\n");
       olsr_exit(__func__, EXIT_FAILURE);
     }
   }
+
+  olsr_do_startup_sleep();
 
   /* Print heartbeat to stdout */
 
@@ -521,6 +524,27 @@ void olsr_reconfigure(int signo __attribute__ ((unused))) {
 }
 #endif
 
+static void olsr_shutdown_messages(void) {
+  struct interface *ifn;
+
+  /* send TC reset */
+  for (ifn = ifnet; ifn; ifn = ifn->int_next) {
+    /* clean output buffer */
+    net_output(ifn);
+
+    /* send 'I'm gone' messages */
+    if (olsr_cnf->lq_level > 0) {
+      olsr_output_lq_tc(ifn);
+      olsr_output_lq_hello(ifn);
+    }
+    else {
+      generate_tc(ifn);
+      generate_hello(ifn);
+    }
+    net_output(ifn);
+  }
+}
+
 /**
  *Function called at shutdown. Signal handler
  *
@@ -549,8 +573,26 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
   OLSR_PRINTF(1, "Scheduler stopped.\n");
 #endif
 
+  /* clear all links and send empty hellos/tcs */
+  olsr_reset_all_links();
+
+  /* deactivate fisheye and immediate TCs */
+  olsr_cnf->lq_fish = 0;
+  for (ifn = ifnet; ifn; ifn = ifn->int_next) {
+    ifn->immediate_send_tc = false;
+  }
+  increase_local_ansn();
+
+  /* send first shutdown message burst */
+  olsr_shutdown_messages();
+
+  /* delete all routes */
   olsr_delete_all_kernel_routes();
 
+  /* send second shutdown message burst */
+  olsr_shutdown_messages();
+
+  /* now try to cleanup the rest of the mess */
   olsr_delete_all_tc_entries();
 
   olsr_delete_all_mid_entries();
