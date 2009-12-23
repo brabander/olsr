@@ -443,21 +443,25 @@ IPV6ADDR {IP6PAT1}|{IP6PAT2}|{IP6PAT3}|{IP6PAT4}|{IP6PAT5}|{IP6PAT6}|{IP6PAT7}|{
     yylval = NULL;
     return TOK_IP4BROADCAST;
 }
+"Ipv4Multicast" {
+    yylval = NULL;
+    return TOK_IP4MULTICAST;
+}
 "Mode" {
     yylval = NULL;
     return TOK_IFMODE;
 }
-"Ip6AddrType" {
+"Ipv6Multicast" {
     yylval = NULL;
-    return TOK_IP6ADDRTYPE;
+    return TOK_IP6MULTICAST;
 }
-"Ip6MulticastSite" {
-    yylval = NULL;
-    return TOK_IP6MULTISITE;
+"Ipv4Src" {
+		yylval = NULL;
+		return TOK_IP4SRC;
 }
-"Ip6MulticastGlobal" {
-    yylval = NULL;
-    return TOK_IP6MULTIGLOBAL;
+"Ipv6Src" {
+		yylval = NULL;
+		return TOK_IP6SRC;
 }
 "HelloInterval" {
     yylval = NULL;

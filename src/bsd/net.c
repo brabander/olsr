@@ -533,10 +533,11 @@ join_mcast(struct interface *ifs, int sock)
 }
 
 int
-get_ipv6_address(char *ifname, struct sockaddr_in6 *saddr6, int scope_in)
+get_ipv6_address(char *ifname, struct sockaddr_in6 *saddr6, struct olsr_ip_prefix *prefix)
 {
   struct ifaddrs *ifap, *ifa;
   const struct sockaddr_in6 *sin6 = NULL;
+  const union olsr_ip_addr *tmp_ip;
   struct in6_ifreq ifr6;
   int found = 0;
   int s6;
@@ -567,18 +568,13 @@ get_ipv6_address(char *ifname, struct sockaddr_in6 *saddr6, int scope_in)
       flags6 = ifr6.ifr_ifru.ifru_flags6;
       if ((flags6 & IN6_IFF_ANYCAST) != 0)
         continue;
-      if (IN6_IS_ADDR_SITELOCAL(&sin6->sin6_addr)) {
-        if (scope_in) {
-          memcpy(&saddr6->sin6_addr, &sin6->sin6_addr, sizeof(struct in6_addr));
-          found = 1;
-          break;
-        }
-      } else {
-        if (scope_in == 0) {
-          memcpy(&saddr6->sin6_addr, &sin6->sin6_addr, sizeof(struct in6_addr));
-          found = 1;
-          break;
-        }
+
+      tmp_ip = (const union olsr_ip_addr *) &sin6->sin6_addr;
+      if ((prefix == NULL && !IN6_IS_ADDR_LINKLOCAL(&sin6->sin6_addr))
+          || (prefix != NULL && ip_in_net(tmp_ip, prefix))) {
+        memcpy(&saddr6->sin6_addr, &sin6->sin6_addr, sizeof(struct in6_addr));
+        found = 1;
+        break;
       }
     }
   }

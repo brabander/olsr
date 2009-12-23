@@ -54,8 +54,7 @@
 
 /* Default IPv6 multicast addresses */
 
-#define OLSR_IPV6_MCAST_SITE_LOCAL "ff05::15"
-#define OLSR_IPV6_MCAST_GLOBAL     "ff0e::1"
+#define OLSR_IPV6_MCAST "FF02::1"
 
 #define OLSR_HEADERSIZE (sizeof(uint16_t) + sizeof(uint16_t))
 

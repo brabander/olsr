@@ -57,6 +57,10 @@
 #include <syslog.h>
 #include <unistd.h>
 
+#define IPV6_ADDR_LOOPBACK      0x0010U
+#define IPV6_ADDR_LINKLOCAL     0x0020U
+#define IPV6_ADDR_SITELOCAL     0x0040U
+
 /* Redirect proc entry */
 #define REDIRECT_PROC "/proc/sys/net/ipv4/conf/%s/send_redirects"
 
@@ -600,28 +604,33 @@ join_mcast(struct interface *ifs, int sock)
  *
  */
 int
-get_ipv6_address(char *ifname, struct sockaddr_in6 *saddr6, int scope_in)
+get_ipv6_address(char *ifname, struct sockaddr_in6 *saddr6, struct olsr_ip_prefix *prefix)
 {
   char addr6[40], devname[IFNAMSIZ];
   char addr6p[8][5];
   int plen, scope, dad_status, if_idx;
   FILE *f;
-  struct sockaddr_in6 tmp_sockaddr6;
+  union olsr_ip_addr tmp_ip;
 
   if ((f = fopen(_PATH_PROCNET_IFINET6, "r")) != NULL) {
     while (fscanf
            (f, "%4s%4s%4s%4s%4s%4s%4s%4s %02x %02x %02x %02x %20s\n", addr6p[0], addr6p[1], addr6p[2], addr6p[3], addr6p[4],
             addr6p[5], addr6p[6], addr6p[7], &if_idx, &plen, &scope, &dad_status, devname) != EOF) {
       if (!strcmp(devname, ifname)) {
+        bool isNetWide = false;
         sprintf(addr6, "%s:%s:%s:%s:%s:%s:%s:%s", addr6p[0], addr6p[1], addr6p[2], addr6p[3], addr6p[4], addr6p[5], addr6p[6],
                 addr6p[7]);
         OLSR_PRINTF(5, "\tinet6 addr: %s\n", addr6);
         OLSR_PRINTF(5, "\tScope: %d\n", scope);
-        if (scope == scope_in) {
+
+        inet_pton(AF_INET6, addr6, &tmp_ip.v6);
+
+        isNetWide = (scope != IPV6_ADDR_LOOPBACK) && (scope != IPV6_ADDR_LINKLOCAL) && (scope != IPV6_ADDR_SITELOCAL);
+
+        if ((prefix == NULL && isNetWide) || (prefix != NULL && ip_in_net(&tmp_ip, prefix))) {
           OLSR_PRINTF(4, "Found addr: %s:%s:%s:%s:%s:%s:%s:%s\n", addr6p[0], addr6p[1], addr6p[2], addr6p[3], addr6p[4], addr6p[5],
                       addr6p[6], addr6p[7]);
-          inet_pton(AF_INET6, addr6, &tmp_sockaddr6);
-          memcpy(&saddr6->sin6_addr, &tmp_sockaddr6, sizeof(struct in6_addr));
+          memcpy(&saddr6->sin6_addr, &tmp_ip.v6, sizeof(struct in6_addr));
           fclose(f);
           return 1;
         }

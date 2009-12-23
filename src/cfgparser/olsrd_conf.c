@@ -477,20 +477,13 @@ get_default_if_config(void)
 
   memset(io, 0, sizeof(*io));
 
-  io->ipv6_addrtype = 1;        /* XXX - FixMe */
-
-  inet_pton(AF_INET6, OLSR_IPV6_MCAST_SITE_LOCAL, &in6);
-  io->ipv6_multi_site.v6 = in6;
-
-  inet_pton(AF_INET6, OLSR_IPV6_MCAST_GLOBAL, &in6);
-  io->ipv6_multi_glbl.v6 = in6;
+  inet_pton(AF_INET6, OLSR_IPV6_MCAST, &in6);
+  io->ipv6_multicast.v6 = in6;
 
   io->lq_mult = NULL;
 
   io->weight.fixed = false;
   io->weight.value = 0;
-
-  io->ipv6_addrtype = 0;        /* global */
 
   io->hello_params.emission_interval = HELLO_INTERVAL;
   io->hello_params.validity_time = NEIGHB_HOLD_TIME;
@@ -575,10 +568,10 @@ olsrd_print_cnf(struct olsrd_config *cnf)
     while (in) {
       printf(" dev: \"%s\"\n", in->name);
 
-      if (in->cnf->ipv4_broadcast.v4.s_addr) {
-        printf("\tIPv4 broadcast           : %s\n", inet_ntoa(in->cnf->ipv4_broadcast.v4));
+      if (in->cnf->ipv4_multicast.v4.s_addr) {
+        printf("\tIPv4 broadcast/multicast : %s\n", inet_ntoa(in->cnf->ipv4_multicast.v4));
       } else {
-        printf("\tIPv4 broadcast           : AUTO\n");
+        printf("\tIPv4 broadcast/multicast : AUTO\n");
       }
 
       if (in->cnf->mode==IF_MODE_ETHER){
@@ -587,12 +580,9 @@ olsrd_print_cnf(struct olsrd_config *cnf)
         printf("\tMode           : mesh\n");
       }
 
-      printf("\tIPv6 addrtype            : %s\n", in->cnf->ipv6_addrtype ? "site-local" : "global");
-
       //union olsr_ip_addr       ipv6_multi_site;
       //union olsr_ip_addr       ipv6_multi_glbl;
-      printf("\tIPv6 multicast site/glbl : %s", inet_ntop(AF_INET6, &in->cnf->ipv6_multi_site.v6, ipv6_buf, sizeof(ipv6_buf)));
-      printf("/%s\n", inet_ntop(AF_INET6, &in->cnf->ipv6_multi_glbl.v6, ipv6_buf, sizeof(ipv6_buf)));
+      printf("\tIPv6 multicast           : %s", inet_ntop(AF_INET6, &in->cnf->ipv6_multicast.v6, ipv6_buf, sizeof(ipv6_buf)));
 
       printf("\tHELLO emission/validity  : %0.2f/%0.2f\n", in->cnf->hello_params.emission_interval,
              in->cnf->hello_params.validity_time);

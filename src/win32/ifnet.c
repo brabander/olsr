@@ -884,8 +884,8 @@ chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__ ((unused)))
   AddrIn->sin_port = 0;
   AddrIn->sin_addr.s_addr = Info.Broad;
 
-  if (IntConf->cnf->ipv4_broadcast.v4.s_addr != 0)
-    AddrIn->sin_addr = IntConf->cnf->ipv4_broadcast.v4;
+  if (IntConf->cnf->ipv4_multicast.v4.s_addr != 0)
+    AddrIn->sin_addr = IntConf->cnf->ipv4_multicast.v4;
 
   New->int_flags = 0;
 
@@ -927,8 +927,8 @@ chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__ ((unused)))
 
   OLSR_PRINTF(3, "\tKernel index: %08x\n", New->if_index);
 
-  New->olsr_socket = getsocket(BUFSPACE, New->int_name);
-  New->send_socket = getsocket(0, New->int_name);
+  New->olsr_socket = getsocket(BUFSPACE, New);
+  New->send_socket = getsocket(0, New);
 
   if (New->olsr_socket < 0) {
     fprintf(stderr, "Could not initialize socket... exiting!\n\n");

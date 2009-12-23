@@ -79,7 +79,7 @@ int getsocket(int, struct interface *);
 
 int getsocket6(int, struct interface *);
 
-int get_ipv6_address(char *, struct sockaddr_in6 *, int);
+int get_ipv6_address(char *, struct sockaddr_in6 *, struct olsr_ip_prefix *);
 
 int calculate_if_metric(char *);
 

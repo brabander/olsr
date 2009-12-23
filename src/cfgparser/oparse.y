@@ -205,11 +205,12 @@ static int add_ipv6_addr(YYSTYPE ipaddr_arg, YYSTYPE prefixlen_arg)
 %token TOK_NETLABEL
 %token TOK_MAXIPC
 
-%token TOK_IP4BROADCAST
 %token TOK_IFMODE
-%token TOK_IP6ADDRTYPE
-%token TOK_IP6MULTISITE
-%token TOK_IP6MULTIGLOBAL
+%token TOK_IP4BROADCAST
+%token TOK_IP4MULTICAST
+%token TOK_IP6MULTICAST
+%token TOK_IP4SRC
+%token TOK_IP6SRC
 %token TOK_IFWEIGHT
 %token TOK_HELLOINT
 %token TOK_HELLOVAL
@@ -318,11 +319,12 @@ ifstmts:   | ifstmts ifstmt
 
 ifstmt:      vcomment
              | iifweight
-             | isetip4br
              | isetifmode
-             | isetip6addrt
-             | isetip6mults
-             | isetip6multg
+             | isetip4br
+             | isetip4mc
+             | isetip6mc
+             | isetip4src
+             | isetip6src
              | isethelloint
              | isethelloval
              | isettcint
@@ -435,31 +437,6 @@ iifweight:       TOK_IFWEIGHT TOK_INTEGER
 }
 ;
 
-isetip4br: TOK_IP4BROADCAST TOK_IP4_ADDR
-{
-  struct in_addr in;
-  int ifcnt = ifs_in_curr_cfg;
-  struct olsr_if *ifs = olsr_cnf->interfaces;
-
-  PARSER_DEBUG_PRINTF("\tIPv4 broadcast: %s\n", $2->string);
-
-  if (inet_aton($2->string, &in) == 0) {
-    fprintf(stderr, "isetip4br: Failed converting IP address %s\n", $2->string);
-    YYABORT;
-  }
-
-  while (ifcnt) {
-    ifs->cnf->ipv4_broadcast.v4 = in;
-
-    ifs = ifs->next;
-    ifcnt--;
-  }
-
-  free($2->string);
-  free($2);
-}
-;
-
 isetifmode: TOK_IFMODE TOK_STRING
 {
   int ifcnt = ifs_in_curr_cfg;
@@ -478,47 +455,71 @@ isetifmode: TOK_IFMODE TOK_STRING
 }
 ;
 
-
-isetip6addrt: TOK_IP6ADDRTYPE TOK_IP6TYPE
+isetip4br: TOK_IP4BROADCAST TOK_IP4_ADDR
 {
+  struct in_addr in;
   int ifcnt = ifs_in_curr_cfg;
   struct olsr_if *ifs = olsr_cnf->interfaces;
 
-  if ($2->boolean) {
-    while (ifcnt) {
-      ifs->cnf->ipv6_addrtype = IPV6_ADDR_SITELOCAL;
-	  
-      ifs = ifs->next;
-      ifcnt--;
-    }
-  } else {
-    while (ifcnt) {
-      ifs->cnf->ipv6_addrtype = 0;
-	  
-      ifs = ifs->next;
-      ifcnt--;
-    }
+  PARSER_DEBUG_PRINTF("\tIPv4 broadcast: %s\n", $2->string);
+
+  if (inet_aton($2->string, &in) == 0) {
+    fprintf(stderr, "isetip4br: Failed converting IP address %s\n", $2->string);
+    YYABORT;
   }
 
+  while (ifcnt) {
+    ifs->cnf->ipv4_multicast.v4 = in;
+
+    ifs = ifs->next;
+    ifcnt--;
+  }
+
+  free($2->string);
   free($2);
 }
 ;
 
-isetip6mults: TOK_IP6MULTISITE TOK_IP6_ADDR
+isetip4mc: TOK_IP4MULTICAST TOK_IP4_ADDR
+{
+  struct in_addr in;
+  int ifcnt = ifs_in_curr_cfg;
+  struct olsr_if *ifs = olsr_cnf->interfaces;
+
+  PARSER_DEBUG_PRINTF("\tIPv4 broadcast: %s\n", $2->string);
+
+  if (inet_aton($2->string, &in) == 0) {
+    fprintf(stderr, "isetip4br: Failed converting IP address %s\n", $2->string);
+    YYABORT;
+  }
+
+  while (ifcnt) {
+    ifs->cnf->ipv4_multicast.v4 = in;
+
+    ifs = ifs->next;
+    ifcnt--;
+  }
+
+  free($2->string);
+  free($2);
+}
+;
+
+isetip6mc: TOK_IP6MULTICAST TOK_IP6_ADDR
 {
   struct in6_addr in6;
   int ifcnt = ifs_in_curr_cfg;
   struct olsr_if *ifs = olsr_cnf->interfaces;
 
-  PARSER_DEBUG_PRINTF("\tIPv6 site-local multicast: %s\n", $2->string);
+  PARSER_DEBUG_PRINTF("\tIPv6 multicast: %s\n", $2->string);
 
   if (inet_pton(AF_INET6, $2->string, &in6) <= 0) {
-    fprintf(stderr, "isetip6mults: Failed converting IP address %s\n", $2->string);
+    fprintf(stderr, "isetip6mc: Failed converting IP address %s\n", $2->string);
     YYABORT;
   }
 
   while (ifcnt) {
-    ifs->cnf->ipv6_multi_site.v6 = in6;
+    ifs->cnf->ipv6_multicast.v6 = in6;
       
     ifs = ifs->next;
     ifcnt--;
@@ -529,23 +530,46 @@ isetip6mults: TOK_IP6MULTISITE TOK_IP6_ADDR
 }
 ;
 
-
-isetip6multg: TOK_IP6MULTIGLOBAL TOK_IP6_ADDR
+isetip4src: TOK_IP4SRC TOK_IP4_ADDR
 {
-  struct in6_addr in6;
+  struct in_addr in;
   int ifcnt = ifs_in_curr_cfg;
   struct olsr_if *ifs = olsr_cnf->interfaces;
 
-  PARSER_DEBUG_PRINTF("\tIPv6 global multicast: %s\n", $2->string);
+  PARSER_DEBUG_PRINTF("\tIPv4 src: %s\n", $2->string);
 
-  if (inet_pton(AF_INET6, $2->string, &in6) <= 0) {
-    fprintf(stderr, "isetip6multg: Failed converting IP address %s\n", $2->string);
+  if (inet_aton($2->string, &in) == 0) {
+    fprintf(stderr, "isetip4src: Failed converting IP address %s\n", $2->string);
     YYABORT;
   }
 
   while (ifcnt) {
-    //memcpy(&ifs->cnf->ipv6_multi_glbl.v6, &in6, sizeof(struct in6_addr));
-    ifs->cnf->ipv6_multi_glbl.v6 = in6;
+    ifs->cnf->ipv4_src.v4 = in;
+
+    ifs = ifs->next;
+    ifcnt--;
+  }
+
+  free($2->string);
+  free($2);
+}
+;
+
+isetip6src: TOK_IP6SRC TOK_IP6_ADDR
+{
+  struct olsr_ip_prefix pr6;
+  int ifcnt = ifs_in_curr_cfg;
+  struct olsr_if *ifs = olsr_cnf->interfaces;
+
+  PARSER_DEBUG_PRINTF("\tIPv6 src prefix: %s\n", $2->string);
+
+  if (olsr_string_to_prefix(AF_INET6, &pr6, $2->string) <= 0) {
+    fprintf(stderr, "isetip6src: Failed converting IP prefix %s\n", $2->string);
+    YYABORT;
+  }
+
+  while (ifcnt) {
+    ifs->cnf->ipv6_src = pr6;
       
     ifs = ifs->next;
     ifcnt--;
@@ -555,6 +579,7 @@ isetip6multg: TOK_IP6MULTIGLOBAL TOK_IP6_ADDR
   free($2);
 }
 ;
+
 isethelloint: TOK_HELLOINT TOK_FLOAT
 {
   int ifcnt = ifs_in_curr_cfg;

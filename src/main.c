@@ -745,7 +745,7 @@ static int olsr_process_arguments(int argc, char *argv[],
         printf("Invalid broadcast address! %s\nSkipping it!\n", *argv);
         continue;
       }
-      memcpy(&ifcnf->ipv4_broadcast.v4, &in.s_addr, sizeof(uint32_t));
+      memcpy(&ifcnf->ipv4_multicast.v4, &in.s_addr, sizeof(ifcnf->ipv4_multicast.v4));
       continue;
     }
 
@@ -929,7 +929,7 @@ static int olsr_process_arguments(int argc, char *argv[],
         exit(EXIT_FAILURE);
       }
 
-      memcpy(&ifcnf->ipv6_multi_glbl, &in6, sizeof(struct in6_addr));
+      memcpy(&ifcnf->ipv6_multicast, &in6, sizeof(struct in6_addr));
 
       continue;
     }

@@ -139,11 +139,14 @@ struct olsr_if_weight {
 };
 
 struct if_config_options {
-  union olsr_ip_addr ipv4_broadcast;
+  union olsr_ip_addr ipv4_multicast;
+  union olsr_ip_addr ipv6_multicast;
+
+  union olsr_ip_addr ipv4_src;
+  struct olsr_ip_prefix ipv6_src;
+
   int mode;
-  int ipv6_addrtype;
-  union olsr_ip_addr ipv6_multi_site;
-  union olsr_ip_addr ipv6_multi_glbl;
+
   struct olsr_if_weight weight;
   struct olsr_msg_params hello_params;
   struct olsr_msg_params tc_params;

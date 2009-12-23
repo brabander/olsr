@@ -134,8 +134,8 @@ getsocket(int BuffSize, struct interface *ifp __attribute__ ((unused)))
   Addr.sin_family = AF_INET;
   Addr.sin_port = htons(olsr_cnf->olsrport);
 
-  if(bufspace <= 0) {
-    sin.sin_addr.s_addr = ifp->int_addr.sin_addr.s_addr;
+  if(BuffSize <= 0) {
+    Addr.sin_addr.s_addr = ifp->int_addr.sin_addr.s_addr;
   }
 
   if (bind(Sock, (struct sockaddr *)&Addr, sizeof(Addr)) < 0) {
@@ -190,7 +190,7 @@ getsocket6(int BuffSize, struct interface *ifp __attribute__ ((unused)))
   Addr6.sin6_family = AF_INET6;
   Addr6.sin6_port = htons(olsr_cnf->olsrport);
 
-  if(bufspace <= 0) {
+  if(BuffSize <= 0) {
     memcpy(&Addr6.sin6_addr, &ifp->int6_addr.sin6_addr, sizeof(struct in6_addr));
   }
 
