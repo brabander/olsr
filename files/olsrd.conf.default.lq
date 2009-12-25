@@ -319,14 +319,14 @@ Interface "wlan0" "ath0"
     # every card is configured with is used
     # The second useful value would be to
     # specify the peer adress of an ptp-tunnel.
-    # another name of this parameter is "Ipv4Multicast"
+    # another name of this parameter is "IPv4Multicast"
  
     # Ip4Broadcast      255.255.255.255
 
     # IPv6 multicast address
     # If not defined, FF02::1 is used
 
-    # Ipv6Multicast	FF02::1
+    # IPv6Multicast	FF02::1
 
 		# IPv4 src address
     # If not defined (0.0.0.0), the interface IP is used
@@ -408,7 +408,7 @@ Interface "wlan0" "ath0"
     # The second useful value would be to 
     # specify the peer adress of an ptp-tunnel
 
-#    Ipv4Multicast	192.168.255.255
+#    IPv4Multicast	192.168.255.255
 
     # Interface Mode is used to prevent unnecessary
     # packet forwardin on switched ethernet interfaces

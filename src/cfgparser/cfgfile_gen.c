@@ -256,15 +256,15 @@ olsrd_write_cnf(struct olsrd_config *cnf, const char *fname)
 
       fprintf(fd,
               "    # IPv6 multicast address.\n    # If not defined, "OLSR_IPV6_MCAST" is used\n");
-      fprintf(fd, "    Ipv6Multicast\t%s\n\n", inet_ntop(AF_INET6, &in->cnf->ipv6_multicast.v6, ipv6_buf, sizeof(ipv6_buf)));
+      fprintf(fd, "    IPv6Multicast\t%s\n\n", inet_ntop(AF_INET6, &in->cnf->ipv6_multicast.v6, ipv6_buf, sizeof(ipv6_buf)));
 
       fprintf(fd,
               "    # IPv4 src address.\n    # If not defined, the interface IP is used\n");
-      fprintf(fd, "    Ipv4Src\t%s\n\n", inet_ntop(AF_INET6, &in->cnf->ipv4_src.v4, ipv6_buf, sizeof(ipv6_buf)));
+      fprintf(fd, "    IPv4Src\t%s\n\n", inet_ntop(AF_INET6, &in->cnf->ipv4_src.v4, ipv6_buf, sizeof(ipv6_buf)));
 
       fprintf(fd,
               "    # IPv6 src prefix.\n    # If not defined, a not-linklocal interface IP is used\n");
-      fprintf(fd, "    Ipv6Src\t%s\n\n", olsr_ip_prefix_to_string(&in->cnf->ipv6_src));
+      fprintf(fd, "    IPv6Src\t%s\n\n", olsr_ip_prefix_to_string(&in->cnf->ipv6_src));
 
       fprintf(fd,
               "    # Olsrd can autodetect changes in\n    # interface configurations. Enabled by default\n    # turn off to save CPU.\n    AutoDetectChanges: %s\n",
@@ -552,21 +552,21 @@ olsrd_write_cnf_buf(struct olsrd_config *cnf, char *buf, uint32_t bufsize)
       if (first)
         WRITE_TO_BUF
           ("    # IPv6 multicast address.\n    # If not defined, "OLSR_IPV6_MCAST" is used\n");
-      WRITE_TO_BUF("    Ipv6Multicast\t%s\n", inet_ntop(AF_INET6, &in->cnf->ipv6_multicast.v6, ipv6_buf, sizeof(ipv6_buf)));
+      WRITE_TO_BUF("    IPv6Multicast\t%s\n", inet_ntop(AF_INET6, &in->cnf->ipv6_multicast.v6, ipv6_buf, sizeof(ipv6_buf)));
       if (first)
         WRITE_TO_BUF("\n");
 
       if (first)
         WRITE_TO_BUF
           ("    # IPv4 src address.\n    # If not defined, the interface IP is used\n");
-      WRITE_TO_BUF("    Ipv6Multicast\t%s\n", inet_ntop(AF_INET6, &in->cnf->ipv6_multicast.v6, ipv6_buf, sizeof(ipv6_buf)));
+      WRITE_TO_BUF("    IPv6Multicast\t%s\n", inet_ntop(AF_INET6, &in->cnf->ipv6_multicast.v6, ipv6_buf, sizeof(ipv6_buf)));
       if (first)
         WRITE_TO_BUF("\n");
 
       if (first)
         WRITE_TO_BUF
           ("    # IPv6 src prefix.\n    # If not defined, a not-linklocal interface IP is used\n");
-      WRITE_TO_BUF("    Ipv6Src\t%s\n", olsr_ip_prefix_to_string(&in->cnf->ipv6_src));
+      WRITE_TO_BUF("    IPv6Src\t%s\n", olsr_ip_prefix_to_string(&in->cnf->ipv6_src));
       if (first)
         WRITE_TO_BUF("\n");
 

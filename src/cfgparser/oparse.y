@@ -163,7 +163,7 @@ static int add_ipv6_addr(YYSTYPE ipaddr_arg, YYSTYPE prefixlen_arg)
 %token TOK_FLOAT
 %token TOK_BOOLEAN
 
-%token TOK_IP6TYPE
+%token TOK_IPV6TYPE
 
 %token TOK_DEBUGLEVEL
 %token TOK_IPVERSION
@@ -206,11 +206,11 @@ static int add_ipv6_addr(YYSTYPE ipaddr_arg, YYSTYPE prefixlen_arg)
 %token TOK_MAXIPC
 
 %token TOK_IFMODE
-%token TOK_IP4BROADCAST
-%token TOK_IP4MULTICAST
-%token TOK_IP6MULTICAST
-%token TOK_IP4SRC
-%token TOK_IP6SRC
+%token TOK_IPV4BROADCAST
+%token TOK_IPV4MULTICAST
+%token TOK_IPV6MULTICAST
+%token TOK_IPV4SRC
+%token TOK_IPV6SRC
 %token TOK_IFWEIGHT
 %token TOK_HELLOINT
 %token TOK_HELLOVAL
@@ -222,8 +222,8 @@ static int add_ipv6_addr(YYSTYPE ipaddr_arg, YYSTYPE prefixlen_arg)
 %token TOK_HNAVAL
 %token TOK_AUTODETCHG
 
-%token TOK_IP4_ADDR
-%token TOK_IP6_ADDR
+%token TOK_IPV4_ADDR
+%token TOK_IPV6_ADDR
 %token TOK_DEFAULT
 
 %token TOK_COMMENT
@@ -320,11 +320,11 @@ ifstmts:   | ifstmts ifstmt
 ifstmt:      vcomment
              | iifweight
              | isetifmode
-             | isetip4br
-             | isetip4mc
-             | isetip6mc
-             | isetip4src
-             | isetip6src
+             | isetipv4br
+             | isetipv4mc
+             | isetipv6mc
+             | isetipv4src
+             | isetipv6src
              | isethelloint
              | isethelloval
              | isettcint
@@ -354,7 +354,7 @@ imaxipc: TOK_MAXIPC TOK_INTEGER
 }
 ;
 
-ipchost: TOK_HOSTLABEL TOK_IP4_ADDR
+ipchost: TOK_HOSTLABEL TOK_IPV4_ADDR
 {
   union olsr_ip_addr ipaddr;
   PARSER_DEBUG_PRINTF("\tIPC host: %s\n", $2->string);
@@ -371,7 +371,7 @@ ipchost: TOK_HOSTLABEL TOK_IP4_ADDR
 }
 ;
 
-ipcnet: TOK_NETLABEL TOK_IP4_ADDR TOK_IP4_ADDR
+ipcnet: TOK_NETLABEL TOK_IPV4_ADDR TOK_IPV4_ADDR
 {
   union olsr_ip_addr ipaddr, netmask;
 
@@ -394,7 +394,7 @@ ipcnet: TOK_NETLABEL TOK_IP4_ADDR TOK_IP4_ADDR
   free($3->string);
   free($3);
 }
-        |       TOK_NETLABEL TOK_IP4_ADDR TOK_SLASH TOK_INTEGER
+        |       TOK_NETLABEL TOK_IPV4_ADDR TOK_SLASH TOK_INTEGER
 {
   union olsr_ip_addr ipaddr;
 
@@ -455,7 +455,7 @@ isetifmode: TOK_IFMODE TOK_STRING
 }
 ;
 
-isetip4br: TOK_IP4BROADCAST TOK_IP4_ADDR
+isetipv4br: TOK_IPV4BROADCAST TOK_IPV4_ADDR
 {
   struct in_addr in;
   int ifcnt = ifs_in_curr_cfg;
@@ -464,7 +464,7 @@ isetip4br: TOK_IP4BROADCAST TOK_IP4_ADDR
   PARSER_DEBUG_PRINTF("\tIPv4 broadcast: %s\n", $2->string);
 
   if (inet_aton($2->string, &in) == 0) {
-    fprintf(stderr, "isetip4br: Failed converting IP address %s\n", $2->string);
+    fprintf(stderr, "isetipv4br: Failed converting IP address %s\n", $2->string);
     YYABORT;
   }
 
@@ -480,7 +480,7 @@ isetip4br: TOK_IP4BROADCAST TOK_IP4_ADDR
 }
 ;
 
-isetip4mc: TOK_IP4MULTICAST TOK_IP4_ADDR
+isetipv4mc: TOK_IPV4MULTICAST TOK_IPV4_ADDR
 {
   struct in_addr in;
   int ifcnt = ifs_in_curr_cfg;
@@ -489,7 +489,7 @@ isetip4mc: TOK_IP4MULTICAST TOK_IP4_ADDR
   PARSER_DEBUG_PRINTF("\tIPv4 broadcast: %s\n", $2->string);
 
   if (inet_aton($2->string, &in) == 0) {
-    fprintf(stderr, "isetip4br: Failed converting IP address %s\n", $2->string);
+    fprintf(stderr, "isetipv4br: Failed converting IP address %s\n", $2->string);
     YYABORT;
   }
 
@@ -505,7 +505,7 @@ isetip4mc: TOK_IP4MULTICAST TOK_IP4_ADDR
 }
 ;
 
-isetip6mc: TOK_IP6MULTICAST TOK_IP6_ADDR
+isetipv6mc: TOK_IPV6MULTICAST TOK_IPV6_ADDR
 {
   struct in6_addr in6;
   int ifcnt = ifs_in_curr_cfg;
@@ -514,7 +514,7 @@ isetip6mc: TOK_IP6MULTICAST TOK_IP6_ADDR
   PARSER_DEBUG_PRINTF("\tIPv6 multicast: %s\n", $2->string);
 
   if (inet_pton(AF_INET6, $2->string, &in6) <= 0) {
-    fprintf(stderr, "isetip6mc: Failed converting IP address %s\n", $2->string);
+    fprintf(stderr, "isetipv6mc: Failed converting IP address %s\n", $2->string);
     YYABORT;
   }
 
@@ -530,7 +530,7 @@ isetip6mc: TOK_IP6MULTICAST TOK_IP6_ADDR
 }
 ;
 
-isetip4src: TOK_IP4SRC TOK_IP4_ADDR
+isetipv4src: TOK_IPV4SRC TOK_IPV4_ADDR
 {
   struct in_addr in;
   int ifcnt = ifs_in_curr_cfg;
@@ -539,7 +539,7 @@ isetip4src: TOK_IP4SRC TOK_IP4_ADDR
   PARSER_DEBUG_PRINTF("\tIPv4 src: %s\n", $2->string);
 
   if (inet_aton($2->string, &in) == 0) {
-    fprintf(stderr, "isetip4src: Failed converting IP address %s\n", $2->string);
+    fprintf(stderr, "isetipv4src: Failed converting IP address %s\n", $2->string);
     YYABORT;
   }
 
@@ -555,7 +555,7 @@ isetip4src: TOK_IP4SRC TOK_IP4_ADDR
 }
 ;
 
-isetip6src: TOK_IP6SRC TOK_IP6_ADDR
+isetipv6src: TOK_IPV6SRC TOK_IPV6_ADDR
 {
   struct olsr_ip_prefix pr6;
   int ifcnt = ifs_in_curr_cfg;
@@ -564,7 +564,7 @@ isetip6src: TOK_IP6SRC TOK_IP6_ADDR
   PARSER_DEBUG_PRINTF("\tIPv6 src prefix: %s\n", $2->string);
 
   if (olsr_string_to_prefix(AF_INET6, &pr6, $2->string) <= 0) {
-    fprintf(stderr, "isetip6src: Failed converting IP prefix %s\n", $2->string);
+    fprintf(stderr, "isetipv6src: Failed converting IP prefix %s\n", $2->string);
     YYABORT;
   }
 
@@ -735,14 +735,14 @@ isetlqmult: TOK_LQ_MULT TOK_DEFAULT TOK_FLOAT
   }
 }
 
-          | TOK_LQ_MULT TOK_IP4_ADDR TOK_FLOAT
+          | TOK_LQ_MULT TOK_IPV4_ADDR TOK_FLOAT
 {
   if (lq_mult_helper($2, $3) < 0) {
     YYABORT;
   }
 }
 
-          | TOK_LQ_MULT TOK_IP6_ADDR TOK_FLOAT
+          | TOK_LQ_MULT TOK_IPV6_ADDR TOK_FLOAT
 {
   if (lq_mult_helper($2, $3) < 0) {
     YYABORT;
@@ -798,7 +798,7 @@ fibmetric:    TOK_FIBMETRIC TOK_STRING
 }
 ;
 
-ihna4entry:     TOK_IP4_ADDR TOK_IP4_ADDR
+ihna4entry:     TOK_IPV4_ADDR TOK_IPV4_ADDR
 {
   union olsr_ip_addr ipaddr, netmask;
 
@@ -832,7 +832,7 @@ ihna4entry:     TOK_IP4_ADDR TOK_IP4_ADDR
   free($2->string);
   free($2);
 }
-        |       TOK_IP4_ADDR TOK_SLASH TOK_INTEGER
+        |       TOK_IPV4_ADDR TOK_SLASH TOK_INTEGER
 {
   union olsr_ip_addr ipaddr, netmask;
 
@@ -863,13 +863,13 @@ ihna4entry:     TOK_IP4_ADDR TOK_IP4_ADDR
 }
 ;
 
-ihna6entry:     TOK_IP6_ADDR TOK_INTEGER
+ihna6entry:     TOK_IPV6_ADDR TOK_INTEGER
 {
   if (add_ipv6_addr($1, $2)) {
     YYABORT;
   }
 }
-        |       TOK_IP6_ADDR TOK_SLASH TOK_INTEGER
+        |       TOK_IPV6_ADDR TOK_SLASH TOK_INTEGER
 {
   if (add_ipv6_addr($1, $3)) {
     YYABORT;
