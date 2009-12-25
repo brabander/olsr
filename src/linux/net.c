@@ -67,6 +67,9 @@
 /* IP spoof proc entry */
 #define SPOOF_PROC "/proc/sys/net/ipv4/conf/%s/rp_filter"
 
+/* list of IPv6 interfaces */
+#define PATH_PROCNET_IFINET6           "/proc/net/if_inet6"
+
 /*
  *Wireless definitions for ioctl calls
  *(from linux/wireless.h)
@@ -612,7 +615,7 @@ get_ipv6_address(char *ifname, struct sockaddr_in6 *saddr6, struct olsr_ip_prefi
   FILE *f;
   union olsr_ip_addr tmp_ip;
 
-  if ((f = fopen(_PATH_PROCNET_IFINET6, "r")) != NULL) {
+  if ((f = fopen(PATH_PROCNET_IFINET6, "r")) != NULL) {
     while (fscanf
            (f, "%4s%4s%4s%4s%4s%4s%4s%4s %02x %02x %02x %02x %20s\n", addr6p[0], addr6p[1], addr6p[2], addr6p[3], addr6p[4],
             addr6p[5], addr6p[6], addr6p[7], &if_idx, &plen, &scope, &dad_status, devname) != EOF) {

@@ -54,8 +54,6 @@
 #include "olsr_types.h"
 #include "mantissa.h"
 
-#define _PATH_PROCNET_IFINET6           "/proc/net/if_inet6"
-
 #define IPV6_ADDR_ANY		0x0000U
 
 #define IPV6_ADDR_UNICAST      	0x0001U
