@@ -622,7 +622,7 @@ olsrd_print_cnf(struct olsrd_config *cnf)
                (float)(mult->value) / 65536.0);
       }
 
-      printf("\tAutodetetc changes       : %s\n", in->cnf->autodetect_chg ? "yes" : "no");
+      printf("\tAutodetect changes       : %s\n", in->cnf->autodetect_chg ? "yes" : "no");
 
       in = in->next;
     }
