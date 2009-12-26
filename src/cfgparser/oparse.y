@@ -115,7 +115,7 @@ static int lq_mult_helper(YYSTYPE ip_addr_arg, YYSTYPE mult_arg)
     mult->value = (uint32_t)(mult_arg->floating * LINK_LOSS_MULTIPLIER);
 
     mult->next = walker->cnf->lq_mult;
-    walker->cnf->lq_mult = walker->cnf->lq_mult = mult;
+    walker->cnfi->lq_mult = walker->cnf->lq_mult = mult;
 
     walker = walker->next;
   }
