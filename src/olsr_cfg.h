@@ -158,12 +158,11 @@ struct if_config_options {
 
 struct olsr_if {
   char *name;
-  char *config;
   bool configured;
   bool host_emul;
   union olsr_ip_addr hemu_ip;
   struct interface *interf;
-  struct if_config_options *cnf;
+  struct if_config_options *cnf, *cnfi;
   struct olsr_if *next;
 };
 
@@ -220,6 +219,7 @@ struct olsrd_config {
   struct plugin_entry *plugins;
   struct ip_prefix_list *hna_entries;
   struct ip_prefix_list *ipc_nets;
+  struct if_config_options *interface_defaults;
   struct olsr_if *interfaces;
   float pollrate;
   float nic_chgs_pollrate;

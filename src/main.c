@@ -644,7 +644,7 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
   OLSR_PRINTF(1, "\n <<<< %s - terminating >>>>\n           http://www.olsr.org\n", olsrd_version);
 
   exit_value = olsr_cnf->exit_value;
-  free (olsr_cnf);
+  olsrd_free_cnf(olsr_cnf);
 
   exit(exit_value);
 }

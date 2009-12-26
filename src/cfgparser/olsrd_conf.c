@@ -46,6 +46,7 @@
 #include "net_olsr.h"
 #include "olsr.h"
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
@@ -287,15 +288,37 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
 	  fprintf(stderr, "Warning, you are using the min_tc_vtime hack. We hope you know what you are doing... contact olsr.org otherwise.\n");
   }
 
+  if (cnf->interface_defaults == NULL) {
+    /* get a default configuration if the user did not specify one */
+    cnf->interface_defaults = get_default_if_config();
+  }
+
   /* Interfaces */
   while (in) {
     struct olsr_lq_mult *mult;
 
     io = in->cnf;
 
-    if (in->name == NULL || !strlen(in->name)) {
-      fprintf(stderr, "Interface has no name!\n");
-      return -1;
+    /*apply defaults (if this is not the default interface stub)*/
+    if (in->cnf != cnf->interface_defaults)
+    {
+      size_t pos;
+      uint8_t *cnfptr = (uint8_t*)in->cnf;
+      uint8_t *cnfiptr = (uint8_t*)in->cnfi;
+      uint8_t *defptr = (uint8_t*)cnf->interface_defaults;
+
+      assert(in->cnf);
+      assert(in->cnfi);
+      for (pos = 0; pos < sizeof(*in->cnf); pos++) {
+        if (cnfptr[pos] != cnfiptr[pos]) {
+          cnfptr[pos] = defptr[pos]; cnfiptr[pos]=0x00;
+        }
+      }
+
+      if (in->name == NULL || !strlen(in->name)) {
+        fprintf(stderr, "Interface has no name!\n");
+        return -1;
+      }
     }
 
     if (io == NULL) {
@@ -314,14 +337,15 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
     }
 
     if (io->hello_params.emission_interval < cnf->pollrate || io->hello_params.emission_interval > io->hello_params.validity_time) {
-      fprintf(stderr, "Bad HELLO parameters! (em: %0.2f, vt: %0.2f)\n", io->hello_params.emission_interval,
-              io->hello_params.validity_time);
+      fprintf(stderr, "Bad HELLO parameters! (em: %0.2f, vt: %0.2f) for dev %s\n", io->hello_params.emission_interval,
+              io->hello_params.validity_time, in->name);
       return -1;
     }
 
     /* TC interval */
     if (io->tc_params.emission_interval < cnf->pollrate || io->tc_params.emission_interval > io->tc_params.validity_time) {
-      fprintf(stderr, "Bad TC parameters! (em: %0.2f, vt: %0.2f)\n", io->tc_params.emission_interval, io->tc_params.validity_time);
+      fprintf(stderr, "Bad TC parameters! (em: %0.2f, vt: %0.2f) for dev %s\n", io->tc_params.emission_interval,
+          io->tc_params.validity_time, in->name);
       return -1;
     }
 
@@ -331,15 +355,15 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
     }
     /* MID interval */
     if (io->mid_params.emission_interval < cnf->pollrate || io->mid_params.emission_interval > io->mid_params.validity_time) {
-      fprintf(stderr, "Bad MID parameters! (em: %0.2f, vt: %0.2f)\n", io->mid_params.emission_interval,
-              io->mid_params.validity_time);
+      fprintf(stderr, "Bad MID parameters! (em: %0.2f, vt: %0.2f) for dev %s\n", io->mid_params.emission_interval,
+              io->mid_params.validity_time, in->name);
       return -1;
     }
 
     /* HNA interval */
     if (io->hna_params.emission_interval < cnf->pollrate || io->hna_params.emission_interval > io->hna_params.validity_time) {
-      fprintf(stderr, "Bad HNA parameters! (em: %0.2f, vt: %0.2f)\n", io->hna_params.emission_interval,
-              io->hna_params.validity_time);
+      fprintf(stderr, "Bad HNA parameters! (em: %0.2f, vt: %0.2f) for dev %s\n", io->hna_params.emission_interval,
+              io->hna_params.validity_time, in->name);
       return -1;
     }
 
@@ -379,10 +403,11 @@ olsrd_free_cnf(struct olsrd_config *cnf)
     }
 
     free(in->cnf);
+    free(in->cnfi);
+
     ind = in;
     in = in->next;
-    free(ind->name);
-    free(ind->config);
+
     free(ind);
   }
 

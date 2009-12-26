@@ -64,6 +64,15 @@
 #define PARSER_DEBUG_PRINTF(x, ...)   do { } while (0)
 #endif
 
+static char interface_defaults_name[] = "[InterfaceDefaults]";
+
+#define SET_IFS_CONF(ifs, ifcnt, field, value) do { \
+	for (; ifcnt>0; ifs=ifs->next, ifcnt--) { \
+    ifs->cnfi->field = (value); \
+    ifs->cnf->field = (value); \
+	} \
+} while (0)
+
 #define YYSTYPE struct conf_token *
 
 void yyerror(const char *);
@@ -71,7 +80,6 @@ int yylex(void);
 
 static int ifs_in_curr_cfg = 0;
 
-static int lq_mult_helper(YYSTYPE ip_addr_arg, YYSTYPE mult_arg);
 static int add_ipv6_addr(YYSTYPE ipaddr_arg, YYSTYPE prefixlen_arg);
 
 static int lq_mult_helper(YYSTYPE ip_addr_arg, YYSTYPE mult_arg)
@@ -107,7 +115,7 @@ static int lq_mult_helper(YYSTYPE ip_addr_arg, YYSTYPE mult_arg)
     mult->value = (uint32_t)(mult_arg->floating * LINK_LOSS_MULTIPLIER);
 
     mult->next = walker->cnf->lq_mult;
-    walker->cnf->lq_mult = mult;
+    walker->cnf->lq_mult = walker->cnf->lq_mult = mult;
 
     walker = walker->next;
   }
@@ -170,6 +178,7 @@ static int add_ipv6_addr(YYSTYPE ipaddr_arg, YYSTYPE prefixlen_arg)
 %token TOK_HNA4
 %token TOK_HNA6
 %token TOK_PLUGIN
+%token TOK_INTERFACE_DEFAULTS
 %token TOK_INTERFACE
 %token TOK_NOINT
 %token TOK_TOS
@@ -269,6 +278,7 @@ stmt:       idebug
 block:      TOK_HNA4 hna4body
           | TOK_HNA6 hna6body
           | TOK_IPCCON ipcbody
+          | ifdblock ifbody
           | ifblock ifbody
           | plblock plbody
 ;
@@ -345,6 +355,34 @@ plstmts:   | plstmts plstmt
 
 plstmt:     plparam
           | vcomment
+;
+
+ifdblock: TOK_INTERFACE_DEFAULTS
+{
+  struct olsr_if *in = malloc(sizeof(*in));
+
+  if (in == NULL) {
+    fprintf(stderr, "Out of memory(ADD IF)\n");
+    YYABORT;
+  }
+
+  in->cnf = get_default_if_config();
+  in->cnfi = get_default_if_config();
+
+  if (in->cnf == NULL || in->cnfi == NULL) {
+    fprintf(stderr, "Out of memory(ADD DEFIFRULE)\n");
+    YYABORT;
+  }
+
+  in->name = strdup(interface_defaults_name);
+
+  olsr_cnf->interface_defaults = in->cnf;
+
+  /* Queue */
+  in->next = olsr_cnf->interfaces;
+  olsr_cnf->interfaces = in;
+  ifs_in_curr_cfg=1;
+}
 ;
 
 imaxipc: TOK_MAXIPC TOK_INTEGER
@@ -428,6 +466,8 @@ iifweight:       TOK_IFWEIGHT TOK_INTEGER
   while (ifcnt) {
     ifs->cnf->weight.value = $2->integer;
     ifs->cnf->weight.fixed = true;
+    ifs->cnfi->weight.value = $2->integer;
+    ifs->cnfi->weight.fixed = true;
 
     ifs = ifs->next;
     ifcnt--;
@@ -441,15 +481,12 @@ isetifmode: TOK_IFMODE TOK_STRING
 {
   int ifcnt = ifs_in_curr_cfg;
   struct olsr_if *ifs = olsr_cnf->interfaces;
+	int mode = (strcmp($2->string, "ether") == 0)?IF_MODE_ETHER:IF_MODE_MESH;
 
   PARSER_DEBUG_PRINTF("\tMode: %d\n", $2->string);
-    while (ifcnt) {
-      ifs->cnf->mode = (strcmp($2->string, "ether") == 0)?IF_MODE_ETHER:IF_MODE_MESH;
 
-      ifs = ifs->next;
-      ifcnt--;
-    }
-
+	SET_IFS_CONF(ifs, ifcnt, mode, mode);
+	
   free($2->string);
   free($2);
 }
@@ -468,12 +505,7 @@ isetipv4br: TOK_IPV4BROADCAST TOK_IPV4_ADDR
     YYABORT;
   }
 
-  while (ifcnt) {
-    ifs->cnf->ipv4_multicast.v4 = in;
-
-    ifs = ifs->next;
-    ifcnt--;
-  }
+	SET_IFS_CONF(ifs, ifcnt, ipv4_multicast.v4, in);
 
   free($2->string);
   free($2);
@@ -493,12 +525,7 @@ isetipv4mc: TOK_IPV4MULTICAST TOK_IPV4_ADDR
     YYABORT;
   }
 
-  while (ifcnt) {
-    ifs->cnf->ipv4_multicast.v4 = in;
-
-    ifs = ifs->next;
-    ifcnt--;
-  }
+	SET_IFS_CONF(ifs, ifcnt, ipv4_multicast.v4, in);
 
   free($2->string);
   free($2);
@@ -518,12 +545,7 @@ isetipv6mc: TOK_IPV6MULTICAST TOK_IPV6_ADDR
     YYABORT;
   }
 
-  while (ifcnt) {
-    ifs->cnf->ipv6_multicast.v6 = in6;
-      
-    ifs = ifs->next;
-    ifcnt--;
-  }
+	SET_IFS_CONF(ifs, ifcnt, ipv6_multicast.v6, in6);
 
   free($2->string);
   free($2);
@@ -543,12 +565,7 @@ isetipv4src: TOK_IPV4SRC TOK_IPV4_ADDR
     YYABORT;
   }
 
-  while (ifcnt) {
-    ifs->cnf->ipv4_src.v4 = in;
-
-    ifs = ifs->next;
-    ifcnt--;
-  }
+	SET_IFS_CONF(ifs, ifcnt, ipv4_src.v4, in);
 
   free($2->string);
   free($2);
@@ -568,12 +585,7 @@ isetipv6src: TOK_IPV6SRC TOK_IPV6_ADDR
     YYABORT;
   }
 
-  while (ifcnt) {
-    ifs->cnf->ipv6_src = pr6;
-      
-    ifs = ifs->next;
-    ifcnt--;
-  }
+	SET_IFS_CONF(ifs, ifcnt, ipv6_src, pr6);
 
   free($2->string);
   free($2);
@@ -587,12 +599,7 @@ isethelloint: TOK_HELLOINT TOK_FLOAT
 
   PARSER_DEBUG_PRINTF("\tHELLO interval: %0.2f\n", $2->floating);
 
-  while (ifcnt) {
-    ifs->cnf->hello_params.emission_interval = $2->floating;
-      
-    ifs = ifs->next;
-    ifcnt--;
-  }
+	SET_IFS_CONF(ifs, ifcnt, hello_params.emission_interval, $2->floating);
 
   free($2);
 }
@@ -604,12 +611,7 @@ isethelloval: TOK_HELLOVAL TOK_FLOAT
 
   PARSER_DEBUG_PRINTF("\tHELLO validity: %0.2f\n", $2->floating);
 
-  while (ifcnt) {
-    ifs->cnf->hello_params.validity_time = $2->floating;
-      
-    ifs = ifs->next;
-    ifcnt--;
-  }
+	SET_IFS_CONF(ifs, ifcnt, hello_params.validity_time, $2->floating);
 
   free($2);
 }
@@ -621,12 +623,8 @@ isettcint: TOK_TCINT TOK_FLOAT
 
   PARSER_DEBUG_PRINTF("\tTC interval: %0.2f\n", $2->floating);
 
-  while (ifcnt) {
-    ifs->cnf->tc_params.emission_interval = $2->floating;
-      
-    ifs = ifs->next;
-    ifcnt--;
-  }
+	SET_IFS_CONF(ifs, ifcnt, tc_params.emission_interval, $2->floating);
+
   free($2);
 }
 ;
@@ -636,12 +634,8 @@ isettcval: TOK_TCVAL TOK_FLOAT
   struct olsr_if *ifs = olsr_cnf->interfaces;
   
   PARSER_DEBUG_PRINTF("\tTC validity: %0.2f\n", $2->floating);
-  while (ifcnt) {
-    ifs->cnf->tc_params.validity_time = $2->floating;
-      
-    ifs = ifs->next;
-    ifcnt--;
-  }
+  
+ SET_IFS_CONF(ifs, ifcnt, tc_params.validity_time, $2->floating);
 
   free($2);
 }
@@ -653,12 +647,8 @@ isetmidint: TOK_MIDINT TOK_FLOAT
 
 
   PARSER_DEBUG_PRINTF("\tMID interval: %0.2f\n", $2->floating);
-  while (ifcnt) {
-    ifs->cnf->mid_params.emission_interval = $2->floating;
-      
-    ifs = ifs->next;
-    ifcnt--;
-  }
+  
+  SET_IFS_CONF(ifs, ifcnt, mid_params.emission_interval, $2->floating);
 
   free($2);
 }
@@ -669,12 +659,8 @@ isetmidval: TOK_MIDVAL TOK_FLOAT
   struct olsr_if *ifs = olsr_cnf->interfaces;
 
   PARSER_DEBUG_PRINTF("\tMID validity: %0.2f\n", $2->floating);
-  while (ifcnt) {
-    ifs->cnf->mid_params.validity_time = $2->floating;
-      
-    ifs = ifs->next;
-    ifcnt--;
-  }
+  
+  SET_IFS_CONF(ifs, ifcnt, mid_params.validity_time, $2->floating);
 
   free($2);
 }
@@ -685,12 +671,8 @@ isethnaint: TOK_HNAINT TOK_FLOAT
   struct olsr_if *ifs = olsr_cnf->interfaces;
   
   PARSER_DEBUG_PRINTF("\tHNA interval: %0.2f\n", $2->floating);
-  while (ifcnt) {
-    ifs->cnf->hna_params.emission_interval = $2->floating;
-      
-    ifs = ifs->next;
-    ifcnt--;
-  }
+
+  SET_IFS_CONF(ifs, ifcnt, hna_params.emission_interval, $2->floating);
 
   free($2);
 }
@@ -701,12 +683,8 @@ isethnaval: TOK_HNAVAL TOK_FLOAT
   struct olsr_if *ifs = olsr_cnf->interfaces;
 
   PARSER_DEBUG_PRINTF("\tHNA validity: %0.2f\n", $2->floating);
-  while (ifcnt) {
-    ifs->cnf->hna_params.validity_time = $2->floating;
-      
-    ifs = ifs->next;
-    ifcnt--;
-  }
+
+  SET_IFS_CONF(ifs, ifcnt, hna_params.validity_time, $2->floating);
 
   free($2);
 }
@@ -717,12 +695,8 @@ isetautodetchg: TOK_AUTODETCHG TOK_BOOLEAN
   struct olsr_if *ifs = olsr_cnf->interfaces;
 
   PARSER_DEBUG_PRINTF("\tAutodetect changes: %s\n", $2->boolean ? "YES" : "NO");
-  while (ifcnt) {
-    ifs->cnf->autodetect_chg = $2->boolean;
-      
-    ifs = ifs->next;
-    ifcnt--;
-  }
+
+  SET_IFS_CONF(ifs, ifcnt, autodetect_chg, $2->boolean);
 
   free($2);
 }
@@ -893,12 +867,19 @@ ifnick: TOK_STRING
     YYABORT;
   }
 
-  in->cnf = get_default_if_config();
-
+  in->cnf = malloc(sizeof(*in->cnf));
   if (in->cnf == NULL) {
     fprintf(stderr, "Out of memory(ADD IFRULE)\n");
     YYABORT;
   }
+  memset(in->cnf, 0x00, sizeof(*in->cnf));
+ 
+  in->cnfi = malloc(sizeof(*in->cnfi));
+  if (in->cnf == NULL) {
+    fprintf(stderr, "Out of memory(ADD IFRULE)\n");
+    YYABORT;
+  }
+  memset(in->cnfi, 0xFF, sizeof(*in->cnfi));
 
   in->name = $1->string;
 
