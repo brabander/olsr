@@ -52,6 +52,7 @@
 #include "net_olsr.h"
 #include "lq_plugin.h"
 #include "olsr_cookie.h"
+#include "duplicate_set.h"
 
 #include <assert.h>
 
@@ -944,9 +945,14 @@ olsr_input_tc(union olsr_message * msg, struct interface * input_if __attribute_
   }
 
   if (emptyTC && borderSet) {
-    /* cleanup MIDs and HNAs if all edges have been erased by an empty TC */
+    /* cleanup MIDs and HNAs if all edges have been erased by
+     * an empty TC, then alert the duplicate set and kill the
+     * tc entry */
     olsr_cleanup_mid(&originator);
     olsr_cleanup_hna(&originator);
+    olsr_cleanup_duplicates(&originator);
+
+    olsr_delete_tc_entry(tc);
   }
   /* Forward the message */
   return true;
