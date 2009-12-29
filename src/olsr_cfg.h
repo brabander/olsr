@@ -75,12 +75,12 @@
 #define DEF_USE_HYST        false
 #define DEF_FIB_METRIC      FIBM_FLAT
 #define DEF_LQ_LEVEL        2
-#define DEF_LQ_FISH         0
+#define DEF_LQ_FISH         1
 #define DEF_LQ_DIJK_LIMIT   255
 #define DEF_LQ_DIJK_INTER   0.0
-#define DEF_LQ_NAT_THRESH   1.0
+#define DEF_LQ_NAT_THRESH   0.5
 #define DEF_LQ_AGING        0.1
-#define DEF_CLEAR_SCREEN    false
+#define DEF_CLEAR_SCREEN    true
 #define DEF_OLSRPORT        698
 #define DEF_RTPROTO         0 /* 0 means OS-specific default */
 #define DEF_RTTABLE         254
