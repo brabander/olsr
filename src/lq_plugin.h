@@ -111,7 +111,7 @@ int avl_strcasecmp(const void *str1, const void *str2);
 void init_lq_handler_tree(void);
 
 void register_lq_handler(struct lq_handler *handler, const char *name);
-int activate_lq_handler(const char *name);
+void activate_lq_handler(const char *name);
 
 olsr_linkcost olsr_calc_tc_cost(const struct tc_edge_entry *);
 

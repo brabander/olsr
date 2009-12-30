@@ -67,7 +67,8 @@
 /* Default values not declared in olsr_protocol.h */
 #define DEF_POLLRATE        0.05
 #define DEF_NICCHGPOLLRT    2.5
-#define DEF_WILL_AUTO       true
+#define DEF_WILL_AUTO       false
+#define DEF_WILLINGNESS     3
 #define DEF_ALLOW_NO_INTS   true
 #define DEF_TOS             16
 #define DEF_DEBUGLVL        1
@@ -75,12 +76,12 @@
 #define DEF_USE_HYST        false
 #define DEF_FIB_METRIC      FIBM_FLAT
 #define DEF_LQ_LEVEL        2
-#define DEF_LQ_FISH         0
+#define DEF_LQ_FISH         1
 #define DEF_LQ_DIJK_LIMIT   255
 #define DEF_LQ_DIJK_INTER   0.0
-#define DEF_LQ_NAT_THRESH   1.0
+#define DEF_LQ_NAT_THRESH   0.5
 #define DEF_LQ_AGING        0.1
-#define DEF_CLEAR_SCREEN    false
+#define DEF_CLEAR_SCREEN    true
 #define DEF_OLSRPORT        698
 #define DEF_RTPROTO         0 /* 0 means OS-specific default */
 #define DEF_RTTABLE         254

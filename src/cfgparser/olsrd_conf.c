@@ -453,6 +453,7 @@ set_default_cnf(struct olsrd_config *cnf)
   cnf->rtproto = DEF_RTPROTO;
   cnf->rttable_default = 0;
   cnf->willingness_auto = DEF_WILL_AUTO;
+  cnf->willingness = DEF_WILLINGNESS;
   cnf->ipc_connections = DEF_IPC_CONNECTIONS;
   cnf->fib_metric = DEF_FIB_METRIC;
 
