@@ -116,6 +116,8 @@ static int lq_mult_helper(YYSTYPE ip_addr_arg, YYSTYPE mult_arg)
 
     mult->next = walker->cnf->lq_mult;
     walker->cnfi->lq_mult = walker->cnf->lq_mult = mult;
+    walker->cnf->orig_lq_mult_cnt++;
+    walker->cnfi->orig_lq_mult_cnt=walker->cnf->orig_lq_mult_cnt;
 
     walker = walker->next;
   }
@@ -887,6 +889,7 @@ ifnick: TOK_STRING
       fprintf(stderr, "Out of memory(ADD IF)\n");
       YYABORT;
     }
+    memset(in, 0, sizeof(*in));
 
     in->cnf = malloc(sizeof(*in->cnf));
     if (in->cnf == NULL) {
@@ -901,6 +904,7 @@ ifnick: TOK_STRING
       YYABORT;
     }
     memset(in->cnfi, 0xFF, sizeof(*in->cnfi));
+    in->cnfi->orig_lq_mult_cnt=0;
 
     in->name = $1->string;
   }
