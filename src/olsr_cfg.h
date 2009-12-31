@@ -154,6 +154,7 @@ struct if_config_options {
   struct olsr_msg_params mid_params;
   struct olsr_msg_params hna_params;
   struct olsr_lq_mult *lq_mult;
+  int orig_lq_mult_cnt;
   bool autodetect_chg;
 };
 
