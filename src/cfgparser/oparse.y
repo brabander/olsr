@@ -860,29 +860,50 @@ ifstart: TOK_INTERFACE
 
 ifnick: TOK_STRING
 {
-  struct olsr_if *in = malloc(sizeof(*in));
-  
-  if (in == NULL) {
-    fprintf(stderr, "Out of memory(ADD IF)\n");
-    YYABORT;
+  struct olsr_if *in, *last;
+  in = olsr_cnf->interfaces;
+  last = NULL;
+  while (in != NULL) {
+    if (strcmp(in->name, $1->string) == 0) {
+      free ($1->string);
+      break;
+    }
+    last = in;
+    in = in->next;
   }
 
-  in->cnf = malloc(sizeof(*in->cnf));
-  if (in->cnf == NULL) {
-    fprintf(stderr, "Out of memory(ADD IFRULE)\n");
-    YYABORT;
+  if (in != NULL) {
+    /* remove old interface from list to add it later at the beginning */
+    if (last) {
+      last->next = in->next;
+    }
+    else {
+      olsr_cnf->interfaces = in->next;
+    }
   }
-  memset(in->cnf, 0x00, sizeof(*in->cnf));
- 
-  in->cnfi = malloc(sizeof(*in->cnfi));
-  if (in->cnf == NULL) {
-    fprintf(stderr, "Out of memory(ADD IFRULE)\n");
-    YYABORT;
+  else {
+    in = malloc(sizeof(*in));
+    if (in == NULL) {
+      fprintf(stderr, "Out of memory(ADD IF)\n");
+      YYABORT;
+    }
+
+    in->cnf = malloc(sizeof(*in->cnf));
+    if (in->cnf == NULL) {
+      fprintf(stderr, "Out of memory(ADD IFRULE)\n");
+      YYABORT;
+    }
+    memset(in->cnf, 0x00, sizeof(*in->cnf));
+
+    in->cnfi = malloc(sizeof(*in->cnfi));
+    if (in->cnf == NULL) {
+      fprintf(stderr, "Out of memory(ADD IFRULE)\n");
+      YYABORT;
+    }
+    memset(in->cnfi, 0xFF, sizeof(*in->cnfi));
+
+    in->name = $1->string;
   }
-  memset(in->cnfi, 0xFF, sizeof(*in->cnfi));
-
-  in->name = $1->string;
-
   /* Queue */
   in->next = olsr_cnf->interfaces;
   olsr_cnf->interfaces = in;
