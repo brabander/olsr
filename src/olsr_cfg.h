@@ -276,7 +276,7 @@ extern "C" {
  * Interface to parser
  */
 
-  struct olsrd_config *olsrd_parse_cnf(const char *);
+  int olsrd_parse_cnf(const char *);
 
   int olsrd_sanity_check_cnf(struct olsrd_config *);
 

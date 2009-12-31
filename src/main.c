@@ -161,6 +161,27 @@ static void olsr_create_lock_file(void) {
 }
 
 /**
+ * loads a config file
+ * @return <0 if load failed, 0 otherwise
+ */
+static int
+olsrmain_load_config(char *file) {
+  struct stat statbuf;
+
+  if (stat(file, &statbuf) < 0) {
+    fprintf(stderr, "Could not find specified config file %s!\n%s\n\n",
+        file, strerror(errno));
+    return -1;
+  }
+
+  if (olsrd_parse_cnf(file) < 0) {
+    fprintf(stderr, "Error while reading config file %s!\n", file);
+    return -1;
+  }
+  return 0;
+}
+
+/**
  * Main entrypoint
  */
 
@@ -168,6 +189,8 @@ int main(int argc, char *argv[]) {
   struct if_config_options *default_ifcnf;
   char conf_file_name[FILENAME_MAX];
   struct ipaddr_str buf;
+  bool loadedConfig = false;
+  int i;
 #ifdef WIN32
   WSADATA WsaData;
   size_t len;
@@ -236,33 +259,34 @@ int main(int argc, char *argv[]) {
   strscpy(conf_file_name, OLSRD_GLOBAL_CONF_FILE, sizeof(conf_file_name));
 #endif
 
-  if ((argc > 1) && (strcmp(argv[1], "-f") == 0)) {
-    struct stat statbuf;
+  olsr_cnf = olsrd_get_default_cnf();
+  for (i=1; i < argc-1;) {
+    if (strcmp(argv[i], "-f") == 0) {
+      loadedConfig = true;
 
-    argv++;
-    argc--;
-    if (argc == 1) {
-      fprintf(stderr, "You must provide a filename when using the -f switch!\n");
-      exit(EXIT_FAILURE);
+      if (olsrmain_load_config(argv[i+1]) < 0) {
+        exit(EXIT_FAILURE);
+      }
+
+      if (i+2 < argc) {
+        memmove(&argv[i], &argv[i+2], sizeof(*argv) * (argc-i-1));
+      }
+      argc -= 2;
     }
-
-    if (stat(argv[1], &statbuf) < 0) {
-      fprintf(stderr, "Could not find specified config file %s!\n%s\n\n",
-          argv[1], strerror(errno));
-      exit(EXIT_FAILURE);
+    else {
+      i++;
     }
-
-    strscpy(conf_file_name, argv[1], sizeof(conf_file_name));
-    argv++;
-    argc--;
-
   }
 
   /*
    * set up configuration prior to processing commandline options
    */
-  if (NULL == (olsr_cnf = olsrd_parse_cnf(conf_file_name))) {
-    printf("Using default config values(no configfile)\n");
+  if (!loadedConfig && olsrmain_load_config(conf_file_name) == 0) {
+    loadedConfig = true;
+  }
+
+  if (!loadedConfig) {
+    olsrd_free_cnf(olsr_cnf);
     olsr_cnf = olsrd_get_default_cnf();
   }
 

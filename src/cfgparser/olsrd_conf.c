@@ -101,38 +101,25 @@ main(int argc, char *argv[])
 
 #endif
 
-struct olsrd_config *
+int
 olsrd_parse_cnf(const char *filename)
 {
   struct olsr_if *in, *new_ifqueue;
   int rc;
 
-  /* Initialize the global varibles - oparse.y needs it there */
-  olsr_cnf = malloc(sizeof(*olsr_cnf));
-  if (olsr_cnf == NULL) {
-    fprintf(stderr, "Out of memory %s\n", __func__);
-    return NULL;
-  }
-
-  set_default_cnf(olsr_cnf);
-
-  printf("Parsing file: \"%s\"\n", filename);
+  fprintf(stderr, "Parsing file: \"%s\"\n", filename);
 
   yyin = fopen(filename, "r");
   if (yyin == NULL) {
     fprintf(stderr, "Cannot open configuration file '%s': %s.\n", filename, strerror(errno));
-    olsrd_free_cnf(olsr_cnf);
-    olsr_cnf = NULL;
-    return NULL;
+    return -1;
   }
 
   current_line = 1;
   rc = yyparse();
   fclose(yyin);
   if (rc != 0) {
-    olsrd_free_cnf(olsr_cnf);
-    olsr_cnf = NULL;
-    return NULL;
+    return -1;
   }
 
   /* Reverse the queue (added by user request) */
@@ -155,7 +142,7 @@ olsrd_parse_cnf(const char *filename)
     in->interf = NULL;
     in->host_emul = false;
   }
-  return olsr_cnf;
+  return 0;
 }
 
 int
