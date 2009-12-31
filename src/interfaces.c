@@ -253,7 +253,7 @@ queue_if(const char *name, int hemu)
 
   /* check if the inerfaces already exists */
   while (interf_n != NULL) {
-    if (memcmp(interf_n->name, name, strlen(name)) == 0) {
+    if (strcmp(interf_n->name, name) == 0) {
       fprintf(stderr, "Duplicate interfaces defined... not adding %s\n", name);
       return NULL;
     }
