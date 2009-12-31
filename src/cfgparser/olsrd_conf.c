@@ -513,6 +513,39 @@ get_default_if_config(void)
 
 }
 
+/* prints an interface (and checks it againt the default config) and the inverted config */
+static void
+olsrd_print_interface_cnf(struct if_config_options *cnf, struct if_config_options *cnfi, bool defcnf)
+{
+  char ipv6_buf[INET6_ADDRSTRLEN];                  /* buffer for IPv6 inet_htop */
+
+  if (cnf->ipv4_multicast.v4.s_addr) {
+    printf("\tIPv4 broadcast/multicast : %s%s\n", inet_ntoa(cnf->ipv4_multicast.v4),DEFAULT_STR(ipv4_multicast.v4.s_addr));
+  } else {
+    printf("\tIPv4 broadcast/multicast : AUTO%s\n",DEFAULT_STR(ipv4_multicast.v4.s_addr));
+  }
+
+  if (cnf->mode==IF_MODE_ETHER){
+    printf("\tMode           : ether%s\n",DEFAULT_STR(mode));
+  } else {
+    printf("\tMode           : mesh%s\n",DEFAULT_STR(mode));
+  }
+
+  printf("\tIPv6 multicast           : %s%s\n", inet_ntop(AF_INET6, &cnf->ipv6_multicast.v6, ipv6_buf, sizeof(ipv6_buf)),DEFAULT_STR(ipv6_multicast.v6));
+
+  printf("\tHELLO emission/validity  : %0.2f%s/%0.2f%s\n", cnf->hello_params.emission_interval, DEFAULT_STR(hello_params.emission_interval),
+         cnf->hello_params.validity_time,DEFAULT_STR(hello_params.validity_time));
+  printf("\tTC emission/validity     : %0.2f%s/%0.2f%s\n", cnf->tc_params.emission_interval, DEFAULT_STR(tc_params.emission_interval),
+         cnf->tc_params.validity_time,DEFAULT_STR(tc_params.validity_time));
+  printf("\tMID emission/validity    : %0.2f%s/%0.2f%s\n", cnf->mid_params.emission_interval, DEFAULT_STR(mid_params.emission_interval),
+         cnf->mid_params.validity_time,DEFAULT_STR(mid_params.validity_time));
+  printf("\tHNA emission/validity    : %0.2f%s/%0.2f%s\n", cnf->hna_params.emission_interval, DEFAULT_STR(hna_params.emission_interval),
+         cnf->hna_params.validity_time,DEFAULT_STR(hna_params.validity_time));
+
+  printf("\tAutodetect changes       : %s%s\n", cnf->autodetect_chg ? "yes" : "no",DEFAULT_STR(autodetect_chg));
+
+}
+
 void
 olsrd_print_cnf(struct olsrd_config *cnf)
 {
@@ -521,7 +554,7 @@ olsrd_print_cnf(struct olsrd_config *cnf)
   struct plugin_entry *pe = cnf->plugins;
   struct ip_prefix_list *ie = cnf->ipc_nets;
   struct olsr_lq_mult *mult;
-  char ipv6_buf[100];                  /* buffer for IPv6 inet_htop */
+  char ipv6_buf[INET6_ADDRSTRLEN];                  /* buffer for IPv6 inet_htop */
 
   printf(" *** olsrd configuration ***\n");
 
@@ -578,42 +611,23 @@ olsrd_print_cnf(struct olsrd_config *cnf)
 
   /* Interfaces */
   if (in) {
-    printf("Interfaces:\n");
-    while (in) {
-      printf(" dev: \"%s\"\n", in->name);
+    /*print interface default config*/
+    printf(" InterfaceDefaults: \n");
+    olsrd_print_interface_cnf(cnf->interface_defaults, cnf->interface_defaults, true);
 
-      if (in->cnf->ipv4_multicast.v4.s_addr) {
-        printf("\tIPv4 broadcast/multicast : %s%s\n", inet_ntoa(in->cnf->ipv4_multicast.v4),DEFAULT_STR(ipv4_multicast.v4.s_addr));
-      } else {
-        printf("\tIPv4 broadcast/multicast : AUTO%s\n",DEFAULT_STR(ipv4_multicast.v4.s_addr));
+    while (in)
+    { 
+      if (cnf->interface_defaults!=in->cnf)
+      {
+        printf(" dev: \"%s\"\n", in->name);
+
+        olsrd_print_interface_cnf(in->cnf, in->cnfi, false);
+
+        for (mult = in->cnf->lq_mult; mult != NULL; mult = mult->next) {
+          printf("\tLinkQualityMult          : %s %0.2f\n", inet_ntop(cnf->ip_version, &mult->addr, ipv6_buf, sizeof(ipv6_buf)),
+             (float)(mult->value) / 65536.0);
+        }
       }
-
-      if (in->cnf->mode==IF_MODE_ETHER){
-        printf("\tMode           : ether%s\n",DEFAULT_STR(mode));
-      } else {
-        printf("\tMode           : mesh%s\n",DEFAULT_STR(mode));
-      }
-
-      //union olsr_ip_addr       ipv6_multi_site;
-      //union olsr_ip_addr       ipv6_multi_glbl;
-      printf("\tIPv6 multicast           : %s%s\n", inet_ntop(AF_INET6, &in->cnf->ipv6_multicast.v6, ipv6_buf, sizeof(ipv6_buf)),DEFAULT_STR(ipv6_multicast.v6));
-
-      printf("\tHELLO emission/validity  : %0.2f%s/%0.2f%s\n", in->cnf->hello_params.emission_interval, DEFAULT_STR(hello_params.emission_interval),
-             in->cnf->hello_params.validity_time,DEFAULT_STR(hello_params.validity_time));
-      printf("\tTC emission/validity     : %0.2f%s/%0.2f%s\n", in->cnf->tc_params.emission_interval, DEFAULT_STR(tc_params.emission_interval),
-             in->cnf->tc_params.validity_time,DEFAULT_STR(tc_params.validity_time));
-      printf("\tMID emission/validity    : %0.2f%s/%0.2f%s\n", in->cnf->mid_params.emission_interval, DEFAULT_STR(mid_params.emission_interval),
-             in->cnf->mid_params.validity_time,DEFAULT_STR(mid_params.validity_time));
-      printf("\tHNA emission/validity    : %0.2f%s/%0.2f%s\n", in->cnf->hna_params.emission_interval, DEFAULT_STR(hna_params.emission_interval),
-             in->cnf->hna_params.validity_time,DEFAULT_STR(hna_params.validity_time));
-
-      for (mult = in->cnf->lq_mult; mult != NULL; mult = mult->next) {
-        printf("\tLinkQualityMult          : %s %0.2f\n", inet_ntop(cnf->ip_version, &mult->addr, ipv6_buf, sizeof(ipv6_buf)),
-               (float)(mult->value) / 65536.0);
-      }
-
-      printf("\tAutodetect changes       : %s%s\n", in->cnf->autodetect_chg ? "yes" : "no",DEFAULT_STR(autodetect_chg));
-
       in = in->next;
     }
   }
