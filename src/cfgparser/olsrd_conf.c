@@ -303,6 +303,16 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
         else cnfiptr[pos]=0xFF;
       }
     }
+    else
+    { /* check if there are no lqmults
+       *  as copying the pointer to the interfaces, 
+       *  would lead 1. to unexpected results if this interface defines its own lqmults 
+       *  2. to problems when freeing lqmult structures them) */
+      if (io->lq_mult!=NULL) {
+        fprintf(stderr, "LinkQualityMult directives are not supported within InterfaceDefaults section!\n", in->name);
+        return -1;
+      }
+    }
 
     if (in->name == NULL || !strlen(in->name)) {
       fprintf(stderr, "Interface has no name!\n");
