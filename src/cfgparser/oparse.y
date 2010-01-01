@@ -1119,18 +1119,42 @@ bclear_screen: TOK_CLEAR_SCREEN TOK_BOOLEAN
 
 plblock: TOK_PLUGIN TOK_STRING
 {
-  struct plugin_entry *pe = malloc(sizeof(*pe));
+  struct plugin_entry *pe, *last;
   
-  if (pe == NULL) {
-    fprintf(stderr, "Out of memory(ADD PL)\n");
-    YYABORT;
+  pe = olsr_cnf->plugins;
+  last = NULL;
+  while (pe != NULL) {
+    if (strcmp(pe->name, $2->string) == 0) {
+      free ($2->string);
+      break;
+    }
+    last = pe;
+    pe = pe->next;
   }
 
-  pe->name = $2->string;
-  pe->params = NULL;
-  
-  PARSER_DEBUG_PRINTF("Plugin: %s\n", $2->string);
+  if (pe != NULL) {
+    /* remove old plugin from list to add it later at the beginning */
+    if (last) {
+      last->next = pe->next;
+    }
+    else {
+      olsr_cnf->plugins = pe->next;
+    }
+  }
+  else {
+    pe = malloc(sizeof(*pe));
 
+    if (pe == NULL) {
+      fprintf(stderr, "Out of memory(ADD PL)\n");
+      YYABORT;
+    }
+
+    pe->name = $2->string;
+    pe->params = NULL;
+
+    PARSER_DEBUG_PRINTF("Plugin: %s\n", $2->string);
+  }
+  
   /* Queue */
   pe->next = olsr_cnf->plugins;
   olsr_cnf->plugins = pe;
