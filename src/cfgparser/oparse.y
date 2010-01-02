@@ -46,6 +46,7 @@
 #include "../ipcalc.h"
 #include "../net_olsr.h"
 #include "../link_set.h"
+#include "../olsr.h"
 
 #include <stddef.h>
 #include <stdio.h>
@@ -138,23 +139,23 @@ static int add_ipv6_addr(YYSTYPE ipaddr_arg, YYSTYPE prefixlen_arg)
   PARSER_DEBUG_PRINTF("HNA IPv6 entry: %s/%d\n", ipaddr_arg->string, prefixlen_arg->integer);
 
   if (olsr_cnf->ip_version != AF_INET6) {
-    fprintf(stderr, "IPv6 addresses can only be used if \"IpVersion\" == 6\n");
-    return 1;
+    fprintf(stderr, "IPv6 addresses can only be used if \"IpVersion\" == 6, skipping HNA6.\n");
+    olsr_startup_sleep(3);
   }
+	else {
+	  if(inet_pton(AF_INET6, ipaddr_arg->string, &ipaddr) <= 0) {
+      fprintf(stderr, "ihna6entry: Failed converting IP address %s\n", ipaddr_arg->string);
+      return 1;
+    }
 
-  if(inet_pton(AF_INET6, ipaddr_arg->string, &ipaddr) <= 0) {
-    fprintf(stderr, "ihna6entry: Failed converting IP address %s\n", ipaddr_arg->string);
-    return 1;
-  }
+		if (prefixlen_arg->integer > 128) {
+			fprintf(stderr, "ihna6entry: Illegal IPv6 prefix length %d\n", prefixlen_arg->integer);
+			return 1;
+		}
 
-  if (prefixlen_arg->integer > 128) {
-    fprintf(stderr, "ihna6entry: Illegal IPv6 prefix length %d\n", prefixlen_arg->integer);
-    return 1;
-  }
-
-  /* Queue */
-  ip_prefix_list_add(&olsr_cnf->hna_entries, &ipaddr, prefixlen_arg->integer);
-
+		/* Queue */
+		ip_prefix_list_add(&olsr_cnf->hna_entries, &ipaddr, prefixlen_arg->integer);
+	}
   free(ipaddr_arg->string);
   free(ipaddr_arg);
   free(prefixlen_arg);
@@ -778,31 +779,31 @@ ihna4entry:     TOK_IPV4_ADDR TOK_IPV4_ADDR
 {
   union olsr_ip_addr ipaddr, netmask;
 
-  PARSER_DEBUG_PRINTF("HNA IPv4 entry: %s/%s\n", $1->string, $2->string);
-
-  if (olsr_cnf->ip_version != AF_INET) {
-    fprintf(stderr, "IPv4 addresses can only be used if \"IpVersion\" == 4\n");
-    YYABORT;
+  if (olsr_cnf->ip_version == AF_INET6) {
+    fprintf(stderr, "IPv4 addresses can only be used if \"IpVersion\" == 4, skipping HNA.\n");
+    olsr_startup_sleep(3);
   }
+  else {
+    PARSER_DEBUG_PRINTF("HNA IPv4 entry: %s/%s\n", $1->string, $2->string);
 
-  if (inet_pton(AF_INET, $1->string, &ipaddr.v4) <= 0) {
-    fprintf(stderr, "ihna4entry: Failed converting IP address %s\n", $1->string);
-    YYABORT;
+    if (inet_pton(AF_INET, $1->string, &ipaddr.v4) <= 0) {
+      fprintf(stderr, "ihna4entry: Failed converting IP address %s\n", $1->string);
+      YYABORT;
+    }
+    if (inet_pton(AF_INET, $2->string, &netmask.v4) <= 0) {
+      fprintf(stderr, "ihna4entry: Failed converting IP address %s\n", $1->string);
+      YYABORT;
+    }
+
+    /* check that the given IP address is actually a network address */
+    if ((ipaddr.v4.s_addr & ~netmask.v4.s_addr) != 0) {
+      fprintf(stderr, "ihna4entry: The ipaddress \"%s\" is not a network address!\n", $1->string);
+      YYABORT;
+    }
+
+    /* Queue */
+    ip_prefix_list_add(&olsr_cnf->hna_entries, &ipaddr, olsr_netmask_to_prefix(&netmask));
   }
-  if (inet_pton(AF_INET, $2->string, &netmask.v4) <= 0) {
-    fprintf(stderr, "ihna4entry: Failed converting IP address %s\n", $1->string);
-    YYABORT;
-  }
-
-  /* check that the given IP address is actually a network address */
-  if ((ipaddr.v4.s_addr & ~netmask.v4.s_addr) != 0) {
-    fprintf(stderr, "ihna4entry: The ipaddress \"%s\" is not a network address!\n", $1->string);
-    YYABORT;
-  }
-
-  /* Queue */
-  ip_prefix_list_add(&olsr_cnf->hna_entries, &ipaddr, olsr_netmask_to_prefix(&netmask));
-
   free($1->string);
   free($1);
   free($2->string);
@@ -812,27 +813,32 @@ ihna4entry:     TOK_IPV4_ADDR TOK_IPV4_ADDR
 {
   union olsr_ip_addr ipaddr, netmask;
 
-  PARSER_DEBUG_PRINTF("HNA IPv4 entry: %s/%d\n", $1->string, $3->integer);
-
-  if (inet_pton(AF_INET, $1->string, &ipaddr.v4) <= 0) {
-    fprintf(stderr, "ihna4entry: Failed converting IP address %s\n", $1->string);
-    YYABORT;
+  if (olsr_cnf->ip_version == AF_INET6) {
+    fprintf(stderr, "IPv4 addresses can only be used if \"IpVersion\" == 4, skipping HNA.\n");
+    olsr_startup_sleep(3);
   }
-  if ($3->integer > olsr_cnf->maxplen) {
-    fprintf(stderr, "ihna4entry: Prefix len %u > %d is not allowed!\n", $3->integer, olsr_cnf->maxplen);
-    YYABORT;
+  else {
+    PARSER_DEBUG_PRINTF("HNA IPv4 entry: %s/%d\n", $1->string, $3->integer);
+
+    if (inet_pton(AF_INET, $1->string, &ipaddr.v4) <= 0) {
+      fprintf(stderr, "ihna4entry: Failed converting IP address %s\n", $1->string);
+      YYABORT;
+    }
+    if ($3->integer > olsr_cnf->maxplen) {
+      fprintf(stderr, "ihna4entry: Prefix len %u > %d is not allowed!\n", $3->integer, olsr_cnf->maxplen);
+      YYABORT;
+    }
+
+    /* check that the given IP address is actually a network address */
+    olsr_prefix_to_netmask(&netmask, $3->integer);
+    if ((ipaddr.v4.s_addr & ~netmask.v4.s_addr) != 0) {
+      fprintf(stderr, "ihna4entry: The ipaddress \"%s\" is not a network address!\n", $1->string);
+      YYABORT;
+    }
+
+    /* Queue */
+    ip_prefix_list_add(&olsr_cnf->hna_entries, &ipaddr, $3->integer);
   }
-
-  /* check that the given IP address is actually a network address */
-  olsr_prefix_to_netmask(&netmask, $3->integer);
-  if ((ipaddr.v4.s_addr & ~netmask.v4.s_addr) != 0) {
-    fprintf(stderr, "ihna4entry: The ipaddress \"%s\" is not a network address!\n", $1->string);
-    YYABORT;
-  }
-
-  /* Queue */
-  ip_prefix_list_add(&olsr_cnf->hna_entries, &ipaddr, $3->integer);
-
   free($1->string);
   free($1);
   free($3);
