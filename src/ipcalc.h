@@ -165,6 +165,18 @@ prefix_to_netmask4(uint8_t prefixlen)
   return prefixlen == 0 ? 0 : (~0U << (32 - prefixlen));
 }
 
+static INLINE bool
+olsr_is_niit_ip(const union olsr_ip_addr *ip) {
+  return olsr_cnf->ip_version == AF_INET6 &&
+      ip->v6.s6_addr32[0] == 0 && ip->v6.s6_addr32[0] == 0 && ip->v6.s6_addr32[0] == 0xffff;
+}
+
+static INLINE union olsr_ip_addr *
+olsr_ipv6_to_ipv4(const union olsr_ip_addr *ipv6, union olsr_ip_addr *ipv4) {
+  ipv4->v4.s_addr = ipv6->v6.s6_addr32[3];
+  return ipv4;
+}
+
 #endif
 
 /*

@@ -212,6 +212,7 @@ static int add_ipv6_addr(YYSTYPE ipaddr_arg, YYSTYPE prefixlen_arg)
 %token TOK_PLPARAM
 %token TOK_MIN_TC_VTIME
 %token TOK_LOCK_FILE
+%token TOK_USE_NIIT
 
 %token TOK_HOSTLABEL
 %token TOK_NETLABEL
@@ -276,6 +277,7 @@ stmt:       idebug
           | vcomment
           | amin_tc_vtime
           | alock_file
+          | suse_niit
 ;
 
 block:      TOK_HNA4 hna4body
@@ -1122,6 +1124,15 @@ bclear_screen: TOK_CLEAR_SCREEN TOK_BOOLEAN
   free($2);
 }
 ;
+
+suse_niit: TOK_USE_NIIT TOK_STRING
+{
+  PARSER_DEBUG_PRINTF("Use NIIT ip translation: %s\n", $2->string);
+  olsr_cnf->niit_if = $2->string;
+  free($2);
+}
+;
+
 
 plblock: TOK_PLUGIN TOK_STRING
 {

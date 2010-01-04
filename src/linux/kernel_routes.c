@@ -175,19 +175,6 @@ void rtnetlink_read(int sock)
 
 #endif /*linux_rtnetlink_listen*/
 
-static bool
-olsr_is_niit_ip(union olsr_ip_addr *ip) {
-  assert(olsr_cnf->ip_version == AF_INET6);
-
-  return ip->v6.s6_addr32[0] == 0 && ip->v6.s6_addr32[0] == 0 && ip->v6.s6_addr32[0] == 0xffff;
-}
-
-static union olsr_ip_addr *
-olsr_ipv6_to_ipv4(union olsr_ip_addr *ipv6, union olsr_ip_addr *ipv4) {
-  ipv4->v4.s_addr = ipv6->v6.s6_addr32[3];
-  return ipv4;
-}
-
 static void
 olsr_netlink_addreq(struct olsr_rtreq *req, int type, const void *data, int len)
 {
@@ -547,7 +534,7 @@ static int
 olsr_netlink_route(const struct rt_entry *rt, uint8_t family, uint8_t rttable, __u16 cmd)
 {
   /*create/delete niit route if we have an niit device*/
-  if ((olsr_cnf->niit_if_index!=NULL) && (family != AF_INET) && (olsr_is_niit_ip(&rt->rt_dst.prefix.v6))) olsr_netlink_route_int(rt, family, rttable, cmd, RT_NIIT);
+  if ((olsr_cnf->niit_if_index!=-1) && (family != AF_INET) && (olsr_is_niit_ip(&rt->rt_dst.prefix))) olsr_netlink_route_int(rt, family, rttable, cmd, RT_NIIT);
 
   return olsr_netlink_route_int(rt, family, rttable, cmd, RT_ORIG_REQUEST);
 }

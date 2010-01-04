@@ -101,6 +101,21 @@ main(int argc, char *argv[])
 
 #endif
 
+static int
+olsrd_parse_niit_if(const char *niit_if) {
+  int i = 0;
+  if (niit_if == NULL || strcmp(niit_if, "yes") == 0 || strcmp(niit_if, "auto") == 0) {
+    i = if_nametoindex(DEF_NIIT_IF);
+    if (i == 0 && niit_if != NULL && strcmp(niit_if, "yes") == 0) {
+      return -1;
+    }
+  }
+  else if (strcmp(niit_if, "no") != 0) {
+    i = if_nametoindex(niit_if);
+  }
+  return i;
+}
+
 int
 olsrd_parse_cnf(const char *filename)
 {
@@ -142,6 +157,16 @@ olsrd_parse_cnf(const char *filename)
     in->interf = NULL;
     in->host_emul = false;
   }
+
+#ifdef linux
+  if (olsr_cnf->ip_version == AF_INET6) {
+    olsr_cnf->niit_if_index = olsrd_parse_niit_if(olsr_cnf->niit_if);
+    if (olsr_cnf->niit_if_index == -1) {
+      fprintf(stderr, "Error, Cannot find niit interface.\n");
+      return -1;
+    }
+  }
+#endif
   return 0;
 }
 
@@ -326,7 +351,6 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
 
     io = in->cnf;
 
-printf("dev %s before applying defaultSection:\n",in->name);
     olsrd_print_interface_cnf(in->cnf, in->cnfi, false);
 
     /*apply defaults (if this is not the default interface stub)*/
@@ -557,6 +581,9 @@ set_default_cnf(struct olsrd_config *cnf)
   cnf->exit_value = EXIT_SUCCESS;
   cnf->max_tc_vtime = 0.0;
   cnf->ioctl_s = 0;
+  cnf->niit_if = NULL;
+  cnf->niit_if_index = 0;
+
 #if LINUX_POLICY_ROUTING
   cnf->rtnl_s = 0;
 #endif
@@ -661,6 +688,8 @@ olsrd_print_cnf(struct olsrd_config *cnf)
   printf("NAT threshold    : %f\n", cnf->lq_nat_thresh);
 
   printf("Clear screen     : %s\n", cnf->clear_screen ? "yes" : "no");
+
+  printf("Use niit:        : %s\n", cnf->niit_if ? cnf->niit_if : DEF_NIIT);
 
   /* Interfaces */
   if (in) {
