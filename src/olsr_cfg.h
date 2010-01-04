@@ -248,6 +248,8 @@ struct olsrd_config {
 
   char *lock_file;
 
+  int niit_if_index;
+
   int ioctl_s;                         /* Socket used for ioctl calls */
 #if LINUX_POLICY_ROUTING
   int rtnl_s;                          /* Socket used for rtnetlink messages */

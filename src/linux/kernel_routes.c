@@ -52,6 +52,7 @@
 #define RT_DELETE_SIMILAR_ROUTE 3
 #define RT_AUTO_ADD_GATEWAY_ROUTE 4
 #define RT_DELETE_SIMILAR_AUTO_ROUTE 5
+#define RT_NIIT 6
 
 #if !LINUX_POLICY_ROUTING
 
@@ -174,6 +175,19 @@ void rtnetlink_read(int sock)
 
 #endif /*linux_rtnetlink_listen*/
 
+static bool
+olsr_is_niit_ip(union olsr_ip_addr *ip) {
+  assert(olsr_cnf->ip_version == AF_INET6);
+
+  return ip->v6.s6_addr32[0] == 0 && ip->v6.s6_addr32[0] == 0 && ip->v6.s6_addr32[0] == 0xffff;
+}
+
+static union olsr_ip_addr *
+olsr_ipv6_to_ipv4(union olsr_ip_addr *ipv6, union olsr_ip_addr *ipv4) {
+  ipv4->v4.s_addr = ipv6->v6.s6_addr32[3];
+  return ipv4;
+}
+
 static void
 olsr_netlink_addreq(struct olsr_rtreq *req, int type, const void *data, int len)
 {
@@ -233,7 +247,16 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
   req.n.nlmsg_len = NLMSG_LENGTH(sizeof(struct rtmsg));
   req.n.nlmsg_flags = NLM_F_REQUEST | NLM_F_CREATE | NLM_F_EXCL | NLM_F_ACK;
   req.n.nlmsg_type = cmd;
-  req.r.rtm_family = family;
+  
+  /*sanity check for niit ipv4 over ipv6 routes*/
+  if (family==AF_INET && flag==RT_NIIT) {
+    olsr_syslog(OLSR_LOG_ERR,"niit makes no sense with olsrd running on ipv4!");
+    return -1;
+  }
+
+  if (flag==RT_NIIT) req.r.rtm_family=AF_INET; /*we create an ipv4 niit route*/
+  else req.r.rtm_family = family;
+
   req.r.rtm_table = rttable;
 
   /* RTN_UNSPEC would be the wildcard, but blackhole broadcast or nat roules should usually not conflict */
@@ -246,7 +269,14 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
   /* as wildcard for deletion */
   req.r.rtm_scope = RT_SCOPE_NOWHERE;
 
-  if ( ( cmd != RTM_NEWRULE ) && ( cmd != RTM_DELRULE ) ) {
+  if ( ( cmd == RTM_NEWRULE ) || ( cmd == RTM_DELRULE ) ) {
+    /* add or delete a rule */
+    static uint32_t priority = 65535;
+
+    req.r.rtm_scope = RT_SCOPE_UNIVERSE;
+    olsr_netlink_addreq(&req, RTA_PRIORITY, &priority, sizeof(priority));
+  }
+  else {
     req.r.rtm_dst_len = rt->rt_dst.prefix_len;
 
     /* do not specify much as we wanna delete similar/conflicting routes */
@@ -258,7 +288,12 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
       req.r.rtm_scope = RT_SCOPE_LINK;
 
       /*add interface*/
-      olsr_netlink_addreq(&req, RTA_OIF, &nexthop->iif_index, sizeof(nexthop->iif_index));
+      if (flag==RT_NIIT) {
+        olsr_netlink_addreq(&req, RTA_OIF, &olsr_cnf->niit_if_index, sizeof(&olsr_cnf->niit_if_index));
+      }
+      else {
+        olsr_netlink_addreq(&req, RTA_OIF, &nexthop->iif_index, sizeof(nexthop->iif_index));
+      }
 
 #if SOURCE_IP_ROUTES
       /* source ip here is based on now static olsr_cnf->main_addr in this olsr-0.5.6-r4, should be based on orignator-id in newer olsrds */
@@ -294,20 +329,22 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
       olsr_netlink_addreq(&req, RTA_DST, ( (flag == RT_AUTO_ADD_GATEWAY_ROUTE) || (flag == RT_DELETE_SIMILAR_AUTO_ROUTE) ) ? 
                           &nexthop->gateway.v4 : &rt->rt_dst.prefix.v4, sizeof(rt->rt_dst.prefix.v4));
     } else {
-      if ( ( flag != RT_AUTO_ADD_GATEWAY_ROUTE ) && (flag != RT_DELETE_SIMILAR_ROUTE ) && ( flag != RT_DELETE_SIMILAR_AUTO_ROUTE) 
-          && (0 != memcmp(&rt->rt_dst.prefix.v6, &nexthop->gateway.v6, sizeof(nexthop->gateway.v6))) ) {
-        olsr_netlink_addreq(&req, RTA_GATEWAY, &nexthop->gateway.v6, sizeof(nexthop->gateway.v6));
-        req.r.rtm_scope = RT_SCOPE_UNIVERSE;
+      if (flag == RT_NIIT) {
+        union olsr_ip_addr ipv4_addr;
+        /*create an ipv4 route*/
+        olsr_syslog(OLSR_LOG_ERR,"niit suport not fully implemented!!"); 
+        olsr_netlink_addreq(&req, RTA_DST, olsr_ipv6_to_ipv4(&rt->rt_dst.prefix, &ipv4_addr), sizeof(ipv4_addr.v4));
       }
-      olsr_netlink_addreq(&req, RTA_DST, ( (flag == RT_AUTO_ADD_GATEWAY_ROUTE) || (flag == RT_DELETE_SIMILAR_AUTO_ROUTE) ) ? 
-                          &nexthop->gateway.v6 : &rt->rt_dst.prefix.v6, sizeof(rt->rt_dst.prefix.v6));
+      else {
+        if ( (flag != RT_NIIT ) && ( flag != RT_AUTO_ADD_GATEWAY_ROUTE ) && (flag != RT_DELETE_SIMILAR_ROUTE ) && ( flag != RT_DELETE_SIMILAR_AUTO_ROUTE) 
+            && (0 != memcmp(&rt->rt_dst.prefix.v6, &nexthop->gateway.v6, sizeof(nexthop->gateway.v6))) ) {
+          olsr_netlink_addreq(&req, RTA_GATEWAY, &nexthop->gateway.v6, sizeof(nexthop->gateway.v6));
+          req.r.rtm_scope = RT_SCOPE_UNIVERSE;
+        }
+        olsr_netlink_addreq(&req, RTA_DST, ( (flag == RT_AUTO_ADD_GATEWAY_ROUTE) || (flag == RT_DELETE_SIMILAR_AUTO_ROUTE) ) ? 
+                            &nexthop->gateway.v6 : &rt->rt_dst.prefix.v6, sizeof(rt->rt_dst.prefix.v6));
+      }
     }
-  } else {
-    /* add or delete a rule */
-    static uint32_t priority = 65535;
-
-    req.r.rtm_scope = RT_SCOPE_UNIVERSE;
-    olsr_netlink_addreq(&req, RTA_PRIORITY, &priority, sizeof(priority));
   }
 
   iov.iov_base = &req.n;
@@ -509,6 +546,9 @@ olsr_netlink_rule(uint8_t family, uint8_t rttable, uint16_t cmd)
 static int
 olsr_netlink_route(const struct rt_entry *rt, uint8_t family, uint8_t rttable, __u16 cmd)
 {
+  /*create/delete niit route if we have an niit device*/
+  if ((olsr_cnf->niit_if_index!=NULL) && (family != AF_INET) && (olsr_is_niit_ip(&rt->rt_dst.prefix.v6))) olsr_netlink_route_int(rt, family, rttable, cmd, RT_NIIT);
+
   return olsr_netlink_route_int(rt, family, rttable, cmd, RT_ORIG_REQUEST);
 }
 
