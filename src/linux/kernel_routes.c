@@ -336,7 +336,7 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
         olsr_netlink_addreq(&req, RTA_DST, olsr_ipv6_to_ipv4(&rt->rt_dst.prefix, &ipv4_addr), sizeof(ipv4_addr.v4));
       }
       else {
-        if ( (flag != RT_NIIT ) && ( flag != RT_AUTO_ADD_GATEWAY_ROUTE ) && (flag != RT_DELETE_SIMILAR_ROUTE ) && ( flag != RT_DELETE_SIMILAR_AUTO_ROUTE) 
+        if ( ( flag != RT_AUTO_ADD_GATEWAY_ROUTE ) && (flag != RT_DELETE_SIMILAR_ROUTE ) && ( flag != RT_DELETE_SIMILAR_AUTO_ROUTE) 
             && (0 != memcmp(&rt->rt_dst.prefix.v6, &nexthop->gateway.v6, sizeof(nexthop->gateway.v6))) ) {
           olsr_netlink_addreq(&req, RTA_GATEWAY, &nexthop->gateway.v6, sizeof(nexthop->gateway.v6));
           req.r.rtm_scope = RT_SCOPE_UNIVERSE;
@@ -379,6 +379,9 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
               }
               else if ( cmd == RTM_DELRULE ) {
                 olsr_syslog(OLSR_LOG_ERR,"Error '%s' (%d) on deleting empty policy rule aimed to activate rtTable %u!", err_msg, errno, rttable);
+              }
+              else if ( flag == RT_NIIT ) {
+                olsr_syslog(OLSR_LOG_ERR,"Error '%s' (%d) on manipulating niit route of %s!", err_msg, errno, olsr_ip_to_string(&ibuf,&rt->rt_dst.prefix));
               }
               else if ( flag <= RT_RETRY_AFTER_DELETE_SIMILAR ) {
                 if (rt->rt_dst.prefix.v4.s_addr!=nexthop->gateway.v4.s_addr) {
