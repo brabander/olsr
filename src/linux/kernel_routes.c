@@ -236,13 +236,17 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
   req.n.nlmsg_type = cmd;
   
   /*sanity check for niit ipv4 over ipv6 routes*/
-  if (family==AF_INET && flag==RT_NIIT) {
+  if (family == AF_INET && flag == RT_NIIT) {
     olsr_syslog(OLSR_LOG_ERR,"niit makes no sense with olsrd running on ipv4!");
     return -1;
   }
 
-  if (flag==RT_NIIT) req.r.rtm_family=AF_INET; /*we create an ipv4 niit route*/
-  else req.r.rtm_family = family;
+  if (flag == RT_NIIT) {
+    req.r.rtm_family=AF_INET; /*we create an ipv4 niit route*/
+  }
+  else {
+    req.r.rtm_family = family;
+  }
 
   req.r.rtm_table = rttable;
 
@@ -275,7 +279,7 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
       req.r.rtm_scope = RT_SCOPE_LINK;
 
       /*add interface*/
-      if (flag==RT_NIIT) {
+      if (flag == RT_NIIT) {
         olsr_netlink_addreq(&req, RTA_OIF, &olsr_cnf->niit_if_index, sizeof(&olsr_cnf->niit_if_index));
       }
       else {
@@ -283,12 +287,17 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
       }
 
 #if SOURCE_IP_ROUTES
-      /* source ip here is based on now static olsr_cnf->main_addr in this olsr-0.5.6-r4, should be based on orignator-id in newer olsrds */
-      if (AF_INET == family) {
-        olsr_netlink_addreq(&req, RTA_PREFSRC, &olsr_cnf->main_addr.v4.s_addr, sizeof(olsr_cnf->main_addr.v4.s_addr));
-      }
-      else {
-        olsr_netlink_addreq(&req, RTA_PREFSRC, &olsr_cnf->main_addr.v6.s6_addr, sizeof(olsr_cnf->main_addr.v6.s6_addr));
+      /**
+       * source ip here is based on now static olsr_cnf->main_addr in this olsr-0.5.6-r4,
+       * should be based on orignator-id in newer olsrds
+       **/
+      if (flag != RT_NIIT) {
+        if (AF_INET == family) {
+          olsr_netlink_addreq(&req, RTA_PREFSRC, &olsr_cnf->main_addr.v4.s_addr, sizeof(olsr_cnf->main_addr.v4.s_addr));
+        }
+        else {
+          olsr_netlink_addreq(&req, RTA_PREFSRC, &olsr_cnf->main_addr.v6.s6_addr, sizeof(olsr_cnf->main_addr.v6.s6_addr));
+        }
       }
 #endif
     }
@@ -303,10 +312,12 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
       req.r.rtm_dst_len = olsr_cnf->maxplen;
     }
 
-    /* for ipv4 or ipv6 we add gateway if one is specified, 
-    * or leave gateway away if we want to delete similar routes aswell, 
-    * or even use the gateway as target if we add a auto-generated route, 
-    * or if delete-similar to make insertion of auto-generated route possible */
+    /**
+     * for ipv4 or ipv6 we add gateway if one is specified,
+     * or leave gateway away if we want to delete similar routes aswell,
+     * or even use the gateway as target if we add a auto-generated route,
+     * or if delete-similar to make insertion of auto-generated route possible
+     **/
     if (AF_INET == family) {
       if ( ( flag != RT_AUTO_ADD_GATEWAY_ROUTE ) && (flag != RT_DELETE_SIMILAR_ROUTE) && 
            ( flag != RT_DELETE_SIMILAR_AUTO_ROUTE) && (rt->rt_dst.prefix.v4.s_addr != nexthop->gateway.v4.s_addr) ) {
@@ -318,7 +329,7 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
     } else {
       if (flag == RT_NIIT) {
         union olsr_ip_addr ipv4_addr;
-        /*create an ipv4 route*/
+        /* create an ipv4 route */
         olsr_syslog(OLSR_LOG_ERR,"niit suport not fully implemented!!"); 
         olsr_netlink_addreq(&req, RTA_DST, olsr_ipv6_to_ipv4(&rt->rt_dst.prefix, &ipv4_addr), sizeof(ipv4_addr.v4));
       }
@@ -537,7 +548,9 @@ static int
 olsr_netlink_route(const struct rt_entry *rt, uint8_t family, uint8_t rttable, __u16 cmd)
 {
   /*create/delete niit route if we have an niit device*/
-  if ((olsr_cnf->niit_if_index!=-1) && (family != AF_INET) && (olsr_is_niit_ip(&rt->rt_dst.prefix))) olsr_netlink_route_int(rt, family, rttable, cmd, RT_NIIT);
+  if ((olsr_cnf->niit_if_index!=0) && (family != AF_INET) && (olsr_is_niit_ip(&rt->rt_dst.prefix))) {
+    olsr_netlink_route_int(rt, family, rttable, cmd, RT_NIIT);
+  }
 
   return olsr_netlink_route_int(rt, family, rttable, cmd, RT_ORIG_REQUEST);
 }
