@@ -83,7 +83,7 @@ olsr_cleanup_hna(union olsr_ip_addr *orig) {
   struct hna_entry *hna;
 
   OLSR_FOR_ALL_HNA_ENTRIES(hna) {
-    if (ipequal(&hna->A_gateway_addr, orig)) {
+    if (hna->networks.next != &hna->networks && ipequal(&hna->A_gateway_addr, orig)) {
       while (!olsr_delete_hna_net_entry(hna->networks.next));
     }
   } OLSR_FOR_ALL_HNA_ENTRIES_END(hna)
