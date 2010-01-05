@@ -15,8 +15,8 @@
 #include "gateway.h"
 
 struct avl_tree gateway_tree;
-
 struct olsr_cookie_info *gw_mem_cookie = NULL;
+union olsr_ip_addr smart_gateway_netmask;
 
 static uint32_t deserialize_gw_speed(uint8_t value) {
   uint32_t speed, exp;
@@ -51,7 +51,7 @@ olsr_init_gateways(void) {
 
   avl_init(&gateway_tree, avl_comp_default);
 
-  memset(&olsr_cnf->smart_gateway_netmask, 0, sizeof(olsr_cnf->smart_gateway_netmask));
+  memset(&smart_gateway_netmask, 0, sizeof(smart_gateway_netmask));
 
   if (olsr_cnf->smart_gateway_active) {
     union olsr_ip_addr gw_net;
@@ -67,7 +67,7 @@ olsr_init_gateways(void) {
       while (ip_prefix_list_remove(&olsr_cnf->hna_entries, &gw_net, prefix));
     }
 
-    ip = (uint8_t *) &olsr_cnf->smart_gateway_netmask;
+    ip = (uint8_t *) &smart_gateway_netmask;
     ip[olsr_cnf->ipsize - 2] = serialize_gw_speed(olsr_cnf->smart_gateway_uplink);
     ip[olsr_cnf->ipsize - 1] = serialize_gw_speed(olsr_cnf->smart_gateway_downlink);
   }

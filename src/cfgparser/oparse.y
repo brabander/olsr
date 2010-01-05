@@ -213,6 +213,8 @@ static int add_ipv6_addr(YYSTYPE ipaddr_arg, YYSTYPE prefixlen_arg)
 %token TOK_MIN_TC_VTIME
 %token TOK_LOCK_FILE
 %token TOK_USE_NIIT
+%token TOK_SMART_GW
+%token TOK_SMART_GW_SPEED
 
 %token TOK_HOSTLABEL
 %token TOK_NETLABEL
@@ -278,6 +280,8 @@ stmt:       idebug
           | amin_tc_vtime
           | alock_file
           | suse_niit
+          | bsmart_gw
+          | ismart_gw_speed
 ;
 
 block:      TOK_HNA4 hna4body
@@ -1119,7 +1123,7 @@ anat_thresh: TOK_LQ_NAT_THRESH TOK_FLOAT
 
 bclear_screen: TOK_CLEAR_SCREEN TOK_BOOLEAN
 {
-  PARSER_DEBUG_PRINTF("Clear screen %s\n", olsr_cnf->clear_screen ? "enabled" : "disabled");
+  PARSER_DEBUG_PRINTF("Clear screen %s\n", $2->boolean ? "enabled" : "disabled");
   olsr_cnf->clear_screen = $2->boolean;
   free($2);
 }
@@ -1130,6 +1134,24 @@ suse_niit: TOK_USE_NIIT TOK_STRING
   PARSER_DEBUG_PRINTF("Use NIIT ip translation: %s\n", $2->string);
   olsr_cnf->niit_if = $2->string;
   free($2);
+}
+;
+
+bsmart_gw: TOK_SMART_GW TOK_BOOLEAN
+{
+	PARSER_DEBUG_PRINTF("Smart gateway system: %s\n", $2->boolean ? "enabled" : "disabled");
+	olsr_cnf->smart_gateway_active = $2->boolean;
+	free($2);
+}
+;
+
+ismart_gw_speed: TOK_SMART_GW_SPEED TOK_INTEGER TOK_INTEGER
+{
+	PARSER_DEBUG_PRINTF("Smart gateway speed: %u uplink/%u downlink kbit/s\n", $2->integer, $3->integer);
+	olsr_cnf->smart_gateway_uplink = $2->integer;
+	olsr_cnf->smart_gateway_downlink = $3->integer;
+	free($2);
+	free($3);
 }
 ;
 

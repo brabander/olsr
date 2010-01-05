@@ -256,7 +256,6 @@ struct olsrd_config {
   bool smart_gateway_active;
   uint32_t smart_gateway_uplink;
   uint32_t smart_gateway_downlink;
-  union olsr_ip_addr smart_gateway_netmask;
 
   int ioctl_s;                         /* Socket used for ioctl calls */
 #if LINUX_POLICY_ROUTING

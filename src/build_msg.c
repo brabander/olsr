@@ -45,6 +45,7 @@
 #include "log.h"
 #include "mantissa.h"
 #include "net_olsr.h"
+#include "gateway.h"
 
 #define BMSG_DBGLVL 5
 
@@ -1048,7 +1049,7 @@ serialize_hna4(struct interface *ifp)
 
     if (olsr_cnf->smart_gateway_active && h->net.prefix_len == 0) {
       /* this is the default route, overwrite it with the smart gateway */
-      ip_addr.v4 = olsr_cnf->smart_gateway_netmask.v4;
+      ip_addr.v4 = smart_gateway_netmask.v4;
     }
     else {
       olsr_prefix_to_netmask(&ip_addr, h->net.prefix_len);
@@ -1142,7 +1143,7 @@ serialize_hna6(struct interface *ifp)
     olsr_prefix_to_netmask(&tmp_netmask, h->net.prefix_len);
     if (olsr_cnf->smart_gateway_active && h->net.prefix_len == 0) {
       /* this is the default gateway, so overwrite it with the smart one */
-      tmp_netmask = olsr_cnf->smart_gateway_netmask;
+      tmp_netmask = smart_gateway_netmask;
     }
     else {
       olsr_prefix_to_netmask(&tmp_netmask, h->net.prefix_len);

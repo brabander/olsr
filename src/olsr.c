@@ -295,10 +295,8 @@ olsr_init_tables(void)
   /* Initialize HNA set */
   olsr_init_hna_set();
 
-#if 0
-  /* Initialize Layer 1/2 database */
-  olsr_initialize_layer12();
-#endif
+  /* Initialize smart gateways */
+  olsr_init_gateways();
 
   /* Start periodic SPF and RIB recalculation */
   if (olsr_cnf->lq_dinter > 0.0) {
