@@ -110,12 +110,18 @@ olsr_delete_gateway(union olsr_ip_addr *originator) {
   }
 }
 
-bool olsr_is_smart_gateway(union olsr_ip_addr *netmask) {
+bool olsr_is_smart_gateway(union olsr_ip_addr *net, union olsr_ip_addr *mask) {
   uint8_t i;
   uint8_t *ip;
 
-  ip = (uint8_t *)netmask;
+  ip = (uint8_t *)net;
+  for (i=0; i<olsr_cnf->ipsize; i++) {
+    if (*ip++) {
+      return false;
+    }
+  }
 
+  ip = (uint8_t *)mask;
   for (i=0; i<olsr_cnf->ipsize-2; i++) {
     if (*ip++ != 0) {
       return false;
