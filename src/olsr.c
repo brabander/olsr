@@ -63,6 +63,7 @@
 #include "common/avl.h"
 #include "net_olsr.h"
 #include "lq_plugin.h"
+#include "gateway.h"
 
 #include <stdarg.h>
 #include <signal.h>
@@ -201,6 +202,7 @@ olsr_process_changes(void)
   if (olsr_cnf->debug_level > 0) {
     if (olsr_cnf->debug_level > 2) {
       olsr_print_mid_set();
+      olsr_print_gateway();
 
       if (olsr_cnf->debug_level > 3) {
         if (olsr_cnf->debug_level > 8) {

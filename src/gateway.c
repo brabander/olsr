@@ -7,9 +7,11 @@
 
 #include "common/avl.h"
 #include "defs.h"
+#include "ipcalc.h"
 #include "olsr.h"
 #include "olsr_cfg.h"
 #include "olsr_cookie.h"
+#include "scheduler.h"
 #include "gateway.h"
 
 struct avl_tree gateway_tree;
@@ -129,4 +131,20 @@ bool olsr_is_smart_gateway(union olsr_ip_addr *net, union olsr_ip_addr *mask) {
   }
 
   return ip[0] > 0 && ip[1] > 0;
+}
+
+void
+olsr_print_gateway(void) {
+#ifndef NODEBUG
+  struct ipaddr_str buf;
+  struct gateway_entry *gw;
+  const int addrsize = olsr_cnf->ip_version == AF_INET ? 15 : 39;
+
+  OLSR_PRINTF(0, "\n--- %s ---------------------------------------------------- GATEWAYS\n\n", olsr_wallclock_string());
+  OLSR_PRINTF(0, "%-*s  %-9s %-9s\n", addrsize, "IP address", "Uplink", "Downlink");
+
+  OLSR_FOR_ALL_GATEWAY_ENTRIES(gw) {
+    OLSR_PRINTF(0, "%-*s  %-9u %-9u\n", addrsize, olsr_ip_to_string(&buf, &gw->originator), gw->uplink, gw->downlink);
+  } OLSR_FOR_ALL_GATEWAY_ENTRIES_END(gw)
+#endif
 }

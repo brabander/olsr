@@ -39,5 +39,6 @@ struct gateway_entry *olsr_find_gateway(union olsr_ip_addr *originator);
 void olsr_set_gateway(union olsr_ip_addr *originator, union olsr_ip_addr *subnetmask);
 void olsr_delete_gateway(union olsr_ip_addr *originator);
 bool olsr_is_smart_gateway(union olsr_ip_addr *net, union olsr_ip_addr *mask);
+void olsr_print_gateway(void);
 
 #endif /* GATEWAY_H_ */
