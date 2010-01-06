@@ -202,7 +202,6 @@ olsr_process_changes(void)
   if (olsr_cnf->debug_level > 0) {
     if (olsr_cnf->debug_level > 2) {
       olsr_print_mid_set();
-      olsr_print_gateway();
 
       if (olsr_cnf->debug_level > 3) {
         if (olsr_cnf->debug_level > 8) {
@@ -216,6 +215,9 @@ olsr_process_changes(void)
     olsr_print_neighbor_table();
     olsr_print_two_hop_neighbor_table();
     olsr_print_tc_table();
+
+    // TODO push this to debug level 3 or 4
+    olsr_print_gateway();
 #endif
   }
 

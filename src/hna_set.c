@@ -438,17 +438,16 @@ olsr_input_hna(union olsr_message *m, struct interface *in_if __attribute__ ((un
     if (olsr_cnf->smart_gateway_active && olsr_is_smart_gateway(&net, &mask)) {
       olsr_set_gateway(&originator, &mask);
     }
-    else {
-      prefixlen = olsr_netmask_to_prefix(&mask);
-      if (olsr_cnf->smart_gateway_active && prefixlen <= MAXIMUM_GATEWAY_PREFIX_LENGTH) {
-        continue;
-      }
 
-      entry = ip_prefix_list_find(olsr_cnf->hna_entries, &net, prefixlen);
-      if (entry == NULL) {
-        /* only update if it's not from us */
-        olsr_update_hna_entry(&originator, &net, prefixlen, vtime);
-      }
+    prefixlen = olsr_netmask_to_prefix(&mask);
+    if (olsr_cnf->smart_gateway_active && prefixlen > 0 && prefixlen <= MAXIMUM_GATEWAY_PREFIX_LENGTH) {
+      continue;
+    }
+
+    entry = ip_prefix_list_find(olsr_cnf->hna_entries, &net, prefixlen);
+    if (entry == NULL) {
+      /* only update if it's not from us */
+      olsr_update_hna_entry(&originator, &net, prefixlen, vtime);
     }
   }
 #else
