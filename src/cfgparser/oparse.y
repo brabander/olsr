@@ -60,9 +60,9 @@
 #define PARSER_DEBUG 0
 
 #if PARSER_DEBUG
-#define PARSER_DEBUG_PRINTF(x, ...)   printf(x, ##args)
+#define PARSER_DEBUG_PRINTF(x, args...)   printf(x, ##args)
 #else
-#define PARSER_DEBUG_PRINTF(x, ...)   do { } while (0)
+#define PARSER_DEBUG_PRINTF(x, args...)   do { } while (0)
 #endif
 
 static char interface_defaults_name[] = "[InterfaceDefaults]";
@@ -488,7 +488,7 @@ isetifmode: TOK_IFMODE TOK_STRING
   struct olsr_if *ifs = olsr_cnf->interfaces;
 	int mode = (strcmp($2->string, "ether") == 0)?IF_MODE_ETHER:IF_MODE_MESH;
 
-  PARSER_DEBUG_PRINTF("\tMode: %d\n", $2->string);
+  PARSER_DEBUG_PRINTF("\tMode: %s\n", $2->string);
 
 	SET_IFS_CONF(ifs, ifcnt, mode, mode);
 	
@@ -760,7 +760,7 @@ iipversion:    TOK_IPVERSION TOK_INTEGER
 
 fibmetric:    TOK_FIBMETRIC TOK_STRING
 {
-  PARSER_DEBUG_PRINTF("FIBMetric: %d\n", $2->string);
+  PARSER_DEBUG_PRINTF("FIBMetric: %s\n", $2->string);
   if (strcmp($2->string, CFG_FIBM_FLAT) == 0) {
       olsr_cnf->fib_metric = FIBM_FLAT;
   } else if (strcmp($2->string, CFG_FIBM_CORRECT) == 0) {
