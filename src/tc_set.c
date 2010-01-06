@@ -53,6 +53,7 @@
 #include "lq_plugin.h"
 #include "olsr_cookie.h"
 #include "duplicate_set.h"
+#include "gateway.h"
 
 #include <assert.h>
 
@@ -283,6 +284,9 @@ olsr_delete_tc_entry(struct tc_entry *tc)
   struct ipaddr_str buf;
   OLSR_PRINTF(1, "TC: del entry %s\n", olsr_ip_to_string(&buf, &tc->addr));
 #endif
+
+  /* delete gateway if available */
+  olsr_delete_gateway(&tc->addr);
 
   /*
    * Delete the rt_path for ourselves.

@@ -248,7 +248,12 @@ olsr_delete_hna_net_entry(struct hna_net *net_to_delete) {
 static void
 olsr_expire_hna_net_entry(void *context)
 {
-  olsr_delete_hna_net_entry(context);
+  struct hna_net *net = context;
+  olsr_delete_hna_net_entry(net);
+  if (net->prefixlen == 0) {
+    /* remove gateway if HNA 0/0 times out */
+    olsr_delete_gateway(&net->hna_gw->A_gateway_addr);
+  }
 }
 
 /**
