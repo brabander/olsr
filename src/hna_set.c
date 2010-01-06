@@ -229,6 +229,8 @@ olsr_delete_hna_net_entry(struct hna_net *net_to_delete) {
    */
   olsr_delete_routing_table(&net_to_delete->A_network_addr, net_to_delete->prefixlen, &hna_gw->A_gateway_addr);
 
+  DEQUEUE_ELEM(net_to_delete);
+
   /* Delete hna_gw if empty */
   if (hna_gw->networks.next == &hna_gw->networks) {
     DEQUEUE_ELEM(hna_gw);
@@ -236,7 +238,6 @@ olsr_delete_hna_net_entry(struct hna_net *net_to_delete) {
     removed_entry = true;
   }
 
-  DEQUEUE_ELEM(net_to_delete);
   olsr_cookie_free(hna_net_mem_cookie, net_to_delete);
   return removed_entry;
 }
