@@ -258,6 +258,7 @@ struct olsrd_config {
   uint32_t smart_gateway_downlink;
   uint32_t ipip_if_index;
   unsigned long int ipip_remote_address;
+  const char *ipip_name;
 
   int ioctl_s;                         /* Socket used for ioctl calls */
 #if LINUX_POLICY_ROUTING

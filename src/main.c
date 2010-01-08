@@ -65,12 +65,6 @@
 #include <linux/rtnetlink.h>
 #include "kernel_routes.h"
 
-/*takes up the tunl0 interface*/
-static int olsr_tunl_up(void)
-{
-  printf("tunl0 up not supported");
-  return 0;
-}
 #endif
 
 #ifdef WIN32
@@ -91,6 +85,8 @@ static void olsr_shutdown(int) __attribute__ ((noreturn));
 void olsr_reconfigure(int) __attribute__ ((noreturn));
 
 static void print_usage(void);
+
+static const char* ipip_default_name = "olsr_tunnel";
 
 static int set_default_ifcnfs(struct olsr_if *, struct if_config_options *);
 
@@ -477,8 +473,8 @@ int main(int argc, char *argv[]) {
   /*create smart-gateway-tunnel policy rules*/
   if (olsr_cnf->smart_gateway_active) {
 
-    //todo take up tunl0 device or disable smartgateway
-    olsr_cnf->smart_gateway_active = olsr_tunl_up();
+    //take up tunl0 device or disable smartgateway
+    olsr_cnf->smart_gateway_active = olsr_dev_up("tunl0");
 
     if (olsr_cnf->smart_gateway_active) {
       struct olsr_if *cfg_if;
@@ -505,6 +501,7 @@ int main(int argc, char *argv[]) {
       //should we start now doing so anyways? (beter not, use only new RTTableRule priority)
 
       //as above ist neither finalized nor done in parser, we use hardcoded values
+      olsr_cnf->ipip_name=ipip_default_name;
       olsr_cnf->rttable_default=112;
       olsr_cnf->rttable_smartgw=113;
       if (olsr_cnf->rttable_default_rule==0) olsr_cnf->rttable_default_rule=65532;

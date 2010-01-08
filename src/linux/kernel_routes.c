@@ -71,6 +71,11 @@ static int delete_all_inet_gws(void);
 #include <linux/ip.h>
 #include <linux/if_tunnel.h>
 
+//ifup includes
+#include <sys/socket.h>
+#include <sys/ioctl.h>
+#include <sys/types.h>
+#include <net/if.h>
 
 extern struct rtnl_handle rth;
 
@@ -80,6 +85,28 @@ struct olsr_rtreq {
   char buf[512];
 };
 
+/*takes up an interface*/
+int olsr_dev_up(char * dev)
+{
+  int s, r, up;
+  struct ifreq f;
+  s = socket(PF_INET, SOCK_DGRAM, 0);
+  if (s < 0) {
+    perror("socket");
+    return(-1);
+  }
+  memset(&f, 0, sizeof(f));
+  strncpy(f.ifr_name, dev, IFNAMSIZ); /* set the interface */
+
+  r = ioctl(s, SIOCGIFFLAGS, &f);
+  if (r < 0) {
+    perror("ioctl");
+    return(-1);
+  }
+  up = (short int)f.ifr_flags & IFF_UP;
+  return up;
+}
+                                        
 #if LINUX_RTNETLINK_LISTEN
 #include "ifnet.h"
 #include "socket_parser.h"
@@ -139,7 +166,6 @@ static void netlink_process_link(struct nlmsghdr *h)
   }
 }
 
-
 void rtnetlink_read(int sock)
 {
   int len, plen;
@@ -191,7 +217,6 @@ static int set_tunl(int cmd, unsigned long int ipv4)
   struct ifreq ifr;
   int fd;
   int err;
-  const char *name = "olsrtunl";
   struct ip_tunnel_parm p;
 
   p.iph.version = 4;
@@ -200,10 +225,10 @@ static int set_tunl(int cmd, unsigned long int ipv4)
   p.iph.saddr=0x00000000;
   p.iph.daddr=ipv4;
 
-  strncpy(p.name, name, IFNAMSIZ);
+  strncpy(p.name, olsr_cnf->ipip_name, IFNAMSIZ);
 
   //specify existing interface name
-  if (cmd!=SIOCADDTUNNEL) strncpy(ifr.ifr_name, name, IFNAMSIZ);
+  if (cmd!=SIOCADDTUNNEL) strncpy(ifr.ifr_name, olsr_cnf->ipip_name, IFNAMSIZ);
 
   ifr.ifr_ifru.ifru_data = (void *) &p;
   fd = socket(AF_INET, SOCK_DGRAM, 0);//warning hardcoded AF_INET
@@ -327,8 +352,10 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
         //create tunnel
         set_tunl(SIOCADDTUNNEL,rt->rt_best->rtp_originator.v4.s_addr);
 //!!?? currently it gets never deleted at shutdown, anyways reusing existing tunnel might be a safe approach if creating fails?
+        //set tunnel up (does it need ip aswell?)
+        olsr_dev_up(olsr_cnf->ipip_name);
         //find out iifindex (maybe it works even if above failed (old tunnel))
-        olsr_cnf->ipip_if_index=if_nametoindex("olsrtunl");
+        olsr_cnf->ipip_if_index=if_nametoindex(olsr_cnf->ipip_name);
       }
 
       /*add interface*/
