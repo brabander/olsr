@@ -64,6 +64,14 @@ static int delete_all_inet_gws(void);
 #include <linux/types.h>
 #include <linux/rtnetlink.h>
 
+//ipip includes
+#include <netinet/in.h>
+#include <sys/ioctl.h>
+#include <net/if.h>
+#include <linux/ip.h>
+#include <linux/if_tunnel.h>
+
+
 extern struct rtnl_handle rth;
 
 struct olsr_rtreq {
@@ -173,7 +181,37 @@ void rtnetlink_read(int sock)
   }
 }
 
+//!!?? listen on our own tunlx interfaces aswell
+
 #endif /*linux_rtnetlink_listen*/
+
+/*create or change a ipip tunnel ipv4 only*/
+static int set_tunl(int cmd, unsigned long int ipv4)
+{
+  struct ifreq ifr;
+  int fd;
+  int err;
+  const char *name = "olsrtunl";
+  struct ip_tunnel_parm p;
+
+  p.iph.version = 4;
+  p.iph.ihl = 5;
+  p.iph.protocol=IPPROTO_IPIP; //IPPROTO_IPV6
+  p.iph.saddr=0x00000000;
+  p.iph.daddr=ipv4;
+
+  strncpy(p.name, name, IFNAMSIZ);
+
+  //specify existing interface name
+  if (cmd!=SIOCADDTUNNEL) strncpy(ifr.ifr_name, name, IFNAMSIZ);
+
+  ifr.ifr_ifru.ifru_data = (void *) &p;
+  fd = socket(AF_INET, SOCK_DGRAM, 0);//warning hardcoded AF_INET
+  err = ioctl(fd, cmd, &ifr);
+  if (err) perror("ioctl");
+  close(fd);
+  return err;
+}
 
 static void
 olsr_netlink_addreq(struct olsr_rtreq *req, int type, const void *data, int len)
@@ -266,6 +304,11 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
 
     req.r.rtm_scope = RT_SCOPE_UNIVERSE;
     olsr_netlink_addreq(&req, RTA_PRIORITY, &priority, sizeof(priority));
+    if (rt!=NULL) {
+      /*add interface name to rule*/
+      //olsr_netlink_addreq(&req, RTA_interface, &rt, sizeof(?));
+      //!!??printf("rule interface %s ignored!",(char*) rt);
+    } 
   }
   else {
     req.r.rtm_dst_len = rt->rt_dst.prefix_len;
@@ -279,7 +322,35 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
       req.r.rtm_scope = RT_SCOPE_LINK;
 
       /*add interface*/
-      if (flag == RT_NIIT) {
+      if ((&olsr_cnf->smart_gateway_active) && (rt->rt_dst.prefix_len == 0) && (&olsr_cnf->ipip_if_index==NULL))
+      {
+        //create tunnel
+        set_tunl(SIOCADDTUNNEL,rt->rt_best->rtp_originator.v4.s_addr);
+//!!?? currently it gets never deleted at shutdown, anyways reusing existing tunnel might be a safe approach if creating fails?
+        //find out iifindex (maybe it works even if above failed (old tunnel))
+        olsr_cnf->ipip_if_index=if_nametoindex("olsrtunl");
+      }
+
+      /*add interface*/
+      if ((&olsr_cnf->smart_gateway_active) && family != AF_INET)
+      {
+        printf("smart gateway not available for ipv6 currently");
+        return -1;
+      }
+      else if ((&olsr_cnf->smart_gateway_active) && (rt->rt_dst.prefix_len == 0) && (&olsr_cnf->ipip_if_index))
+      {
+        //change tunnel to new originator og potentially new gateway
+        if (olsr_cnf->ipip_remote_address != rt->rt_best->rtp_originator.v4.s_addr)
+        {
+          struct ipaddr_str buf;
+          printf("changing tunnel to %s",olsr_ip_to_string(&buf,&rt->rt_best->rtp_originator));
+          olsr_cnf->ipip_remote_address = rt->rt_best->rtp_originator.v4.s_addr;
+          set_tunl(SIOCCHGTUNNEL,olsr_cnf->ipip_remote_address);
+        }
+        //add interface
+        olsr_netlink_addreq(&req, RTA_OIF, &olsr_cnf->niit_if_index, sizeof(&olsr_cnf->ipip_if_index));
+      }
+      else if (flag == RT_NIIT) {
         olsr_netlink_addreq(&req, RTA_OIF, &olsr_cnf->niit_if_index, sizeof(&olsr_cnf->niit_if_index));
       }
       else {
@@ -319,7 +390,8 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
      * or if delete-similar to make insertion of auto-generated route possible
      **/
     if (AF_INET == family) {
-      if ( ( flag != RT_AUTO_ADD_GATEWAY_ROUTE ) && (flag != RT_DELETE_SIMILAR_ROUTE) && 
+      if ( !( (rt->rt_dst.prefix_len == 0) && (olsr_cnf->smart_gateway_active) )
+           && ( flag != RT_AUTO_ADD_GATEWAY_ROUTE ) && (flag != RT_DELETE_SIMILAR_ROUTE) && 
            ( flag != RT_DELETE_SIMILAR_AUTO_ROUTE) && (rt->rt_dst.prefix.v4.s_addr != nexthop->gateway.v4.s_addr) ) {
         olsr_netlink_addreq(&req, RTA_GATEWAY, &nexthop->gateway.v4, sizeof(nexthop->gateway.v4));
         req.r.rtm_scope = RT_SCOPE_UNIVERSE;
@@ -334,7 +406,8 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
         olsr_netlink_addreq(&req, RTA_DST, olsr_ipv6_to_ipv4(&rt->rt_dst.prefix, &ipv4_addr), sizeof(ipv4_addr.v4));
       }
       else {
-        if ( ( flag != RT_AUTO_ADD_GATEWAY_ROUTE ) && (flag != RT_DELETE_SIMILAR_ROUTE ) && ( flag != RT_DELETE_SIMILAR_AUTO_ROUTE) 
+        if ( !( (rt->rt_dst.prefix_len == 0) && (olsr_cnf->smart_gateway_active) ) 
+            && ( flag != RT_AUTO_ADD_GATEWAY_ROUTE ) && (flag != RT_DELETE_SIMILAR_ROUTE ) && ( flag != RT_DELETE_SIMILAR_AUTO_ROUTE) 
             && (0 != memcmp(&rt->rt_dst.prefix.v6, &nexthop->gateway.v6, sizeof(nexthop->gateway.v6))) ) {
           olsr_netlink_addreq(&req, RTA_GATEWAY, &nexthop->gateway.v6, sizeof(nexthop->gateway.v6));
           req.r.rtm_scope = RT_SCOPE_UNIVERSE;
@@ -538,9 +611,10 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
 
 /* external wrapper function for above patched multi purpose rtnetlink function */
 int
-olsr_netlink_rule(uint8_t family, uint8_t rttable, uint16_t cmd)
+olsr_netlink_rule(uint8_t family, uint8_t rttable, uint16_t cmd, uint32_t priority, char* dev)
 {
-  return olsr_netlink_route_int(NULL, family, rttable, cmd, RT_ORIG_REQUEST);
+  printf("rule priority not supported");
+  return olsr_netlink_route_int(dev, family, rttable, cmd, RT_ORIG_REQUEST);
 }
 
 /* internal wrapper function for above patched function */

@@ -64,6 +64,13 @@
 #include <linux/types.h>
 #include <linux/rtnetlink.h>
 #include "kernel_routes.h"
+
+/*takes up the tunl0 interface*/
+static int olsr_tunl_up(void)
+{
+  printf("tunl0 up not supported");
+  return 0;
+}
 #endif
 
 #ifdef WIN32
@@ -467,12 +474,66 @@ int main(int argc, char *argv[]) {
   OLSR_PRINTF(1, "Main address: %s\n\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
 
 #if LINUX_POLICY_ROUTING
+  /*create smart-gateway-tunnel policy rules*/
+  if (olsr_cnf->smart_gateway_active) {
+
+    //todo take up tunl0 device or disable smartgateway
+    olsr_cnf->smart_gateway_active = olsr_tunl_up();
+
+    if (olsr_cnf->smart_gateway_active) {
+      struct olsr_if *cfg_if;
+
+      //need sanity checks for routintg tables
+
+      //question: if rttable_default unconfigured, determine one?
+      //yes use 112
+      //same with smartTable (113)
+
+      //further checks: tabledefault and smartgateway >0 < 253
+      //check if all tables are unique
+      //if not use other values for unconfigured Tables? or stop startup?
+
+      //future improvement: verify if no rule points to default and smartgateway table, with un unknown realm?
+      //nice as we can use realms to give traffic info about gateway tunnel, and ...
+
+      //question: do we set an defaulttable now, which persists if smartgateway is turned off, due to problems (or an rmmodding user) later?
+      //its easier to stick to tables and also better, 
+      //as users will always find the default route on same place.
+
+      //question: make priority of rules configureable (if configured for rttable this might means we shall create this rule (instead the 65535 dummy)
+      //question olsr did never create rules for a custom table (beside the dummy)
+      //should we start now doing so anyways? (beter not, use only new RTTableRule priority)
+
+      //as above ist neither finalized nor done in parser, we use hardcoded values
+      olsr_cnf->rttable_default=112;
+      olsr_cnf->rttable_smartgw=113;
+      if (olsr_cnf->rttable_default_rule==0) olsr_cnf->rttable_default_rule=65532;
+      if (olsr_cnf->rttable_smartgw_rule==0) olsr_cnf->rttable_smartgw_rule=olsr_cnf->rttable_default_rule+1;
+      if (olsr_cnf->rttable_backup_rule==0) olsr_cnf->rttable_backup_rule=olsr_cnf->rttable_smartgw_rule+1;
+
+      //!!??warning rule function ignores prio at the moment, so ordering counts (should be enough for a prrof of concept)
+
+      /*table with default routes for olsr interfaces*/
+      for (cfg_if = olsr_cnf->interfaces; cfg_if; cfg_if = cfg_if->next) {
+        olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable_default, RTM_NEWRULE, 
+                             olsr_cnf->rttable_default_rule, cfg_if->name);
+      }
+      /*table with route into tunnel (for all interfaces)*/
+      olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable_smartgw, RTM_NEWRULE,
+                        olsr_cnf->rttable_smartgw_rule, NULL);
+      /*backup rule to default route table (if tunnel table gets empty)*/
+      olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable_default, RTM_NEWRULE, 
+                        olsr_cnf->rttable_backup_rule, NULL);
+    }
+  }
+
   /* Create rule for RtTable to resolve route insertion problems*/
   if ((olsr_cnf->rttable < 253) & (olsr_cnf->rttable > 0)) {
-    olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable, RTM_NEWRULE);
+    olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable, RTM_NEWRULE, (olsr_cnf->rttable_rule>0?olsr_cnf->rttable_rule:65535), NULL);
   }
 
   /* Create rtnetlink socket to listen on interface change events RTMGRP_LINK and RTMGRP_IPV4_ROUTE */
+  //todo listen on tunl0 events aswell
 
 #if LINUX_RTNETLINK_LISTEN
   rtnetlink_register_socket(RTMGRP_LINK);
@@ -646,9 +707,12 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
   close(olsr_cnf->ioctl_s);
 
 #if LINUX_POLICY_ROUTING
+//!!?? warning we do not delete any smartgw rules
+printf("smartgw rules where not deleted!");
+
   /* RtTable (linux only!!) */
   if ((olsr_cnf->rttable < 253) & (olsr_cnf->rttable > 0)) {
-    olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable, RTM_DELRULE);
+    olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable, RTM_DELRULE, 65535, NULL);
   }
 
   close(olsr_cnf->rtnl_s);

@@ -212,8 +212,8 @@ struct olsrd_config {
   bool allow_no_interfaces;
   uint16_t tos;
   uint8_t rtproto;
-  uint8_t rttable;
-  uint8_t rttable_default;
+  uint8_t rttable, rttable_default, rttable_smartgw;
+  uint16_t rttable_rule, rttable_default_rule, rttable_smartgw_rule, rttable_backup_rule;
   uint8_t willingness;
   bool willingness_auto;
   int ipc_connections;
@@ -256,6 +256,8 @@ struct olsrd_config {
   bool smart_gateway_active;
   uint32_t smart_gateway_uplink;
   uint32_t smart_gateway_downlink;
+  uint32_t ipip_if_index;
+  unsigned long int ipip_remote_address;
 
   int ioctl_s;                         /* Socket used for ioctl calls */
 #if LINUX_POLICY_ROUTING
