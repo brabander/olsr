@@ -53,6 +53,7 @@
 #define RT_AUTO_ADD_GATEWAY_ROUTE 4
 #define RT_DELETE_SIMILAR_AUTO_ROUTE 5
 #define RT_NIIT 6
+#define RT_SMARTGW 7
 
 #if !LINUX_POLICY_ROUTING
 
@@ -366,35 +367,16 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
       req.r.rtm_scope = RT_SCOPE_LINK;
 
       /*add interface*/
-      if ((&olsr_cnf->smart_gateway_active) && (rt->rt_dst.prefix_len == 0) && (&olsr_cnf->ipip_if_index==NULL))
-      {
-        //create tunnel
-        set_tunl(SIOCADDTUNNEL,rt->rt_best->rtp_originator.v4.s_addr);
-//!!?? currently it gets never deleted at shutdown, anyways reusing existing tunnel might be a safe approach if creating fails?
-        //set tunnel up with originator ip
-        olsr_dev_up(olsr_cnf->ipip_name,true);
-        //find out iifindex (maybe it works even if above failed (old tunnel))
-        olsr_cnf->ipip_if_index=if_nametoindex(olsr_cnf->ipip_name);
-      }
-
-      /*add interface*/
       if ((&olsr_cnf->smart_gateway_active) && family != AF_INET)
       {
         printf("smart gateway not available for ipv6 currently");
         return -1;
       }
-      else if ((&olsr_cnf->smart_gateway_active) && (rt->rt_dst.prefix_len == 0) && (&olsr_cnf->ipip_if_index))
+      else if(flag == RT_SMARTGW)
+      //else if ((&olsr_cnf->smart_gateway_active) && (rt->rt_dst.prefix_len == 0) && (&olsr_cnf->ipip_if_index))
       {
-        //change tunnel to new originator og potentially new gateway
-        if (olsr_cnf->ipip_remote_address != rt->rt_best->rtp_originator.v4.s_addr)
-        {
-          struct ipaddr_str buf;
-          printf("changing tunnel to %s",olsr_ip_to_string(&buf,&rt->rt_best->rtp_originator));
-          olsr_cnf->ipip_remote_address = rt->rt_best->rtp_originator.v4.s_addr;
-          set_tunl(SIOCCHGTUNNEL,olsr_cnf->ipip_remote_address);
-        }
-        //add interface
-        olsr_netlink_addreq(&req, RTA_OIF, &olsr_cnf->niit_if_index, sizeof(&olsr_cnf->ipip_if_index));
+        //add interface (without nexthop if possible (if not use &rt->rt_best->rtp_originator))
+        olsr_netlink_addreq(&req, RTA_OIF, &olsr_cnf->ipip_if_index, sizeof(&olsr_cnf->ipip_if_index));
       }
       else if (flag == RT_NIIT) {
         olsr_netlink_addreq(&req, RTA_OIF, &olsr_cnf->niit_if_index, sizeof(&olsr_cnf->niit_if_index));
@@ -436,7 +418,7 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
      * or if delete-similar to make insertion of auto-generated route possible
      **/
     if (AF_INET == family) {
-      if ( !( (rt->rt_dst.prefix_len == 0) && (olsr_cnf->smart_gateway_active) )
+      if ( ( flag != RT_SMARTGW )
            && ( flag != RT_AUTO_ADD_GATEWAY_ROUTE ) && (flag != RT_DELETE_SIMILAR_ROUTE) && 
            ( flag != RT_DELETE_SIMILAR_AUTO_ROUTE) && (rt->rt_dst.prefix.v4.s_addr != nexthop->gateway.v4.s_addr) ) {
         olsr_netlink_addreq(&req, RTA_GATEWAY, &nexthop->gateway.v4, sizeof(nexthop->gateway.v4));
@@ -452,7 +434,7 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
         olsr_netlink_addreq(&req, RTA_DST, olsr_ipv6_to_ipv4(&rt->rt_dst.prefix, &ipv4_addr), sizeof(ipv4_addr.v4));
       }
       else {
-        if ( !( (rt->rt_dst.prefix_len == 0) && (olsr_cnf->smart_gateway_active) ) 
+        if ( ( flag != RT_SMARTGW ) 
             && ( flag != RT_AUTO_ADD_GATEWAY_ROUTE ) && (flag != RT_DELETE_SIMILAR_ROUTE ) && ( flag != RT_DELETE_SIMILAR_AUTO_ROUTE) 
             && (0 != memcmp(&rt->rt_dst.prefix.v6, &nexthop->gateway.v6, sizeof(nexthop->gateway.v6))) ) {
           olsr_netlink_addreq(&req, RTA_GATEWAY, &nexthop->gateway.v6, sizeof(nexthop->gateway.v6));
@@ -664,9 +646,36 @@ olsr_netlink_rule(uint8_t family, uint8_t rttable, uint16_t cmd, uint32_t priori
 }
 
 /* internal wrapper function for above patched function */
+/* added smartgw and niit route creation*/
 static int
 olsr_netlink_route(const struct rt_entry *rt, uint8_t family, uint8_t rttable, __u16 cmd)
 {
+  /*check if this rule is relevant for smartgw*/
+  if ((&olsr_cnf->smart_gateway_active) && (rt->rt_dst.prefix_len == 0) ) {
+    if (&olsr_cnf->ipip_if_index==NULL) {
+      /*create tunnel*/
+      set_tunl(SIOCADDTUNNEL,rt->rt_best->rtp_originator.v4.s_addr);
+      /*!!?? currently it gets never deleted on shutdown, anyways reusing existing tunnel might be a safe approach if creating fails?*/
+      /*set tunnel up with originator ip*/
+      olsr_dev_up(olsr_cnf->ipip_name,true);
+      /*find out iifindex (maybe it works even if above failed (old tunnel))*/
+      olsr_cnf->ipip_if_index=if_nametoindex(olsr_cnf->ipip_name);
+    }
+    else
+    {
+      /*change tunnel to new originator or potentially new gateway*/
+      if (olsr_cnf->ipip_remote_address != rt->rt_best->rtp_originator.v4.s_addr) {
+        struct ipaddr_str buf;
+        printf("changing tunnel to %s",olsr_ip_to_string(&buf,&rt->rt_best->rtp_originator));
+        olsr_cnf->ipip_remote_address = rt->rt_best->rtp_originator.v4.s_addr;
+        set_tunl(SIOCCHGTUNNEL,olsr_cnf->ipip_remote_address);
+      }
+    }
+    /*create route into tunnel*/
+    olsr_netlink_route_int(rt, family, olsr_cnf->rttable_smartgw, cmd, RT_SMARTGW);
+  }
+  /*normal route in default route table*/
+
   /*create/delete niit route if we have an niit device*/
   if ((olsr_cnf->niit_if_index!=0) && (family != AF_INET) && (olsr_is_niit_ip(&rt->rt_dst.prefix))) {
     olsr_netlink_route_int(rt, family, rttable, cmd, RT_NIIT);
