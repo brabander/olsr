@@ -472,9 +472,9 @@ int main(int argc, char *argv[]) {
 #if LINUX_POLICY_ROUTING
   /*create smart-gateway-tunnel policy rules*/
   if (olsr_cnf->smart_gateway_active) {
-
+    const char* tunlbase = "tunl0";
     //take up tunl0 device or disable smartgateway
-    olsr_cnf->smart_gateway_active = olsr_dev_up("tunl0");
+    olsr_cnf->smart_gateway_active = olsr_dev_up(tunlbase,false);//!!?? kernel 2.4 may need true to function as gateway, does it harm to do anyway
 
     if (olsr_cnf->smart_gateway_active) {
       struct olsr_if *cfg_if;

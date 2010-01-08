@@ -86,25 +86,42 @@ struct olsr_rtreq {
 };
 
 /*takes up an interface*/
-int olsr_dev_up(char * dev)
+int olsr_dev_up(const char * dev,bool set_ip)
 {
-  int s, r, up;
-  struct ifreq f;
+  int s, r;
+  struct ifreq ifr;
   s = socket(PF_INET, SOCK_DGRAM, 0);
   if (s < 0) {
     perror("socket");
     return(-1);
   }
-  memset(&f, 0, sizeof(f));
-  strncpy(f.ifr_name, dev, IFNAMSIZ); /* set the interface */
+  memset(&ifr, 0, sizeof(ifr));
+  strncpy(ifr.ifr_name, dev, IFNAMSIZ);
 
-  r = ioctl(s, SIOCGIFFLAGS, &f);
+  if (set_ip){
+    struct sockaddr_in sin;
+    memset(&sin, 0, sizeof(struct sockaddr_in));
+    sin.sin_family = AF_INET;
+    sin.sin_addr.s_addr = 0x01020304;//!!??use originator address
+    memcpy(&ifr.ifr_addr, &sin, sizeof(struct sockaddr_in));
+
+    r = ioctl(s, SIOCSIFADDR, &ifr);
+    if (r < 0){
+      perror("ioctl");
+      return(-1);
+    }
+    /*reset ifreq fuild for IFFLGAS*/
+    memset(&sin, 0, sizeof( struct sockaddr_in) );
+  }
+
+  ifr.ifr_flags = IFF_UP; //!!?? read old flags and before setting new ones
+  r = ioctl(s, SIOCSIFFLAGS, &ifr);
   if (r < 0) {
     perror("ioctl");
     return(-1);
   }
-  up = (short int)f.ifr_flags & IFF_UP;
-  return up;
+
+  return true;
 }
                                         
 #if LINUX_RTNETLINK_LISTEN
@@ -256,7 +273,7 @@ olsr_netlink_addreq(struct olsr_rtreq *req, int type, const void *data, int len)
  *    not the cause, like unintelligent ordering of inserted routes.
  *  1 on success */
 static int
-olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttable, __u16 cmd, uint8_t flag)
+olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttable, __u16 cmd, uint16_t flag)
 {
   int ret = 1; /* helper variable for rtnetlink_message processing */
   int rt_ret = -2;  /* if no response from rtnetlink it must be considered as failed! */
@@ -325,14 +342,12 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
 
   if ( ( cmd == RTM_NEWRULE ) || ( cmd == RTM_DELRULE ) ) {
     /* add or delete a rule */
-    static uint32_t priority = 65535;
-
     req.r.rtm_scope = RT_SCOPE_UNIVERSE;
-    olsr_netlink_addreq(&req, RTA_PRIORITY, &priority, sizeof(priority));
+    olsr_netlink_addreq(&req, RTA_PRIORITY, &flag, sizeof(flag));
     if (rt!=NULL) {
       /*add interface name to rule*/
       //olsr_netlink_addreq(&req, RTA_interface, &rt, sizeof(?));
-      //!!??printf("rule interface %s ignored!",(char*) rt);
+      printf("rule interface %s ignored!",(const char *) rt);
     } 
   }
   else {
@@ -352,8 +367,8 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
         //create tunnel
         set_tunl(SIOCADDTUNNEL,rt->rt_best->rtp_originator.v4.s_addr);
 //!!?? currently it gets never deleted at shutdown, anyways reusing existing tunnel might be a safe approach if creating fails?
-        //set tunnel up (does it need ip aswell?)
-        olsr_dev_up(olsr_cnf->ipip_name);
+        //set tunnel up with originator ip
+        olsr_dev_up(olsr_cnf->ipip_name,true);
         //find out iifindex (maybe it works even if above failed (old tunnel))
         olsr_cnf->ipip_if_index=if_nametoindex(olsr_cnf->ipip_name);
       }
@@ -641,7 +656,7 @@ int
 olsr_netlink_rule(uint8_t family, uint8_t rttable, uint16_t cmd, uint32_t priority, char* dev)
 {
   printf("rule priority not supported");
-  return olsr_netlink_route_int(dev, family, rttable, cmd, RT_ORIG_REQUEST);
+  return olsr_netlink_route_int((const struct rt_entry *) dev, family, rttable, cmd, priority);
 }
 
 /* internal wrapper function for above patched function */
