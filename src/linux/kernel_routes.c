@@ -108,19 +108,23 @@ int olsr_dev_up(const char * dev,bool set_ip)
     r = ioctl(s, SIOCSIFADDR, &ifr);
     if (r < 0){
       perror("ioctl");
-      return(-1);
+      return false;
     }
     /*reset ifreq fuild for IFFLGAS*/
     memset(&sin, 0, sizeof( struct sockaddr_in) );
   }
 
   ifr.ifr_flags = IFF_UP; //!!?? read old flags and before setting new ones
+  r = ioctl(s, SIOCGIFFLAGS, &ifr);
+  /*check if already up*/
+  if ((short int)ifr.ifr_flags & IFF_UP) return true;
+  /*set to UP now*/
+  ifr.ifr_flags |= IFF_UP;
   r = ioctl(s, SIOCSIFFLAGS, &ifr);
   if (r < 0) {
     perror("ioctl");
-    return(-1);
+    return false;
   }
-
   return true;
 }
                                         
