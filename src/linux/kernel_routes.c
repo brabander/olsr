@@ -138,7 +138,7 @@ int olsr_ifconfig(const char * dev,int flag)
     perror("ioctl");
     return false;
   }
-  return true;
+  return -1;
 }
                                         
 #if LINUX_RTNETLINK_LISTEN
