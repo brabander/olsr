@@ -154,7 +154,7 @@ ifeq ($(OS),android)
 # nameservice: no regex
 SUBDIRS := bmf dot_draw dyn_gw_plain httpinfo mini quagga secure tas txtinfo watchdog
 else
-SUBDIRS := bmf dot_draw dyn_gw dyn_gw_plain httpinfo mini nameservice pgraph secure txtinfo watchdog
+SUBDIRS := dot_draw dyn_gw dyn_gw_plain httpinfo mini nameservice pgraph secure txtinfo watchdog
 endif
 endif
 endif
