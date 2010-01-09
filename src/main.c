@@ -475,6 +475,7 @@ int main(int argc, char *argv[]) {
     const char* tunlbase = "tunl0";
     //take up tunl0 device or disable smartgateway
     olsr_cnf->smart_gateway_active = olsr_dev_up(tunlbase,false);//!!?? kernel 2.4 may need true to function as gateway, does it harm to do anyway
+    olsr_cnf->ipip_base_if_index = if_nametoindex(tunlbase);
 
     if (olsr_cnf->smart_gateway_active) {
       struct olsr_if *cfg_if;
@@ -501,6 +502,7 @@ int main(int argc, char *argv[]) {
       //should we start now doing so anyways? (beter not, use only new RTTableRule priority)
 
       //as above ist neither finalized nor done in parser, we use hardcoded values
+      olsr_cnf->ipip_if_index = false;
       olsr_cnf->ipip_name=ipip_default_name;
       olsr_cnf->rttable_default=112;
       olsr_cnf->rttable_smartgw=113;
@@ -704,12 +706,28 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
   close(olsr_cnf->ioctl_s);
 
 #if LINUX_POLICY_ROUTING
-//!!?? warning we do not delete any smartgw rules
-printf("smartgw rules where not deleted!");
 
-  /* RtTable (linux only!!) */
+  /*delete smartgw tunnel if it index is known*/
+  if (olsr_cnf->ipip_if_index) olsr_del_tunl();
+
+  /*!!?? we should take down the tunl0 interface*/
+
+  /*we shall delete all rules with an configured prio*/
+  if (olsr_cnf->rttable_default_rule>0) {
+    struct olsr_if * cfg_if;
+    for (cfg_if = olsr_cnf->interfaces; cfg_if; cfg_if = cfg_if->next) {
+      olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable_default, RTM_DELRULE, olsr_cnf->rttable_default_rule, cfg_if->name);
+    }
+  }
+  if (olsr_cnf->rttable_smartgw_rule>0)
+    olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable_smartgw, RTM_DELRULE, olsr_cnf->rttable_smartgw_rule, NULL);
+  if (olsr_cnf->rttable_backup_rule>0)
+    olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable_default, RTM_DELRULE, olsr_cnf->rttable_backup_rule, NULL);
+
+
+  /* RtTable backup rule */
   if ((olsr_cnf->rttable < 253) & (olsr_cnf->rttable > 0)) {
-    olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable, RTM_DELRULE, 65535, NULL);
+    olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable, RTM_DELRULE, (olsr_cnf->rttable_rule?olsr_cnf->rttable_rule:65535), NULL);
   }
 
   close(olsr_cnf->rtnl_s);

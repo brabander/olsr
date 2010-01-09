@@ -164,6 +164,27 @@ static void netlink_process_link(struct nlmsghdr *h)
   struct interface *iface;
   struct olsr_if *tmp_if;
 
+  /*monitor tunl0 and olsrtunl*/
+  if (olsr_cnf->smart_gateway_active) {
+    if (ifi->ifi_index==olsr_cnf->ipip_if_index) {
+      /*we try to delete the interface completely*/
+      olsr_del_tunl();
+      //!!?? shall we mark the default route dirty?
+      /*we mark it unexisting -> we will create the tunnel again (if gateway changes)*/
+      olsr_cnf->ipip_if_index = false;
+      return;
+    }
+    if (ifi->ifi_index==olsr_cnf->ipip_base_if_index) {
+      /*we try to take it up again (if its only down it might workout)*/
+      if (olsr_dev_up("tunl0",false)) return; //!!?? test this
+      /*we disable -> this should stop us announcing being a smart gateway, and can not use tunnels as its unlikely to be able to crete them without tunl0*/
+      olsr_cnf->smart_gateway_active=false;
+      /*recovery is not easy as potentially the ipip module is not loaded any more*/
+      /*but it could just mean the tunl0 is down, and the gatewaytunnel would work*/
+      return;
+    }
+  }
+
   iface = if_ifwithindex(ifi->ifi_index);
   if (iface == NULL) {
     return;
@@ -258,6 +279,11 @@ static int set_tunl(int cmd, unsigned long int ipv4)
   if (err) perror("ioctl");
   close(fd);
   return err;
+}
+
+int olsr_del_tunl(void)
+{
+  return set_tunl(SIOCDELTUNNEL,0x00000000);//!!??test if this deletes tunnel
 }
 
 static void
@@ -367,13 +393,13 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
       req.r.rtm_scope = RT_SCOPE_LINK;
 
       /*add interface*/
-      if ((&olsr_cnf->smart_gateway_active) && family != AF_INET)
+      if ((olsr_cnf->smart_gateway_active) && family != AF_INET)
       {
         printf("smart gateway not available for ipv6 currently");
         return -1;
       }
       else if(flag == RT_SMARTGW)
-      //else if ((&olsr_cnf->smart_gateway_active) && (rt->rt_dst.prefix_len == 0) && (&olsr_cnf->ipip_if_index))
+      //else if ((olsr_cnf->smart_gateway_active) && (rt->rt_dst.prefix_len == 0) && (&olsr_cnf->ipip_if_index))
       {
         //add interface (without nexthop if possible (if not use &rt->rt_best->rtp_originator))
         olsr_netlink_addreq(&req, RTA_OIF, &olsr_cnf->ipip_if_index, sizeof(&olsr_cnf->ipip_if_index));
@@ -651,8 +677,8 @@ static int
 olsr_netlink_route(const struct rt_entry *rt, uint8_t family, uint8_t rttable, __u16 cmd)
 {
   /*check if this rule is relevant for smartgw*/
-  if ((&olsr_cnf->smart_gateway_active) && (rt->rt_dst.prefix_len == 0) ) {
-    if (&olsr_cnf->ipip_if_index==NULL) {
+  if ((olsr_cnf->smart_gateway_active) && (rt->rt_dst.prefix_len == 0) ) {
+    if (olsr_cnf->ipip_if_index == -1) {
       /*create tunnel*/
       set_tunl(SIOCADDTUNNEL,rt->rt_best->rtp_originator.v4.s_addr);
       /*!!?? currently it gets never deleted on shutdown, anyways reusing existing tunnel might be a safe approach if creating fails?*/
