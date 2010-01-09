@@ -101,6 +101,7 @@ main(int argc, char *argv[])
 
 #endif
 
+#ifdef linux
 static int
 olsrd_parse_niit_if(const char *niit_if) {
   int i = 0;
@@ -115,6 +116,7 @@ olsrd_parse_niit_if(const char *niit_if) {
   }
   return i;
 }
+#endif
 
 int
 olsrd_parse_cnf(const char *filename)
