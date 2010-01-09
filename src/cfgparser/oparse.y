@@ -285,7 +285,7 @@ stmt:       idebug
 block:      TOK_HNA4 hna4body
           | TOK_HNA6 hna6body
           | TOK_IPCCON ipcbody
-          | ifdblock ifbody
+          | ifdblock ifdbody
           | ifblock ifbody
           | plblock plbody
 ;
@@ -329,6 +329,20 @@ ifnicks:   | ifnicks ifnick
 ;
 
 ifbody:     TOK_OPEN ifstmts TOK_CLOSE
+;
+
+ifdbody:     TOK_OPEN ifstmts TOK_CLOSE
+{
+  struct olsr_if *in = olsr_cnf->interfaces;
+  printf("\nInterface Defaults");
+  /*remove Interface Defaults from Interface list as they are no interface!*/
+  olsr_cnf->interfaces = in->next;
+  ifs_in_curr_cfg=0;
+  /*free interface but keep its config intact?*/
+  free(in->cnfi);
+  free(in);
+
+}
 ;
 
 ifstmts:   | ifstmts ifstmt
@@ -390,6 +404,8 @@ ifdblock: TOK_INTERFACE_DEFAULTS
   in->next = olsr_cnf->interfaces;
   olsr_cnf->interfaces = in;
   ifs_in_curr_cfg=1;
+  
+  fflush(stdout);
 }
 ;
 

@@ -268,6 +268,7 @@ int olsrd_sanity_check_interface_cnf(struct if_config_options * io, struct olsrd
       return -1;
     }
   }
+  return 0;
 }
 
 
