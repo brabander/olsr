@@ -59,6 +59,8 @@
 extern FILE *yyin;
 extern int yyparse(void);
 
+static char interface_defaults_name[] = "[InterfaceDefaults]";
+
 static char copyright_string[] __attribute__ ((unused)) =
   "The olsr.org Optimized Link-State Routing daemon(olsrd) Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org) All rights reserved.";
 
@@ -212,6 +214,63 @@ olsrd_print_interface_cnf(struct if_config_options *cnf, struct if_config_option
   printf("\tAutodetect changes       : %s%s\n", cnf->autodetect_chg ? "yes" : "no",DEFAULT_STR(autodetect_chg));
 }
 
+static 
+int olsrd_sanity_check_interface_cnf(struct if_config_options * io, struct olsrd_config * cnf, char* name) {
+  struct olsr_lq_mult *mult;
+
+  /* HELLO interval */
+
+  if (io->hello_params.validity_time < 0.0) {
+    if (cnf->lq_level == 0)
+      io->hello_params.validity_time = NEIGHB_HOLD_TIME;
+
+    else
+      io->hello_params.validity_time = (int)(REFRESH_INTERVAL / cnf->lq_aging);
+  }
+
+  if (io->hello_params.emission_interval < cnf->pollrate || io->hello_params.emission_interval > io->hello_params.validity_time) {
+    fprintf(stderr, "Bad HELLO parameters! (em: %0.2f, vt: %0.2f) for dev %s\n", io->hello_params.emission_interval,
+            io->hello_params.validity_time, name);
+    return -1;
+  }
+
+  /* TC interval */
+  if (io->tc_params.emission_interval < cnf->pollrate || io->tc_params.emission_interval > io->tc_params.validity_time) {
+    fprintf(stderr, "Bad TC parameters! (em: %0.2f, vt: %0.2f) for dev %s\n", io->tc_params.emission_interval,
+        io->tc_params.validity_time, name);
+    return -1;
+  }
+
+  if (cnf->min_tc_vtime > 0.0 && (io->tc_params.validity_time / io->tc_params.emission_interval) < 128) {
+    fprintf(stderr, "Please use a tc vtime at least 128 times the emission interval while using the min_tc_vtime hack.\n");
+    return -1;
+  }
+  /* MID interval */
+  if (io->mid_params.emission_interval < cnf->pollrate || io->mid_params.emission_interval > io->mid_params.validity_time) {
+    fprintf(stderr, "Bad MID parameters! (em: %0.2f, vt: %0.2f) for dev %s\n", io->mid_params.emission_interval,
+            io->mid_params.validity_time, name);
+    return -1;
+  }
+
+  /* HNA interval */
+  if (io->hna_params.emission_interval < cnf->pollrate || io->hna_params.emission_interval > io->hna_params.validity_time) {
+    fprintf(stderr, "Bad HNA parameters! (em: %0.2f, vt: %0.2f) for dev %s\n", io->hna_params.emission_interval,
+            io->hna_params.validity_time, name);
+    return -1;
+  }
+
+  for (mult = io->lq_mult; mult; mult=mult->next) {
+    if (mult->value > LINK_LOSS_MULTIPLIER) {
+      struct ipaddr_str buf;
+
+      fprintf(stderr, "Bad Linkquality multiplier ('%s' on IP %s: %0.2f)\n",
+          name, olsr_ip_to_string(&buf, &mult->addr), (float)mult->value / (float)LINK_LOSS_MULTIPLIER);
+      return -1;
+    }
+  }
+}
+
+
 int
 olsrd_sanity_check_cnf(struct olsrd_config *cnf)
 {
@@ -345,6 +404,9 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
   if (cnf->interface_defaults == NULL) {
     /* get a default configuration if the user did not specify one */
     cnf->interface_defaults = get_default_if_config();
+  } else {
+    olsrd_print_interface_cnf(cnf->interface_defaults, cnf->interface_defaults, false);
+    olsrd_sanity_check_interface_cnf(cnf->interface_defaults, cnf, interface_defaults_name);
   }
 
   /* Interfaces */
@@ -355,8 +417,7 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
 
     olsrd_print_interface_cnf(in->cnf, in->cnfi, false);
 
-    /*apply defaults (if this is not the default interface stub)*/
-    if (in->cnf != cnf->interface_defaults)
+    /*apply defaults*/
     {
       size_t pos;
       struct olsr_lq_mult *mult_temp, *mult_orig_walk;
@@ -393,17 +454,6 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
         }
       }
     }
-    else
-    { /* check if there are no lqmults
-       *  as copying the pointer to the interfaces, 
-       *  would lead 1. to unexpected results if this interface defines its own lqmults 
-       *  2. to problems when freeing lqmult structures them) 
-      if (io->lq_mult!=NULL) {
-        fprintf(stderr, "LinkQualityMult directives are not supported within InterfaceDefaults section!\n", in->name);
-        return -1;
-      }*/
-      mult_orig = NULL;
-    }
 
     if (in->name == NULL || !strlen(in->name)) {
       fprintf(stderr, "Interface has no name!\n");
@@ -412,47 +462,6 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
 
     if (io == NULL) {
       fprintf(stderr, "Interface %s has no configuration!\n", in->name);
-      return -1;
-    }
-
-    /* HELLO interval */
-
-    if (io->hello_params.validity_time < 0.0) {
-      if (cnf->lq_level == 0)
-        io->hello_params.validity_time = NEIGHB_HOLD_TIME;
-
-      else
-        io->hello_params.validity_time = (int)(REFRESH_INTERVAL / cnf->lq_aging);
-    }
-
-    if (io->hello_params.emission_interval < cnf->pollrate || io->hello_params.emission_interval > io->hello_params.validity_time) {
-      fprintf(stderr, "Bad HELLO parameters! (em: %0.2f, vt: %0.2f) for dev %s\n", io->hello_params.emission_interval,
-              io->hello_params.validity_time, in->name);
-      return -1;
-    }
-
-    /* TC interval */
-    if (io->tc_params.emission_interval < cnf->pollrate || io->tc_params.emission_interval > io->tc_params.validity_time) {
-      fprintf(stderr, "Bad TC parameters! (em: %0.2f, vt: %0.2f) for dev %s\n", io->tc_params.emission_interval,
-          io->tc_params.validity_time, in->name);
-      return -1;
-    }
-
-    if (cnf->min_tc_vtime > 0.0 && (io->tc_params.validity_time / io->tc_params.emission_interval) < 128) {
-      fprintf(stderr, "Please use a tc vtime at least 128 times the emission interval while using the min_tc_vtime hack.\n");
-      return -1;
-    }
-    /* MID interval */
-    if (io->mid_params.emission_interval < cnf->pollrate || io->mid_params.emission_interval > io->mid_params.validity_time) {
-      fprintf(stderr, "Bad MID parameters! (em: %0.2f, vt: %0.2f) for dev %s\n", io->mid_params.emission_interval,
-              io->mid_params.validity_time, in->name);
-      return -1;
-    }
-
-    /* HNA interval */
-    if (io->hna_params.emission_interval < cnf->pollrate || io->hna_params.emission_interval > io->hna_params.validity_time) {
-      fprintf(stderr, "Bad HNA parameters! (em: %0.2f, vt: %0.2f) for dev %s\n", io->hna_params.emission_interval,
-              io->hna_params.validity_time, in->name);
       return -1;
     }
 
@@ -469,15 +478,8 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
       io->lq_mult=mult_orig;
     }
 
-    for (mult = io->lq_mult; mult; mult=mult->next) {
-      if (mult->value > LINK_LOSS_MULTIPLIER) {
-        struct ipaddr_str buf;
+    if (olsrd_sanity_check_interface_cnf(io, cnf, in->name)) return -1;
 
-        fprintf(stderr, "Bad Linkquality multiplier ('%s' on IP %s: %0.2f)\n",
-            in->name, olsr_ip_to_string(&buf, &mult->addr), (float)mult->value / (float)LINK_LOSS_MULTIPLIER);
-        return -1;
-      }
-    }
     in = in->next;
   }
 

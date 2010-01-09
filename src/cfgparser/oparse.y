@@ -65,8 +65,6 @@
 #define PARSER_DEBUG_PRINTF(x, args...)   do { } while (0)
 #endif
 
-static char interface_defaults_name[] = "[InterfaceDefaults]";
-
 #define SET_IFS_CONF(ifs, ifcnt, field, value) do { \
 	for (; ifcnt>0; ifs=ifs->next, ifcnt--) { \
     ifs->cnfi->field = (value); \
@@ -383,7 +381,8 @@ ifdblock: TOK_INTERFACE_DEFAULTS
     YYABORT;
   }
 
-  in->name = strdup(interface_defaults_name);
+  //should not need a name any more, as we free it on "}" again
+  //in->name = strdup(interface_defaults_name);
 
   olsr_cnf->interface_defaults = in->cnf;
 
