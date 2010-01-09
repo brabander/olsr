@@ -258,6 +258,7 @@ struct olsrd_config {
   uint32_t smart_gateway_downlink;
   struct interface ipip_base_if;
   int ipip_if_index;
+  bool ipip_if_up;
   unsigned long int ipip_remote_address;
   const char *ipip_name;
 

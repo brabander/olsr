@@ -479,16 +479,20 @@ int main(int argc, char *argv[]) {
   /*create smart-gateway-tunnel policy rules*/
   //!!?? disable smartgateway if not ipv4?, or better: do not start olsr
   if (olsr_cnf->smart_gateway_active) {
-    const char* tunlbase = "tunl0";
+
     //take up tunl0 device or disable smartgateway
-    olsr_cnf->smart_gateway_active = olsr_dev_up(tunlbase,false);//!!?? kernel 2.4 may need true to function as gateway, does it harm to do anyway
+    olsr_cnf->smart_gateway_active = olsr_dev_up(TUNL_BASE,false);//!!?? kernel 2.4 may need true to function as gateway, does it harm to do anyway
     /*create an interface structure for the tunlbase to store procnet settings*/
     /*hmmm integrate it into the olsr_interface list to ensure spoof setting clenaup at end!???*/
-    olsr_cnf->ipip_base_if.if_index = if_nametoindex(tunlbase);
+    olsr_cnf->ipip_base_if.if_index = if_nametoindex(TUNL_BASE);
 
-    deactivate_spoof(tunlbase, &olsr_cnf->ipip_base_if, AF_INET );//ipip is an ipv4 tunnel
+    deactivate_spoof(TUNL_BASE, &olsr_cnf->ipip_base_if, AF_INET );//ipip is an ipv4 tunnel
 
-    if (olsr_cnf->smart_gateway_active) {
+    if (!olsr_cnf->smart_gateway_active) 
+    {
+      printf("disabled smart Gateway! (ipip tunnels not useable for olsrd on this host)");
+    }
+    else {
       struct olsr_if *cfg_if;
 
       //need sanity checks for routintg tables
@@ -521,7 +525,8 @@ int main(int argc, char *argv[]) {
       if (olsr_cnf->rttable_smartgw_rule==0) olsr_cnf->rttable_smartgw_rule=olsr_cnf->rttable_default_rule+1;
       if (olsr_cnf->rttable_backup_rule==0) olsr_cnf->rttable_backup_rule=olsr_cnf->rttable_smartgw_rule+1;
 
-      //!!??warning rule function ignores prio at the moment, so ordering counts (should be enough for a prrof of concept)
+//!!?? just a test
+olsr_cnf->rttable_rule=65531;
 
       /*table with default routes for olsr interfaces*/
       for (cfg_if = olsr_cnf->interfaces; cfg_if; cfg_if = cfg_if->next) {
