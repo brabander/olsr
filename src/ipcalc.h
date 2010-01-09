@@ -167,13 +167,12 @@ prefix_to_netmask4(uint8_t prefixlen)
 
 static INLINE bool
 olsr_is_niit_ip(const union olsr_ip_addr *ip) {
-  return olsr_cnf->ip_version == AF_INET6 &&
-      ip->v6.s6_addr32[0] == 0 && ip->v6.s6_addr32[0] == 0 && ip->v6.s6_addr32[0] == 0xffff;
+  return olsr_cnf->ip_version == AF_INET6 && IN6_IS_ADDR_V4MAPPED(&ip->v6);
 }
 
 static INLINE union olsr_ip_addr *
 olsr_ipv6_to_ipv4(const union olsr_ip_addr *ipv6, union olsr_ip_addr *ipv4) {
-  ipv4->v4.s_addr = ipv6->v6.s6_addr32[3];
+  memcpy(&ipv4->v4, &ipv6->v6.s6_addr[12], sizeof(ipv4->v4));
   return ipv4;
 }
 
