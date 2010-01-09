@@ -86,7 +86,9 @@ void olsr_reconfigure(int) __attribute__ ((noreturn));
 
 static void print_usage(void);
 
+#ifdef linux
 static const char* ipip_default_name = "olsr_tunnel";
+#endif
 
 static int set_default_ifcnfs(struct olsr_if *, struct if_config_options *);
 
