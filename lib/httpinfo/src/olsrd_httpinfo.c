@@ -553,7 +553,8 @@ httpinfo_write_data(void *foo __attribute__ ((unused))) {
   FD_ZERO(&set);
   max = 0;
   for (i=0; i<outbuffer_count; i++) {
-    FD_SET(outbuffer_socket[i], &set);
+    /* prevent warning in win32 */
+    FD_SET((unsigned int)outbuffer_socket[i], &set);
     if (outbuffer_socket[i] > max) {
       max = outbuffer_socket[i];
     }

@@ -102,7 +102,9 @@ static char
         "The olsr.org Optimized Link-State Routing daemon(olsrd) Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org) All rights reserved.";
 
 /* Data for OLSR locking */
+#ifndef WIN32
 static int lock_fd = 0;
+#endif
 static char lock_file_name[FILENAME_MAX];
 
 /*
@@ -350,7 +352,9 @@ int main(int argc, char *argv[]) {
    */
   olsr_cnf->ioctl_s = socket(olsr_cnf->ip_version, SOCK_DGRAM, 0);
   if (olsr_cnf->ioctl_s < 0) {
+#ifndef WIN32
     olsr_syslog(OLSR_LOG_ERR, "ioctl socket: %m");
+#endif
     olsr_exit(__func__, 0);
   }
 #if LINUX_POLICY_ROUTING
