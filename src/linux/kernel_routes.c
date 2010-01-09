@@ -594,7 +594,7 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
              * anyways if invalid gateway ips may happen we are f*cked up!!
              * but if not, these on the fly generated routes are no problem, and will only get used when needed */
             else if ( ( (errno == 3) || (errno == 101) || (errno == 128) )
-                && (flag == RT_ORIG_REQUEST) && (FIBM_FLAT == olsr_cnf->fib_metric) && (olsr_cnf->rttable == rttable)
+                && (flag == RT_ORIG_REQUEST) && (FIBM_FLAT == olsr_cnf->fib_metric)
                      && (cmd == RTM_NEWROUTE) && (rt->rt_dst.prefix.v4.s_addr!=nexthop->gateway.v4.s_addr)) {
               if (errno == 128)  {
                 olsr_syslog(OLSR_LOG_ERR, ". autogenerating route to handle 'Network unreachable' (128) while adding route!");
@@ -662,7 +662,7 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
     /* autoadd route via gateway */
 
     /* recursive call to invoke creation of a route to the gateway */
-    rt_ret = olsr_netlink_route_int(rt, family, rttable, RTM_NEWROUTE, RT_AUTO_ADD_GATEWAY_ROUTE);
+    rt_ret = olsr_netlink_route_int(rt, family, olsr_cnf->rttable, RTM_NEWROUTE, RT_AUTO_ADD_GATEWAY_ROUTE);
 
     /* retry insert original route, if above succeeded without problems */
     if (rt_ret > 0) {

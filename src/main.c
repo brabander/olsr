@@ -531,6 +531,8 @@ printf("old ipip_base_orig_down state: %i",olsr_cnf->ipip_base_orig_down);
 //!!?? just a test
 olsr_cnf->rttable_rule=65531;
 
+printf("\nMain Table is %i prio %i", olsr_cnf->rttable, olsr_cnf->rttable_rule);
+
       /*table with default routes for olsr interfaces*/
       for (cfg_if = olsr_cnf->interfaces; cfg_if; cfg_if = cfg_if->next) {
         olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable_default, RTM_NEWRULE, 
