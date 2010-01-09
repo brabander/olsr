@@ -479,9 +479,10 @@ int main(int argc, char *argv[]) {
   /*create smart-gateway-tunnel policy rules*/
   //!!?? disable smartgateway if not ipv4?, or better: do not start olsr
   if (olsr_cnf->smart_gateway_active) {
-
+    int r = olsr_ifconfig(TUNL_BASE,IF_SET_UP);
     //take up tunl0 device or disable smartgateway
-    olsr_cnf->smart_gateway_active = olsr_dev_up(TUNL_BASE,false);//!!?? kernel 2.4 may need true to function as gateway, does it harm to do anyway
+    olsr_cnf->ipip_base_orig_down = (r == -1 ?true:false);
+    olsr_cnf->smart_gateway_active = (r != 0); //!!?? kernel 2.4 may need true to function as gateway, does it harm to do anyway
     /*create an interface structure for the tunlbase to store procnet settings*/
     /*hmmm integrate it into the olsr_interface list to ensure spoof setting clenaup at end!???*/
     olsr_cnf->ipip_base_if.if_index = if_nametoindex(TUNL_BASE);
@@ -739,6 +740,9 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
     olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable_smartgw, RTM_DELRULE, olsr_cnf->rttable_smartgw_rule, NULL);
   if (olsr_cnf->rttable_backup_rule>0)
     olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable_default, RTM_DELRULE, olsr_cnf->rttable_backup_rule, NULL);
+
+  /*tunl0*/
+  if (olsr_cnf->ipip_base_orig_down) olsr_ifconfig(TUNL_BASE,IF_SET_DOWN);
 
   /*rp_filter*/
   if (olsr_cnf->ipip_base_if.if_index) printf("resetting of tunl0 rp_filter not implemented");//!!?? no function extits to reset a single interface

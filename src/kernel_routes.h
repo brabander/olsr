@@ -58,7 +58,11 @@ static const char TUNL_BASE[IFNAMSIZ] = "tunl0";
 
 int olsr_netlink_rule(uint8_t, uint8_t, uint16_t, uint32_t, char *);
 
-int olsr_dev_up(const char *, bool);
+#define IF_SET_UP 0
+#define IF_SET_IP 1 /*sets up aswell*/
+#define IF_SET_DOWN 2
+
+int olsr_ifconfig(const char *, int);
 int olsr_del_tunl(void);
 
 #if LINUX_RTNETLINK_LISTEN

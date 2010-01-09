@@ -253,12 +253,14 @@ struct olsrd_config {
   char *niit_if;
   int niit_if_index;
 
+  /*many potential parameters or helper variables for smartgateway*/
   bool smart_gateway_active;
   uint32_t smart_gateway_uplink;
   uint32_t smart_gateway_downlink;
   struct interface ipip_base_if;
   int ipip_if_index;
   bool ipip_if_up;
+  bool ipip_base_orig_down;
   unsigned long int ipip_remote_address;
   const char *ipip_name;
 

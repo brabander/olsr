@@ -86,8 +86,12 @@ struct olsr_rtreq {
   char buf[512];
 };
 
-/*takes up an interface*/
-int olsr_dev_up(const char * dev,bool set_ip)
+/*takes up or down (flag IF_SET_DOWN) an interface (optionally able to configure an /32 ip aswell IF_SET_IP)*/
+/* return value
+ * 0 if failure
+ * -1 if success
+ *  1 if interface was already up/down and no therefoew was no need to change this*/
+int olsr_ifconfig(const char * dev,int flag)
 {
   int s, r;
   struct ifreq ifr;
@@ -99,7 +103,7 @@ int olsr_dev_up(const char * dev,bool set_ip)
   memset(&ifr, 0, sizeof(ifr));
   strncpy(ifr.ifr_name, dev, IFNAMSIZ);
 
-  if (set_ip){
+  if (flag == IF_SET_IP){
     struct sockaddr_in sin;
     memset(&sin, 0, sizeof(struct sockaddr_in));
     sin.sin_family = AF_INET; //ipv4 only!
@@ -117,10 +121,18 @@ int olsr_dev_up(const char * dev,bool set_ip)
 
   ifr.ifr_flags = IFF_UP; //!!?? read old flags and before setting new ones
   r = ioctl(s, SIOCGIFFLAGS, &ifr);
-  /*check if already up*/
-  if ((short int)ifr.ifr_flags & IFF_UP) return true;
-  /*set to UP now*/
-  ifr.ifr_flags |= IFF_UP;
+  /*set to UP/DOWN now*/
+  if (flag == IF_SET_DOWN) {
+    /*check if already down*/
+    if ((short int)ifr.ifr_flags & IFF_UP) ifr.ifr_flags &= ~IFF_UP;
+    else return 1;
+  }
+  else {
+    /*check if already up*/
+    if ((short int)ifr.ifr_flags & IFF_UP) return 1;
+    else ifr.ifr_flags |= IFF_UP;
+  }
+  
   r = ioctl(s, SIOCSIFFLAGS, &ifr);
   if (r < 0) {
     perror("ioctl");
@@ -187,7 +199,7 @@ static void netlink_process_link(struct nlmsghdr *h)
       if (ifi->ifi_flags&IFF_UP) {
         /*we try to take it up again (if its only down it might workout)*/
         printf("\ntunl0 is down, we try to take it up again");
-        if (olsr_dev_up("tunl0",false)) return; //!!?? todo: test if we can really know that its up now
+        if (olsr_ifconfig("tunl0",IF_SET_UP)) return; //!!?? todo: test if we can really know that its up now
         /*we disable -> this should stop us announcing being a smart gateway, 
  	* and can not use tunnels as its unlikely to be able to crete them without tunl0*/
         olsr_cnf->smart_gateway_active=false;
@@ -710,7 +722,7 @@ int r;
         olsr_cnf->ipip_if_up=false;/*rtnetlink monitoring will detect it up*/
         /*!!?? currently it gets never deleted on shutdown, anyways reusing existing tunnel might be a safe approach if creating fails?*/
         /*set tunnel up with originator ip*/
-        r=olsr_dev_up(olsr_cnf->ipip_name,true);
+        r=olsr_ifconfig(olsr_cnf->ipip_name,IF_SET_IP);
 printf("\nresult of ifup is %i",r);
         /*find out iifindex (maybe it works even if above failed (old tunnel))*/
         olsr_cnf->ipip_if_index=if_nametoindex(olsr_cnf->ipip_name);
@@ -804,13 +816,16 @@ olsr_ioctl_add_route(const struct rt_entry *rt)
 
   return rslt;
 #else /* !LINUX_POLICY_ROUTING */
+  /*put large hnas also into RtTabledefault (if smartgateway is active) as they may be used to replace (huge parts) of a normal default route*/
   if (0 == olsr_cnf->rttable_default && 0 == rt->rt_dst.prefix_len && 253 > olsr_cnf->rttable) {
     /*
      * Users start whining about not having internet with policy
      * routing activated and no static default route in table 254.
      * We maintain a fallback defroute in the default=253 table.
+     *
+     * which was always insane but togehter with smartgateways policy routing its too insane
      */
-    olsr_netlink_route(rt, AF_INET, 253, RTM_NEWROUTE);
+    if (!olsr_cnf->smart_gateway_active) olsr_netlink_route(rt, AF_INET, 253, RTM_NEWROUTE);
   }
   if (0 == rt->rt_dst.prefix_len && olsr_cnf->rttable_default != 0) {
     return olsr_netlink_route(rt, AF_INET, olsr_cnf->rttable_default, RTM_NEWROUTE);
