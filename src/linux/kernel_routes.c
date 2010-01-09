@@ -174,7 +174,7 @@ static void netlink_process_link(struct nlmsghdr *h)
       olsr_cnf->ipip_if_index = false;
       return;
     }
-    if (ifi->ifi_index==olsr_cnf->ipip_base_if_index) {
+    if (ifi->ifi_index==olsr_cnf->ipip_base_if.if_index) {
       /*we try to take it up again (if its only down it might workout)*/
       if (olsr_dev_up("tunl0",false)) return; //!!?? test this
       /*we disable -> this should stop us announcing being a smart gateway, and can not use tunnels as its unlikely to be able to crete them without tunl0*/

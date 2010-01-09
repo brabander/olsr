@@ -471,11 +471,16 @@ int main(int argc, char *argv[]) {
 
 #if LINUX_POLICY_ROUTING
   /*create smart-gateway-tunnel policy rules*/
+  //!!?? disable smartgateway if not ipv4?, or better: do not start olsr
   if (olsr_cnf->smart_gateway_active) {
     const char* tunlbase = "tunl0";
     //take up tunl0 device or disable smartgateway
     olsr_cnf->smart_gateway_active = olsr_dev_up(tunlbase,false);//!!?? kernel 2.4 may need true to function as gateway, does it harm to do anyway
-    olsr_cnf->ipip_base_if_index = if_nametoindex(tunlbase);
+    /*create an interface structure for the tunlbase to store procnet settings*/
+    /*hmmm integrate it into the olsr_interface list to ensure spoof setting clenaup at end!???*/
+    olsr_cnf->ipip_base_if.if_index = if_nametoindex(tunlbase);
+
+    deactivate_spoof(tunlbase, &olsr_cnf->ipip_base_if, AF_INET );//ipip is an ipv4 tunnel
 
     if (olsr_cnf->smart_gateway_active) {
       struct olsr_if *cfg_if;
@@ -724,6 +729,8 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
   if (olsr_cnf->rttable_backup_rule>0)
     olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable_default, RTM_DELRULE, olsr_cnf->rttable_backup_rule, NULL);
 
+  /*rp_filter*/
+  if (olsr_cnf->ipip_base_if.if_index) printf("resetting of tunl0 rp_filter not implemented");//!!?? no function extits to reset a single interface
 
   /* RtTable backup rule */
   if ((olsr_cnf->rttable < 253) & (olsr_cnf->rttable > 0)) {
