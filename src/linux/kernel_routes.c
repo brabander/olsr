@@ -331,6 +331,9 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
         union olsr_ip_addr ipv4_addr;
         /* create an ipv4 route */
         olsr_syslog(OLSR_LOG_ERR,"niit suport not fully implemented!!"); 
+
+        /* fix prefix length */
+        req.r.rtm_dst_len = rt->rt_dst.prefix_len - 96;
         olsr_netlink_addreq(&req, RTA_DST, olsr_ipv6_to_ipv4(&rt->rt_dst.prefix, &ipv4_addr), sizeof(ipv4_addr.v4));
       }
       else {
