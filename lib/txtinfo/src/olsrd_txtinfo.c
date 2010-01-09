@@ -47,6 +47,7 @@
  * Dynamic linked library for the olsr.org olsr daemon
  */
 
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #if !defined WIN32
@@ -547,7 +548,9 @@ txtinfo_write_data(void *foo __attribute__ ((unused))) {
   FD_ZERO(&set);
   max = 0;
   for (i=0; i<outbuffer_count; i++) {
-    FD_SET(outbuffer_socket[i], &set);
+    /* And we cast here since we get a warning on Win32 */
+    FD_SET((unsigned int)(outbuffer_socket[i]), &set);
+
     if (outbuffer_socket[i] > max) {
       max = outbuffer_socket[i];
     }
@@ -563,7 +566,7 @@ txtinfo_write_data(void *foo __attribute__ ((unused))) {
 
   for (i=0; i<outbuffer_count; i++) {
     if (FD_ISSET(outbuffer_socket[i], &set)) {
-      result = write(outbuffer_socket[i], outbuffer[i] + outbuffer_written[i], outbuffer_size[i] - outbuffer_written[i]);
+      result = send(outbuffer_socket[i], outbuffer[i] + outbuffer_written[i], outbuffer_size[i] - outbuffer_written[i], 0);
       if (result > 0) {
         outbuffer_written[i] += result;
       }

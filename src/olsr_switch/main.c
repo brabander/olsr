@@ -236,7 +236,7 @@ ohs_route_data(struct ohs_connection *oc)
 
   oc->tx++;
   /* Read data */
-  if ((len = recv(oc->socket, data_buffer, OHS_BUFSIZE, 0)) <= 0)
+  if ((len = recv(oc->socket, (void *)data_buffer, OHS_BUFSIZE, 0)) <= 0)
     return -1;
 
   if (logbits & LOG_FORWARD) {
@@ -260,7 +260,7 @@ ohs_route_data(struct ohs_connection *oc)
                olsr_ip_to_string(&addrstr2, &ohs_cs->ip_addr));
       }
 
-      sent = send(ohs_cs->socket, data_buffer, len, 0);
+      sent = send(ohs_cs->socket, (void*)data_buffer, len, 0);
       if (sent != len) {
         printf("Error sending(buf %d != sent %d)\n", (int)len, (int)sent);
       }

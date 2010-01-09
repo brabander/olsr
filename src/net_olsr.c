@@ -392,7 +392,9 @@ net_output(struct interface *ifp)
     if (olsr_sendto(ifp->send_socket, ifp->netbuf.buff, ifp->netbuf.pending, MSG_DONTROUTE, (struct sockaddr *)sin, sizeof(*sin)) <
         0) {
       perror("sendto(v4)");
+#ifndef WIN32
       olsr_syslog(OLSR_LOG_ERR, "OLSR: sendto IPv4 %m");
+#endif
       retval = -1;
     }
   } else {
@@ -401,7 +403,9 @@ net_output(struct interface *ifp)
         < 0) {
       struct ipaddr_str buf;
       perror("sendto(v6)");
+#ifndef WIN32
       olsr_syslog(OLSR_LOG_ERR, "OLSR: sendto IPv6 %m");
+#endif
       fprintf(stderr, "Socket: %d interface: %d\n", ifp->olsr_socket, ifp->if_index);
       fprintf(stderr, "To: %s (size: %u)\n", ip6_to_string(&buf, &sin6->sin6_addr), (unsigned int)sizeof(*sin6));
       fprintf(stderr, "Outputsize: %d\n", ifp->netbuf.pending);

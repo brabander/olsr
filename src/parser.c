@@ -444,7 +444,9 @@ olsr_input(int fd)
     if (cc <= 0) {
       if (cc < 0 && errno != EWOULDBLOCK) {
         OLSR_PRINTF(1, "error recvfrom: %s", strerror(errno));
+#ifndef WIN32
         olsr_syslog(OLSR_LOG_ERR, "error recvfrom: %m");
+#endif
       }
       break;
     }
@@ -522,7 +524,7 @@ olsr_input_hostemu(int fd)
   /* Host emulator receives IP address first to emulate
      direct link */
 
-  int cc = recv(fd, from_addr.v6.s6_addr, olsr_cnf->ipsize, 0);
+  int cc = recv(fd, (void*)from_addr.v6.s6_addr, olsr_cnf->ipsize, 0);
   if (cc != (int)olsr_cnf->ipsize) {
     fprintf(stderr, "Error receiving host-client IP hook(%d) %s!\n", cc, strerror(errno));
     memcpy(&from_addr, &((struct olsr *)inbuf)->olsr_msg->originator, olsr_cnf->ipsize);

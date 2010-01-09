@@ -47,6 +47,7 @@
 
 #include <limits.h>
 #include <arpa/inet.h>
+#include <netinet/in.h>
 
 struct ipaddr_str {
   char buf[MAX(INET6_ADDRSTRLEN, INET_ADDRSTRLEN)];
