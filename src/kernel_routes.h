@@ -59,8 +59,10 @@ static const char TUNL_BASE[IFNAMSIZ] = "tunl0";
 int olsr_netlink_rule(uint8_t, uint8_t, uint16_t, uint32_t, char *);
 
 #define IF_SET_UP 0
-#define IF_SET_IP 1 /*sets up aswell*/
-#define IF_SET_DOWN 2
+#define IF_SET_DOWN 1
+#define IF_SET_IP 2 /*sets up aswell*/
+#define IF_CHECK_UP 3
+#define IF_CHECK_DOWN 4
 
 int olsr_ifconfig(const char *, int);
 int olsr_del_tunl(void);

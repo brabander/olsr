@@ -87,10 +87,16 @@ struct olsr_rtreq {
 };
 
 /*takes up or down (flag IF_SET_DOWN) an interface (optionally able to configure an /32 ip aswell IF_SET_IP)*/
-/* return value
- * 0 if failure
- * -1 if success
- *  1 if interface was already up/down and no therefoew was no need to change this*/
+/* parameter
+ * dev device name
+ * flags:
+ * IF_SET_UP, IF_SET_DOWN set interface up or down
+ * IF_CHECK_UP, IF_CHECK_DOWN only check interface state, dont change (returns false or 1)
+ * IF_SET_IP set interface up and set interface ip to originator address
+ * return value:
+ * 0 on error/failure (or failed CHECK)
+ * -1 on success (and interface state was changed)
+ *  1 if interface was already up/down*/
 int olsr_ifconfig(const char * dev,int flag)
 {
   int s, r;
@@ -122,15 +128,17 @@ int olsr_ifconfig(const char * dev,int flag)
   ifr.ifr_flags = IFF_UP; //!!?? read old flags and before setting new ones
   r = ioctl(s, SIOCGIFFLAGS, &ifr);
   /*set to UP/DOWN now*/
-  if (flag == IF_SET_DOWN) {
+  if ((flag == IF_SET_DOWN)||(flag == IF_CHECK_DOWN)) {
     /*check if already down*/
     if ((short int)ifr.ifr_flags & IFF_UP) ifr.ifr_flags &= ~IFF_UP;
     else return 1;
+    if (flag == IF_CHECK_DOWN) return false;
   }
   else {
     /*check if already up*/
     if ((short int)ifr.ifr_flags & IFF_UP) return 1;
     else ifr.ifr_flags |= IFF_UP;
+    if (flag == IF_CHECK_UP) return false;
   }
   
   r = ioctl(s, SIOCSIFFLAGS, &ifr);
