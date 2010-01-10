@@ -54,12 +54,12 @@
 #include <net/route.h>
 #include <unistd.h>
 #include <errno.h>
+#include <pthread.h>
 
 #define PLUGIN_INTERFACE_VERSION 5
 
 static int has_inet_gateway;
 static struct olsr_cookie_info *event_timer_cookie;
-static union olsr_ip_addr gw_net;
 static union olsr_ip_addr gw_netmask;
 
 /**
@@ -77,11 +77,30 @@ static const struct olsrd_plugin_parameters plugin_parameters[] = {
 
 
 
+typedef struct { 
+	struct in_addr ip;
+	u_int64_t mac;
+	struct in_addr from_node;
+	char pingable;
+	char is_announced;
+ } guest_client;
 
-int host_there=0;
-int route_announced=0;
 
 
+typedef struct {
+	guest_client *client;
+	struct client_list *list;
+} client_list;
+
+
+guest_client foobar;
+
+client_list *list;
+
+
+
+
+void ping(guest_client *);
 
 void
 olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size)
@@ -98,9 +117,15 @@ int
 olsrd_plugin_init(void)
 {
 
+
+  
+  list=(client_list*)malloc( sizeof(client_list) );
+
+
+
   OLSR_INFO(LOG_PLUGINS, "OLSRD automated Client Roaming Plugin\n");
 
-  gw_net.v4.s_addr = inet_addr("10.0.0.134");
+
   gw_netmask.v4.s_addr = inet_addr("255.255.255.255");
 
   has_inet_gateway = 0;
@@ -111,11 +136,40 @@ olsrd_plugin_init(void)
 
   /* Register the GW check */
   olsr_start_timer(3 * MSEC_PER_SEC, 0, OLSR_TIMER_PERIODIC, &olsr_event, NULL, event_timer_cookie);
-
-
-
+  //system("echo \"1\" ");
+  //pthread_create(&ping_thread, NULL, &do_ping, NULL);
+  //system("echo \"2\" ");
+  //CreateThread(NULL, 0, do_ping, NULL, 0, &ThreadId);
+  //if (pthread_create(&ping_thread, NULL, do_ping, NULL) != 0) {
+   // OLSR_WARN(LOG_PLUGINS, "pthread_create() error");
+   // return 0;
+  //}
 
   return 1;
+}
+
+
+
+void ping(guest_client * target)
+{
+
+    char ping_command[50];
+
+
+    //snprintf(ping_command, sizeof(ping_command), "ping -I ath0 -c 1 -q %s", inet_ntoa(target->ip));
+    snprintf(ping_command, sizeof(ping_command), "ping -c 1 -q %s", inet_ntoa(target->ip));
+    if (system(ping_command) == 0) {
+      system("echo \"ping erfolgreich\" ");
+      OLSR_DEBUG(LOG_PLUGINS, "\nDo ping on %s ... ok\n", inet_ntoa(target->ip));
+      target->pingable=1;
+    }
+    else
+    {
+      system("echo \"ping erfolglos\" ");
+      OLSR_DEBUG(LOG_PLUGINS, "\nDo ping on %s ... failed\n", inet_ntoa(target->ip));
+      target->pingable=0;
+    }
+
 }
 
 
@@ -129,25 +183,99 @@ olsrd_plugin_init(void)
 
 
 
-
-
-int do_ping(void)
+void check_for_route(guest_client * host)
 {
-    char ping_command[50];
-    
-    snprintf(ping_command, sizeof(ping_command), "ping -I ath0 -c 1 -q %s", "10.0.0.134");
-    //snprintf(ping_command, sizeof(ping_command), "ping -c 1 -q %s", "137.0.0.1");
-    if (system(ping_command) == 0) {
-      system("echo \"ping erfolgreich\" ");
-      OLSR_DEBUG(LOG_PLUGINS, "\nDo ping on %s ... ok\n", "10.0.0.134");
-      host_there=1;
+  if (host->pingable && ! host->is_announced) {
+      OLSR_DEBUG(LOG_PLUGINS, "Adding Route\n");
+      system("echo \"Setze route\" ");
+      ip_prefix_list_add(&olsr_cnf->hna_entries, &(host->ip), olsr_netmask_to_prefix(&gw_netmask));
+      host->is_announced=1;
+  } else if ((! host->pingable) &&  host->is_announced) {
+      OLSR_DEBUG(LOG_PLUGINS, "Removing Route\n");
+      system("echo \"Entferne route\" ");
+      ip_prefix_list_remove(&olsr_cnf->hna_entries, &(host->ip), olsr_netmask_to_prefix(&gw_netmask), olsr_cnf->ip_version);
+      host->is_announced=0;
+}
+}
+
+void check_client_list(client_list * clist) {
+  if (clist!=NULL && clist->client!=NULL) {
+
+    ping(clist->client);
+    check_for_route(clist->client);
+
+
+    check_client_list(clist->list);
+  }
+}
+
+
+int ip_is_in_guest_list(client_list * list, guest_client * host) {
+if (list==NULL)
+  return 0;
+if (list->client==NULL)
+  return 0;
+else if (inet_lnaof(list->client->ip) == inet_lnaof(host->ip))
+  return 1;
+else
+  return ip_is_in_guest_list(list->list, host);
+}
+
+
+void check_leases(client_list * clist){
+  FILE * fp = fopen("/var/dhcp.leases", "r");
+  //FILE * fp = fopen("/home/raphael/tmp/leases", "r");
+  char s1[50];
+  char s2[50];
+  char s3[50];
+  char s4[50];
+  char s5[50];
+
+
+  while (1) { 
+    int parse = fscanf (fp, "%s %s %s %s %s", s1, s2, s3, s4, s5);
+    if (parse==EOF)
+      break;
+    if(parse==5) {
+    guest_client* user;
+    //printf ("String 3 = %s\n", s3);
+    user = (guest_client*)malloc( sizeof(guest_client) );
+    inet_aton(s3, &(user->ip));
+    add_client_to_list(clist, user);
+
+}
+  }
+  fclose(fp);
+  
+
+}
+
+
+void add_client_to_list(client_list * clist, guest_client * host) {
+  if (ip_is_in_guest_list(clist,  host)) {
+    free(host);
+  }
+  else {
+    if (clist->client!=NULL) {
+      client_list * this_one;
+      this_one = (client_list *)malloc( sizeof(client_list) );
+      this_one->client = host;
+      this_one->list=clist->list;
+      clist->list=this_one;
+      printf("added something\n");
+    } else {
+      clist->client=host;
+      printf("added something\n");
     }
-    else
-    {
-      system("echo \"ping erfolglos\" ");
-      OLSR_DEBUG(LOG_PLUGINS, "\nDo ping on %s ... failed\n", "10.0.0.134");
-      host_there=0;
-    }
+  }
+}
+
+
+
+
+
+void check_for_new_clients(client_list * clist) {
+    check_leases(clist);
 }
 
 
@@ -159,22 +287,8 @@ int do_ping(void)
 void
 olsr_event(void *foo __attribute__ ((unused)))
 {
-    do_ping();
-
-
-    if (host_there && ! route_announced ) {
-      OLSR_DEBUG(LOG_PLUGINS, "Adding Route\n");
-      system("echo \"Setze route\" ");
-      ip_prefix_list_add(&olsr_cnf->hna_entries, &gw_net, olsr_netmask_to_prefix(&gw_netmask));
-      route_announced=1;
-    }
-    else if ((! host_there) &&  route_announced )
-    {
-      OLSR_DEBUG(LOG_PLUGINS, "Removing Route\n");
-      system("echo \"Entferne route\" ");
-      ip_prefix_list_remove(&olsr_cnf->hna_entries, &gw_net, olsr_netmask_to_prefix(&gw_netmask), olsr_cnf->ip_version);
-      route_announced=0;
-    }
+    check_for_new_clients(list);
+    check_client_list(list);
 
 }
 
