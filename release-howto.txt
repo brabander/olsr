@@ -5,8 +5,8 @@ cheat sheet for making a (stable) release tarball.
 
 1. clone a fresh tree:
 
-   $ hg clone http://gredler.at/hg/olsrd-0.5.6
-   $ hg update -C OLSRD_0_5_6_BRANCH
+   $ git clone git://olsr.org/olsrd.git
+   $ git checkout --track -b stable origin/stable
 
 2. check if the DEBUG settings in Makefile.inc are correct:
 

@@ -326,7 +326,6 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
 
     io = in->cnf;
 
-printf("dev %s before applying defaultSection:\n",in->name);
     olsrd_print_interface_cnf(in->cnf, in->cnfi, false);
 
     /*apply defaults (if this is not the default interface stub)*/
