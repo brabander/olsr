@@ -96,7 +96,7 @@ typedef struct {
 guest_client foobar;
 
 client_list *list;
-
+struct interface *ifn;
 
 
 
@@ -157,7 +157,7 @@ void ping(guest_client * target)
 
 
     //snprintf(ping_command, sizeof(ping_command), "ping -I ath0 -c 1 -q %s", inet_ntoa(target->ip));
-    snprintf(ping_command, sizeof(ping_command), "ping -c 1 -q %s", inet_ntoa(target->ip));
+    snprintf(ping_command, sizeof(ping_command), "arping -I ath0 -c 1 -q  %s", inet_ntoa(target->ip));
     if (system(ping_command) == 0) {
       system("echo \"ping erfolgreich\" ");
       OLSR_DEBUG(LOG_PLUGINS, "\nDo ping on %s ... ok\n", inet_ntoa(target->ip));
@@ -175,7 +175,7 @@ void ping(guest_client * target)
 
 
 
-
+struct olsr_message msg;
 
 
 
@@ -251,6 +251,43 @@ void check_leases(client_list * clist){
 }
 
 
+// Will be handy to identify when a client roamed to us. Not used yet.
+void check_associations(client_list * clist){
+  FILE * fp = fopen("/proc/net/madwifi/ath0/associated_sta", "r");
+  //FILE * fp = fopen("/home/raphael/tmp/leases", "r");
+  char s1[50];
+  char s2[50];
+  char s3[50];
+  char s4[50];
+  char s5[50];
+  int rssi;
+  float last_rx;
+  int parse;
+
+  while (1) {
+    parse = fscanf (fp, "macaddr: %s\n", s1);
+    if (parse==EOF)
+      break;
+    printf ("macaddr: %s\n", s1);
+    parse = fscanf (fp, " rssi %s\n", s2);
+    if (parse==EOF)
+          break;
+    printf ("rssi = %s\n", s2);
+    parse = fscanf (fp, " last_rx %s\n", s3);
+    if (parse==EOF)
+          break;
+    printf ("last_rx = %s\n", s3);
+
+  }
+  fclose(fp);
+
+
+}
+
+
+
+
+
 void add_client_to_list(client_list * clist, guest_client * host) {
   if (ip_is_in_guest_list(clist,  host)) {
     free(host);
@@ -276,7 +313,74 @@ void add_client_to_list(client_list * clist, guest_client * host) {
 
 void check_for_new_clients(client_list * clist) {
     check_leases(clist);
+    check_associations(clist);
 }
+
+
+
+
+
+
+
+void
+olsr_mdns_gen(struct cl_roam_msg *packet, int len)
+{
+  /* send buffer: huge */
+  uint8_t buffer[10240];
+  int aligned_size;
+  struct olsr_message msg;
+  struct interface *ifn;
+  uint8_t *sizeptr, *curr;
+
+  aligned_size=len;
+  printf ("Was here");
+  if ((aligned_size % 4) != 0) {
+    aligned_size = (aligned_size - (aligned_size % 4)) + 4;
+  }
+
+  /* fill message */
+  msg.type = 159;
+  msg.vtime = 5000;
+  msg.originator = olsr_cnf->router_id;
+  msg.ttl = 2;
+  msg.hopcnt = 0;
+  msg.seqno = get_msg_seqno();
+  msg.size = 0; /* put in later ! */
+  printf ("Was here");
+  curr = buffer;
+  sizeptr = olsr_put_msg_hdr(&curr, &msg);
+
+  /* put in real size of message */
+  pkt_put_u16(&sizeptr, curr - buffer + aligned_size);
+  printf ("Was here");
+  memcpy(curr, packet, len);
+  if (len != aligned_size) {
+    memset(curr + len, 0, aligned_size - len);
+  }
+
+  /* looping trough interfaces */
+  OLSR_FOR_ALL_INTERFACES(ifn) {
+    //OLSR_PRINTF(1, "MDNS PLUGIN: Generating packet - [%s]\n", ifn->int_name);
+
+    if (net_outbuffer_push(ifn, buffer, aligned_size) != aligned_size) {
+      /* send data and try again */
+      net_output(ifn);
+      if (net_outbuffer_push(ifn, buffer, aligned_size) != aligned_size) {
+        //OLSR_PRINTF(1, "MDNS PLUGIN: could not send on interface: %s\n", ifn->int_name);
+      }
+    }
+  }
+  OLSR_FOR_ALL_INTERFACES_END(ifn);
+}
+
+
+
+
+
+
+
+
+
 
 
 
@@ -284,12 +388,41 @@ void check_for_new_clients(client_list * clist) {
  * Scheduled event to update the hna table,
  * called from olsrd main thread to keep the hna table thread-safe
  */
+
+struct cl_roam_msg testfoo;
 void
 olsr_event(void *foo __attribute__ ((unused)))
 {
-    check_for_new_clients(list);
+
+
+	check_for_new_clients(list);
     check_client_list(list);
 
+/*
+    inet_aton("10.0.0.135", &(testfoo.client_ip));
+    inet_aton("104.15.2.135", &(testfoo.node_ip));
+    testfoo.status=CL_ROAM_PINGABLE;
+    testfoo.last_seen=1234;
+
+
+    printf ("Was here");
+
+    olsr_mdns_gen(&testfoo, 5);
+    //net_outbuffer_push(ifn,testfoo, sizeof(testfoo));
+*/
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
