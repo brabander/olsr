@@ -52,9 +52,8 @@
 
 #include <string.h>
 
-/* Default IPv6 multicast addresses */
-
-#define OLSR_IPV6_MCAST "FF02::1"
+/* Default IPv6 multicast addresses (linklocal manet routers, see RFC 5498) */
+#define OLSR_IPV6_MCAST "FF02::6D"
 
 #define OLSR_HEADERSIZE (sizeof(uint16_t) + sizeof(uint16_t))
 
