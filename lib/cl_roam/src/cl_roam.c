@@ -55,6 +55,22 @@
 #include <unistd.h>
 #include <errno.h>
 #include <pthread.h>
+#include "neighbor_table.h"
+#include "olsr.h"
+#include "olsr_cfg.h"
+#include "interfaces.h"
+#include "olsr_protocol.h"
+#include "net_olsr.h"
+#include "link_set.h"
+#include "ipcalc.h"
+#include "lq_plugin.h"
+#include "olsr_cfg_gen.h"
+#include "common/string.h"
+#include "olsr_ip_prefix_list.h"
+#include "olsr_logging.h"
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
 
 #define PLUGIN_INTERFACE_VERSION 5
 
@@ -109,6 +125,20 @@ olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *
   *size = ARRAYSIZE(plugin_parameters);
 }
 
+
+
+void *PrintHello(void *threadid)
+{
+   long tid;
+   tid = (long)threadid;
+   printf("Hello World! It's me, thread #%ld!\n", tid);
+   pthread_exit(NULL);
+}
+
+
+
+
+
 /**
  * Initialize plugin
  * Called after all parameters are passed
@@ -145,19 +175,25 @@ olsrd_plugin_init(void)
    // return 0;
   //}
 
+
+
+
+
+
+
   return 1;
 }
 
 
 
-void ping(guest_client * target)
+void ping_thread(guest_client * target)
 {
 
     char ping_command[50];
 
 
     //snprintf(ping_command, sizeof(ping_command), "ping -I ath0 -c 1 -q %s", inet_ntoa(target->ip));
-    snprintf(ping_command, sizeof(ping_command), "arping -I ath0 -c 1 -q  %s", inet_ntoa(target->ip));
+    snprintf(ping_command, sizeof(ping_command), "arping -I ath0 -w 1 -c 1 -q %s", inet_ntoa(target->ip));
     if (system(ping_command) == 0) {
       system("echo \"ping erfolgreich\" ");
       OLSR_DEBUG(LOG_PLUGINS, "\nDo ping on %s ... ok\n", inet_ntoa(target->ip));
@@ -171,6 +207,60 @@ void ping(guest_client * target)
     }
 
 }
+
+
+
+void ping_thread_infinite(guest_client * target)
+{
+
+	while (1) {
+		char ping_command[50];
+
+
+		//snprintf(ping_command, sizeof(ping_command), "ping -I ath0 -c 1 -q %s", inet_ntoa(target->ip));
+		snprintf(ping_command, sizeof(ping_command), "arping -I ath0 -w 1 -c 1 -q %s", inet_ntoa(target->ip));
+		if (system(ping_command) == 0) {
+		  system("echo \"ping erfolgreich\" ");
+		  OLSR_DEBUG(LOG_PLUGINS, "\nDo ping on %s ... ok\n", inet_ntoa(target->ip));
+		  target->pingable=1;
+		}
+		else
+		{
+		  system("echo \"ping erfolglos\" ");
+		  OLSR_DEBUG(LOG_PLUGINS, "\nDo ping on %s ... failed\n", inet_ntoa(target->ip));
+		  target->pingable=0;
+		}
+		sleep (2);
+	}
+}
+
+
+
+void ping(guest_client * target)
+{
+	int rc;
+	pthread_t thread;
+    rc = pthread_create(&thread, NULL, ping_thread, (void *) target   );
+    if (rc){
+       printf("ERROR; return code from pthread_create() is %d\n", rc);
+       exit(-1);
+    }
+}
+
+void ping_infinite(guest_client * target)
+{
+	int rc;
+	pthread_t thread;
+    rc = pthread_create(&thread, NULL, ping_thread_infinite, (void *) target   );
+    if (rc){
+       printf("ERROR; return code from pthread_create() is %d\n", rc);
+       exit(-1);
+    }
+}
+
+
+
+
 
 
 
@@ -201,7 +291,7 @@ void check_for_route(guest_client * host)
 void check_client_list(client_list * clist) {
   if (clist!=NULL && clist->client!=NULL) {
 
-    ping(clist->client);
+    //ping(clist->client);
     check_for_route(clist->client);
 
 
@@ -249,6 +339,45 @@ void check_leases(client_list * clist){
   
 
 }
+
+
+
+
+void check_remote_leases(client_list * clist){
+  FILE * fp = fopen("/tmp/otherclient", "r");
+  //FILE * fp = fopen("/home/raphael/tmp/leases", "r");
+  char s1[50];
+  char s2[50];
+  char s3[50];
+  char s4[50];
+  char s5[50];
+
+
+  while (1) {
+    int parse = fscanf (fp, "%s %s %s %s %s", s1, s2, s3, s4, s5);
+    if (parse==EOF)
+      break;
+    if(parse==5) {
+    guest_client* user;
+    //printf ("String 3 = %s\n", s3);
+    user = (guest_client*)malloc( sizeof(guest_client) );
+    inet_aton(s3, &(user->ip));
+    add_client_to_list(clist, user);
+
+}
+  }
+  fclose(fp);
+
+
+}
+
+
+
+
+
+
+
+
 
 
 // Will be handy to identify when a client roamed to us. Not used yet.
@@ -304,6 +433,7 @@ void add_client_to_list(client_list * clist, guest_client * host) {
       clist->client=host;
       printf("added something\n");
     }
+    ping_infinite(host);
   }
 }
 
@@ -320,105 +450,40 @@ void check_for_new_clients(client_list * clist) {
 
 
 
-
-
-void
-olsr_mdns_gen(struct cl_roam_msg *packet, int len)
-{
-  /* send buffer: huge */
-  uint8_t buffer[10240];
-  int aligned_size;
-  struct olsr_message msg;
-  struct interface *ifn;
-  uint8_t *sizeptr, *curr;
-
-  aligned_size=len;
-  printf ("Was here");
-  if ((aligned_size % 4) != 0) {
-    aligned_size = (aligned_size - (aligned_size % 4)) + 4;
-  }
-
-  /* fill message */
-  msg.type = 159;
-  msg.vtime = 5000;
-  msg.originator = olsr_cnf->router_id;
-  msg.ttl = 2;
-  msg.hopcnt = 0;
-  msg.seqno = get_msg_seqno();
-  msg.size = 0; /* put in later ! */
-  printf ("Was here");
-  curr = buffer;
-  sizeptr = olsr_put_msg_hdr(&curr, &msg);
-
-  /* put in real size of message */
-  pkt_put_u16(&sizeptr, curr - buffer + aligned_size);
-  printf ("Was here");
-  memcpy(curr, packet, len);
-  if (len != aligned_size) {
-    memset(curr + len, 0, aligned_size - len);
-  }
-
-  /* looping trough interfaces */
-  OLSR_FOR_ALL_INTERFACES(ifn) {
-    //OLSR_PRINTF(1, "MDNS PLUGIN: Generating packet - [%s]\n", ifn->int_name);
-
-    if (net_outbuffer_push(ifn, buffer, aligned_size) != aligned_size) {
-      /* send data and try again */
-      net_output(ifn);
-      if (net_outbuffer_push(ifn, buffer, aligned_size) != aligned_size) {
-        //OLSR_PRINTF(1, "MDNS PLUGIN: could not send on interface: %s\n", ifn->int_name);
-      }
-    }
-  }
-  OLSR_FOR_ALL_INTERFACES_END(ifn);
-}
-
-
-
-
-
-
-
-
-
-
-
-
-/**
- * Scheduled event to update the hna table,
- * called from olsrd main thread to keep the hna table thread-safe
- */
-
-struct cl_roam_msg testfoo;
 void
 olsr_event(void *foo __attribute__ ((unused)))
 {
-
-
+	struct nbr_entry *nbr;
 	check_for_new_clients(list);
     check_client_list(list);
 
-/*
-    inet_aton("10.0.0.135", &(testfoo.client_ip));
-    inet_aton("104.15.2.135", &(testfoo.node_ip));
-    testfoo.status=CL_ROAM_PINGABLE;
-    testfoo.last_seen=1234;
 
 
-    printf ("Was here");
 
-    olsr_mdns_gen(&testfoo, 5);
-    //net_outbuffer_push(ifn,testfoo, sizeof(testfoo));
-*/
+
+    OLSR_FOR_ALL_NBR_ENTRIES(nbr) {
+    	union olsr_ip_addr foobar = nbr->nbr_addr;
+
+		char wget_command[70];
+
+
+		snprintf(wget_command, sizeof(wget_command), "wget -O /tmp/otherclient http://%s/dhcp.leases", inet_ntoa(foobar.v4));
+
+		system(wget_command);
+
+		check_remote_leases(list);
+
+        }OLSR_FOR_ALL_NBR_ENTRIES_END();
+
+
+
+
+
+
+
+
+
 }
-
-
-
-
-
-
-
-
 
 
 
