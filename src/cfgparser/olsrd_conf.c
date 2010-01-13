@@ -556,6 +556,9 @@ set_default_cnf(struct olsrd_config *cnf)
   cnf->exit_value = EXIT_SUCCESS;
   cnf->max_tc_vtime = 0.0;
   cnf->ioctl_s = 0;
+  cnf->use_niit = DEF_USE_NIIT;
+  cnf->niit_if_index = 0;
+
 #if LINUX_POLICY_ROUTING
   cnf->rtnl_s = 0;
 #endif
@@ -660,6 +663,8 @@ olsrd_print_cnf(struct olsrd_config *cnf)
   printf("NAT threshold    : %f\n", cnf->lq_nat_thresh);
 
   printf("Clear screen     : %s\n", cnf->clear_screen ? "yes" : "no");
+
+  printf("Use niit:        : %s\n", cnf->use_niit ? "yes" : "no");
 
   /* Interfaces */
   if (in) {
