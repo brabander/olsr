@@ -63,6 +63,7 @@
 #include "common/avl.h"
 #include "net_olsr.h"
 #include "lq_plugin.h"
+#include "duplicate_handler.h"
 
 #include <stdarg.h>
 #include <signal.h>
@@ -136,6 +137,19 @@ uint16_t
 get_msg_seqno(void)
 {
   return message_seqno++;
+}
+
+bool
+olsr_is_bad_duplicate_msg_seqno(uint16_t seqno) {
+  int32_t diff = (int32_t) seqno - (int32_t) message_seqno;
+
+  if (diff < -32768) {
+    diff += 65536;
+  }
+  else if (diff > 32767) {
+    diff -= 65536;
+  }
+  return diff > 0;
 }
 
 void
@@ -293,9 +307,9 @@ olsr_init_tables(void)
   /* Initialize HNA set */
   olsr_init_hna_set();
 
-#if 0
-  /* Initialize Layer 1/2 database */
-  olsr_initialize_layer12();
+  /* Initialize duplicate handler */
+#ifndef NO_DUPLICATE_DETECTION_HANDLER
+  olsr_duplicate_handler_init();
 #endif
 
   /* Start periodic SPF and RIB recalculation */

@@ -46,6 +46,7 @@
 #include "net_olsr.h"
 #include "tc_set.h"
 #include "parser.h"
+#include "duplicate_handler.h"
 
 struct hna_entry hna_set[HASHSIZE];
 struct olsr_cookie_info *hna_net_timer_cookie = NULL;
@@ -428,28 +429,35 @@ olsr_input_hna(union olsr_message *m, struct interface *in_if __attribute__ ((un
     OLSR_PRINTF(2, "Received HNA from NON SYM neighbor %s\n", olsr_ip_to_string(&buf, from_addr));
     return false;
   }
-#if 1
   while (curr < curr_end) {
     union olsr_ip_addr net;
     uint8_t prefixlen;
     struct ip_prefix_list *entry;
+    struct interface *ifs;
+    bool stop = false;
 
     pkt_get_ipaddress(&curr, &net);
     pkt_get_prefixlen(&curr, &prefixlen);
+
+#ifndef NO_DUPLICATE_DETECTION_HANDLER
+    for (ifs = ifnet; ifs != NULL; ifs = ifs->int_next) {
+      if (ipequal(&ifs->ip_addr, &net)) {
+      /* ignore your own main IP as an incoming MID */
+        olsr_handle_hna_collision(&net, &originator);
+        stop = true;
+        break;
+      }
+    }
+    if (stop) {
+      continue;
+    }
+#endif
     entry = ip_prefix_list_find(olsr_cnf->hna_entries, &net, prefixlen);
     if (entry == NULL) {
       /* only update if it's not from us */
       olsr_update_hna_entry(&originator, &net, prefixlen, vtime);
     }
   }
-#else
-  while (hna_tmp) {
-    /* Don't add an HNA entry that we are advertising ourselves. */
-    if (!ip_prefix_list_find(olsr_cnf->hna_entries, &hna_tmp->net, hna_tmp->prefixlen)) {
-      olsr_update_hna_entry(&message.originator, &hna_tmp->net, hna_tmp->prefixlen, message.vtime);
-    }
-  }
-#endif
   /* Forward the message */
   return true;
 }
