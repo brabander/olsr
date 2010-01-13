@@ -213,6 +213,7 @@ static int add_ipv6_addr(YYSTYPE ipaddr_arg, YYSTYPE prefixlen_arg)
 %token TOK_USE_NIIT
 %token TOK_SMART_GW
 %token TOK_SMART_GW_SPEED
+%token TOK_SMART_GW_PREFIX
 
 %token TOK_HOSTLABEL
 %token TOK_NETLABEL
@@ -1167,6 +1168,32 @@ ismart_gw_speed: TOK_SMART_GW_SPEED TOK_INTEGER TOK_INTEGER
 	olsr_cnf->smart_gateway_downlink = $3->integer;
 	free($2);
 	free($3);
+}
+;
+
+ismart_gw_prefix: TOK_SMART_GW_PREFIX TOK_IPV6_ADDR TOK_INTEGER
+{
+  PARSER_DEBUG_PRINTF("Smart gateway prefix: %s %u\n", $2->string, $3->integer);
+	if (inet_pton(olsr_cnf->ip_version, $2->string, &olsr_cnf->smart_gateway_prefix.prefix) == 0) {
+	  fprintf(stderr, "Bad IP part of gateway prefix: %s\n", $2->string);
+    YYABORT;
+  }
+	olsr_cnf->smart_gateway_prefix.prefixlen = (uint8_t)$3->integer;
+	
+	free($2);
+	free($3);
+}
+        |       TOK_SMART_GW_PREFIX TOK_IPV6_ADDR TOK_SLASH TOK_INTEGER
+{
+	PARSER_DEBUG_PRINTF("Smart gateway prefix: %s %u\n", $2->string, $4->integer);
+	if (inet_pton(olsr_cnf->ip_version, $2->string, &olsr_cnf->smart_gateway_prefix.prefix) == 0) {
+	  fprintf(stderr, "Bad IP part of gateway prefix: %s\n", $2->string);
+    YYABORT;
+  }
+	olsr_cnf->smart_gateway_prefix.prefixlen = (uint8_t)$4->integer;
+	
+	free($2);
+	free($4);
 }
 ;
 

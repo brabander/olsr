@@ -256,6 +256,8 @@ struct olsrd_config {
   bool smart_gateway_active;
   uint32_t smart_gateway_uplink;
   uint32_t smart_gateway_downlink;
+  struct olsr_ip_prefix smart_gateway_prefix;
+
   struct interface ipip_base_if;
   int ipip_if_index;
   bool ipip_if_up;

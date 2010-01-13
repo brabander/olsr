@@ -21,7 +21,7 @@ union olsr_ip_addr smart_gateway_netmask;
 static uint32_t deserialize_gw_speed(uint8_t value) {
   uint32_t speed, exp;
 
-  speed = value >> 3;
+  speed = (value >> 3)+1;
   exp = value & 7;
   while (exp-- > 0) {
     speed *= 10;
@@ -32,7 +32,7 @@ static uint32_t deserialize_gw_speed(uint8_t value) {
 static uint8_t serialize_gw_speed(uint32_t speed) {
   uint8_t exp = 0;
 
-  if (speed == 0 || speed > 310000000) {
+  if (speed == 0 || speed > 320000000) {
     return 0;
   }
 
@@ -40,7 +40,7 @@ static uint8_t serialize_gw_speed(uint32_t speed) {
     speed /= 10;
     exp ++;
   }
-  return (speed << 3) | exp;
+  return ((speed-1) << 3) | exp;
 }
 
 void
@@ -68,8 +68,21 @@ olsr_init_gateways(void) {
     }
 
     ip = (uint8_t *) &smart_gateway_netmask;
-    ip[olsr_cnf->ipsize - 2] = serialize_gw_speed(olsr_cnf->smart_gateway_uplink);
-    ip[olsr_cnf->ipsize - 1] = serialize_gw_speed(olsr_cnf->smart_gateway_downlink);
+
+    ip[GW_HNA_FLAGS] |= GW_HNA_FLAG_SMART;
+    if (olsr_cnf->smart_gateway_uplink > 0) {
+      ip[GW_HNA_FLAGS] |= GW_HNA_FLAG_UPLINK;
+      ip[GW_HNA_UPLINK] = serialize_gw_speed(olsr_cnf->smart_gateway_uplink);
+    }
+    if (olsr_cnf->smart_gateway_downlink > 0) {
+      ip[GW_HNA_FLAGS] |= GW_HNA_FLAG_DOWNLINK;
+      ip[GW_HNA_DOWNLINK] = serialize_gw_speed(olsr_cnf->smart_gateway_downlink);
+    }
+    if (olsr_cnf->ip_version == AF_INET6 && olsr_cnf->smart_gateway_prefix.prefix_len > 0) {
+      ip[GW_HNA_FLAGS] |= GW_HNA_FLAG_IPV6PREFIX;
+      ip[GW_HNA_V6PREFIXLEN] = olsr_cnf->smart_gateway_prefix.prefix_len;
+      memcpy(&ip[GW_HNA_V6PREFIX], &olsr_cnf->smart_gateway_prefix.prefix, 8);
+    }
   }
 }
 
@@ -96,8 +109,25 @@ olsr_set_gateway(union olsr_ip_addr *originator, union olsr_ip_addr *subnetmask)
   }
 
   ip = (uint8_t *)subnetmask;
-  gw->uplink = deserialize_gw_speed(ip[olsr_cnf->ipsize - 2]);
-  gw->downlink = deserialize_gw_speed(ip[olsr_cnf->ipsize - 1]);
+  if ((ip[GW_HNA_FLAGS] & GW_HNA_FLAG_UPLINK) != 0) {
+    gw->uplink = deserialize_gw_speed(ip[GW_HNA_UPLINK]);
+  }
+  else {
+    gw->uplink = 1;
+  }
+
+  if ((ip[GW_HNA_FLAGS] & GW_HNA_FLAG_DOWNLINK) != 0) {
+    gw->downlink = deserialize_gw_speed(ip[GW_HNA_DOWNLINK]);
+  }
+  else {
+    gw->downlink = 1;
+  }
+
+  memset(&gw->external_prefix, 0, sizeof(gw->external_prefix));
+  if ((ip[GW_HNA_FLAGS] & GW_HNA_FLAG_IPV6PREFIX) != 0 && olsr_cnf->ip_version == AF_INET6) {
+    gw->external_prefix.prefix_len = ip[GW_HNA_V6PREFIXLEN];
+    memcpy(&gw->external_prefix.prefix, &ip[GW_HNA_V6PREFIX], 8);
+  }
 }
 
 void
@@ -113,24 +143,14 @@ olsr_delete_gateway(union olsr_ip_addr *originator) {
 }
 
 bool olsr_is_smart_gateway(union olsr_ip_addr *net, union olsr_ip_addr *mask) {
-  uint8_t i;
   uint8_t *ip;
 
-  ip = (uint8_t *)net;
-  for (i=0; i<olsr_cnf->ipsize; i++) {
-    if (*ip++) {
-      return false;
-    }
+  if (memcmp(&in6addr_any, net, olsr_cnf->ipsize) != 0) {
+    return false;
   }
 
   ip = (uint8_t *)mask;
-  for (i=0; i<olsr_cnf->ipsize-2; i++) {
-    if (*ip++ != 0) {
-      return false;
-    }
-  }
-
-  return ip[0] > 0 && ip[1] > 0;
+  return ip[0] == 0 && ip[1] != 0;
 }
 
 void
@@ -140,11 +160,14 @@ olsr_print_gateway(void) {
   struct gateway_entry *gw;
   const int addrsize = olsr_cnf->ip_version == AF_INET ? 15 : 39;
 
-  OLSR_PRINTF(0, "\n--- %s ---------------------------------------------------- GATEWAYS\n\n", olsr_wallclock_string());
-  OLSR_PRINTF(0, "%-*s  %-9s %-9s\n", addrsize, "IP address", "Uplink", "Downlink");
+  OLSR_PRINTF(0, "\n--- %s ---------------------------------------------------- GATEWAYS\n\n",
+      olsr_wallclock_string());
+  OLSR_PRINTF(0, "%-*s  %-9s %-9s %s\n", addrsize, "IP address", "Uplink", "Downlink",
+      olsr_cnf->ip_version == AF_INET ? "" : "External Prefix");
 
   OLSR_FOR_ALL_GATEWAY_ENTRIES(gw) {
-    OLSR_PRINTF(0, "%-*s  %-9u %-9u\n", addrsize, olsr_ip_to_string(&buf, &gw->originator), gw->uplink, gw->downlink);
+    OLSR_PRINTF(0, "%-*s  %-9u %-9u %s\n", addrsize, olsr_ip_to_string(&buf, &gw->originator),
+        gw->uplink, gw->downlink, gw->external_prefix.prefix_len == 0 ? "" : olsr_ip_prefix_to_string(&gw->external_prefix));
   } OLSR_FOR_ALL_GATEWAY_ENTRIES_END(gw)
 #endif
 }
