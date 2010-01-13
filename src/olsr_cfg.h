@@ -86,8 +86,7 @@
 #define DEF_RTPROTO         0 /* 0 means OS-specific default */
 #define DEF_RTTABLE         254
 #define DEF_MIN_TC_VTIME    0.0
-#define DEF_NIIT            "auto"
-#define DEF_NIIT_IF         "niit4to6"
+#define DEF_USE_NIIT        true
 
 /* Bounds */
 
@@ -250,7 +249,7 @@ struct olsrd_config {
 
   char *lock_file;
 
-  char *niit_if;
+  bool use_niit;
   int niit_if_index;
 
   int ioctl_s;                         /* Socket used for ioctl calls */

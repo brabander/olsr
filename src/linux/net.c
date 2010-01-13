@@ -821,6 +821,22 @@ calculate_if_metric(char *ifname)
 }
 #endif
 
+bool olsr_check_ifup(const char * dev)
+{
+  int r;
+  struct ifreq ifr;
+  memset(&ifr, 0, sizeof(ifr));
+  strncpy(ifr.ifr_name, dev, IFNAMSIZ);
+
+  r = ioctl(olsr_cnf->ioctl_s, SIOCGIFFLAGS, &ifr);
+  if (r < 0) {
+    perror("ioctl to check interface up/down");
+    return false;
+  }
+
+  return (ifr.ifr_flags & IFF_UP) != 0;
+}
+
 /*
  * Local Variables:
  * c-basic-offset: 2
