@@ -1170,7 +1170,6 @@ ismart_gw_speed: TOK_SMART_GW_SPEED TOK_INTEGER TOK_INTEGER
 }
 ;
 
-
 plblock: TOK_PLUGIN TOK_STRING
 {
   struct plugin_entry *pe, *last;

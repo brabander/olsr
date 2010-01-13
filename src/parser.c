@@ -53,6 +53,7 @@
 #include "log.h"
 #include "print_packet.h"
 #include "net_olsr.h"
+#include "duplicate_handler.h"
 
 #ifdef WIN32
 #undef EWOULDBLOCK
@@ -274,6 +275,7 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
   union olsr_message *m = (union olsr_message *)olsr->olsr_msg;
   int count;
   int msgsize;
+  uint16_t seqno;
   struct parse_function_entry *entry;
   struct packetparser_function_entry *packetparser;
 
@@ -305,11 +307,6 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
   if (disp_pack_in)
     print_olsr_serialized_packet(stdout, (union olsr_packet *)olsr, size, from_addr);
 
-  if (olsr_cnf->ip_version == AF_INET)
-    msgsize = ntohs(m->v4.olsr_msgsize);
-  else
-    msgsize = ntohs(m->v6.olsr_msgsize);
-
   /*
    * Hysteresis update - for every OLSR package
    */
@@ -325,14 +322,19 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
 
   for (; count > 0; m = (union olsr_message *)((char *)m + (msgsize))) {
     bool forward = true;
+    bool validated;
 
     if (count < MIN_PACKET_SIZE(olsr_cnf->ip_version) + 8)
       break;
 
-    if (olsr_cnf->ip_version == AF_INET)
+    if (olsr_cnf->ip_version == AF_INET) {
       msgsize = ntohs(m->v4.olsr_msgsize);
-    else
+      seqno = ntohs(m->v4.seqno);
+    }
+    else {
       msgsize = ntohs(m->v6.olsr_msgsize);
+      seqno = ntohs(m->v6.seqno);
+    }
 
     if ((msgsize % 4) != 0) {
       struct ipaddr_str buf;
@@ -378,14 +380,17 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
      */
 
     /* Should be the same for IPv4 and IPv6 */
-    if (ipequal((union olsr_ip_addr *)&m->v4.originator, &olsr_cnf->main_addr)
-        || !olsr_validate_address((union olsr_ip_addr *)&m->v4.originator)) {
+    validated = olsr_validate_address((union olsr_ip_addr *)&m->v4.originator);
+    if (ipequal((union olsr_ip_addr *)&m->v4.originator, &olsr_cnf->main_addr) || !validated) {
 #ifdef DEBUG
       struct ipaddr_str buf;
-#endif
-#ifdef DEBUG
       OLSR_PRINTF(3, "Not processing message originating from %s!\n",
                   olsr_ip_to_string(&buf, (union olsr_ip_addr *)&m->v4.originator));
+#endif
+#ifndef NO_DUPLICATE_DETECTION_HANDLER
+      if (validated) {
+        olsr_test_originator_collision(m->v4.olsr_msgtype, seqno);
+      }
 #endif
       continue;
     }

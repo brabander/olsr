@@ -707,15 +707,18 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__ ((unused)))
   /* IP version 4 */
   else {
     /* Get interface address (IPv4) */
-    if (ioctl(olsr_cnf->ioctl_s, SIOCGIFADDR, &ifr) < 0) {
-      OLSR_PRINTF(debuglvl, "\tCould not get address of interface - skipping it\n");
-      return 0;
+    if (iface->cnf->ipv4_src.v4.s_addr) {
+      ifs.int_addr.sin_addr = iface->cnf->ipv4_src.v4;
     }
+    else {
+      if (ioctl(olsr_cnf->ioctl_s, SIOCGIFADDR, &ifr) < 0) {
+        OLSR_PRINTF(debuglvl, "\tCould not get address of interface - skipping it\n");
+        return 0;
+      }
 
-    ifs.int_addr = *(struct sockaddr_in *)(ARM_NOWARN_ALIGN)&ifr.ifr_addr;
-
+      ifs.int_addr = *(struct sockaddr_in *)(ARM_NOWARN_ALIGN)&ifr.ifr_addr;
+    }
     /* Find netmask */
-
     if (ioctl(olsr_cnf->ioctl_s, SIOCGIFNETMASK, &ifr) < 0) {
       olsr_syslog(OLSR_LOG_ERR, "%s: ioctl (get netmask)", ifr.ifr_name);
       return 0;
