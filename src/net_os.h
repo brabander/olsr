@@ -89,6 +89,10 @@ bool is_if_link_up(char *);
 
 int join_mcast(struct interface *, int);
 
+#ifdef linux
+bool olsr_check_ifup(const char * dev);
+#endif
+
 #endif
 
 /*

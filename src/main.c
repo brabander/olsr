@@ -79,6 +79,8 @@ bool olsr_win32_end_flag = false;
 static void olsr_shutdown(int) __attribute__ ((noreturn));
 #endif
 
+#define DEF_NIIT_IFNAME         "niit4to6"
+
 /*
  * Local function prototypes
  */
@@ -166,6 +168,21 @@ static void olsr_create_lock_file(void) {
 #endif
   return;
 }
+
+#ifdef linux
+static void handle_niit_config(void) {
+  int if_index;
+
+  if (olsr_cnf->ip_version == AF_INET || !olsr_cnf->use_niit) {
+    return;
+  }
+
+  if_index = if_nametoindex(DEF_NIIT_IFNAME);
+  if (if_index > 0 && olsr_check_ifup(DEF_NIIT_IFNAME)) {
+    olsr_cnf->niit_if_index = if_index;
+  }
+}
+#endif
 
 /**
  * loads a config file
@@ -377,6 +394,11 @@ int main(int argc, char *argv[]) {
     olsr_syslog(OLSR_LOG_ERR, "routing socket: %m");
     olsr_exit(__func__, 0);
   }
+#endif
+
+#if defined linux
+  /* initialize niit if index */
+  handle_niit_config();
 #endif
 
   /* Init empty TC timer */

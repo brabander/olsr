@@ -1144,10 +1144,10 @@ bclear_screen: TOK_CLEAR_SCREEN TOK_BOOLEAN
 }
 ;
 
-suse_niit: TOK_USE_NIIT TOK_STRING
+suse_niit: TOK_USE_NIIT TOK_BOOLEAN
 {
-  PARSER_DEBUG_PRINTF("Use NIIT ip translation: %s\n", $2->string);
-  olsr_cnf->niit_if = $2->string;
+  PARSER_DEBUG_PRINTF("Use NIIT ip translation: %s\n", $2->boolean ? "enabled" : "disabled");
+  olsr_cnf->use_niit = $2->boolean;
   free($2);
 }
 ;

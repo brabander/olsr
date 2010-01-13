@@ -103,23 +103,6 @@ main(int argc, char *argv[])
 
 #endif
 
-#ifdef linux
-static int
-olsrd_parse_niit_if(const char *niit_if) {
-  int i = 0;
-  if (niit_if == NULL || strcmp(niit_if, "yes") == 0 || strcmp(niit_if, "auto") == 0) {
-    i = if_nametoindex(DEF_NIIT_IF);
-    if (i == 0 && niit_if != NULL && strcmp(niit_if, "yes") == 0) {
-      return -1;
-    }
-  }
-  else if (strcmp(niit_if, "no") != 0) {
-    i = if_nametoindex(niit_if);
-  }
-  return i;
-}
-#endif
-
 int
 olsrd_parse_cnf(const char *filename)
 {
@@ -161,16 +144,6 @@ olsrd_parse_cnf(const char *filename)
     in->interf = NULL;
     in->host_emul = false;
   }
-
-#ifdef linux
-  if (olsr_cnf->ip_version == AF_INET6) {
-    olsr_cnf->niit_if_index = olsrd_parse_niit_if(olsr_cnf->niit_if);
-    if (olsr_cnf->niit_if_index == -1) {
-      fprintf(stderr, "Error, Cannot find niit interface.\n");
-      return -1;
-    }
-  }
-#endif
   return 0;
 }
 
@@ -586,7 +559,7 @@ set_default_cnf(struct olsrd_config *cnf)
   cnf->exit_value = EXIT_SUCCESS;
   cnf->max_tc_vtime = 0.0;
   cnf->ioctl_s = 0;
-  cnf->niit_if = NULL;
+  cnf->use_niit = DEF_USE_NIIT;
   cnf->niit_if_index = 0;
 
 #if LINUX_POLICY_ROUTING
@@ -694,7 +667,7 @@ olsrd_print_cnf(struct olsrd_config *cnf)
 
   printf("Clear screen     : %s\n", cnf->clear_screen ? "yes" : "no");
 
-  printf("Use niit:        : %s\n", cnf->niit_if ? cnf->niit_if : DEF_NIIT);
+  printf("Use niit:        : %s\n", cnf->use_niit ? "yes" : "no");
 
   /* Interfaces */
   if (in) {
