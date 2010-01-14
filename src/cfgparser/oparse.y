@@ -57,7 +57,7 @@
 #include <arpa/inet.h>
 #include <string.h>
 
-#define PARSER_DEBUG 0
+#define PARSER_DEBUG 1
 
 #if PARSER_DEBUG
 #define PARSER_DEBUG_PRINTF(x, args...)   printf(x, ##args)
@@ -281,6 +281,7 @@ stmt:       idebug
           | suse_niit
           | bsmart_gw
           | ismart_gw_speed
+          | ismart_gw_prefix
 ;
 
 block:      TOK_HNA4 hna4body
@@ -1178,7 +1179,7 @@ ismart_gw_prefix: TOK_SMART_GW_PREFIX TOK_IPV6_ADDR TOK_INTEGER
 	  fprintf(stderr, "Bad IP part of gateway prefix: %s\n", $2->string);
     YYABORT;
   }
-	olsr_cnf->smart_gateway_prefix.prefixlen = (uint8_t)$3->integer;
+	olsr_cnf->smart_gateway_prefix.prefix_len = (uint8_t)$3->integer;
 	
 	free($2);
 	free($3);
@@ -1190,7 +1191,7 @@ ismart_gw_prefix: TOK_SMART_GW_PREFIX TOK_IPV6_ADDR TOK_INTEGER
 	  fprintf(stderr, "Bad IP part of gateway prefix: %s\n", $2->string);
     YYABORT;
   }
-	olsr_cnf->smart_gateway_prefix.prefixlen = (uint8_t)$4->integer;
+	olsr_cnf->smart_gateway_prefix.prefix_len = (uint8_t)$4->integer;
 	
 	free($2);
 	free($4);

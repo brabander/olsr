@@ -16,7 +16,7 @@
 
 struct avl_tree gateway_tree;
 static struct olsr_cookie_info *gw_mem_cookie = NULL;
-static uint8_t smart_gateway_netmask[15];
+static uint8_t smart_gateway_netmask[sizeof(union olsr_ip_addr)];
 
 static uint32_t deserialize_gw_speed(uint8_t value) {
   uint32_t speed, exp;
@@ -122,8 +122,11 @@ olsr_set_gateway(union olsr_ip_addr *originator, union olsr_ip_addr *mask, int p
     gw->downlink = 1;
   }
 
+  gw->ipv6 = (ptr[GW_HNA_FLAGS] & GW_HNA_FLAG_IPV6) != 0;
+
   memset(&gw->external_prefix, 0, sizeof(gw->external_prefix));
-  if ((ptr[GW_HNA_FLAGS] & GW_HNA_FLAG_IPV6PREFIX) != 0 && olsr_cnf->ip_version == AF_INET6) {
+  if (olsr_cnf->ip_version == AF_INET6 && prefixlen == 0
+      && (ptr[GW_HNA_FLAGS] & GW_HNA_FLAG_IPV6PREFIX) != 0) {
     gw->external_prefix.prefix_len = ptr[GW_HNA_V6PREFIXLEN];
     memcpy(&gw->external_prefix.prefix, &ptr[GW_HNA_V6PREFIX], 8);
   }
@@ -143,6 +146,9 @@ olsr_delete_gateway(union olsr_ip_addr *originator) {
 
 bool olsr_is_smart_gateway(union olsr_ip_addr *net, union olsr_ip_addr *mask, int prefixlen) {
   uint8_t *ptr = ((uint8_t *)mask) + (prefixlen/8);
+  struct ipaddr_str buf;
+
+  fprintf(stderr, "olsr_is_smart_gw: %s\n", olsr_ip_to_string(&buf, mask));
 
   if (prefixlen == 0) {
     if (memcmp(&in6addr_any, net, olsr_cnf->ipsize) != 0) {
@@ -165,6 +171,7 @@ void olsr_modifiy_inetgw_netmask(union olsr_ip_addr *mask, int prefixlen) {
   uint8_t *ptr = ((uint8_t *)mask) + (prefixlen/8);
 
   if (olsr_cnf->has_ipv4_gateway) {
+    struct ipaddr_str buf;
     memcpy(ptr, &smart_gateway_netmask, sizeof(smart_gateway_netmask) - prefixlen/8);
   }
   if (olsr_cnf->has_ipv6_gateway) {
@@ -184,11 +191,11 @@ olsr_print_gateway(void) {
 
   OLSR_PRINTF(0, "\n--- %s ---------------------------------------------------- GATEWAYS\n\n",
       olsr_wallclock_string());
-  OLSR_PRINTF(0, "%-*s %5s %-9s %-9s %s\n", addrsize, "IP address", "IPv6", "Uplink", "Downlink",
+  OLSR_PRINTF(0, "%-*s %-5s %-9s %-9s %s\n", addrsize, "IP address", "IPv6", "Uplink", "Downlink",
       olsr_cnf->ip_version == AF_INET ? "" : "External Prefix");
 
   OLSR_FOR_ALL_GATEWAY_ENTRIES(gw) {
-    OLSR_PRINTF(0, "%-*s %5s %-9u %-9u %s\n", addrsize, olsr_ip_to_string(&buf, &gw->originator),
+    OLSR_PRINTF(0, "%-*s %-5s %-9u %-9u %s\n", addrsize, olsr_ip_to_string(&buf, &gw->originator),
         gw->ipv6 ? "true" : "false",
         gw->uplink, gw->downlink,
         gw->external_prefix.prefix_len == 0 ? "" : olsr_ip_prefix_to_string(&gw->external_prefix));

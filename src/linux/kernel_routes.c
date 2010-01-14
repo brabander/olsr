@@ -187,10 +187,10 @@ static void netlink_process_link(struct nlmsghdr *h)
   /*monitor tunl0 and olsrtunl*/
   if (olsr_cnf->smart_gateway_active) {
     if (ifi->ifi_index==olsr_cnf->ipip_if_index) {
-      printf("\nolsrtunl state change:");
+      printf("olsrtunl state change:\n");
       if (ifi->ifi_flags&IFF_UP)
       {
-        printf("is up now");
+        printf("is up now\n");
         olsr_cnf->ipip_if_up=true;
       }
       else if (olsr_cnf->ipip_if_up) {
@@ -200,13 +200,13 @@ static void netlink_process_link(struct nlmsghdr *h)
         /*we mark it unexisting -> we will create the tunnel again (if gateway changes)*/
         olsr_cnf->ipip_if_index = olsr_cnf->ipip_if_up = false;
       }
-      else printf("\ninterface is down, but was never up -> ignoring!");
+      else printf("interface is down, but was never up -> ignoring!\n");
       return;
     }
     if (ifi->ifi_index==olsr_cnf->ipip_base_if.if_index) {
       if (ifi->ifi_flags&IFF_UP) {
         /*we try to take it up again (if its only down it might workout)*/
-        printf("\ntunl0 is down, we try to take it up again");
+        printf("tunl0 is down, we try to take it up again\n");
         if (olsr_ifconfig("tunl0",IF_SET_UP)) return; //!!?? todo: test if we can really know that its up now
         /*we disable -> this should stop us announcing being a smart gateway, 
  	* and can not use tunnels as its unlikely to be able to crete them without tunl0*/
@@ -226,16 +226,16 @@ static void netlink_process_link(struct nlmsghdr *h)
   //all IFF flags: LOOPBACK,BROADCAST;POINTOPOINT;MULTICAST;NOARP;ALLMULTI;PROMISC;MASTER;SLAVE;DEBUG;DYNAMIC;AUTOMEDIA;PORTSEL;NOTRAILERS;UP;LOWER_UP;DORMANT
   /* check if interface is up and running? (a not running interface keeps its routes, so better not react like on ifdown!!??) */
   if (ifi->ifi_flags&IFF_UP) {
-    OLSR_PRINTF(3,"interface %s changed but is still up! ", iface->int_name);
+    OLSR_PRINTF(3,"interface %s changed but is still up!\n", iface->int_name);
     return; //we are currently only interested in interfaces that are/go down
   } else {
-    OLSR_PRINTF(1,"interface %s is down! ", iface->int_name);
+    OLSR_PRINTF(1,"interface %s is down!\n", iface->int_name);
   }
 
   //only for still configured interfaces (ifup has to be detected with regular interface polling)
   for (tmp_if = olsr_cnf->interfaces; tmp_if != NULL; tmp_if = tmp_if->next) {
     if (tmp_if->interf==iface) {
-      OLSR_PRINTF(1,"-> removing %s from olsr config! ", iface->int_name);
+      OLSR_PRINTF(1,"-> removing %s from olsr config!\n", iface->int_name);
       RemoveInterface(tmp_if,true);
       break;
     }
@@ -267,7 +267,7 @@ void rtnetlink_read(int sock)
   while (true) { //read until ret<0;
     ret=recvmsg(sock, &msg, 0);
     if (ret<0) {
-      if (errno != EAGAIN) OLSR_PRINTF(1,"\nnetlink listen error %u - %s",errno,strerror(errno));
+      if (errno != EAGAIN) OLSR_PRINTF(1,"netlink listen error %u - %s\n",errno,strerror(errno));
       return;
     }
     /*check message*/
@@ -275,7 +275,7 @@ void rtnetlink_read(int sock)
     plen = len - sizeof(nlh);
     if (len > ret || plen < 0) {
       OLSR_PRINTF(1,"Malformed netlink message: "
-             "len=%d left=%d plen=%d",
+             "len=%d left=%d plen=%d\n",
               len, ret, plen);
       return;
     }
@@ -302,18 +302,18 @@ static int set_tunl(int cmd, unsigned long int ipv4)
   p.iph.daddr=ipv4;
 
   strncpy(p.name, olsr_cnf->ipip_name, IFNAMSIZ);
-printf("\nset tunl to name: %s",p.name);
+printf("set tunl to name: %s\n",p.name);
 
   //specify existing interface name
   if (cmd==SIOCADDTUNNEL) strncpy(ifr.ifr_name, TUNL_BASE, IFNAMSIZ);
   else strncpy(ifr.ifr_name, olsr_cnf->ipip_name, IFNAMSIZ);
 
-printf("\nset tunl %s",ifr.ifr_name);
+printf("set tunl %s\n",ifr.ifr_name);
 
   ifr.ifr_ifru.ifru_data = (void *) &p;
   fd = socket(AF_INET, SOCK_DGRAM, 0);//warning hardcoded AF_INET
   err = ioctl(fd, cmd, &ifr);
-printf("\nset tunl result %i",err);
+printf("set tunl result %i\n",err);
   if (err) perror("ioctl");
   close(fd);
   return err;
@@ -321,7 +321,7 @@ printf("\nset tunl result %i",err);
 
 int olsr_del_tunl(void)
 {
-  printf("\n-----\ndelete olsrtunle!");
+  printf("-----\ndelete olsrtunle!\n");
   return set_tunl(SIOCDELTUNNEL,0x00000000);//!!??test if this deletes tunnel
 }
 
@@ -434,7 +434,7 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
       /*add interface*/
       if ((olsr_cnf->smart_gateway_active) && family != AF_INET)
       {
-        printf("smart gateway not available for ipv6 currently");
+        printf("smart gateway not available for ipv6 currently\n");
         return -1;
       }
       else if(flag == RT_SMARTGW)
@@ -495,7 +495,7 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
       if (flag == RT_NIIT) {
         union olsr_ip_addr ipv4_addr;
         /* create an ipv4 route */
-        olsr_syslog(OLSR_LOG_ERR,"niit suport not fully implemented!!"); 
+        olsr_syslog(OLSR_LOG_ERR,"niit suport not fully implemented!!\n");
 
         /* fix prefix length */
         req.r.rtm_dst_len = rt->rt_dst.prefix_len - 96;
@@ -721,31 +721,31 @@ olsr_netlink_route(const struct rt_entry *rt, uint8_t family, uint8_t rttable, _
   if ((olsr_cnf->smart_gateway_active) && (rt->rt_dst.prefix_len == 0) )
   { 
     if (cmd == RTM_DELROUTE){ /*should we do something sane here!!??*/
-      printf("\nignoreing deletion of default route for smart gateway!!");
+      printf("ignoreing deletion of default route for smart gateway!!\n");
     }
     else
     {
       if (!olsr_cnf->ipip_if_index) {
 int r;
-        printf("\ncreating tunnel %s:",olsr_cnf->ipip_name);
+        printf("creating tunnel %s\n",olsr_cnf->ipip_name);
         /*create tunnel*/
         set_tunl(SIOCADDTUNNEL,rt->rt_best->rtp_originator.v4.s_addr);
         olsr_cnf->ipip_if_up=false;/*rtnetlink monitoring will detect it up*/
         /*!!?? currently it gets never deleted on shutdown, anyways reusing existing tunnel might be a safe approach if creating fails?*/
         /*set tunnel up with originator ip*/
         r=olsr_ifconfig(olsr_cnf->ipip_name,IF_SET_IP);
-printf("\nresult of ifup is %i",r);
+printf("result of ifup is %i\n",r);
         /*find out iifindex (maybe it works even if above failed (old tunnel))*/
         olsr_cnf->ipip_if_index=if_nametoindex(olsr_cnf->ipip_name);
-printf("\nindex of new olsrtunl is %i",olsr_cnf->ipip_if_index);
+printf("index of new olsrtunl is %i\n",olsr_cnf->ipip_if_index);
       }
       else
       {
-        printf("\n changing tunnel %s:",olsr_cnf->ipip_name);
+        printf("changing tunnel %s:\n",olsr_cnf->ipip_name);
         /*change tunnel to new originator or potentially new gateway*/
         if ((olsr_cnf->ipip_remote_address != rt->rt_best->rtp_originator.v4.s_addr) && (rt->rt_best->rtp_originator.v4.s_addr != 0x00000000) ) {
           struct ipaddr_str buf;
-          printf("changing tunnel to %s",olsr_ip_to_string(&buf,&rt->rt_best->rtp_originator));
+          printf("changing tunnel to %s\n",olsr_ip_to_string(&buf,&rt->rt_best->rtp_originator));
           olsr_cnf->ipip_remote_address = rt->rt_best->rtp_originator.v4.s_addr;
           set_tunl(SIOCCHGTUNNEL,olsr_cnf->ipip_remote_address);
         }
