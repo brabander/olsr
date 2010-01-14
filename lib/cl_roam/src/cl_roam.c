@@ -97,8 +97,8 @@ typedef struct {
 	struct in_addr ip;
 	u_int64_t mac;
 	struct in_addr from_node;
-	char pingable;
 	char is_announced;
+	float last_seen;
  } guest_client;
 
 
@@ -109,7 +109,7 @@ typedef struct {
 } client_list;
 
 
-guest_client foobar;
+
 
 client_list *list;
 struct interface *ifn;
@@ -186,25 +186,14 @@ olsrd_plugin_init(void)
 
 
 
-void ping_thread(guest_client * target)
+int ping_thread(guest_client * target)
 {
 
     char ping_command[50];
 
 
-    //snprintf(ping_command, sizeof(ping_command), "ping -I ath0 -c 1 -q %s", inet_ntoa(target->ip));
     snprintf(ping_command, sizeof(ping_command), "arping -I ath0 -w 1 -c 1 -q %s", inet_ntoa(target->ip));
-    if (system(ping_command) == 0) {
-      system("echo \"ping erfolgreich\" ");
-      OLSR_DEBUG(LOG_PLUGINS, "\nDo ping on %s ... ok\n", inet_ntoa(target->ip));
-      target->pingable=1;
-    }
-    else
-    {
-      system("echo \"ping erfolglos\" ");
-      OLSR_DEBUG(LOG_PLUGINS, "\nDo ping on %s ... failed\n", inet_ntoa(target->ip));
-      target->pingable=0;
-    }
+    return system(ping_command);
 
 }
 
@@ -212,26 +201,12 @@ void ping_thread(guest_client * target)
 
 void ping_thread_infinite(guest_client * target)
 {
-
-	while (1) {
-		char ping_command[50];
+    char ping_command[50];
 
 
-		//snprintf(ping_command, sizeof(ping_command), "ping -I ath0 -c 1 -q %s", inet_ntoa(target->ip));
-		snprintf(ping_command, sizeof(ping_command), "arping -I ath0 -w 1 -c 1 -q %s", inet_ntoa(target->ip));
-		if (system(ping_command) == 0) {
-		  system("echo \"ping erfolgreich\" ");
-		  OLSR_DEBUG(LOG_PLUGINS, "\nDo ping on %s ... ok\n", inet_ntoa(target->ip));
-		  target->pingable=1;
-		}
-		else
-		{
-		  system("echo \"ping erfolglos\" ");
-		  OLSR_DEBUG(LOG_PLUGINS, "\nDo ping on %s ... failed\n", inet_ntoa(target->ip));
-		  target->pingable=0;
-		}
-		sleep (2);
-	}
+    snprintf(ping_command, sizeof(ping_command), "arping -I ath0 -q %s", inet_ntoa(target->ip));
+    system(ping_command);
+
 }
 
 
@@ -269,18 +244,36 @@ struct olsr_message msg;
 
 
 
+void add_route(void* guest) {
+
+	guest_client * host = (guest_client *) guest;
+
+	if (ping_thread(host)==0) {
+
+		OLSR_DEBUG(LOG_PLUGINS, "Adding Route\n");
+		printf("Added Route\n");
+		ip_prefix_list_add(&olsr_cnf->hna_entries, &(host->ip), olsr_netmask_to_prefix(&gw_netmask));
+		host->is_announced=1;
+	} else
+		  printf("Decided not to\n");
+}
+
 
 
 
 
 void check_for_route(guest_client * host)
 {
-  if (host->pingable && ! host->is_announced) {
-      OLSR_DEBUG(LOG_PLUGINS, "Adding Route\n");
-      system("echo \"Setze route\" ");
-      ip_prefix_list_add(&olsr_cnf->hna_entries, &(host->ip), olsr_netmask_to_prefix(&gw_netmask));
-      host->is_announced=1;
-  } else if ((! host->pingable) &&  host->is_announced) {
+
+  if (host->last_seen < 5.0 && ! host->is_announced) {
+	  pthread_t add;
+	  printf("maybe add something\n");
+	  int rc = pthread_create(&add, NULL, add_route, (void *)host);
+	  if (rc){
+	           printf("ERROR; return code from pthread_create() is %d\n", rc);
+	           exit(-1);
+	        }
+  } else if ((host->last_seen > 5.0) &&  host->is_announced) {
       OLSR_DEBUG(LOG_PLUGINS, "Removing Route\n");
       system("echo \"Entferne route\" ");
       ip_prefix_list_remove(&olsr_cnf->hna_entries, &(host->ip), olsr_netmask_to_prefix(&gw_netmask), olsr_cnf->ip_version);
@@ -292,12 +285,29 @@ void check_client_list(client_list * clist) {
   if (clist!=NULL && clist->client!=NULL) {
 
     //ping(clist->client);
+	if( ! check_if_associcated(clist->client))
+		clist->client->last_seen+=2;
     check_for_route(clist->client);
 
 
     check_client_list(clist->list);
   }
 }
+
+
+
+guest_client * get_client_by_mac(client_list * clist, u_int64_t mac) {
+  if (clist!=NULL && clist->client!=NULL) {
+
+    if (clist->client->mac == mac)
+    	return clist->client;
+    else
+    	return get_client_by_mac(clist->list, mac);
+  }
+  else
+	  return NULL;
+}
+
 
 
 int ip_is_in_guest_list(client_list * list, guest_client * host) {
@@ -312,66 +322,86 @@ else
 }
 
 
-void check_leases(client_list * clist){
-  FILE * fp = fopen("/var/dhcp.leases", "r");
-  //FILE * fp = fopen("/home/raphael/tmp/leases", "r");
-  char s1[50];
-  char s2[50];
-  char s3[50];
-  char s4[50];
-  char s5[50];
-
-
-  while (1) { 
-    int parse = fscanf (fp, "%s %s %s %s %s", s1, s2, s3, s4, s5);
-    if (parse==EOF)
-      break;
-    if(parse==5) {
-    guest_client* user;
-    //printf ("String 3 = %s\n", s3);
-    user = (guest_client*)malloc( sizeof(guest_client) );
-    inet_aton(s3, &(user->ip));
-    add_client_to_list(clist, user);
-
+void check_local_leases(client_list * clist){
+  check_leases(clist,"/var/dhcp.leases" , 1.0);
 }
-  }
-  fclose(fp);
-  
 
-}
+
+void check_leases(client_list * clist, char file[], float def_last_seen) {
+	  FILE * fp = fopen(file, "r");
+	  char s1[50];
+	  char s2[50];
+	  char s3[50];
+	  char s4[50];
+	  long long int one, two, three, four, five, six;
+
+	  while (1) {
+		  int parse = fscanf (fp, "%s %llx:%llx:%llx:%llx:%llx:%llx %s %s", s1, &one, &two, &three, &four, &five, &six, s3, s4);
+	    if (parse==EOF)
+	      break;
+	    if(parse==9) {
+	    guest_client* user;
+	    //printf ("String 3 = %s\n", s3);
+	    user = (guest_client*)malloc( sizeof(guest_client) );
+	    inet_aton(s3, &(user->ip));
+	    user->mac= six | five<<8 | four<<16 | three<<24 | two<<32 | one<<40;
+	    user->last_seen=def_last_seen;
+	    user->is_announced=0;
+	    //printf("last seen on Add %f\n",user->last_seen);
+	    add_client_to_list(clist, user);
+
+	}
+	  }
+	  fclose(fp);
+
+
+	}
 
 
 
 
 void check_remote_leases(client_list * clist){
-  FILE * fp = fopen("/tmp/otherclient", "r");
+  check_leases(clist,"/tmp/otherclient" , 20.0);
+
+}
+
+
+
+
+
+int check_if_associcated(guest_client *client)
+{
+  FILE * fp = fopen("/proc/net/madwifi/ath0/associated_sta", "r");
   //FILE * fp = fopen("/home/raphael/tmp/leases", "r");
   char s1[50];
   char s2[50];
   char s3[50];
-  char s4[50];
-  char s5[50];
+  int rssi;
+  float last_rx;
+  int parse;
 
+  long long int one, two, three, four, five, six;
 
   while (1) {
-    int parse = fscanf (fp, "%s %s %s %s %s", s1, s2, s3, s4, s5);
-    if (parse==EOF)
+    parse = fscanf (fp, "macaddr: <%llx:%llx:%llx:%llx:%llx:%llx>\n", &one, &two, &three, &four, &five, &six);
+    if (parse==EOF || parse!=6)
       break;
-    if(parse==5) {
-    guest_client* user;
-    //printf ("String 3 = %s\n", s3);
-    user = (guest_client*)malloc( sizeof(guest_client) );
-    inet_aton(s3, &(user->ip));
-    add_client_to_list(clist, user);
+    if ((six | five<<8 | four<<16 | three<<24 | two<<32 | one<<40)==client->mac) {
+    	fclose(fp);
+    	return 1;
+    }
+    if (parse==EOF)
+          break;
+    //printf ("rssi = %s\n", s2);
+    parse = fscanf (fp, " last_rx %f\n", &last_rx);
+    if (parse==EOF)
+          break;
 
-}
   }
   fclose(fp);
 
 
 }
-
-
 
 
 
@@ -387,25 +417,32 @@ void check_associations(client_list * clist){
   char s1[50];
   char s2[50];
   char s3[50];
-  char s4[50];
-  char s5[50];
   int rssi;
   float last_rx;
   int parse;
 
+  long long int one, two, three, four, five, six;
+
   while (1) {
-    parse = fscanf (fp, "macaddr: %s\n", s1);
-    if (parse==EOF)
+    parse = fscanf (fp, "macaddr: <%llx:%llx:%llx:%llx:%llx:%llx>\n", &one, &two, &three, &four, &five, &six);
+    if (parse==EOF || parse!=6)
       break;
-    printf ("macaddr: %s\n", s1);
+    uint64_t mac = six | five<<8 | four<<16 | three<<24 | two<<32 | one<<40;
+    //printf ("macaddr: %llx\n", mac);
     parse = fscanf (fp, " rssi %s\n", s2);
     if (parse==EOF)
           break;
-    printf ("rssi = %s\n", s2);
-    parse = fscanf (fp, " last_rx %s\n", s3);
+    //printf ("rssi = %s\n", s2);
+    parse = fscanf (fp, " last_rx %f\n", &last_rx);
     if (parse==EOF)
           break;
-    printf ("last_rx = %s\n", s3);
+    //printf ("last_rx = %f\n", last_rx);
+    guest_client* node = get_client_by_mac(clist, mac);
+    if (node!=NULL) {
+    	//printf("Sichtung!\n");
+    	node->last_seen=last_rx;
+    	//printf("last_seen= %f\n",node->last_seen);
+    }
 
   }
   fclose(fp);
@@ -442,7 +479,7 @@ void add_client_to_list(client_list * clist, guest_client * host) {
 
 
 void check_for_new_clients(client_list * clist) {
-    check_leases(clist);
+    check_local_leases(clist);
     check_associations(clist);
 }
 
@@ -467,7 +504,7 @@ olsr_event(void *foo __attribute__ ((unused)))
 		char wget_command[70];
 
 
-		snprintf(wget_command, sizeof(wget_command), "wget -O /tmp/otherclient http://%s/dhcp.leases", inet_ntoa(foobar.v4));
+		snprintf(wget_command, sizeof(wget_command), "wget -q -O /tmp/otherclient http://%s/dhcp.leases", inet_ntoa(foobar.v4));
 
 		system(wget_command);
 

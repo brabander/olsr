@@ -35,4 +35,4 @@ OS_LIB_DYNLOAD = -ldl
 # Local Variables:
 # mode: makefile
 # End:
-CC=/home/raphael/kamikaze_8.09.1/staging_dir/toolchain-mips_gcc4.1.2/bin/mips-linux-uclibc-gcc
+CC=/home/raphael/kamikaze_8.09.1/staging_dir/toolchain-mips_gcc4.1.2/bin/mips-linux-uclibc-gcc -lpthread
