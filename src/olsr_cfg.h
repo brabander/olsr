@@ -253,6 +253,7 @@ struct olsrd_config {
   int niit_if_index;
 
   /*many potential parameters or helper variables for smartgateway*/
+  bool has_ipv4_gateway, has_ipv6_gateway;
   bool smart_gateway_active;
   uint32_t smart_gateway_uplink;
   uint32_t smart_gateway_downlink;

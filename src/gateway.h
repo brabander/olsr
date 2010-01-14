@@ -18,9 +18,11 @@ enum gateway_hna_flags {
   GW_HNA_FLAG_SMART      = 1<<0,
   GW_HNA_FLAG_UPLINK     = 1<<1,
   GW_HNA_FLAG_DOWNLINK   = 1<<2,
-  GW_HNA_FLAG_IPV6PREFIX = 1<<3
+  GW_HNA_FLAG_IPV6       = 1<<3,
+  GW_HNA_FLAG_IPV6PREFIX = 1<<4
 };
 
+/* relative to the first zero byte in the netmask (0 or 12) */
 enum gateway_hna_fields {
   GW_HNA_PAD         = 0,
   GW_HNA_FLAGS       = 1,
@@ -36,6 +38,7 @@ struct gateway_entry {
   struct olsr_ip_prefix external_prefix;
   uint32_t uplink;
   uint32_t downlink;
+  bool ipv6;
 };
 
 AVLNODE2STRUCT(node2gateway, struct gateway_entry, node);
@@ -53,11 +56,9 @@ extern struct avl_tree gateway_tree;
 
 void olsr_init_gateways(void);
 struct gateway_entry *olsr_find_gateway(union olsr_ip_addr *originator);
-void olsr_set_gateway(union olsr_ip_addr *originator, union olsr_ip_addr *subnetmask);
+void olsr_set_gateway(union olsr_ip_addr *originator, union olsr_ip_addr *mask, int prefixlen);
 void olsr_delete_gateway(union olsr_ip_addr *originator);
-bool olsr_is_smart_gateway(union olsr_ip_addr *net, union olsr_ip_addr *mask);
+bool olsr_is_smart_gateway(union olsr_ip_addr *net, union olsr_ip_addr *mask, int prefixlen);
 void olsr_print_gateway(void);
-
-extern union olsr_ip_addr smart_gateway_netmask;
-
+void olsr_modifiy_inetgw_netmask(union olsr_ip_addr *mask, int prefixlen);
 #endif /* GATEWAY_H_ */

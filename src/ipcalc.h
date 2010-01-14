@@ -53,6 +53,8 @@ struct ipaddr_str {
   char buf[MAX(INET6_ADDRSTRLEN, INET_ADDRSTRLEN)];
 } __attribute__ ((unused));
 
+extern const uint8_t mapped_v4_gw[];
+
 /*
  * Macros for comparing and copying IP addresses
  */
@@ -175,6 +177,13 @@ static INLINE union olsr_ip_addr *
 olsr_ipv6_to_ipv4(const union olsr_ip_addr *ipv6, union olsr_ip_addr *ipv4) {
   memcpy(&ipv4->v4, &ipv6->v6.s6_addr[12], sizeof(ipv4->v4));
   return ipv4;
+}
+
+
+static INLINE bool
+ip_prefix_is_mappedv4_gw(struct olsr_ip_prefix *prefix) {
+  return olsr_cnf->ip_version == AF_INET6 && prefix->prefix_len == 96
+      && memcmp(&prefix->prefix, mapped_v4_gw, sizeof(prefix->prefix)) == 0;
 }
 
 #endif

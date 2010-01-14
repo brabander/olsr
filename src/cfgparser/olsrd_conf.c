@@ -769,6 +769,24 @@ win32_olsrd_free(void *ptr)
 }
 #endif
 
+static void update_has_gateway_fields(void) {
+  struct ip_prefix_list *h;
+
+  olsr_cnf->has_ipv4_gateway = false;
+  olsr_cnf->has_ipv6_gateway = false;
+
+  for (h = olsr_cnf->hna_entries; h != NULL; h = h->next) {
+    if (h->net.prefix_len == 0) {
+      olsr_cnf->has_ipv4_gateway = true;
+      olsr_cnf->has_ipv6_gateway = olsr_cnf->ip_version == AF_INET6;
+      return;
+    }
+    if (ip_prefix_is_mappedv4_gw(&h->net)) {
+      olsr_cnf->has_ipv4_gateway = true;
+    }
+  }
+}
+
 void
 ip_prefix_list_add(struct ip_prefix_list **list, const union olsr_ip_addr *net, uint8_t prefix_len)
 {
@@ -780,6 +798,9 @@ ip_prefix_list_add(struct ip_prefix_list **list, const union olsr_ip_addr *net, 
   /* Queue */
   new_entry->next = *list;
   *list = new_entry;
+
+  /* update gateway flags */
+  update_has_gateway_fields();
 }
 
 int
@@ -796,6 +817,9 @@ ip_prefix_list_remove(struct ip_prefix_list **list, const union olsr_ip_addr *ne
         prev->next = h->next;
       }
       free(h);
+
+      /* update gateway flags */
+      update_has_gateway_fields();
       return 1;
     }
     prev = h;

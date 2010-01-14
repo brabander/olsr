@@ -1047,13 +1047,12 @@ serialize_hna4(struct interface *ifp)
     OLSR_PRINTF(BMSG_DBGLVL, "\tNet: %s\n", olsr_ip_prefix_to_string(&h->net));
 #endif
 
+    olsr_prefix_to_netmask(&ip_addr, h->net.prefix_len);
     if (olsr_cnf->smart_gateway_active && h->net.prefix_len == 0) {
       /* this is the default route, overwrite it with the smart gateway */
-      ip_addr.v4 = smart_gateway_netmask.v4;
+      olsr_modifiy_inetgw_netmask(&ip_addr, h->net.prefix_len);
     }
-    else {
-      olsr_prefix_to_netmask(&ip_addr, h->net.prefix_len);
-    }
+
     pair->addr = h->net.prefix.v4.s_addr;
     pair->netmask = ip_addr.v4.s_addr;
     pair++;
@@ -1141,13 +1140,11 @@ serialize_hna6(struct interface *ifp)
     OLSR_PRINTF(BMSG_DBGLVL, "\tNet: %s\n", olsr_ip_prefix_to_string(&h->net));
 #endif
     olsr_prefix_to_netmask(&tmp_netmask, h->net.prefix_len);
-    if (olsr_cnf->smart_gateway_active && h->net.prefix_len == 0) {
+    if (olsr_cnf->smart_gateway_active && (h->net.prefix_len == 0 || ip_prefix_is_mappedv4_gw(&h->net))) {
       /* this is the default gateway, so overwrite it with the smart one */
-      tmp_netmask = smart_gateway_netmask;
+      olsr_modifiy_inetgw_netmask(&tmp_netmask, h->net.prefix_len);
     }
-    else {
-      olsr_prefix_to_netmask(&tmp_netmask, h->net.prefix_len);
-    }
+
     pair6->addr = h->net.prefix.v6;
     pair6->netmask = tmp_netmask.v6;
     pair6++;

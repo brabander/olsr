@@ -444,11 +444,12 @@ olsr_input_hna(union olsr_message *m, struct interface *in_if __attribute__ ((un
 
     pkt_get_ipaddress(&curr, &net);
     pkt_get_ipaddress(&curr, &mask);
-    if (olsr_cnf->smart_gateway_active && olsr_is_smart_gateway(&net, &mask)) {
-      olsr_set_gateway(&originator, &mask);
+    prefixlen = olsr_netmask_to_prefix(&mask);
+
+    if (olsr_cnf->smart_gateway_active && olsr_is_smart_gateway(&net, &mask, prefixlen)) {
+      olsr_set_gateway(&originator, &mask, prefixlen);
     }
 
-    prefixlen = olsr_netmask_to_prefix(&mask);
     if (olsr_cnf->smart_gateway_active && prefixlen > 0 && prefixlen <= MAXIMUM_GATEWAY_PREFIX_LENGTH) {
       continue;
     }
