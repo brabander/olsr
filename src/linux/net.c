@@ -823,18 +823,73 @@ calculate_if_metric(char *ifname)
 
 bool olsr_check_ifup(const char * dev)
 {
-  int r;
   struct ifreq ifr;
-  memset(&ifr, 0, sizeof(ifr));
-  strncpy(ifr.ifr_name, dev, IFNAMSIZ);
 
-  r = ioctl(olsr_cnf->ioctl_s, SIOCGIFFLAGS, &ifr);
-  if (r < 0) {
-    perror("ioctl to check interface up/down");
-    return false;
+  memset(&ifr, 0, sizeof(ifr));
+  strscpy(ifr.ifr_name, dev, IFNAMSIZ);
+
+  if (ioctl(olsr_cnf->ioctl_s, SIOCGIFFLAGS, &ifr) < 0) {
+    perror("ioctl SIOCGIFFLAGS (get flags)");
+    return 1;
+  }
+  return (ifr.ifr_flags & IFF_UP) != 0;
+}
+
+int olsr_if_updown(const char *dev, bool up) {
+  int oldflags;
+  struct ifreq ifr;
+
+  memset(&ifr, 0, sizeof(ifr));
+  strscpy(ifr.ifr_name, dev, IFNAMSIZ);
+
+  if (ioctl(olsr_cnf->ioctl_s, SIOCGIFFLAGS, &ifr) < 0) {
+    perror("ioctl SIOCGIFFLAGS (get flags)");
+    return 1;
   }
 
-  return (ifr.ifr_flags & IFF_UP) != 0;
+  oldflags = ifr.ifr_flags;
+  if (up) {
+    ifr.ifr_flags |= IFF_UP;
+  }
+  else {
+    ifr.ifr_flags &= ~IFF_UP;
+  }
+
+  if (oldflags == ifr.ifr_flags) {
+    /* interface is already up/down */
+    return 0;
+  }
+
+  if (ioctl(olsr_cnf->ioctl_s, SIOCSIFFLAGS, &ifr) < 0) {
+    perror("ioctl SIOCSIFFLAGS (set flags)");
+    return 1;
+  }
+  return 0;
+}
+
+
+int olsr_if_setip(const char *dev, union olsr_ip_addr *ip) {
+  struct sockaddr s;
+  struct ifreq ifr;
+
+  memset(&ifr, 0, sizeof(ifr));
+  strscpy(ifr.ifr_name, dev, IFNAMSIZ);
+
+  memset(&s, 0, sizeof(s));
+  s.sa_family = olsr_cnf->ip_version;
+  if (olsr_cnf->ip_version == AF_INET) {
+    ((struct sockaddr_in *)&s)->sin_addr = ip->v4;
+  }
+  else {
+    ((struct sockaddr_in6 *)&s)->sin6_addr = ip->v6;
+  }
+  memcpy(&ifr.ifr_addr, &s, sizeof(s));
+
+  if (ioctl(olsr_cnf->ioctl_s, SIOCSIFADDR, ifr) < 0) {
+    perror("ioctl SIOCSIFADDR (set addr)");
+    return 1;
+  }
+  return 0;
 }
 
 /*
