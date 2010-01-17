@@ -15,30 +15,30 @@
 #define MAXIMUM_GATEWAY_PREFIX_LENGTH 0
 
 enum gateway_hna_flags {
-  GW_HNA_FLAG_SMART      = 1<<0,
-  GW_HNA_FLAG_UPLINK     = 1<<1,
-  GW_HNA_FLAG_DOWNLINK   = 1<<2,
+  GW_HNA_FLAG_LINKSPEED  = 1<<0,
+  GW_HNA_FLAG_IPV4       = 1<<1,
+  GW_HNA_FLAG_IPV4_NAT   = 1<<2,
   GW_HNA_FLAG_IPV6       = 1<<3,
   GW_HNA_FLAG_IPV6PREFIX = 1<<4
 };
 
-/* relative to the first zero byte in the netmask (0 or 12) */
+/* relative to the first zero byte in the netmask (0, 1 or 12) */
 enum gateway_hna_fields {
   GW_HNA_PAD         = 0,
   GW_HNA_FLAGS       = 1,
   GW_HNA_UPLINK      = 2,
   GW_HNA_DOWNLINK    = 3,
   GW_HNA_V6PREFIXLEN = 4,
-  GW_HNA_V6PREFIX    = 8
+  GW_HNA_V6PREFIX    = 5
 };
 
 struct gateway_entry {
   struct avl_node node;
   union olsr_ip_addr originator;
   struct olsr_ip_prefix external_prefix;
-  uint32_t uplink;
-  uint32_t downlink;
-  bool ipv6;
+  uint32_t last_heared;
+  uint32_t uplink, downlink;
+  bool ipv4, ipv4nat, ipv6;
 };
 
 AVLNODE2STRUCT(node2gateway, struct gateway_entry, node);

@@ -49,11 +49,15 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 
+#define IPV6_INET_GW_PREFIX     0x20
+#define IPV6_INET_GW_PREFIX_LEN 3
+
+extern const uint8_t mapped_v4_gw[];
+extern const uint8_t ipv6_internet_route[];
+
 struct ipaddr_str {
   char buf[MAX(INET6_ADDRSTRLEN, INET_ADDRSTRLEN)];
 } __attribute__ ((unused));
-
-extern const uint8_t mapped_v4_gw[];
 
 /*
  * Macros for comparing and copying IP addresses

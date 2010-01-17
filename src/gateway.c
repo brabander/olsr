@@ -69,14 +69,10 @@ olsr_init_gateways(void) {
 
     ip = (uint8_t *) &smart_gateway_netmask;
 
-    ip[GW_HNA_FLAGS] |= GW_HNA_FLAG_SMART;
-    if (olsr_cnf->smart_gateway_uplink > 0) {
-      ip[GW_HNA_FLAGS] |= GW_HNA_FLAG_UPLINK;
-      ip[GW_HNA_UPLINK] = serialize_gw_speed(olsr_cnf->smart_gateway_uplink);
-    }
-    if (olsr_cnf->smart_gateway_downlink > 0) {
-      ip[GW_HNA_FLAGS] |= GW_HNA_FLAG_DOWNLINK;
+    if (olsr_cnf->smart_gateway_uplink > 0 || olsr_cnf->smart_gateway_downlink > 0) {
+      ip[GW_HNA_FLAGS] |= GW_HNA_FLAG_LINKSPEED;
       ip[GW_HNA_DOWNLINK] = serialize_gw_speed(olsr_cnf->smart_gateway_downlink);
+      ip[GW_HNA_UPLINK] = serialize_gw_speed(olsr_cnf->smart_gateway_uplink);
     }
     if (olsr_cnf->ip_version == AF_INET6 && olsr_cnf->smart_gateway_prefix.prefix_len > 0) {
       ip[GW_HNA_FLAGS] |= GW_HNA_FLAG_IPV6PREFIX;
@@ -96,7 +92,7 @@ olsr_find_gateway(union olsr_ip_addr *originator) {
 void
 olsr_set_gateway(union olsr_ip_addr *originator, union olsr_ip_addr *mask, int prefixlen) {
   struct gateway_entry *gw;
-  uint8_t *ptr = ((uint8_t *)mask) + (prefixlen/8);
+  uint8_t *ptr = ((uint8_t *)mask) + ((prefixlen+7)/8);
 
   gw = olsr_find_gateway(originator);
   if (!gw) {
@@ -108,27 +104,29 @@ olsr_set_gateway(union olsr_ip_addr *originator, union olsr_ip_addr *mask, int p
     avl_insert(&gateway_tree, &gw->node, AVL_DUP_NO);
   }
 
-  if ((ptr[GW_HNA_FLAGS] & GW_HNA_FLAG_UPLINK) != 0) {
+  if ((ptr[GW_HNA_FLAGS] & GW_HNA_FLAG_LINKSPEED) != 0) {
     gw->uplink = deserialize_gw_speed(ptr[GW_HNA_UPLINK]);
-  }
-  else {
-    gw->uplink = 1;
-  }
-
-  if ((ptr[GW_HNA_FLAGS] & GW_HNA_FLAG_DOWNLINK) != 0) {
     gw->downlink = deserialize_gw_speed(ptr[GW_HNA_DOWNLINK]);
   }
   else {
+    gw->uplink = 1;
     gw->downlink = 1;
   }
 
-  gw->ipv6 = (ptr[GW_HNA_FLAGS] & GW_HNA_FLAG_IPV6) != 0;
+  gw->ipv4 = (ptr[GW_HNA_FLAGS] & GW_HNA_FLAG_IPV4) != 0;
+  gw->ipv4nat = (ptr[GW_HNA_FLAGS] & GW_HNA_FLAG_IPV4_NAT) != 0;
 
-  memset(&gw->external_prefix, 0, sizeof(gw->external_prefix));
-  if (olsr_cnf->ip_version == AF_INET6 && prefixlen == 0
+  if (olsr_cnf->ip_version == AF_INET) {
+    gw->ipv6 = (ptr[GW_HNA_FLAGS] & GW_HNA_FLAG_IPV6) != 0;
+    if (prefixlen == IPV6_INET_GW_PREFIX_LEN) {
+      /* do not reset prefixlength for ::ffff:0:0 HNAs */
+      memset(&gw->external_prefix, 0, sizeof(gw->external_prefix));
+    }
+    if (prefixlen == IPV6_INET_GW_PREFIX_LEN && mask->v6.s6_addr[0] == IPV6_INET_GW_PREFIX
       && (ptr[GW_HNA_FLAGS] & GW_HNA_FLAG_IPV6PREFIX) != 0) {
-    gw->external_prefix.prefix_len = ptr[GW_HNA_V6PREFIXLEN];
-    memcpy(&gw->external_prefix.prefix, &ptr[GW_HNA_V6PREFIX], 8);
+      gw->external_prefix.prefix_len = ptr[GW_HNA_V6PREFIXLEN];
+      memcpy(&gw->external_prefix.prefix, &ptr[GW_HNA_V6PREFIX], 8);
+    }
   }
 }
 
@@ -145,13 +143,13 @@ olsr_delete_gateway(union olsr_ip_addr *originator) {
 }
 
 bool olsr_is_smart_gateway(union olsr_ip_addr *net, union olsr_ip_addr *mask, int prefixlen) {
-  uint8_t *ptr = ((uint8_t *)mask) + (prefixlen/8);
+  uint8_t *ptr = ((uint8_t *)mask) + ((prefixlen+7)/8);
   struct ipaddr_str buf;
 
   fprintf(stderr, "olsr_is_smart_gw: %s\n", olsr_ip_to_string(&buf, mask));
 
-  if (prefixlen == 0) {
-    if (memcmp(&in6addr_any, net, olsr_cnf->ipsize) != 0) {
+  if (olsr_cnf->ip_version == AF_INET6 && prefixlen == IPV6_INET_GW_PREFIX_LEN) {
+    if (memcmp(&ipv6_internet_route, net, olsr_cnf->ipsize) != 0) {
       return false;
     }
   }
@@ -160,24 +158,32 @@ bool olsr_is_smart_gateway(union olsr_ip_addr *net, union olsr_ip_addr *mask, in
       return false;
     }
   }
+  else if (prefixlen == 0) {
+    if (memcmp(&in6addr_any, net, olsr_cnf->ipsize) != 0) {
+      return false;
+    }
+  }
   else {
     return false;
   }
-
   return ptr[GW_HNA_PAD] == 0 && ptr[GW_HNA_FLAGS] != 0;
 }
 
 void olsr_modifiy_inetgw_netmask(union olsr_ip_addr *mask, int prefixlen) {
-  uint8_t *ptr = ((uint8_t *)mask) + (prefixlen/8);
+  uint8_t *ptr = ((uint8_t *)mask) + ((prefixlen+7)/8);
 
+  memcpy(ptr, &smart_gateway_netmask, sizeof(smart_gateway_netmask) - prefixlen/8);
   if (olsr_cnf->has_ipv4_gateway) {
-    struct ipaddr_str buf;
-    memcpy(ptr, &smart_gateway_netmask, sizeof(smart_gateway_netmask) - prefixlen/8);
+    ptr[GW_HNA_FLAGS] |= GW_HNA_FLAG_IPV4;
+
+    if (olsr_cnf->has_ipv4_nat) {
+      ptr[GW_HNA_FLAGS] |= GW_HNA_FLAG_IPV4_NAT;
+    }
   }
   if (olsr_cnf->has_ipv6_gateway) {
     ptr[GW_HNA_FLAGS] |= GW_HNA_FLAG_IPV6;
   }
-  else {
+  if (!olsr_cnf->has_ipv6_gateway || prefixlen > 0){
     ptr[GW_HNA_FLAGS] &= ~GW_HNA_FLAG_IPV6PREFIX;
   }
 }

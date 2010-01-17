@@ -43,6 +43,7 @@
 #include "ipcalc.h"
 
 const uint8_t mapped_v4_gw[] = { 0,0,0,0,0,0,0,0,0,0,0xff,0xff,0,0,0,0};
+const uint8_t ipv6_internet_route[] = { 0x20, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
 
 int
 prefix_to_netmask(uint8_t * a, int len, uint8_t prefixlen)
