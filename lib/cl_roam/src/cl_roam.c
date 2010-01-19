@@ -285,8 +285,9 @@ void check_client_list(client_list * clist) {
   if (clist!=NULL && clist->client!=NULL) {
 
     //ping(clist->client);
-	if( ! check_if_associcated(clist->client))
-		clist->client->last_seen+=2;
+	  if(clist->client->is_announced==1)
+		  if( ! check_if_associcated(clist->client))
+			  clist->client->last_seen+=2;
     check_for_route(clist->client);
 
 
