@@ -333,14 +333,13 @@ void check_leases(client_list * clist, char file[], float def_last_seen) {
 	  char s1[50];
 	  char s2[50];
 	  char s3[50];
-	  char s4[50];
 	  long long int one, two, three, four, five, six;
 
 	  while (1) {
-		  int parse = fscanf (fp, "%s %llx:%llx:%llx:%llx:%llx:%llx %s %s", s1, &one, &two, &three, &four, &five, &six, s3, s4);
+		  int parse = fscanf (fp, "%s %llx:%llx:%llx:%llx:%llx:%llx %s %*s %*s\n", s1, &one, &two, &three, &four, &five, &six, s3);
 	    if (parse==EOF)
 	      break;
-	    if(parse==9) {
+	    if(parse==8) {
 	    guest_client* user;
 	    //printf ("String 3 = %s\n", s3);
 	    user = (guest_client*)malloc( sizeof(guest_client) );
