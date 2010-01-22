@@ -387,7 +387,7 @@ void check_remote_leases(client_list * clist){
 	    	char leases[80];
 
 	    	// Why the fuck cant I do it in one step!?
-	    	 snprintf(leases, sizeof(leases), "%s %x:%x:%x:%x:%x:%x", s1, one, two, three, four, five, six);
+	    	 snprintf(leases, sizeof(leases), "%s %llx:%llx:%llx:%llx:%llx:%llx", s1, one, two, three, four, five, six);
 	    	 snprintf(leases, sizeof(leases), "%s %s * *\n", leases, s3);
 	    	printf(leases);
 	    	fprintf(my_leases, leases);
