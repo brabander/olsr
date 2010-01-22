@@ -361,9 +361,48 @@ void check_leases(client_list * clist, char file[], float def_last_seen) {
 
 
 void check_remote_leases(client_list * clist){
-  check_leases(clist,"/tmp/otherclient" , 20.0);
+	  FILE * fp = fopen("/tmp/otherclient", "r");
+	  FILE * my_leases =fopen ("/var/dhcp.leases", "a");
+	  char s1[50];
+	  char s2[50];
+	  char s3[50];
+	  long long int one, two, three, four, five, six;
 
-}
+	  while (1) {
+		  int parse = fscanf (fp, "%s %llx:%llx:%llx:%llx:%llx:%llx %s %*s %*s\n", s1, &one, &two, &three, &four, &five, &six, s3);
+	    if (parse==EOF)
+	      break;
+	    if(parse==8) {
+	    guest_client* user;
+	    //printf ("String 3 = %s\n", s3);
+	    user = (guest_client*)malloc( sizeof(guest_client) );
+	    inet_aton(s3, &(user->ip));
+	    user->mac= six | five<<8 | four<<16 | three<<24 | two<<32 | one<<40;
+	    user->last_seen=20.0;
+	    user->is_announced=0;
+	    //printf("last seen on Add %f\n",user->last_seen);
+
+	    if (!(ip_is_in_guest_list(clist,  user))) {
+
+	    	char leases[80];
+
+	    	// Why the fuck cant I do it in one step!?
+	    	 snprintf(leases, sizeof(leases), "%s %x:%x:%x:%x:%x:%x", s1, one, two, three, four, five, six);
+	    	 snprintf(leases, sizeof(leases), "%s %s * *\n", leases, s3);
+	    	printf(leases);
+	    	fprintf(my_leases, leases);
+	    }
+
+
+	    add_client_to_list(clist, user);
+
+	}
+	  }
+	  fclose(fp);
+	  fclose(my_leases);
+
+
+	}
 
 
 
@@ -505,10 +544,10 @@ olsr_event(void *foo __attribute__ ((unused)))
 
 
 		snprintf(wget_command, sizeof(wget_command), "wget -q -O /tmp/otherclient http://%s/dhcp.leases", inet_ntoa(foobar.v4));
-
-		system(wget_command);
+		if (system(wget_command)==0){
 
 		check_remote_leases(list);
+		}
 
         }OLSR_FOR_ALL_NBR_ENTRIES_END();
 
