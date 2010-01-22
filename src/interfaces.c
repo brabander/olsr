@@ -170,7 +170,7 @@ if_ifwithsock(int fd)
   ifp = ifnet;
 
   while (ifp) {
-    if (ifp->olsr_socket == fd)
+    if (ifp->olsr_socket == fd || ifp->send_socket == fd)
       return ifp;
     ifp = ifp->int_next;
   }
