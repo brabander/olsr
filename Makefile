@@ -163,15 +163,7 @@ libs:
 		set -e;for dir in $(SUBDIRS);do $(MAKECMD) -C lib/$$dir LIBDIR=$(LIBDIR);done
 
 libs_clean clean_libs:
-		-for dir in $(SUBDIRS);do $(MAKECMD) -C lib/$$dir LIBDIR=$(LIBDIR) clean;done
-ifeq ($(OS), win32)
-		-rm -f lib/pgraph/olsrd_pgraph.dll
-		-rm -f lib/txtinfo/olsrd_txtinfo.dll
-		-rm -f lib/httpinfo/olsrd_httpinfo.dll
-		-rm -f lib/secure/olsrd_secure.dll
-		-rm -f lib/dot_draw/olsrd_dot_draw.dll
-		-rm -f lib/mini/olsrd_mini.dll
-endif
+		-for dir in $(SUBDIRS);do $(MAKECMD) -C lib/$$dir LIBDIR=$(LIBDIR) clean;rm -f lib/$$dir/*.so lib/$$dir/*.dll;done
 
 libs_install install_libs:
 		set -e;for dir in $(SUBDIRS);do $(MAKECMD) -C lib/$$dir LIBDIR=$(LIBDIR) install;done

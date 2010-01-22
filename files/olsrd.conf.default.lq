@@ -225,6 +225,12 @@ LinkQualityFishEye	0
 
 # MprCoverage	7
 
+# LockFile
+# The lockfile is used to prevent multiple OLSR instances running at the same
+# time. On linux/bsd it defaults to "/var/run/olsrd-ipv(4/6).lock", on other
+# systems to "<configfile>-ipv(4/6).lock".
+#
+# LockFile "olsrd.lock"
 
 # Olsrd plugins to load
 # This must be the absolute path to the file

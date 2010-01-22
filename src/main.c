@@ -78,6 +78,10 @@ bool olsr_win32_end_flag = false;
 static void olsr_shutdown(int) __attribute__ ((noreturn));
 #endif
 
+#if defined linux || __FreeBSD__ || defined __NetBSD__ || defined __OpenBSD__
+#define DEFAULT_LOCKFILE_PREFIX "/var/run/olsrd"
+#endif
+
 #define DEF_NIIT_IFNAME         "niit4to6"
 
 /*
@@ -346,8 +350,15 @@ int main(int argc, char *argv[]) {
   if (olsr_cnf->lock_file) {
     strscpy(lock_file_name, olsr_cnf->lock_file, sizeof(lock_file_name));
   } else {
+    size_t len;
+#ifdef DEFAULT_LOCKFILE_PREFIX
+    strscpy(lock_file_name, DEFAULT_LOCKFILE_PREFIX, sizeof(lock_file_name));
+#else
     strscpy(lock_file_name, conf_file_name, sizeof(lock_file_name));
-    strscat(lock_file_name, ".lock", sizeof(lock_file_name));
+#endif
+    len = strlen(lock_file_name);
+    snprintf(&lock_file_name[len], sizeof(lock_file_name) - len, "-ipv%d.lock",
+        olsr_cnf->ip_version == AF_INET ? 4 : 6);
   }
 
   /*
