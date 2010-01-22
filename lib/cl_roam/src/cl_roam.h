@@ -71,7 +71,7 @@ struct cl_roam_msg
 {
   union olsr_ip_addr   client_ip;
   union olsr_ip_addr   node_ip;
-  enum cl_roam_status_types status;
+  u_int64_t mac;
   uint16_t last_seen;
 };
 

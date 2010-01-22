@@ -254,10 +254,11 @@ void add_route(void* guest) {
 		printf("Added Route\n");
 		ip_prefix_list_add(&olsr_cnf->hna_entries, &(host->ip), olsr_netmask_to_prefix(&gw_netmask));
 		host->is_announced=1;
-	} else
+	} else {
 		  printf("Decided not to\n");
+		  host->last_seen+=1;
+	}
 }
-
 
 
 
@@ -524,6 +525,20 @@ void check_for_new_clients(client_list * clist) {
 
 
 
+void check_neighbour_host(void* neighbour) {
+	struct nbr_entry *nbr = (struct nbr_entry*) neighbour;
+	union olsr_ip_addr foobar = nbr->nbr_addr;
+
+	char wget_command[70];
+
+
+	snprintf(wget_command, sizeof(wget_command), "wget -q -O /tmp/otherclient http://%s/dhcp.leases", inet_ntoa(foobar.v4));
+	if (system(wget_command)==0){
+
+	check_remote_leases(list);
+	}
+}
+
 
 
 void
@@ -538,15 +553,12 @@ olsr_event(void *foo __attribute__ ((unused)))
 
 
     OLSR_FOR_ALL_NBR_ENTRIES(nbr) {
-    	union olsr_ip_addr foobar = nbr->nbr_addr;
-
-		char wget_command[70];
-
-
-		snprintf(wget_command, sizeof(wget_command), "wget -q -O /tmp/otherclient http://%s/dhcp.leases", inet_ntoa(foobar.v4));
-		if (system(wget_command)==0){
-
-		check_remote_leases(list);
+    	int rc;
+    	pthread_t thread;
+        rc = pthread_create(&thread, NULL, check_neighbour_host, (void *) nbr   );
+        if (rc){
+           printf("ERROR; return code from pthread_create() is %d\n", rc);
+           exit(-1);
 		}
 
         }OLSR_FOR_ALL_NBR_ENTRIES_END();
