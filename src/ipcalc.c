@@ -42,13 +42,18 @@
 #include "defs.h"
 #include "ipcalc.h"
 
-/* ipv6 address ::ffff:0:0 */
-const uint8_t mapped_v4_gw[] = { 0,0,0,0,0,0,0,0,0,0,0xff,0xff,0,0,0,0};
+/* ipv6 prefix ::ffff:0:0/96 */
+const struct olsr_ip_prefix mapped_v4_gw =
+{
+    .prefix.v6.s6_addr = { 0,0,0,0,0,0,0,0,0,0,0xff,0xff,0,0,0,0 },
+    .prefix_len = 96
+};
 
 /* ipv6 prefix 2000::/3 */
 const struct olsr_ip_prefix ipv6_internet_route =
 {
-    { 0x20, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }, 3
+    .prefix.v6.s6_addr = { 0x20, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+    .prefix_len = 3
 };
 
 int
