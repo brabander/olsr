@@ -49,11 +49,8 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 
-#define IPV6_INET_GW_PREFIX     0x20
-#define IPV6_INET_GW_PREFIX_LEN 3
-
 extern const uint8_t mapped_v4_gw[];
-extern const uint8_t ipv6_internet_route[];
+extern const struct olsr_ip_prefix ipv6_internet_route;
 
 struct ipaddr_str {
   char buf[MAX(INET6_ADDRSTRLEN, INET_ADDRSTRLEN)];
@@ -173,7 +170,7 @@ prefix_to_netmask4(uint8_t prefixlen)
 }
 
 static INLINE bool
-olsr_is_niit_ip(const union olsr_ip_addr *ip) {
+olsr_is_niit_ipv6(const union olsr_ip_addr *ip) {
   return olsr_cnf->ip_version == AF_INET6 && IN6_IS_ADDR_V4MAPPED(&ip->v6);
 }
 
@@ -189,6 +186,8 @@ ip_prefix_is_mappedv4_gw(struct olsr_ip_prefix *prefix) {
   return olsr_cnf->ip_version == AF_INET6 && prefix->prefix_len == 96
       && memcmp(&prefix->prefix, mapped_v4_gw, sizeof(prefix->prefix)) == 0;
 }
+
+extern bool ip_is_inetgw_prefix(union olsr_ip_addr *net, int prefixlen);
 
 #endif
 

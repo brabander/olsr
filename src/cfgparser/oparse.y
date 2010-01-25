@@ -212,6 +212,8 @@ static int add_ipv6_addr(YYSTYPE ipaddr_arg, YYSTYPE prefixlen_arg)
 %token TOK_LOCK_FILE
 %token TOK_USE_NIIT
 %token TOK_SMART_GW
+%token TOK_SMART_GW_NAT
+%token TOK_SMART_GW_UPLINK
 %token TOK_SMART_GW_SPEED
 %token TOK_SMART_GW_PREFIX
 
@@ -280,6 +282,8 @@ stmt:       idebug
           | alock_file
           | suse_niit
           | bsmart_gw
+          | bsmart_gw_nat
+          | ssmart_gw_type
           | ismart_gw_speed
           | ismart_gw_prefix
 ;
@@ -1157,7 +1161,36 @@ suse_niit: TOK_USE_NIIT TOK_BOOLEAN
 bsmart_gw: TOK_SMART_GW TOK_BOOLEAN
 {
 	PARSER_DEBUG_PRINTF("Smart gateway system: %s\n", $2->boolean ? "enabled" : "disabled");
-	olsr_cnf->smart_gateway_active = $2->boolean;
+	olsr_cnf->smart_gw_active = $2->boolean;
+	free($2);
+}
+;
+
+bsmart_gw_nat: TOK_SMART_GW_NAT TOK_BOOLEAN
+{
+	PARSER_DEBUG_PRINTF("Smart gateway nat: %s\n", $2->boolean ? "yes" : "no");
+	olsr_cnf->smart_gw_nat = $2->boolean;
+	free($2);
+}
+;
+
+ssmart_gw_type: TOK_SMART_GW_NAT TOK_STRING
+{
+	PARSER_DEBUG_PRINTF("Smart gateway uplink: %s\n", $2->string);
+	if (strcasecmp($2->string, GW_UPLINK_TXT[GW_UPLINK_IPV4]) == 0) {
+		olsr_cnf->smart_gw_type = GW_UPLINK_IPV4;
+	}
+	else if (strcasecmp($2->string, GW_UPLINK_TXT[GW_UPLINK_IPV6]) == 0) {
+		olsr_cnf->smart_gw_type = GW_UPLINK_IPV6;
+	}
+	else if (strcasecmp($2->string, GW_UPLINK_TXT[GW_UPLINK_IPV46]) == 0) {
+		olsr_cnf->smart_gw_type = GW_UPLINK_IPV46;
+	}
+	else {
+		fprintf(stderr, "Bad gateway uplink type: %s\n", $2->string);
+		YYABORT;
+	}
+	olsr_cnf->smart_gw_nat = $2->boolean;
 	free($2);
 }
 ;
@@ -1165,8 +1198,8 @@ bsmart_gw: TOK_SMART_GW TOK_BOOLEAN
 ismart_gw_speed: TOK_SMART_GW_SPEED TOK_INTEGER TOK_INTEGER
 {
 	PARSER_DEBUG_PRINTF("Smart gateway speed: %u uplink/%u downlink kbit/s\n", $2->integer, $3->integer);
-	olsr_cnf->smart_gateway_uplink = $2->integer;
-	olsr_cnf->smart_gateway_downlink = $3->integer;
+	olsr_cnf->smart_gw_uplink = $2->integer;
+	olsr_cnf->smart_gw_downlink = $3->integer;
 	free($2);
 	free($3);
 }
@@ -1175,11 +1208,11 @@ ismart_gw_speed: TOK_SMART_GW_SPEED TOK_INTEGER TOK_INTEGER
 ismart_gw_prefix: TOK_SMART_GW_PREFIX TOK_IPV6_ADDR TOK_INTEGER
 {
   PARSER_DEBUG_PRINTF("Smart gateway prefix: %s %u\n", $2->string, $3->integer);
-	if (inet_pton(olsr_cnf->ip_version, $2->string, &olsr_cnf->smart_gateway_prefix.prefix) == 0) {
+	if (inet_pton(olsr_cnf->ip_version, $2->string, &olsr_cnf->smart_gw_prefix.prefix) == 0) {
 	  fprintf(stderr, "Bad IP part of gateway prefix: %s\n", $2->string);
     YYABORT;
   }
-	olsr_cnf->smart_gateway_prefix.prefix_len = (uint8_t)$3->integer;
+	olsr_cnf->smart_gw_prefix.prefix_len = (uint8_t)$3->integer;
 	
 	free($2);
 	free($3);
@@ -1187,11 +1220,11 @@ ismart_gw_prefix: TOK_SMART_GW_PREFIX TOK_IPV6_ADDR TOK_INTEGER
         |       TOK_SMART_GW_PREFIX TOK_IPV6_ADDR TOK_SLASH TOK_INTEGER
 {
 	PARSER_DEBUG_PRINTF("Smart gateway prefix: %s %u\n", $2->string, $4->integer);
-	if (inet_pton(olsr_cnf->ip_version, $2->string, &olsr_cnf->smart_gateway_prefix.prefix) == 0) {
+	if (inet_pton(olsr_cnf->ip_version, $2->string, &olsr_cnf->smart_gw_prefix.prefix) == 0) {
 	  fprintf(stderr, "Bad IP part of gateway prefix: %s\n", $2->string);
     YYABORT;
   }
-	olsr_cnf->smart_gateway_prefix.prefix_len = (uint8_t)$4->integer;
+	olsr_cnf->smart_gw_prefix.prefix_len = (uint8_t)$4->integer;
 	
 	free($2);
 	free($4);

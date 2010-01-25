@@ -185,7 +185,7 @@ static void netlink_process_link(struct nlmsghdr *h)
   struct olsr_if *tmp_if;
 
   /*monitor tunl0 and olsrtunl*/
-  if (olsr_cnf->smart_gateway_active) {
+  if (olsr_cnf->smart_gw_active) {
     if (ifi->ifi_index==olsr_cnf->ipip_if_index) {
       printf("olsrtunl state change:\n");
       if (ifi->ifi_flags&IFF_UP)
@@ -210,7 +210,7 @@ static void netlink_process_link(struct nlmsghdr *h)
         if (olsr_ifconfig("tunl0",IF_SET_UP)) return; //!!?? todo: test if we can really know that its up now
         /*we disable -> this should stop us announcing being a smart gateway, 
  	* and can not use tunnels as its unlikely to be able to crete them without tunl0*/
-        olsr_cnf->smart_gateway_active=false;
+        olsr_cnf->smart_gw_active=false;
         /*recovery is not easy as potentially the ipip module is not loaded any more*/
         /*but it could just mean the tunl0 is down, and the gatewaytunnel would work*/
         return;
@@ -432,7 +432,7 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
       req.r.rtm_scope = RT_SCOPE_LINK;
 
       /*add interface*/
-      if ((olsr_cnf->smart_gateway_active) && family != AF_INET)
+      if ((olsr_cnf->smart_gw_active) && family != AF_INET)
       {
         printf("smart gateway not available for ipv6 currently\n");
         return -1;
@@ -718,7 +718,7 @@ static int
 olsr_netlink_route(const struct rt_entry *rt, uint8_t family, uint8_t rttable, __u16 cmd)
 {
   /*check if this rule is relevant for smartgw*/
-  if ((olsr_cnf->smart_gateway_active) && (rt->rt_dst.prefix_len == 0) )
+  if ((olsr_cnf->smart_gw_active) && (rt->rt_dst.prefix_len == 0) )
   { 
     if (cmd == RTM_DELROUTE){ /*should we do something sane here!!??*/
       printf("ignoreing deletion of default route for smart gateway!!\n");
@@ -757,7 +757,7 @@ printf("index of new olsrtunl is %i\n",olsr_cnf->ipip_if_index);
   /*normal route in default route table*/
 
   /*create/delete niit route if we have an niit device*/
-  if ((olsr_cnf->niit_if_index!=0) && (family != AF_INET) && (olsr_is_niit_ip(&rt->rt_dst.prefix))) {
+  if ((olsr_cnf->niit_if_index!=0) && (family != AF_INET) && (olsr_is_niit_ipv6(&rt->rt_dst.prefix))) {
     olsr_netlink_route_int(rt, family, rttable, cmd, RT_NIIT);
   }
 
@@ -836,7 +836,7 @@ olsr_ioctl_add_route(const struct rt_entry *rt)
      *
      * which was always insane but togehter with smartgateways policy routing its too insane
      */
-    if (!olsr_cnf->smart_gateway_active) olsr_netlink_route(rt, AF_INET, 253, RTM_NEWROUTE);
+    if (!olsr_cnf->smart_gw_active) olsr_netlink_route(rt, AF_INET, 253, RTM_NEWROUTE);
   }
   if (0 == rt->rt_dst.prefix_len && olsr_cnf->rttable_default != 0) {
     return olsr_netlink_route(rt, AF_INET, olsr_cnf->rttable_default, RTM_NEWROUTE);

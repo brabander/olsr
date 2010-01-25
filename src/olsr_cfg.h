@@ -113,6 +113,9 @@
 #define MAX_LQ_AGING        1.0
 #define MIN_LQ_AGING        0.01
 
+#define MIN_SMARTGW_SPEED   1
+#define MAX_SMARTGW_SPEED   320000000
+
 /* Option values */
 #define CFG_FIBM_FLAT          "flat"
 #define CFG_FIBM_CORRECT       "correct"
@@ -123,6 +126,13 @@
 #endif
 
 #include "interfaces.h"
+
+enum smart_gw_uplinktype {
+  GW_UPLINK_IPV4,
+  GW_UPLINK_IPV6,
+  GW_UPLINK_IPV46,
+  GW_UPLINK_CNT,
+};
 
 struct olsr_msg_params {
   float emission_interval;
@@ -237,6 +247,15 @@ struct olsrd_config {
   uint8_t lq_dlimit;
 
   float min_tc_vtime;
+
+  char *lock_file;
+  bool use_niit;
+
+  bool smart_gw_active, smart_gw_nat;
+  enum smart_gw_uplinktype smart_gw_type;
+  uint32_t smart_gw_uplink, smart_gw_downlink;
+  struct olsr_ip_prefix smart_gw_prefix;
+
   /* Stuff set by olsrd */
   uint8_t maxplen;                     /* maximum prefix len */
   size_t ipsize;                       /* Size of address */
@@ -247,17 +266,10 @@ struct olsrd_config {
   int exit_value;                      /* Global return value for process termination */
   float max_tc_vtime;
 
-  char *lock_file;
-
-  bool use_niit;
   int niit_if_index;
 
   /*many potential parameters or helper variables for smartgateway*/
-  bool has_ipv4_gateway, has_ipv6_gateway, has_ipv4_nat;
-  bool smart_gateway_active;
-  uint32_t smart_gateway_uplink;
-  uint32_t smart_gateway_downlink;
-  struct olsr_ip_prefix smart_gateway_prefix;
+  bool has_ipv4_gateway, has_ipv6_gateway;
 
   struct interface ipip_base_if;
   int ipip_if_index;
@@ -280,6 +292,8 @@ struct olsrd_config {
 #if defined __cplusplus
 extern "C" {
 #endif
+
+  extern const char *GW_UPLINK_TXT[];
 
 /*
  * List functions

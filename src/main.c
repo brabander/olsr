@@ -511,20 +511,20 @@ int main(int argc, char *argv[]) {
 #if LINUX_POLICY_ROUTING
   /*create smart-gateway-tunnel policy rules*/
   //!!?? disable smartgateway if not ipv4?, or better: do not start olsr
-  if (olsr_cnf->smart_gateway_active) {
+  if (olsr_cnf->smart_gw_active) {
     int r = olsr_ifconfig(TUNL_BASE,IF_SET_UP);
 printf("set interface up returned %i",r);
     //take up tunl0 device or disable smartgateway
     olsr_cnf->ipip_base_orig_down = (r == -1 ?true:false);
 printf("old ipip_base_orig_down state: %i",olsr_cnf->ipip_base_orig_down);
-    olsr_cnf->smart_gateway_active = (r != 0); //!!?? kernel 2.4 may need true to function as gateway, does it harm to do anyway
+    olsr_cnf->smart_gw_active = (r != 0); //!!?? kernel 2.4 may need true to function as gateway, does it harm to do anyway
     /*create an interface structure for the tunlbase to store procnet settings*/
     /*hmmm integrate it into the olsr_interface list to ensure spoof setting clenaup at end!???*/
     olsr_cnf->ipip_base_if.if_index = if_nametoindex(TUNL_BASE);
 
     deactivate_spoof(TUNL_BASE, &olsr_cnf->ipip_base_if, AF_INET );//ipip is an ipv4 tunnel
 
-    if (!olsr_cnf->smart_gateway_active) 
+    if (!olsr_cnf->smart_gw_active) 
     {
       printf("disabled smart Gateway! (ipip tunnels not useable for olsrd on this host)");
     }

@@ -61,6 +61,12 @@ extern int yyparse(void);
 
 static char interface_defaults_name[] = "[InterfaceDefaults]";
 
+const char *GW_UPLINK_TXT[] = {
+  "ipv4",
+  "ipv6",
+  "both"
+};
+
 static char copyright_string[] __attribute__ ((unused)) =
   "The olsr.org Optimized Link-State Routing daemon(olsrd) Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org) All rights reserved.";
 
@@ -368,11 +374,26 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
   }
 
   if (cnf->min_tc_vtime < 0.0) {
-	fprintf(stderr, "Error, negative minimal tc time not allowed.\n");
-	return -1;
+    fprintf(stderr, "Error, negative minimal tc time not allowed.\n");
+    return -1;
   }
   if (cnf->min_tc_vtime > 0.0) {
 	  fprintf(stderr, "Warning, you are using the min_tc_vtime hack. We hope you know what you are doing... contact olsr.org otherwise.\n");
+  }
+
+  if (cnf->smart_gw_type >= GW_UPLINK_CNT) {
+    fprintf(stderr, "Error, illegal gateway uplink type: %d\n", cnf->smart_gw_type);
+    return -1;
+  }
+  if (cnf->smart_gw_downlink < MIN_SMARTGW_SPEED || cnf->smart_gw_downlink > MAX_SMARTGW_SPEED) {
+    fprintf(stderr, "Error, bad gateway downlink speed: %d kbit/s (should be %d-%d)\n",
+        cnf->smart_gw_downlink, MIN_SMARTGW_SPEED, MAX_SMARTGW_SPEED);
+    return -1;
+  }
+  if (cnf->smart_gw_uplink < MIN_SMARTGW_SPEED || cnf->smart_gw_uplink > MAX_SMARTGW_SPEED) {
+    fprintf(stderr, "Error, bad gateway uplink speed: %d kbit/s (should be %d-%d)\n",
+        cnf->smart_gw_uplink, MIN_SMARTGW_SPEED, MAX_SMARTGW_SPEED);
+    return -1;
   }
 
   if (cnf->interface_defaults == NULL) {
@@ -562,6 +583,11 @@ set_default_cnf(struct olsrd_config *cnf)
   cnf->use_niit = DEF_USE_NIIT;
   cnf->niit_if_index = 0;
 
+  cnf->smart_gw_active = true;
+  cnf->smart_gw_nat = true;
+  cnf->smart_gw_type = GW_UPLINK_IPV4;
+  cnf->smart_gw_uplink = 100;
+  cnf->smart_gw_downlink = 1000;
 #if LINUX_POLICY_ROUTING
   cnf->rtnl_s = 0;
 #endif
@@ -667,7 +693,20 @@ olsrd_print_cnf(struct olsrd_config *cnf)
 
   printf("Clear screen     : %s\n", cnf->clear_screen ? "yes" : "no");
 
-  printf("Use niit:        : %s\n", cnf->use_niit ? "yes" : "no");
+  printf("Use niit         : %s\n", cnf->use_niit ? "yes" : "no");
+
+  printf("Smart Gateway    : %s\n", cnf->smart_gw_active ? "yes" : "no");
+
+  printf("Smart Gw. NAT    : %s\n", cnf->smart_gw_nat ? "yes" : "no");
+
+  printf("Smart Gw. Uplink : %s\n", GW_UPLINK_TXT[cnf->smart_gw_type]);
+
+  printf("Smart Gw. speed  : %d kbit/s up, %d kbit/s down\n",
+      cnf->smart_gw_uplink, cnf->smart_gw_downlink);
+
+  printf("Smart Gw. prefix : %s\n",
+      olsr_cnf->smart_gw_prefix.prefix_len == 0
+      ? "-" : olsr_ip_prefix_to_string(&cnf->smart_gw_prefix));
 
   /* Interfaces */
   if (in) {

@@ -42,8 +42,14 @@
 #include "defs.h"
 #include "ipcalc.h"
 
+/* ipv6 address ::ffff:0:0 */
 const uint8_t mapped_v4_gw[] = { 0,0,0,0,0,0,0,0,0,0,0xff,0xff,0,0,0,0};
-const uint8_t ipv6_internet_route[] = { 0x20, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
+
+/* ipv6 prefix 2000::/3 */
+const struct olsr_ip_prefix ipv6_internet_route =
+{
+    { 0x20, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }, 3
+};
 
 int
 prefix_to_netmask(uint8_t * a, int len, uint8_t prefixlen)
@@ -198,6 +204,19 @@ ip_in_net(const union olsr_ip_addr *ipaddr, const struct olsr_ip_prefix *net)
     rv = (*i & netmask) == (*n & netmask);
   }
   return rv;
+}
+
+bool ip_is_inetgw_prefix(union olsr_ip_addr *net, int prefixlen) {
+  if (olsr_cnf->ip_version == AF_INET6 && prefixlen == ipv6_internet_route.prefix_len) {
+    return memcmp(&ipv6_internet_route.prefix, net, olsr_cnf->ipsize) == 0;
+  }
+  if (prefixlen == 96) {
+    return memcmp(&mapped_v4_gw, net, olsr_cnf->ipsize) == 0;
+  }
+  if (olsr_cnf->ip_version == AF_INET && prefixlen == 0) {
+    return memcmp(&in6addr_any, net, olsr_cnf->ipsize) == 0;
+  }
+  return false;
 }
 
 /*
