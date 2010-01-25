@@ -215,8 +215,8 @@ bool ip_is_inetgw_prefix(union olsr_ip_addr *net, int prefixlen) {
   if (olsr_cnf->ip_version == AF_INET6 && prefixlen == ipv6_internet_route.prefix_len) {
     return memcmp(&ipv6_internet_route.prefix, net, olsr_cnf->ipsize) == 0;
   }
-  if (prefixlen == 96) {
-    return memcmp(&mapped_v4_gw, net, olsr_cnf->ipsize) == 0;
+  if (olsr_cnf->ip_version == AF_INET6 && prefixlen == mapped_v4_gw.prefix_len) {
+    return memcmp(&mapped_v4_gw.prefix, net, olsr_cnf->ipsize) == 0;
   }
   if (olsr_cnf->ip_version == AF_INET && prefixlen == 0) {
     return memcmp(&in6addr_any, net, olsr_cnf->ipsize) == 0;

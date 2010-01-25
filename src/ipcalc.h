@@ -183,8 +183,7 @@ olsr_ipv6_to_ipv4(const union olsr_ip_addr *ipv6, union olsr_ip_addr *ipv4) {
 
 static INLINE bool
 ip_prefix_is_mappedv4_gw(struct olsr_ip_prefix *prefix) {
-  return olsr_cnf->ip_version == AF_INET6 && prefix->prefix_len == mapped_v4_gw.prefix_len
-      && memcmp(&prefix->prefix, &mapped_v4_gw.prefix, sizeof(prefix->prefix)) == 0;
+  return olsr_cnf->ip_version == AF_INET6 && memcmp(prefix, &mapped_v4_gw, sizeof(struct olsr_ip_prefix)) == 0;
 }
 
 extern bool ip_is_inetgw_prefix(union olsr_ip_addr *net, int prefixlen);
