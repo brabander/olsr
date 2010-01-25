@@ -436,29 +436,30 @@ olsr_input_hna(union olsr_message *m, struct interface *in_if __attribute__ ((un
     return false;
   }
   while (curr < curr_end) {
-    union olsr_ip_addr net, mask;
-    uint8_t prefixlen;
+    struct olsr_ip_prefix prefix;
+    union olsr_ip_addr mask;
+
     struct ip_prefix_list *entry;
     struct interface *ifs;
     bool stop = false;
 
-    pkt_get_ipaddress(&curr, &net);
+    pkt_get_ipaddress(&curr, &prefix.prefix);
     pkt_get_ipaddress(&curr, &mask);
-    prefixlen = olsr_netmask_to_prefix(&mask);
+    prefix.prefix_len = olsr_netmask_to_prefix(&mask);
 
-    if (olsr_cnf->smart_gw_active && olsr_is_smart_gateway(&net, &mask, prefixlen)) {
-      olsr_set_gateway(&originator, &mask, prefixlen);
+    if (olsr_cnf->smart_gw_active && olsr_is_smart_gateway(&prefix, &mask)) {
+      olsr_set_gateway(&originator, &mask, prefix.prefix_len);
     }
 
-    if (olsr_cnf->smart_gw_active && prefixlen > 0 && prefixlen <= MAXIMUM_GATEWAY_PREFIX_LENGTH) {
+    if (olsr_cnf->smart_gw_active && prefix.prefix_len > 0 && prefix.prefix_len <= MAXIMUM_GATEWAY_PREFIX_LENGTH) {
       continue;
     }
 
 #ifndef NO_DUPLICATE_DETECTION_HANDLER
     for (ifs = ifnet; ifs != NULL; ifs = ifs->int_next) {
-      if (ipequal(&ifs->ip_addr, &net)) {
+      if (ipequal(&ifs->ip_addr, &prefix.prefix)) {
       /* ignore your own main IP as an incoming MID */
-        olsr_handle_hna_collision(&net, &originator);
+        olsr_handle_hna_collision(&prefix.prefix, &originator);
         stop = true;
         break;
       }
@@ -467,10 +468,10 @@ olsr_input_hna(union olsr_message *m, struct interface *in_if __attribute__ ((un
       continue;
     }
 #endif
-    entry = ip_prefix_list_find(olsr_cnf->hna_entries, &net, prefixlen);
+    entry = ip_prefix_list_find(olsr_cnf->hna_entries, &prefix.prefix, prefix.prefix_len);
     if (entry == NULL) {
       /* only update if it's not from us */
-      olsr_update_hna_entry(&originator, &net, prefixlen, vtime);
+      olsr_update_hna_entry(&originator, &prefix.prefix, prefix.prefix_len, vtime);
     }
   }
   /* Forward the message */

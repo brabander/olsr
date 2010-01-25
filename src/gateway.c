@@ -145,14 +145,14 @@ olsr_delete_gateway(union olsr_ip_addr *originator) {
   }
 }
 
-bool olsr_is_smart_gateway(union olsr_ip_addr *net, union olsr_ip_addr *mask, int prefixlen) {
+bool olsr_is_smart_gateway(struct olsr_ip_prefix *prefix, union olsr_ip_addr *mask) {
   uint8_t *ptr;
 
-  if (!ip_is_inetgw_prefix(net, prefixlen)) {
+  if (!ip_is_inetgw_prefix(prefix)) {
     return false;
   }
 
-  ptr = ((uint8_t *)mask) + ((prefixlen+7)/8);
+  ptr = ((uint8_t *)mask) + ((prefix->prefix_len+7)/8);
   return ptr[GW_HNA_PAD] == 0 && ptr[GW_HNA_FLAGS] != 0;
 }
 
@@ -170,7 +170,7 @@ void olsr_modifiy_inetgw_netmask(union olsr_ip_addr *mask, int prefixlen) {
   if (olsr_cnf->has_ipv6_gateway) {
     ptr[GW_HNA_FLAGS] |= GW_HNA_FLAG_IPV6;
   }
-  if (!olsr_cnf->has_ipv6_gateway || prefixlen > 0){
+  if (!olsr_cnf->has_ipv6_gateway || prefixlen != ipv6_internet_route.prefix_len){
     ptr[GW_HNA_FLAGS] &= ~GW_HNA_FLAG_IPV6PREFIX;
   }
 }
@@ -184,12 +184,16 @@ olsr_print_gateway(void) {
 
   OLSR_PRINTF(0, "\n--- %s ---------------------------------------------------- GATEWAYS\n\n",
       olsr_wallclock_string());
-  OLSR_PRINTF(0, "%-*s %-5s %-9s %-9s %s\n", addrsize, "IP address", "IPv6", "Uplink", "Downlink",
+  OLSR_PRINTF(0, "%-*s %-6s %-9s %-9s %s\n", addrsize, "IP address", "Type", "Uplink", "Downlink",
       olsr_cnf->ip_version == AF_INET ? "" : "External Prefix");
 
   OLSR_FOR_ALL_GATEWAY_ENTRIES(gw) {
-    OLSR_PRINTF(0, "%-*s %-5s %-9u %-9u %s\n", addrsize, olsr_ip_to_string(&buf, &gw->originator),
-        gw->ipv6 ? "true" : "false",
+    OLSR_PRINTF(0, "%-*s %s%c%s%c%c %-9u %-9u %s\n", addrsize, olsr_ip_to_string(&buf, &gw->originator),
+        gw->ipv4nat ? "" : "   ",
+        gw->ipv4 ? '4' : ' ',
+        gw->ipv4nat ? "(N)" : "",
+        (gw->ipv4 && gw->ipv6) ? ',' : ' ',
+        gw->ipv6 ? '6' : ' ',
         gw->uplink, gw->downlink,
         gw->external_prefix.prefix_len == 0 ? "" : olsr_ip_prefix_to_string(&gw->external_prefix));
   } OLSR_FOR_ALL_GATEWAY_ENTRIES_END(gw)

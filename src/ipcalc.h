@@ -49,7 +49,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 
-extern const struct olsr_ip_prefix  mapped_v4_gw;
+extern const struct olsr_ip_prefix mapped_v4_gw;
 extern const struct olsr_ip_prefix ipv6_internet_route;
 
 struct ipaddr_str {
@@ -186,7 +186,17 @@ ip_prefix_is_mappedv4_gw(struct olsr_ip_prefix *prefix) {
   return olsr_cnf->ip_version == AF_INET6 && memcmp(prefix, &mapped_v4_gw, sizeof(struct olsr_ip_prefix)) == 0;
 }
 
-extern bool ip_is_inetgw_prefix(union olsr_ip_addr *net, int prefixlen);
+static INLINE bool
+ip_prefix_is_v4_gw(struct olsr_ip_prefix *prefix) {
+  return olsr_cnf->ip_version == AF_INET && prefix->prefix_len == 0 && prefix->prefix.v4.s_addr == 0;
+}
+
+static INLINE bool
+ip_prefix_is_v6_gw(struct olsr_ip_prefix *prefix) {
+  return olsr_cnf->ip_version == AF_INET6 && memcmp(prefix, &ipv6_internet_route, sizeof(struct olsr_ip_prefix)) == 0;
+}
+
+extern bool ip_is_inetgw_prefix(struct olsr_ip_prefix *prefix);
 
 #endif
 

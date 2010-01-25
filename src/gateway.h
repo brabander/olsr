@@ -58,7 +58,7 @@ void olsr_init_gateways(void);
 struct gateway_entry *olsr_find_gateway(union olsr_ip_addr *originator);
 void olsr_set_gateway(union olsr_ip_addr *originator, union olsr_ip_addr *mask, int prefixlen);
 void olsr_delete_gateway(union olsr_ip_addr *originator);
-bool olsr_is_smart_gateway(union olsr_ip_addr *net, union olsr_ip_addr *mask, int prefixlen);
+bool olsr_is_smart_gateway(struct olsr_ip_prefix *prefix, union olsr_ip_addr *net);
 void olsr_print_gateway(void);
 void olsr_modifiy_inetgw_netmask(union olsr_ip_addr *mask, int prefixlen);
 #endif /* GATEWAY_H_ */
