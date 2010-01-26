@@ -87,6 +87,11 @@
 #define DEF_RTTABLE         254
 #define DEF_MIN_TC_VTIME    0.0
 #define DEF_USE_NIIT        true
+#define DEF_SMART_GW        true
+#define DEF_GW_ALLOW_NAT    true
+#define DEF_GW_UPLINK_NAT   true
+#define DEF_UPLINK_SPEED    128
+#define DEF_DOWNLINK_SPEED  1024
 
 /* Bounds */
 
@@ -251,7 +256,7 @@ struct olsrd_config {
   char *lock_file;
   bool use_niit;
 
-  bool smart_gw_active, smart_gw_nat;
+  bool smart_gw_active, smart_gw_allow_nat, smart_gw_uplink_nat;
   enum smart_gw_uplinktype smart_gw_type;
   uint32_t smart_gw_uplink, smart_gw_downlink;
   struct olsr_ip_prefix smart_gw_prefix;

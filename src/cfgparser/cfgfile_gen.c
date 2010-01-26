@@ -216,11 +216,14 @@ olsrd_write_cnf(struct olsrd_config *cnf, const char *fname)
   fprintf(fd, "# Smart gateway system\n\n");
   fprintf(fd, "SmartGateway\t%s\n\n", cnf->smart_gw_active ? "yes" : "no");
 
-  fprintf(fd, "# Smart gateway NAT\n\n");
-  fprintf(fd, "SmartGatewayNAT\t%s\n\n", cnf->smart_gw_nat ? "yes" : "no");
+  fprintf(fd, "# Smart gateway allow NAT\n\n");
+  fprintf(fd, "SmartGatewayAllowNAT\t%s\n\n", cnf->smart_gw_allow_nat ? "yes" : "no");
 
   fprintf(fd, "# Smart gateway uplink type\n\n");
   fprintf(fd, "SmartGatewayUplink\t%s\n\n", GW_UPLINK_TXT[cnf->smart_gw_type]);
+
+  fprintf(fd, "# Smart gateway uplink use NAT\n\n");
+  fprintf(fd, "SmartGatewayUplinkNAT\t%s\n\n", cnf->smart_gw_uplink_nat ? "yes" : "no");
 
   fprintf(fd, "# Smart gateway uplink/downlink speed (in kbit/s)\n\n");
   fprintf(fd, "SmartGatewaySpeed\t%d %d\n\n", cnf->smart_gw_uplink, cnf->smart_gw_downlink);

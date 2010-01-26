@@ -212,8 +212,9 @@ static int add_ipv6_addr(YYSTYPE ipaddr_arg, YYSTYPE prefixlen_arg)
 %token TOK_LOCK_FILE
 %token TOK_USE_NIIT
 %token TOK_SMART_GW
-%token TOK_SMART_GW_NAT
+%token TOK_SMART_GW_ALLOW_NAT
 %token TOK_SMART_GW_UPLINK
+%token TOK_SMART_GW_UPLINK_NAT
 %token TOK_SMART_GW_SPEED
 %token TOK_SMART_GW_PREFIX
 
@@ -282,8 +283,9 @@ stmt:       idebug
           | alock_file
           | suse_niit
           | bsmart_gw
-          | bsmart_gw_nat
-          | ssmart_gw_type
+          | bsmart_gw_allow_nat
+          | ssmart_gw_uplink
+          | bsmart_gw_uplink_nat
           | ismart_gw_speed
           | ismart_gw_prefix
 ;
@@ -1166,15 +1168,15 @@ bsmart_gw: TOK_SMART_GW TOK_BOOLEAN
 }
 ;
 
-bsmart_gw_nat: TOK_SMART_GW_NAT TOK_BOOLEAN
+bsmart_gw_allow_nat: TOK_SMART_GW_ALLOW_NAT TOK_BOOLEAN
 {
-	PARSER_DEBUG_PRINTF("Smart gateway nat: %s\n", $2->boolean ? "yes" : "no");
-	olsr_cnf->smart_gw_nat = $2->boolean;
+	PARSER_DEBUG_PRINTF("Smart gateway allow client nat: %s\n", $2->boolean ? "yes" : "no");
+	olsr_cnf->smart_gw_allow_nat = $2->boolean;
 	free($2);
 }
 ;
 
-ssmart_gw_type: TOK_SMART_GW_NAT TOK_STRING
+ssmart_gw_uplink: TOK_SMART_GW_UPLINK TOK_STRING
 {
 	PARSER_DEBUG_PRINTF("Smart gateway uplink: %s\n", $2->string);
 	if (strcasecmp($2->string, GW_UPLINK_TXT[GW_UPLINK_IPV4]) == 0) {
@@ -1190,7 +1192,6 @@ ssmart_gw_type: TOK_SMART_GW_NAT TOK_STRING
 		fprintf(stderr, "Bad gateway uplink type: %s\n", $2->string);
 		YYABORT;
 	}
-	olsr_cnf->smart_gw_nat = $2->boolean;
 	free($2);
 }
 ;
@@ -1204,6 +1205,15 @@ ismart_gw_speed: TOK_SMART_GW_SPEED TOK_INTEGER TOK_INTEGER
 	free($3);
 }
 ;
+
+bsmart_gw_uplink_nat: TOK_SMART_GW_UPLINK_NAT TOK_BOOLEAN
+{
+	PARSER_DEBUG_PRINTF("Smart gateway uplink nat: %s\n", $2->boolean ? "yes" : "no");
+	olsr_cnf->smart_gw_uplink_nat = $2->boolean;
+	free($2);
+}
+;
+
 
 ismart_gw_prefix: TOK_SMART_GW_PREFIX TOK_IPV6_ADDR TOK_INTEGER
 {

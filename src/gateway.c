@@ -163,7 +163,7 @@ void olsr_modifiy_inetgw_netmask(union olsr_ip_addr *mask, int prefixlen) {
   if (olsr_cnf->has_ipv4_gateway) {
     ptr[GW_HNA_FLAGS] |= GW_HNA_FLAG_IPV4;
 
-    if (olsr_cnf->smart_gw_nat) {
+    if (olsr_cnf->smart_gw_uplink_nat) {
       ptr[GW_HNA_FLAGS] |= GW_HNA_FLAG_IPV4_NAT;
     }
   }

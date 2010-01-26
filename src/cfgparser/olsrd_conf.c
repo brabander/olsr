@@ -583,11 +583,12 @@ set_default_cnf(struct olsrd_config *cnf)
   cnf->use_niit = DEF_USE_NIIT;
   cnf->niit_if_index = 0;
 
-  cnf->smart_gw_active = true;
-  cnf->smart_gw_nat = true;
+  cnf->smart_gw_active = DEF_SMART_GW;
+  cnf->smart_gw_allow_nat = DEF_GW_ALLOW_NAT;
   cnf->smart_gw_type = GW_UPLINK_IPV4;
-  cnf->smart_gw_uplink = 100;
-  cnf->smart_gw_downlink = 1000;
+  cnf->smart_gw_uplink = DEF_UPLINK_SPEED;
+  cnf->smart_gw_uplink_nat = DEF_GW_UPLINK_NAT;
+  cnf->smart_gw_downlink = DEF_DOWNLINK_SPEED;
 #if LINUX_POLICY_ROUTING
   cnf->rtnl_s = 0;
 #endif
@@ -697,16 +698,21 @@ olsrd_print_cnf(struct olsrd_config *cnf)
 
   printf("Smart Gateway    : %s\n", cnf->smart_gw_active ? "yes" : "no");
 
-  printf("Smart Gw. NAT    : %s\n", cnf->smart_gw_nat ? "yes" : "no");
+  printf("SmGw. Allow NAT  : %s\n", cnf->smart_gw_allow_nat ? "yes" : "no");
 
   printf("Smart Gw. Uplink : %s\n", GW_UPLINK_TXT[cnf->smart_gw_type]);
+
+  printf("SmGw. Uplink NAT : %s\n", cnf->smart_gw_uplink_nat ? "yes" : "no");
 
   printf("Smart Gw. speed  : %d kbit/s up, %d kbit/s down\n",
       cnf->smart_gw_uplink, cnf->smart_gw_downlink);
 
-  printf("Smart Gw. prefix : %s\n",
-      olsr_cnf->smart_gw_prefix.prefix_len == 0
-      ? "-" : olsr_ip_prefix_to_string(&cnf->smart_gw_prefix));
+  if (olsr_cnf->smart_gw_prefix.prefix_len == 0) {
+    printf("# Smart Gw. prefix : ::/0\n");
+  }
+  else {
+    printf("Smart Gw. prefix : %s\n", olsr_ip_prefix_to_string(&cnf->smart_gw_prefix));
+  }
 
   /* Interfaces */
   if (in) {
