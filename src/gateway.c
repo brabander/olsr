@@ -15,8 +15,11 @@
 #include "gateway.h"
 
 struct avl_tree gateway_tree;
+struct list_node gw_listener_list;;
+
 static struct olsr_cookie_info *gw_mem_cookie = NULL;
 static uint8_t smart_gateway_netmask[sizeof(union olsr_ip_addr)];
+static struct gateway_entry *current_ipv4_gw, *current_ipv6_gw;
 
 static uint32_t deserialize_gw_speed(uint8_t value) {
   uint32_t speed, exp;
@@ -50,23 +53,25 @@ olsr_init_gateways(void) {
   olsr_cookie_set_memory_size(gw_mem_cookie, sizeof(struct gateway_entry));
 
   avl_init(&gateway_tree, avl_comp_default);
+  list_head_init(&gw_listener_list);
+  current_ipv4_gw = NULL;
+  current_ipv6_gw = NULL;
 
   memset(&smart_gateway_netmask, 0, sizeof(smart_gateway_netmask));
 
   if (olsr_cnf->smart_gw_active) {
     union olsr_ip_addr gw_net;
+#ifdef MAXIMUM_GATEWAY_PREFIX_LENGTH
     int prefix;
+#endif
 
     memset(&gw_net, 0, sizeof(gw_net));
 
-    /*
-     * hack for Vienna network to remove 0.0.0.0/128.0.0.0 and 128.0.0.0/128.0.0.0 routes
-     * just set MAXIMUM_GATEWAY_PREFIX_LENGTH to 1
-     */
+#ifdef MAXIMUM_GATEWAY_PREFIX_LENGTH
     for (prefix = 1; prefix <= MAXIMUM_GATEWAY_PREFIX_LENGTH; prefix++) {
       while (ip_prefix_list_remove(&olsr_cnf->hna_entries, &gw_net, prefix));
     }
-
+#endif
     ip = (uint8_t *) &smart_gateway_netmask;
 
     if (olsr_cnf->smart_gw_uplink > 0 || olsr_cnf->smart_gw_downlink > 0) {
@@ -82,19 +87,33 @@ olsr_init_gateways(void) {
   }
 }
 
+void
+olsr_add_inetgw_listener(struct olsr_gw_change_handler *l) {
+  list_node_init(&l->node);
+  list_add_after(&gw_listener_list, &l->node);
+}
+
+void
+olsr_remove_inetgw_listener(struct olsr_gw_change_handler *l) {
+  list_remove(&l->node);
+}
+
 struct gateway_entry *
-olsr_find_gateway(union olsr_ip_addr *originator) {
+olsr_find_gateway_entry(union olsr_ip_addr *originator) {
   struct avl_node *node = avl_find(&gateway_tree, originator);
 
   return node == NULL ? NULL : node2gateway(node);
 }
 
 void
-olsr_set_gateway(union olsr_ip_addr *originator, union olsr_ip_addr *mask, int prefixlen) {
+olsr_update_gateway_entry(union olsr_ip_addr *originator, union olsr_ip_addr *mask, int prefixlen) {
   struct gateway_entry *gw;
-  uint8_t *ptr = ((uint8_t *)mask) + ((prefixlen+7)/8);
+  struct olsr_gw_change_handler *listener;
+  uint8_t *ptr;
 
-  gw = olsr_find_gateway(originator);
+  ptr = ((uint8_t *)mask) + ((prefixlen+7)/8);
+
+  gw = olsr_find_gateway_entry(originator);
   if (!gw) {
     gw = olsr_cookie_malloc(gw_mem_cookie);
 
@@ -131,17 +150,49 @@ olsr_set_gateway(union olsr_ip_addr *originator, union olsr_ip_addr *mask, int p
       }
     }
   }
+
+  OLSR_FOR_ALL_GW_LISTENERS(listener) {
+    listener->handle_update_gw(gw);
+  } OLSR_FOR_ALL_GW_LISTENERS_END(listener)
 }
 
 void
-olsr_delete_gateway(union olsr_ip_addr *originator) {
+olsr_delete_gateway_entry(union olsr_ip_addr *originator, uint8_t prefixlen) {
   struct gateway_entry *gw;
+  struct olsr_gw_change_handler *listener;
+  bool change = false;
 
-  gw = olsr_find_gateway(originator);
+  gw = olsr_find_gateway_entry(originator);
   if (gw) {
-    avl_delete(&gateway_tree, &gw->node);
+    if (olsr_cnf->ip_version == AF_INET && prefixlen == 0) {
+      gw->ipv4 = false;
+      gw->ipv4nat = false;
+      change = true;
+    }
+    if (olsr_cnf->ip_version == AF_INET6 && prefixlen == ipv6_internet_route.prefix_len) {
+      gw->ipv6 = false;
+      change = true;
+    }
+    if (olsr_cnf->ip_version == AF_INET6 && prefixlen == mapped_v4_gw.prefix_len) {
+      gw->ipv4 = false;
+      gw->ipv4nat = false;
+      change = true;
+    }
 
-    olsr_cookie_free(gw_mem_cookie, gw);
+    if (prefixlen == FORCE_DELETE_GW_ENTRY || !(gw->ipv4 || gw->ipv6)) {
+      OLSR_FOR_ALL_GW_LISTENERS(listener) {
+        listener->handle_delete_gw(gw);
+      } OLSR_FOR_ALL_GW_LISTENERS_END(listener)
+
+      avl_delete(&gateway_tree, &gw->node);
+
+      olsr_cookie_free(gw_mem_cookie, gw);
+    }
+    else if (change) {
+      OLSR_FOR_ALL_GW_LISTENERS(listener) {
+        listener->handle_update_gw(gw);
+      } OLSR_FOR_ALL_GW_LISTENERS_END(listener)
+    }
   }
 }
 
@@ -176,7 +227,7 @@ void olsr_modifiy_inetgw_netmask(union olsr_ip_addr *mask, int prefixlen) {
 }
 
 void
-olsr_print_gateway(void) {
+olsr_print_gateway_entries(void) {
 #ifndef NODEBUG
   struct ipaddr_str buf;
   struct gateway_entry *gw;

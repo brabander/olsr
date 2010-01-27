@@ -360,7 +360,8 @@ pcf_event(int my_changes_neighborhood, int my_changes_topology, int my_changes_h
 
       /* Check all networks */
       for (tmp_net = tmp_hna->networks.next; tmp_net != &tmp_hna->networks; tmp_net = tmp_net->next) {
-        ipc_print_net(&outbuffer, &tmp_hna->A_gateway_addr, &tmp_net->A_network_addr, tmp_net->prefixlen);
+        ipc_print_net(&outbuffer, &tmp_hna->A_gateway_addr,
+            &tmp_net->hna_prefix.prefix, tmp_net->hna_prefix.prefix_len);
       }
     }
     OLSR_FOR_ALL_HNA_ENTRIES_END(tmp_hna);

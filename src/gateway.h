@@ -9,10 +9,17 @@
 #define GATEWAY_H_
 
 #include "common/avl.h"
+#include "common/list.h"
 #include "defs.h"
 #include "olsr.h"
 
-#define MAXIMUM_GATEWAY_PREFIX_LENGTH 0
+#define FORCE_DELETE_GW_ENTRY 255
+
+/*
+ * hack for Vienna network to remove 0.0.0.0/128.0.0.0 and 128.0.0.0/128.0.0.0 routes
+ * just set MAXIMUM_GATEWAY_PREFIX_LENGTH to 1
+ */
+// #define MAXIMUM_GATEWAY_PREFIX_LENGTH 1
 
 enum gateway_hna_flags {
   GW_HNA_FLAG_LINKSPEED  = 1<<0,
@@ -55,10 +62,37 @@ AVLNODE2STRUCT(node2gateway, struct gateway_entry, node);
 extern struct avl_tree gateway_tree;
 
 void olsr_init_gateways(void);
-struct gateway_entry *olsr_find_gateway(union olsr_ip_addr *originator);
-void olsr_set_gateway(union olsr_ip_addr *originator, union olsr_ip_addr *mask, int prefixlen);
-void olsr_delete_gateway(union olsr_ip_addr *originator);
+
+struct gateway_entry *olsr_find_gateway_entry(union olsr_ip_addr *originator);
+void olsr_update_gateway_entry(union olsr_ip_addr *originator, union olsr_ip_addr *mask, int prefixlen);
+void olsr_delete_gateway_entry(union olsr_ip_addr *originator, uint8_t prefixlen);
+void olsr_print_gateway_entries(void);
+
+void olsr_set_inet_gateway(union olsr_ip_addr *originator, bool ipv4, bool ipv6);
 bool olsr_is_smart_gateway(struct olsr_ip_prefix *prefix, union olsr_ip_addr *net);
-void olsr_print_gateway(void);
 void olsr_modifiy_inetgw_netmask(union olsr_ip_addr *mask, int prefixlen);
+
+struct olsr_gw_change_handler {
+  struct list_node node;
+  void (* handle_update_gw)(struct gateway_entry *);
+  void (* handle_delete_gw)(struct gateway_entry *);
+};
+
+LISTNODE2STRUCT(gwnode2list, struct olsr_gw_change_handler, node);
+
+/* deletion safe macro for list traversal */
+#define OLSR_FOR_ALL_GW_LISTENERS(l) \
+{ \
+  struct list_node *link_head_node, *link_node, *next_link_node; \
+  link_head_node = &gw_listener_list; \
+  for (link_node = link_head_node->next; \
+    link_node != link_head_node; link_node = next_link_node) { \
+    next_link_node = link_node->next; \
+    l = gwnode2list(link_node);
+#define OLSR_FOR_ALL_GW_LISTENERS_END(l) }}
+
+extern struct list_node gw_listener_list;
+
+void olsr_add_inetgw_listener(struct olsr_gw_change_handler *l);
+void olsr_remove_inetgw_listener(struct olsr_gw_change_handler *l);
 #endif /* GATEWAY_H_ */

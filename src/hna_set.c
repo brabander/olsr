@@ -107,7 +107,7 @@ olsr_lookup_hna_net(const struct hna_net *nets, const union olsr_ip_addr *net, u
 
   /* Loop trough entrys */
   for (tmp = nets->next; tmp != nets; tmp = tmp->next) {
-    if (tmp->prefixlen == prefixlen && ipequal(&tmp->A_network_addr, net)) {
+    if (tmp->hna_prefix.prefix_len == prefixlen && ipequal(&tmp->hna_prefix.prefix, net)) {
       return tmp;
     }
   }
@@ -193,8 +193,8 @@ olsr_add_hna_net(struct hna_entry *hna_gw, const union olsr_ip_addr *net, uint8_
 
   /* Fill struct */
   memset(new_net, 0, sizeof(struct hna_net));
-  new_net->A_network_addr = *net;
-  new_net->prefixlen = prefixlen;
+  new_net->hna_prefix.prefix = *net;
+  new_net->hna_prefix.prefix_len= prefixlen;
 
   /* Set backpointer */
   new_net->hna_gw = hna_gw;
@@ -216,9 +216,9 @@ olsr_delete_hna_net_entry(struct hna_net *net_to_delete) {
   struct hna_entry *hna_gw;
   bool removed_entry = false;
 
-  if (net_to_delete->prefixlen == 0) {
-    /* remove gateway if HNA 0/0 is removed */
-    olsr_delete_gateway(&net_to_delete->hna_gw->A_gateway_addr);
+  if (ip_is_inetgw_prefix(&net_to_delete->hna_prefix)) {
+    /* modify smart gateway entry if necessary */
+    olsr_delete_gateway_entry(&net_to_delete->hna_gw->A_gateway_addr, net_to_delete->hna_prefix.prefix_len);
   }
 
   olsr_stop_timer(net_to_delete->hna_net_timer);
@@ -226,14 +226,16 @@ olsr_delete_hna_net_entry(struct hna_net *net_to_delete) {
   hna_gw = net_to_delete->hna_gw;
 
 #ifdef DEBUG
-  OLSR_PRINTF(5, "HNA: timeout %s/%u via hna-gw %s\n", olsr_ip_to_string(&buf1, &net_to_delete->A_network_addr),
-              net_to_delete->prefixlen, olsr_ip_to_string(&buf2, &hna_gw->A_gateway_addr));
+  OLSR_PRINTF(5, "HNA: timeout %s via hna-gw %s\n",
+      olsr_ip_prefix_to_string(&net_to_delete->hna_prefix),
+              olsr_ip_to_string(&buf2, &hna_gw->A_gateway_addr));
 #endif
 
   /*
    * Delete the rt_path for the entry.
    */
-  olsr_delete_routing_table(&net_to_delete->A_network_addr, net_to_delete->prefixlen, &hna_gw->A_gateway_addr);
+  olsr_delete_routing_table(&net_to_delete->hna_prefix.prefix,
+      net_to_delete->hna_prefix.prefix_len, &hna_gw->A_gateway_addr);
 
   DEQUEUE_ELEM(net_to_delete);
 
@@ -294,7 +296,8 @@ olsr_update_hna_entry(const union olsr_ip_addr *gw, const union olsr_ip_addr *ne
   /*
    * Add the rt_path for the entry.
    */
-  olsr_insert_routing_table(&net_entry->A_network_addr, net_entry->prefixlen, &gw_entry->A_gateway_addr, OLSR_RT_ORIGIN_HNA);
+  olsr_insert_routing_table(&net_entry->hna_prefix.prefix,
+      net_entry->hna_prefix.prefix_len, &gw_entry->A_gateway_addr, OLSR_RT_ORIGIN_HNA);
 
   /*
    * Start, or refresh the timer, whatever is appropriate.
@@ -448,12 +451,14 @@ olsr_input_hna(union olsr_message *m, struct interface *in_if __attribute__ ((un
     prefix.prefix_len = olsr_netmask_to_prefix(&mask);
 
     if (olsr_cnf->smart_gw_active && olsr_is_smart_gateway(&prefix, &mask)) {
-      olsr_set_gateway(&originator, &mask, prefix.prefix_len);
+      olsr_update_gateway_entry(&originator, &mask, prefix.prefix_len);
     }
 
+#ifdef MAXIMUM_GATEWAY_PREFIX_LENGTH
     if (olsr_cnf->smart_gw_active && prefix.prefix_len > 0 && prefix.prefix_len <= MAXIMUM_GATEWAY_PREFIX_LENGTH) {
       continue;
     }
+#endif
 
 #ifndef NO_DUPLICATE_DETECTION_HANDLER
     for (ifs = ifnet; ifs != NULL; ifs = ifs->int_next) {

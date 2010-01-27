@@ -478,8 +478,8 @@ ipc_print_hna(struct autobuf *abuf)
                    olsr_ip_to_string(&mainaddrbuf, &tmp_hna->A_gateway_addr),
                    diff/1000, abs(diff%1000));
 #else
-      abuf_appendf(abuf, "%s/%d\t%s\n", olsr_ip_to_string(&buf, &tmp_net->A_network_addr), tmp_net->prefixlen,
-                olsr_ip_to_string(&mainaddrbuf, &tmp_hna->A_gateway_addr));
+      abuf_appendf(abuf, "%s/%d\t%s\n", olsr_ip_to_string(&buf, &tmp_net->hna_prefix.prefix),
+          tmp_net->hna_prefix.prefix_len, olsr_ip_to_string(&mainaddrbuf, &tmp_hna->A_gateway_addr));
 #endif /*vtime txtinfo*/
     }
   }
