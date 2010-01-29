@@ -59,6 +59,7 @@
 #include "net_olsr.h"
 #include "mid_set.h"
 #include "mpr_selector_set.h"
+#include "gateway.h"
 
 #if LINUX_POLICY_ROUTING
 #include <linux/types.h>
@@ -593,6 +594,11 @@ printf("\nMain Table is %i prio %i", olsr_cnf->rttable, olsr_cnf->rttable_rule);
 #endif /*LINUX_RTNETLINK_LISTEN*/
 
 #endif
+
+  /* trigger gateway selection */
+  if (olsr_cnf->smart_gw_active) {
+    olsr_trigger_inetgw_startup();
+  }
 
   /* Start syslog entry */
   olsr_syslog(OLSR_LOG_INFO, "%s successfully started", olsrd_version);

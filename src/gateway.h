@@ -62,37 +62,26 @@ AVLNODE2STRUCT(node2gateway, struct gateway_entry, node);
 extern struct avl_tree gateway_tree;
 
 void olsr_init_gateways(void);
+void olsr_trigger_inetgw_startup(void);
+int olsr_trigger_inetgw_selection(bool ipv4, bool ipv6);
 
 struct gateway_entry *olsr_find_gateway_entry(union olsr_ip_addr *originator);
 void olsr_update_gateway_entry(union olsr_ip_addr *originator, union olsr_ip_addr *mask, int prefixlen);
 void olsr_delete_gateway_entry(union olsr_ip_addr *originator, uint8_t prefixlen);
 void olsr_print_gateway_entries(void);
 
-void olsr_set_inet_gateway(union olsr_ip_addr *originator, bool ipv4, bool ipv6);
+int olsr_set_inet_gateway(union olsr_ip_addr *originator, bool ipv4, bool ipv6, bool external);
+struct gateway_entry *olsr_get_inet_gateway(bool ipv6);
 bool olsr_is_smart_gateway(struct olsr_ip_prefix *prefix, union olsr_ip_addr *net);
 void olsr_modifiy_inetgw_netmask(union olsr_ip_addr *mask, int prefixlen);
 
-struct olsr_gw_change_handler {
-  struct list_node node;
+struct olsr_gw_handler {
+  void (* handle_startup)(void);
+  void (* select_gateway) (bool ipv4, bool ipv6);
   void (* handle_update_gw)(struct gateway_entry *);
   void (* handle_delete_gw)(struct gateway_entry *);
 };
 
-LISTNODE2STRUCT(gwnode2list, struct olsr_gw_change_handler, node);
+void olsr_set_inetgw_handler(struct olsr_gw_handler *l);
 
-/* deletion safe macro for list traversal */
-#define OLSR_FOR_ALL_GW_LISTENERS(l) \
-{ \
-  struct list_node *link_head_node, *link_node, *next_link_node; \
-  link_head_node = &gw_listener_list; \
-  for (link_node = link_head_node->next; \
-    link_node != link_head_node; link_node = next_link_node) { \
-    next_link_node = link_node->next; \
-    l = gwnode2list(link_node);
-#define OLSR_FOR_ALL_GW_LISTENERS_END(l) }}
-
-extern struct list_node gw_listener_list;
-
-void olsr_add_inetgw_listener(struct olsr_gw_change_handler *l);
-void olsr_remove_inetgw_listener(struct olsr_gw_change_handler *l);
 #endif /* GATEWAY_H_ */
