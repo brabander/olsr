@@ -99,6 +99,7 @@ typedef struct {
 	struct in_addr from_node;
 	char is_announced;
 	float last_seen;
+	pthread_t ping_thread;
  } guest_client;
 
 
@@ -113,7 +114,6 @@ typedef struct {
 
 client_list *list;
 struct interface *ifn;
-
 
 
 void ping(guest_client *);
@@ -134,6 +134,67 @@ void *PrintHello(void *threadid)
    printf("Hello World! It's me, thread #%ld!\n", tid);
    pthread_exit(NULL);
 }
+
+
+
+
+guest_client * get_client_by_ip(struct in_addr ip) {
+  if (list!=NULL && list->client!=NULL) {
+
+    if (strcmp(inet_ntoa(list->client->ip), inet_ntoa(ip))==0)
+    	return list->client;
+    else
+    	return get_client_by_ip(ip);
+  }
+  else
+	  return NULL;
+}
+
+
+
+void
+olsr_parser(struct olsr_message *msg, struct interface *in_if __attribute__ ((unused)),
+    union olsr_ip_addr *ipaddr, enum duplicate_status status __attribute__ ((unused)))
+{
+	const uint8_t *curr;
+// my MessageType
+  if (msg->type != 134) {
+	  printf("recieved something else\n");
+    return;
+  }
+  printf("recieved my shiiiiiiit!!!!\n");
+  curr = msg->payload;
+  struct in_addr ip;
+  pkt_get_ipaddress(&curr, &ip);
+
+
+  guest_client * guest;
+
+  guest=get_client_by_ip(ip);
+
+
+
+  if (guest!=NULL) {
+	  printf("debugschritt\n");
+	  if ((guest->is_announced)!=0) {
+		  printf("Having to revoke \n");
+		  guest->is_announced=0;
+		  guest->last_seen=20.0;
+		  revoke_hna(&ip);
+		  }
+	  else
+		  printf("Not revoking \n");
+  }
+  else
+	  printf("Not revoking\n");
+
+
+
+}
+
+
+
+
 
 
 
@@ -177,7 +238,9 @@ olsrd_plugin_init(void)
 
 
 
-
+  /* register functions with olsrd */
+  // somehow my cool new message.....
+  olsr_parser_add_function(&olsr_parser, 134);
 
 
 
@@ -203,9 +266,11 @@ void ping_thread_infinite(guest_client * target)
 {
     char ping_command[50];
 
-
-    snprintf(ping_command, sizeof(ping_command), "arping -I ath0 -q %s", inet_ntoa(target->ip));
-    system(ping_command);
+    while (1) {
+		snprintf(ping_command, sizeof(ping_command), "arping -I ath0 -q -c 10 %s", inet_ntoa(target->ip));
+		system(ping_command);
+		pthread_testcancel();
+    }
 
 }
 
@@ -226,11 +291,16 @@ void ping_infinite(guest_client * target)
 {
 	int rc;
 	pthread_t thread;
-    rc = pthread_create(&thread, NULL, ping_thread_infinite, (void *) target   );
-    if (rc){
-       printf("ERROR; return code from pthread_create() is %d\n", rc);
-       exit(-1);
-    }
+	if (target->ping_thread==NULL) {
+		rc = pthread_create(&thread, NULL, ping_thread_infinite, (void *) target   );
+		if (rc){
+		   printf("ERROR; return code from pthread_create() is %d\n", rc);
+		   exit(-1);
+		}
+		target->ping_thread=thread;
+	}
+	else
+		printf("already pinging\n");
 }
 
 
@@ -252,6 +322,7 @@ void add_route(void* guest) {
 
 		OLSR_DEBUG(LOG_PLUGINS, "Adding Route\n");
 		printf("Added Route\n");
+		spread_host(host);
 		ip_prefix_list_add(&olsr_cnf->hna_entries, &(host->ip), olsr_netmask_to_prefix(&gw_netmask));
 		host->is_announced=1;
 	} else {
@@ -286,12 +357,25 @@ void check_client_list(client_list * clist) {
   if (clist!=NULL && clist->client!=NULL) {
 
     //ping(clist->client);
-	  if(clist->client->is_announced==1)
-		  if( ! check_if_associcated(clist->client))
-			  clist->client->last_seen+=2;
+	  if(clist->client->is_announced==1 || clist->client->ping_thread!=NULL) {
+		  if( ! check_if_associcated(clist->client)) {
+			  if(clist->client->is_announced==1) {
+				  clist->client->last_seen+=2;
+			  }
+			  if (clist->client->ping_thread!=NULL) {
+				  printf("attempting to kill ping-thread\n");
+				  pthread_detach(clist->client->ping_thread);
+				  //pthread_kill(clist->client->ping_thread, 1);
+				  //pthread_cancel(clist->client->ping_thread);
+				  pthread_cancel(clist->client->ping_thread);
+				  printf("killed ping-thread\n");
+				  clist->client->ping_thread=NULL;
+			  }
+		  }
+	  }
+
+
     check_for_route(clist->client);
-
-
     check_client_list(clist->list);
   }
 }
@@ -309,6 +393,10 @@ guest_client * get_client_by_mac(client_list * clist, u_int64_t mac) {
   else
 	  return NULL;
 }
+
+
+
+
 
 
 
@@ -348,6 +436,7 @@ void check_leases(client_list * clist, char file[], float def_last_seen) {
 	    user->mac= six | five<<8 | four<<16 | three<<24 | two<<32 | one<<40;
 	    user->last_seen=def_last_seen;
 	    user->is_announced=0;
+	    user->ping_thread=NULL;
 	    //printf("last seen on Add %f\n",user->last_seen);
 	    add_client_to_list(clist, user);
 
@@ -381,6 +470,7 @@ void check_remote_leases(client_list * clist){
 	    user->mac= six | five<<8 | four<<16 | three<<24 | two<<32 | one<<40;
 	    user->last_seen=20.0;
 	    user->is_announced=0;
+	    user->ping_thread=NULL;
 	    //printf("last seen on Add %f\n",user->last_seen);
 
 	    if (!(ip_is_in_guest_list(clist,  user))) {
@@ -439,7 +529,7 @@ int check_if_associcated(guest_client *client)
 
   }
   fclose(fp);
-
+  return 0;
 
 }
 
@@ -481,7 +571,9 @@ void check_associations(client_list * clist){
     if (node!=NULL) {
     	//printf("Sichtung!\n");
     	node->last_seen=last_rx;
-    	//printf("last_seen= %f\n",node->last_seen);
+    	if(node->ping_thread==NULL) {
+    		ping_infinite(node);
+    	}
     }
 
   }
@@ -489,6 +581,10 @@ void check_associations(client_list * clist){
 
 
 }
+
+
+
+
 
 
 
@@ -541,16 +637,142 @@ void check_neighbour_host(void* neighbour) {
 
 
 
+
+
+
+
+
+
+
 void
-olsr_event(void *foo __attribute__ ((unused)))
+spread_host(guest_client * host) {
+  struct interface *ifp;
+  struct ip_prefix_entry *h;
+  uint8_t msg_buffer[MAXMESSAGESIZE - OLSR_HEADERSIZE] __attribute__ ((aligned));
+  uint8_t *curr = msg_buffer;
+  uint8_t *length_field, *last;
+  bool sendHNA = false;
+
+  OLSR_INFO(LOG_PACKET_CREATION, "Building HNA\n-------------------\n");
+
+  // My message Type 134:
+  pkt_put_u8(&curr, 134);
+  // hna-validity
+  pkt_put_reltime(&curr, 0.00001);
+
+  length_field = curr;
+  pkt_put_u16(&curr, 0); /* put in real messagesize later */
+
+  pkt_put_ipaddress(&curr, &olsr_cnf->router_id);
+
+  // TTL
+  pkt_put_u8(&curr, 2);
+  pkt_put_u8(&curr, 0);
+  pkt_put_u16(&curr, get_msg_seqno());
+
+  last = msg_buffer + sizeof(msg_buffer) - olsr_cnf->ipsize;
+
+
+
+
+// Actual message
+	pkt_put_ipaddress(&curr, &(host->ip));
+
+
+
+	//Put in Message size
+  pkt_put_u16(&length_field, curr - msg_buffer);
+
+  OLSR_FOR_ALL_INTERFACES(ifp) {
+    net_output(ifp);
+    set_buffer_timer(ifp);
+    net_outbuffer_push(ifp, msg_buffer, curr - msg_buffer);
+    net_output(ifp);
+    set_buffer_timer(ifp);
+  } OLSR_FOR_ALL_INTERFACES_END(ifp)
+}
+
+
+
+
+
+
+
+
+
+
+void
+revoke_hna(struct in_addr * ip) {
+	  struct in_addr subnet;
+	  inet_aton("255.255.255.255", &subnet);
+	  printf("revoking announcement%i\n",*ip);
+	  ip_prefix_list_remove(&olsr_cnf->hna_entries, ip, &subnet, olsr_cnf->ip_version);
+
+
+
+
+  struct interface *ifp;
+  struct ip_prefix_entry *h;
+  uint8_t msg_buffer[MAXMESSAGESIZE - OLSR_HEADERSIZE] __attribute__ ((aligned));
+  uint8_t *curr = msg_buffer;
+  uint8_t *length_field, *last;
+  bool sendHNA = false;
+
+  OLSR_INFO(LOG_PACKET_CREATION, "Building HNA\n-------------------\n");
+
+  // My message Type 134:
+  pkt_put_u8(&curr, HNA_MESSAGE);
+  // hna-validity
+  pkt_put_reltime(&curr, 0.00001);
+
+  length_field = curr;
+  pkt_put_u16(&curr, 0); /* put in real messagesize later */
+
+  pkt_put_ipaddress(&curr, &olsr_cnf->router_id);
+
+  // TTL
+  pkt_put_u8(&curr, 2);
+  pkt_put_u8(&curr, 0);
+  pkt_put_u16(&curr, get_msg_seqno());
+
+  last = msg_buffer + sizeof(msg_buffer) - olsr_cnf->ipsize;
+
+
+
+
+	pkt_put_ipaddress(&curr, ip);
+	pkt_put_ipaddress(&curr, &subnet);
+
+
+  pkt_put_u16(&length_field, curr - msg_buffer);
+
+
+
+
+  OLSR_FOR_ALL_INTERFACES(ifp) {
+    net_output(ifp);
+    set_buffer_timer(ifp);
+    net_outbuffer_push(ifp, msg_buffer, curr - msg_buffer);
+    net_output(ifp);
+    set_buffer_timer(ifp);
+  } OLSR_FOR_ALL_INTERFACES_END(ifp)
+}
+
+
+
+
+
+
+
+
+
+
+void
+olsr_event(void *foo )
 {
 	struct nbr_entry *nbr;
 	check_for_new_clients(list);
     check_client_list(list);
-
-
-
-
 
     OLSR_FOR_ALL_NBR_ENTRIES(nbr) {
     	int rc;
@@ -562,18 +784,7 @@ olsr_event(void *foo __attribute__ ((unused)))
 		}
 
         }OLSR_FOR_ALL_NBR_ENTRIES_END();
-
-
-
-
-
-
-
-
-
 }
-
-
 
 
 
