@@ -162,7 +162,7 @@ olsr_parser(struct olsr_message *msg, struct interface *in_if __attribute__ ((un
 	  printf("recieved something else\n");
     return;
   }
-  printf("recieved my shiiiiiiit!!!!\n");
+  printf("recieved my Message\n");
   curr = msg->payload;
   struct in_addr ip;
   pkt_get_ipaddress(&curr, &ip);
@@ -175,12 +175,16 @@ olsr_parser(struct olsr_message *msg, struct interface *in_if __attribute__ ((un
 
 
   if (guest!=NULL) {
-	  printf("debugschritt\n");
 	  if ((guest->is_announced)!=0) {
 		  printf("Having to revoke \n");
 		  guest->is_announced=0;
-		  guest->last_seen=20.0;
-		  revoke_hna(&ip);
+		  guest->last_seen=30.0;
+
+
+		  ip_prefix_list_remove(&olsr_cnf->hna_entries, &(guest->ip), olsr_netmask_to_prefix(&gw_netmask), olsr_cnf->ip_version);
+
+
+		  single_hna(&ip, 0);
 		  }
 	  else
 		  printf("Not revoking \n");
@@ -319,15 +323,24 @@ void add_route(void* guest) {
 	guest_client * host = (guest_client *) guest;
 
 	if (ping_thread(host)==0) {
+		if (host->is_announced==1) {
+			printf("Host already announced!!");
+		}
+		else {
+			OLSR_DEBUG(LOG_PLUGINS, "Adding Route\n");
+			printf("Added Route\n");
+			ip_prefix_list_add(&olsr_cnf->hna_entries, &(host->ip), olsr_netmask_to_prefix(&gw_netmask));
+			host->is_announced=1;
+			spread_host(host);
+			//This really big time will be overwritten by the next normal hna-announcement
+			single_hna(&host->ip, -1);
 
-		OLSR_DEBUG(LOG_PLUGINS, "Adding Route\n");
-		printf("Added Route\n");
-		spread_host(host);
-		ip_prefix_list_add(&olsr_cnf->hna_entries, &(host->ip), olsr_netmask_to_prefix(&gw_netmask));
-		host->is_announced=1;
+			//Append to buffer, will be send at some time. In case it didn't arrive at the old master
+			spread_host(host);
+		}
 	} else {
 		  printf("Decided not to\n");
-		  host->last_seen+=1;
+		  host->last_seen+=0.5;
 	}
 }
 
@@ -345,7 +358,7 @@ void check_for_route(guest_client * host)
 	           printf("ERROR; return code from pthread_create() is %d\n", rc);
 	           exit(-1);
 	        }
-  } else if ((host->last_seen > 5.0) &&  host->is_announced) {
+  } else if ((host->last_seen > 20.0) &&  host->is_announced) {
       OLSR_DEBUG(LOG_PLUGINS, "Removing Route\n");
       system("echo \"Entferne route\" ");
       ip_prefix_list_remove(&olsr_cnf->hna_entries, &(host->ip), olsr_netmask_to_prefix(&gw_netmask), olsr_cnf->ip_version);
@@ -360,7 +373,7 @@ void check_client_list(client_list * clist) {
 	  if(clist->client->is_announced==1 || clist->client->ping_thread!=NULL) {
 		  if( ! check_if_associcated(clist->client)) {
 			  if(clist->client->is_announced==1) {
-				  clist->client->last_seen+=2;
+				  clist->client->last_seen+=5;
 			  }
 			  if (clist->client->ping_thread!=NULL) {
 				  printf("attempting to kill ping-thread\n");
@@ -468,7 +481,7 @@ void check_remote_leases(client_list * clist){
 	    user = (guest_client*)malloc( sizeof(guest_client) );
 	    inet_aton(s3, &(user->ip));
 	    user->mac= six | five<<8 | four<<16 | three<<24 | two<<32 | one<<40;
-	    user->last_seen=20.0;
+	    user->last_seen=30.0;
 	    user->is_announced=0;
 	    user->ping_thread=NULL;
 	    //printf("last seen on Add %f\n",user->last_seen);
@@ -684,12 +697,15 @@ spread_host(guest_client * host) {
   pkt_put_u16(&length_field, curr - msg_buffer);
 
   OLSR_FOR_ALL_INTERFACES(ifp) {
-    net_output(ifp);
-    set_buffer_timer(ifp);
+	    if (net_outbuffer_bytes_left(ifp) < curr - msg_buffer) {
+	      net_output(ifp);
+	      set_buffer_timer(ifp);
+	    }
+	// buffer gets pushed out in single_hna, or at flush-time
     net_outbuffer_push(ifp, msg_buffer, curr - msg_buffer);
-    net_output(ifp);
-    set_buffer_timer(ifp);
   } OLSR_FOR_ALL_INTERFACES_END(ifp)
+
+
 }
 
 
@@ -700,13 +716,10 @@ spread_host(guest_client * host) {
 
 
 
-
+// sends packet immedeately!
 void
-revoke_hna(struct in_addr * ip) {
-	  struct in_addr subnet;
-	  inet_aton("255.255.255.255", &subnet);
-	  printf("revoking announcement%i\n",*ip);
-	  ip_prefix_list_remove(&olsr_cnf->hna_entries, ip, &subnet, olsr_cnf->ip_version);
+single_hna(struct in_addr * ip, uint32_t time) {
+	  printf("single hna %x with time %i\n",*ip, time);
 
 
 
@@ -723,7 +736,7 @@ revoke_hna(struct in_addr * ip) {
   // My message Type 134:
   pkt_put_u8(&curr, HNA_MESSAGE);
   // hna-validity
-  pkt_put_reltime(&curr, 0.00001);
+  pkt_put_reltime(&curr, time);
 
   length_field = curr;
   pkt_put_u16(&curr, 0); /* put in real messagesize later */
@@ -739,7 +752,8 @@ revoke_hna(struct in_addr * ip) {
 
 
 
-
+  struct in_addr subnet;
+  	  inet_aton("255.255.255.255", &subnet);
 	pkt_put_ipaddress(&curr, ip);
 	pkt_put_ipaddress(&curr, &subnet);
 
@@ -751,7 +765,6 @@ revoke_hna(struct in_addr * ip) {
 
   OLSR_FOR_ALL_INTERFACES(ifp) {
     net_output(ifp);
-    set_buffer_timer(ifp);
     net_outbuffer_push(ifp, msg_buffer, curr - msg_buffer);
     net_output(ifp);
     set_buffer_timer(ifp);
