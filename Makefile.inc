@@ -42,7 +42,7 @@ endif
 BISON ?=	bison
 FLEX ?=		flex
 TAGCMD ?=	etags
-#LD_HAS_DYN ?=   $(shell $(CC) -Wl,--help 2>&1|grep -w -q -- --dynamic-list && echo yes)
+LD_HAS_DYN ?=   $(shell $(CC) -Wl,--help 2>&1|grep -w -q -- --dynamic-list && echo yes)
 
 # target directories and names
 PREFIX  ?= /usr/local
@@ -119,7 +119,7 @@ ifndef CFLAGS
 
     ALL_WARNINGS +=	-Winline
     ALL_WARNINGS +=	-Wdisabled-optimization
-    #ALL_WARNINGS +=	-Werror
+    ALL_WARNINGS +=	-Werror
     ALL_WARNINGS +=	-finline-functions-called-once
     ALL_WARNINGS +=	-funit-at-a-time
     ALL_WARNINGS +=	-fearly-inlining
@@ -140,7 +140,7 @@ ifndef CFLAGS
 
     #ALL_WARNINGS +=	-ffunction-sections
     #ALL_WARNINGS +=	-fdata-sections
-    #ALL_WARNINGS +=	-Wstrict-overflow=5
+    ALL_WARNINGS +=	-Wstrict-overflow=5
     ALL_WARNINGS +=	$(EXTRA_WARNINGS)
     WARNINGS :=	$(shell CC="$(CC)" $(TOPDIR)/gcc-warnings $(ALL_WARNINGS) 2> /dev/null)
   endif
@@ -150,7 +150,7 @@ ifndef CFLAGS
   CFLAGS +=	$(EXTRA_CFLAGS)
 
   ifneq ($(filter -Wstrict-overflow%,$(WARNINGS)),)
-    #NO_STRICT_OVERFLOW = -Wstrict-overflow=0
+    NO_STRICT_OVERFLOW = -Wstrict-overflow=0
   endif
 
 endif # ifndef CFLAGS
@@ -176,7 +176,7 @@ ifdef OLSRD_PLUGIN
 else
   # c and ld flags for main
   ifeq ($(LD_HAS_DYN), yes)
-    #LDFLAGS_EXE +=	-Wl,--dynamic-list=$(EXENAME).exports
+    LDFLAGS_EXE +=	-Wl,--dynamic-list=$(EXENAME).exports
   else
     LDFLAGS_EXE +=	-Wl,-export-dynamic
   endif
