@@ -821,7 +821,7 @@ calculate_if_metric(char *ifname)
 }
 #endif
 
-bool olsr_check_ifup(const char * dev)
+bool olsr_if_isup(const char * dev)
 {
   struct ifreq ifr;
 
@@ -835,7 +835,7 @@ bool olsr_check_ifup(const char * dev)
   return (ifr.ifr_flags & IFF_UP) != 0;
 }
 
-int olsr_if_updown(const char *dev, bool up) {
+int olsr_if_set_state(const char *dev, bool up) {
   int oldflags;
   struct ifreq ifr;
 
@@ -868,16 +868,21 @@ int olsr_if_updown(const char *dev, bool up) {
 }
 
 
-int olsr_if_setip(const char *dev, union olsr_ip_addr *ip) {
+int olsr_if_setip(const char *dev, union olsr_ip_addr *ip, int ip_version) {
   struct sockaddr s;
   struct ifreq ifr;
+
+  /* first activate interface */
+  if (olsr_if_set_state(dev, true)) {
+    return 1;
+  }
 
   memset(&ifr, 0, sizeof(ifr));
   strscpy(ifr.ifr_name, dev, IFNAMSIZ);
 
   memset(&s, 0, sizeof(s));
-  s.sa_family = olsr_cnf->ip_version;
-  if (olsr_cnf->ip_version == AF_INET) {
+  s.sa_family = ip_version == 0 ? olsr_cnf->ip_version : ip_version;
+  if (s.sa_family == AF_INET) {
     ((struct sockaddr_in *)&s)->sin_addr = ip->v4;
   }
   else {

@@ -183,7 +183,7 @@ static void handle_niit_config(void) {
   }
 
   if_index = if_nametoindex(DEF_NIIT_IFNAME);
-  if (if_index > 0 && olsr_check_ifup(DEF_NIIT_IFNAME)) {
+  if (if_index > 0 && olsr_if_isup(DEF_NIIT_IFNAME)) {
     olsr_cnf->niit_if_index = if_index;
   }
 }
@@ -513,7 +513,7 @@ int main(int argc, char *argv[]) {
   /*create smart-gateway-tunnel policy rules*/
   //!!?? disable smartgateway if not ipv4?, or better: do not start olsr
   if (olsr_cnf->smart_gw_active) {
-    int r = olsr_ifconfig(TUNL_BASE,IF_SET_UP);
+    int r = olsr_if_setip(TUNL_BASE, &olsr_cnf->main_addr, 0);
 printf("set interface up returned %i",r);
     //take up tunl0 device or disable smartgateway
     olsr_cnf->ipip_base_orig_down = (r == -1 ?true:false);
@@ -787,7 +787,7 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
   /*tunl0*/
   if (olsr_cnf->ipip_base_orig_down) {
     printf("\ntakig down tunl0 again");
-    olsr_ifconfig(TUNL_BASE,IF_SET_DOWN);
+    olsr_if_set_state(TUNL_BASE, false);
   }
 
   /*rp_filter*/

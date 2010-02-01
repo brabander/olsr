@@ -42,6 +42,7 @@
 #include "kernel_routes.h"
 #include "ipc_frontend.h"
 #include "log.h"
+#include "net_os.h"
 
 /* values for control flag to handle recursive route corrections 
  *  currently only requires in linux specific kernel_routes.c */
@@ -86,69 +87,6 @@ struct olsr_rtreq {
   char buf[512];
 };
 
-/*takes up or down (flag IF_SET_DOWN) an interface (optionally able to configure an /32 ip aswell IF_SET_IP)*/
-/* parameter
- * dev device name
- * flags:
- * IF_SET_UP, IF_SET_DOWN set interface up or down
- * IF_CHECK_UP, IF_CHECK_DOWN only check interface state, dont change (returns false or 1)
- * IF_SET_IP set interface up and set interface ip to originator address
- * return value:
- * 0 on error/failure (or failed CHECK)
- * -1 on success (and interface state was changed)
- *  1 if interface was already up/down*/
-int olsr_ifconfig(const char * dev,int flag)
-{
-  int s, r;
-  struct ifreq ifr;
-  s = socket(PF_INET, SOCK_DGRAM, 0);
-  if (s < 0) {
-    perror("socket");
-    return(-1);
-  }
-  memset(&ifr, 0, sizeof(ifr));
-  strncpy(ifr.ifr_name, dev, IFNAMSIZ);
-
-  if (flag == IF_SET_IP){
-    struct sockaddr_in sin;
-    memset(&sin, 0, sizeof(struct sockaddr_in));
-    sin.sin_family = AF_INET; //ipv4 only!
-    sin.sin_addr.s_addr = olsr_cnf->main_addr.v4.s_addr;
-    memcpy(&ifr.ifr_addr, &sin, sizeof(struct sockaddr_in));
-
-    r = ioctl(s, SIOCSIFADDR, &ifr);
-    if (r < 0){
-      perror("ioctl");
-      return false;
-    }
-    /*reset ifreq fuild for IFFLGAS*/
-    memset(&sin, 0, sizeof( struct sockaddr_in) );
-  }
-
-  ifr.ifr_flags = IFF_UP; //!!?? read old flags and before setting new ones
-  r = ioctl(s, SIOCGIFFLAGS, &ifr);
-  /*set to UP/DOWN now*/
-  if ((flag == IF_SET_DOWN)||(flag == IF_CHECK_DOWN)) {
-    /*check if already down*/
-    if ((short int)ifr.ifr_flags & IFF_UP) ifr.ifr_flags &= ~IFF_UP;
-    else return 1;
-    if (flag == IF_CHECK_DOWN) return false;
-  }
-  else {
-    /*check if already up*/
-    if ((short int)ifr.ifr_flags & IFF_UP) return 1;
-    else ifr.ifr_flags |= IFF_UP;
-    if (flag == IF_CHECK_UP) return false;
-  }
-  
-  r = ioctl(s, SIOCSIFFLAGS, &ifr);
-  if (r < 0) {
-    perror("ioctl");
-    return false;
-  }
-  return -1;
-}
-                                        
 #if LINUX_RTNETLINK_LISTEN
 #include "ifnet.h"
 #include "socket_parser.h"
@@ -207,7 +145,7 @@ static void netlink_process_link(struct nlmsghdr *h)
       if (ifi->ifi_flags&IFF_UP) {
         /*we try to take it up again (if its only down it might workout)*/
         printf("tunl0 is down, we try to take it up again\n");
-        if (olsr_ifconfig("tunl0",IF_SET_UP)) return; //!!?? todo: test if we can really know that its up now
+        if (olsr_if_set_state("tunl0",true)) return; //!!?? todo: test if we can really know that its up now
         /*we disable -> this should stop us announcing being a smart gateway, 
  	* and can not use tunnels as its unlikely to be able to crete them without tunl0*/
         olsr_cnf->smart_gw_active=false;
@@ -733,7 +671,7 @@ int r;
         olsr_cnf->ipip_if_up=false;/*rtnetlink monitoring will detect it up*/
         /*!!?? currently it gets never deleted on shutdown, anyways reusing existing tunnel might be a safe approach if creating fails?*/
         /*set tunnel up with originator ip*/
-        r=olsr_ifconfig(olsr_cnf->ipip_name,IF_SET_IP);
+        r=olsr_if_setip(olsr_cnf->ipip_name, &olsr_cnf->main_addr, 0);
 printf("result of ifup is %i\n",r);
         /*find out iifindex (maybe it works even if above failed (old tunnel))*/
         olsr_cnf->ipip_if_index=if_nametoindex(olsr_cnf->ipip_name);
