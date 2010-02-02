@@ -211,7 +211,7 @@ ip_in_net(const union olsr_ip_addr *ipaddr, const struct olsr_ip_prefix *net)
   return rv;
 }
 
-bool ip_is_inetgw_prefix(struct olsr_ip_prefix *prefix) {
+bool is_prefix_inetgw(const struct olsr_ip_prefix *prefix) {
   if (ip_prefix_is_v4_gw(prefix)) {
     return true;
   }

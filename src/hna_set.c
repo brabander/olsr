@@ -216,7 +216,7 @@ olsr_delete_hna_net_entry(struct hna_net *net_to_delete) {
   struct hna_entry *hna_gw;
   bool removed_entry = false;
 
-  if (ip_is_inetgw_prefix(&net_to_delete->hna_prefix)) {
+  if (is_prefix_inetgw(&net_to_delete->hna_prefix)) {
     /* modify smart gateway entry if necessary */
     olsr_delete_gateway_entry(&net_to_delete->hna_gw->A_gateway_addr, net_to_delete->hna_prefix.prefix_len);
   }

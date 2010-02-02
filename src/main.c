@@ -60,6 +60,7 @@
 #include "mid_set.h"
 #include "mpr_selector_set.h"
 #include "gateway.h"
+#include "olsr_niit.h"
 
 #if LINUX_POLICY_ROUTING
 #include <linux/types.h>
@@ -83,8 +84,6 @@ static void olsr_shutdown(int) __attribute__ ((noreturn));
 #if defined linux || __FreeBSD__ || defined __NetBSD__ || defined __OpenBSD__
 #define DEFAULT_LOCKFILE_PREFIX "/var/run/olsrd"
 #endif
-
-#define DEF_NIIT_IFNAME         "niit4to6"
 
 /*
  * Local function prototypes
@@ -173,21 +172,6 @@ static void olsr_create_lock_file(void) {
 #endif
   return;
 }
-
-#ifdef linux
-static void handle_niit_config(void) {
-  int if_index;
-
-  if (olsr_cnf->ip_version == AF_INET || !olsr_cnf->use_niit) {
-    return;
-  }
-
-  if_index = if_nametoindex(DEF_NIIT_IFNAME);
-  if (if_index > 0 && olsr_if_isup(DEF_NIIT_IFNAME)) {
-    olsr_cnf->niit_if_index = if_index;
-  }
-}
-#endif
 
 /**
  * loads a config file
@@ -410,7 +394,9 @@ int main(int argc, char *argv[]) {
 
 #if defined linux
   /* initialize niit if index */
-  handle_niit_config();
+  if (olsr_cnf->use_niit) {
+    olsr_init_niit();
+  }
 #endif
 
   /* Init empty TC timer */
@@ -569,21 +555,21 @@ printf("\nMain Table is %i prio %i", olsr_cnf->rttable, olsr_cnf->rttable_rule);
 
       /*table with default routes for olsr interfaces*/
       for (cfg_if = olsr_cnf->interfaces; cfg_if; cfg_if = cfg_if->next) {
-        olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable_default, RTM_NEWRULE, 
-                             olsr_cnf->rttable_default_rule, cfg_if->name);
+        olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable_default,
+            olsr_cnf->rttable_default_rule, cfg_if->name, true);
       }
       /*table with route into tunnel (for all interfaces)*/
-      olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable_smartgw, RTM_NEWRULE,
-                        olsr_cnf->rttable_smartgw_rule, NULL);
+      olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable_smartgw,
+                        olsr_cnf->rttable_smartgw_rule, NULL, true);
       /*backup rule to default route table (if tunnel table gets empty)*/
-      olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable_default, RTM_NEWRULE, 
-                        olsr_cnf->rttable_backup_rule, NULL);
+      olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable_default,
+                        olsr_cnf->rttable_backup_rule, NULL, true);
     }
   }
 
   /* Create rule for RtTable to resolve route insertion problems*/
   if ((olsr_cnf->rttable < 253) & (olsr_cnf->rttable > 0)) {
-    olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable, RTM_NEWRULE, (olsr_cnf->rttable_rule>0?olsr_cnf->rttable_rule:65535), NULL);
+    olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable, (olsr_cnf->rttable_rule>0?olsr_cnf->rttable_rule:65535), NULL, true);
   }
 
   /* Create rtnetlink socket to listen on interface change events RTMGRP_LINK and RTMGRP_IPV4_ROUTE */
@@ -595,10 +581,17 @@ printf("\nMain Table is %i prio %i", olsr_cnf->rttable, olsr_cnf->rttable_rule);
 
 #endif
 
+#if defined linux
   /* trigger gateway selection */
   if (olsr_cnf->smart_gw_active) {
     olsr_trigger_inetgw_startup();
   }
+
+  /* trigger niit static route setup */
+  if (olsr_cnf->use_niit) {
+    olsr_setup_niit_routes();
+  }
+#endif
 
   /* Start syslog entry */
   olsr_syslog(OLSR_LOG_INFO, "%s successfully started", olsrd_version);
@@ -733,6 +726,18 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
   /* delete all routes */
   olsr_delete_all_kernel_routes();
 
+#if defined linux
+  /* trigger gateway selection */
+  if (olsr_cnf->smart_gw_active) {
+    // TODO: cleanup smart gateway routes
+  }
+
+  /* trigger niit static route cleanup */
+  if (olsr_cnf->use_niit) {
+    olsr_cleanup_niit_routes();
+  }
+#endif
+
   /* send second shutdown message burst */
   olsr_shutdown_messages();
 
@@ -776,13 +781,13 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
   if (olsr_cnf->rttable_default_rule>0) {
     struct olsr_if * cfg_if;
     for (cfg_if = olsr_cnf->interfaces; cfg_if; cfg_if = cfg_if->next) {
-      olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable_default, RTM_DELRULE, olsr_cnf->rttable_default_rule, cfg_if->name);
+      olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable_default, olsr_cnf->rttable_default_rule, cfg_if->name, false);
     }
   }
   if (olsr_cnf->rttable_smartgw_rule>0)
-    olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable_smartgw, RTM_DELRULE, olsr_cnf->rttable_smartgw_rule, NULL);
+    olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable_smartgw, olsr_cnf->rttable_smartgw_rule, NULL, false);
   if (olsr_cnf->rttable_backup_rule>0)
-    olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable_default, RTM_DELRULE, olsr_cnf->rttable_backup_rule, NULL);
+    olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable_default, olsr_cnf->rttable_backup_rule, NULL, false);
 
   /*tunl0*/
   if (olsr_cnf->ipip_base_orig_down) {
@@ -795,7 +800,7 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
 
   /* RtTable backup rule */
   if ((olsr_cnf->rttable < 253) & (olsr_cnf->rttable > 0)) {
-    olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable, RTM_DELRULE, (olsr_cnf->rttable_rule?olsr_cnf->rttable_rule:65535), NULL);
+    olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable, (olsr_cnf->rttable_rule?olsr_cnf->rttable_rule:65535), NULL, false);
   }
 
   close(olsr_cnf->rtnl_s);

@@ -80,17 +80,8 @@ olsr_init_gateways(void) {
 
   if (olsr_cnf->smart_gw_active) {
     union olsr_ip_addr gw_net;
-#ifdef MAXIMUM_GATEWAY_PREFIX_LENGTH
-    int prefix;
-#endif
-
     memset(&gw_net, 0, sizeof(gw_net));
 
-#ifdef MAXIMUM_GATEWAY_PREFIX_LENGTH
-    for (prefix = 1; prefix <= MAXIMUM_GATEWAY_PREFIX_LENGTH; prefix++) {
-      while (ip_prefix_list_remove(&olsr_cnf->hna_entries, &gw_net, prefix));
-    }
-#endif
     ip = (uint8_t *) &smart_gateway_netmask;
 
     if (olsr_cnf->smart_gw_uplink > 0 || olsr_cnf->smart_gw_downlink > 0) {
@@ -322,7 +313,7 @@ bool
 olsr_is_smart_gateway(struct olsr_ip_prefix *prefix, union olsr_ip_addr *mask) {
   uint8_t *ptr;
 
-  if (!ip_is_inetgw_prefix(prefix)) {
+  if (!is_prefix_inetgw(prefix)) {
     return false;
   }
 

@@ -271,7 +271,7 @@ struct olsrd_config {
   int exit_value;                      /* Global return value for process termination */
   float max_tc_vtime;
 
-  int niit_if_index;
+  int niit4to6_if_index, niit6to4_if_index;
 
   /*many potential parameters or helper variables for smartgateway*/
   bool has_ipv4_gateway, has_ipv6_gateway;

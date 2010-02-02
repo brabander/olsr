@@ -581,7 +581,7 @@ set_default_cnf(struct olsrd_config *cnf)
   cnf->max_tc_vtime = 0.0;
   cnf->ioctl_s = 0;
   cnf->use_niit = DEF_USE_NIIT;
-  cnf->niit_if_index = 0;
+  cnf->niit4to6_if_index = 0;
 
   cnf->smart_gw_active = DEF_SMART_GW;
   cnf->smart_gw_allow_nat = DEF_GW_ALLOW_NAT;

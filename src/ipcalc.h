@@ -170,33 +170,34 @@ prefix_to_netmask4(uint8_t prefixlen)
 }
 
 static INLINE bool
-olsr_is_niit_ipv6(const union olsr_ip_addr *ip) {
-  return olsr_cnf->ip_version == AF_INET6 && IN6_IS_ADDR_V4MAPPED(&ip->v6);
+is_prefix_niit_ipv6(const struct olsr_ip_prefix *p) {
+  return olsr_cnf->ip_version == AF_INET6 && IN6_IS_ADDR_V4MAPPED(&p->prefix.v6) && p->prefix_len >= 96;
 }
 
-static INLINE union olsr_ip_addr *
-olsr_ipv6_to_ipv4(const union olsr_ip_addr *ipv6, union olsr_ip_addr *ipv4) {
-  memcpy(&ipv4->v4, &ipv6->v6.s6_addr[12], sizeof(ipv4->v4));
-  return ipv4;
+static INLINE struct olsr_ip_prefix *
+prefix_mappedv4_to_v4(struct olsr_ip_prefix *v4, const struct olsr_ip_prefix *v6) {
+  memcpy(&v4->prefix.v4, &v6->prefix.v6.s6_addr[12], sizeof(struct in_addr));
+  v4->prefix_len = v6->prefix_len - 96;
+  return v4;
 }
 
 
 static INLINE bool
-ip_prefix_is_mappedv4_gw(struct olsr_ip_prefix *prefix) {
+ip_prefix_is_mappedv4_gw(const struct olsr_ip_prefix *prefix) {
   return olsr_cnf->ip_version == AF_INET6 && memcmp(prefix, &mapped_v4_gw, sizeof(struct olsr_ip_prefix)) == 0;
 }
 
 static INLINE bool
-ip_prefix_is_v4_gw(struct olsr_ip_prefix *prefix) {
+ip_prefix_is_v4_gw(const struct olsr_ip_prefix *prefix) {
   return olsr_cnf->ip_version == AF_INET && prefix->prefix_len == 0 && prefix->prefix.v4.s_addr == 0;
 }
 
 static INLINE bool
-ip_prefix_is_v6_gw(struct olsr_ip_prefix *prefix) {
+ip_prefix_is_v6_gw(const struct olsr_ip_prefix *prefix) {
   return olsr_cnf->ip_version == AF_INET6 && memcmp(prefix, &ipv6_internet_route, sizeof(struct olsr_ip_prefix)) == 0;
 }
 
-extern bool ip_is_inetgw_prefix(struct olsr_ip_prefix *prefix);
+extern bool is_prefix_inetgw(const struct olsr_ip_prefix *prefix);
 
 #endif
 

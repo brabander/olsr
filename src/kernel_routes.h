@@ -56,7 +56,9 @@ int olsr_ioctl_del_route6(const struct rt_entry *);
 #if LINUX_POLICY_ROUTING
 static const char TUNL_BASE[IFNAMSIZ] = "tunl0";
 
-int olsr_netlink_rule(uint8_t, uint8_t, uint16_t, uint32_t, char *);
+int olsr_netlink_static_niit_routes(const struct olsr_ip_prefix *route, bool set);
+
+int olsr_netlink_rule(int family, int rttable, uint32_t priority, const char *if_name, bool set);
 
 int olsr_del_tunl(void);
 
