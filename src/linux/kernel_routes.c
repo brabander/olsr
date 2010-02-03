@@ -174,7 +174,7 @@ static void netlink_process_link(struct nlmsghdr *h)
   for (tmp_if = olsr_cnf->interfaces; tmp_if != NULL; tmp_if = tmp_if->next) {
     if (tmp_if->interf==iface) {
       OLSR_PRINTF(1,"-> removing %s from olsr config!\n", iface->int_name);
-      RemoveInterface(tmp_if,true);
+      olsr_remove_interface(tmp_if,true);
       break;
     }
   }

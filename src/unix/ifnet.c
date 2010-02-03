@@ -266,7 +266,7 @@ chk_if_changed(struct olsr_if *iface)
       memcpy(&ifp->int6_addr.sin6_addr, &tmp_saddr6.sin6_addr, olsr_cnf->ipsize);
       memcpy(&ifp->ip_addr, &tmp_saddr6.sin6_addr, olsr_cnf->ipsize);
 
-      run_ifchg_cbs(ifp, IFCHG_IF_UPDATE);
+      olsr_trigger_ifchange(ifp, IFCHG_IF_UPDATE);
 
       return 1;
     }
@@ -352,100 +352,15 @@ chk_if_changed(struct olsr_if *iface)
   }
 
   if (if_changes)
-    run_ifchg_cbs(ifp, IFCHG_IF_UPDATE);
+    olsr_trigger_ifchange(ifp, IFCHG_IF_UPDATE);
 
   return if_changes;
 
 remove_interface:
 
-RemoveInterface(iface, false);
+olsr_remove_interface(iface, false);
 
 return 0;
-}
-
-/*should move to interfaces.c*/
-void 
-RemoveInterface(struct olsr_if * iface, bool went_down)
-{
-  struct interface *ifp, *tmp_ifp;
-  struct rt_entry *rt;
-  ifp = iface->interf;
-
-  OLSR_PRINTF(1, "Removing interface %s\n", iface->name);
-  olsr_syslog(OLSR_LOG_INFO, "Removing interface %s\n", iface->name);
-
-  olsr_delete_link_entry_by_ip(&ifp->ip_addr);
-
-  /*
-   *Call possible ifchange functions registered by plugins
-   */
-  run_ifchg_cbs(ifp, IFCHG_IF_REMOVE);
-
-  /*remove all routes*/
-    if (went_down) {
-    OLSR_FOR_ALL_RT_ENTRIES(rt) {
-      if (rt->rt_nexthop.iif_index == ifp->if_index) {
-	rt->rt_nexthop.iif_index=-1;//marks route as unexisting in kernel, do this better !?
-      }
-    }
-    OLSR_FOR_ALL_RT_ENTRIES_END(rt);
-  }
-
-  /* Dequeue */
-  if (ifp == ifnet) {
-    ifnet = ifp->int_next;
-  } else {
-    tmp_ifp = ifnet;
-    while (tmp_ifp->int_next != ifp) {
-      tmp_ifp = tmp_ifp->int_next;
-    }
-    tmp_ifp->int_next = ifp->int_next;
-  }
-
-  /* Remove output buffer */
-  net_remove_buffer(ifp);
-
-  /* Check main addr */
-  /* deactivated to prevent change of originator IP */
-#if 0
-  if (ipequal(&olsr_cnf->main_addr, &ifp->ip_addr)) {
-    if (ifnet == NULL) {
-      /* No more interfaces */
-      memset(&olsr_cnf->main_addr, 0, olsr_cnf->ipsize);
-      OLSR_PRINTF(1, "No more interfaces...\n");
-    } else {
-      struct ipaddr_str buf;
-      olsr_cnf->main_addr = ifnet->ip_addr;
-      OLSR_PRINTF(1, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
-      olsr_syslog(OLSR_LOG_INFO, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
-    }
-  }
-#endif
-  /*
-   * Deregister functions for periodic message generation
-   */
-  olsr_stop_timer(ifp->hello_gen_timer);
-  olsr_stop_timer(ifp->tc_gen_timer);
-  olsr_stop_timer(ifp->mid_gen_timer);
-  olsr_stop_timer(ifp->hna_gen_timer);
-
-  iface->configured = 0;
-  iface->interf = NULL;
-  /* Close olsr socket */
-  close(ifp->olsr_socket);
-  remove_olsr_socket(ifp->olsr_socket, &olsr_input);
-
-  /* Free memory */
-  free(ifp->int_name);
-  free(ifp);
-
-  if ((ifnet == NULL) && (!olsr_cnf->allow_no_interfaces)) {
-    OLSR_PRINTF(1, "No more active interfaces - exiting.\n");
-    olsr_syslog(OLSR_LOG_INFO, "No more active interfaces - exiting.\n");
-    olsr_cnf->exit_value = EXIT_FAILURE;
-    kill(getpid(), SIGINT);
-  }
-
 }
 
 /**
@@ -921,7 +836,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__ ((unused)))
   /*
    *Call possible ifchange functions registered by plugins
    */
-  run_ifchg_cbs(ifp, IFCHG_IF_ADD);
+  olsr_trigger_ifchange(ifp, IFCHG_IF_ADD);
 
   return 1;
 }

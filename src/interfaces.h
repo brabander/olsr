@@ -185,10 +185,10 @@ struct interface {
 /* The interface linked-list */
 extern struct interface *ifnet;
 
-int ifinit(void);
+int olsr_init_interfacedb(void);
 void olsr_delete_interfaces(void);
 
-void run_ifchg_cbs(struct interface *, int);
+void olsr_trigger_ifchange(struct interface *, int);
 
 struct interface *if_ifwithsock(int);
 
@@ -200,11 +200,13 @@ const char *if_ifwithindex_name(const int if_index);
 
 struct interface *if_ifwithindex(const int if_index);
 
-struct olsr_if *queue_if(const char *, int);
+struct olsr_if *olsr_create_olsrif(const char *name, int hemu);
 
-int add_ifchgf(int (*f) (struct interface *, int));
+int olsr_add_ifchange_handler(int (*f) (struct interface *, int));
 
-int del_ifchgf(int (*f) (struct interface *, int));
+int olsr_remove_ifchange_handler(int (*f) (struct interface *, int));
+
+void olsr_remove_interface(struct olsr_if *, bool);
 
 extern struct olsr_cookie_info *interface_poll_timer_cookie;
 extern struct olsr_cookie_info *hello_gen_timer_cookie;

@@ -97,7 +97,7 @@ olsrd_plugin_init(void)
   InitPacketHistory();
 
   /* Register ifchange function */
-  add_ifchgf(&InterfaceChange);
+  olsr_add_ifchange_handler(&InterfaceChange);
 
   /* Register the duplicate registration pruning process */
   olsr_start_timer(3 * MSEC_PER_SEC, 0, OLSR_TIMER_PERIODIC, &PrunePacketHistory, NULL, 0);

@@ -488,68 +488,6 @@ ListInterfaces(void)
   }
 }
 
-void
-RemoveInterface(struct olsr_if *IntConf, bool went_down)
-{
-  struct interface *Int, *Prev;
-
-  OLSR_PRINTF(1, "Removing interface %s.\n", IntConf->name);
-
-  Int = IntConf->interf;
-
-  run_ifchg_cbs(Int, IFCHG_IF_ADD);
-
-  /*remove all routes*/
-  if (went_down) OLSR_PRINTF(1,"Hint: ifdown handling unimplemented");
-
-  if (Int == ifnet)
-    ifnet = Int->int_next;
-
-  else {
-    for (Prev = ifnet; Prev->int_next != Int; Prev = Prev->int_next);
-
-    Prev->int_next = Int->int_next;
-  }
-
-  if (ipequal(&olsr_cnf->main_addr, &Int->ip_addr)) {
-    if (ifnet == NULL) {
-      memset(&olsr_cnf->main_addr, 0, olsr_cnf->ipsize);
-      OLSR_PRINTF(1, "Removed last interface. Cleared main address.\n");
-    }
-
-    else {
-      struct ipaddr_str buf;
-      olsr_cnf->main_addr = ifnet->ip_addr;
-      OLSR_PRINTF(1, "New main address: %s.\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
-    }
-  }
-
-  /*
-   * Deregister functions for periodic message generation
-   */
-  olsr_stop_timer(Int->hello_gen_timer);
-  olsr_stop_timer(Int->tc_gen_timer);
-  olsr_stop_timer(Int->mid_gen_timer);
-  olsr_stop_timer(Int->hna_gen_timer);
-
-  net_remove_buffer(Int);
-
-  IntConf->configured = 0;
-  IntConf->interf = NULL;
-
-  closesocket(Int->olsr_socket);
-  remove_olsr_socket(Int->olsr_socket, &olsr_input);
-
-  free(Int->int_name);
-  free(Int);
-
-  if (ifnet == NULL && !olsr_cnf->allow_no_interfaces) {
-    OLSR_PRINTF(1, "No more active interfaces - exiting.\n");
-    olsr_cnf->exit_value = EXIT_FAILURE;
-    CallSignalHandler();
-  }
-}
-
 int
 add_hemu_if(struct olsr_if *iface)
 {
@@ -714,7 +652,7 @@ chk_if_changed(struct olsr_if *IntConf)
   Int = IntConf->interf;
 
   if (GetIntInfo(&Info, IntConf->name) < 0) {
-    RemoveInterface(IntConf,false);
+    olsr_remove_interface(IntConf,false);
     return 1;
   }
 
@@ -831,7 +769,7 @@ chk_if_changed(struct olsr_if *IntConf)
     OLSR_PRINTF(3, "\tNo broadcast address change.\n");
 
   if (Res != 0)
-    run_ifchg_cbs(Int, IFCHG_IF_UPDATE);
+    olsr_trigger_ifchange(Int, IFCHG_IF_UPDATE);
 
   return Res;
 }
@@ -979,7 +917,7 @@ chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__ ((unused)))
 
   New->mode = IntConf->cnf->mode;
 
-  run_ifchg_cbs(New, IFCHG_IF_ADD);
+  olsr_trigger_ifchange(New, IFCHG_IF_ADD);
 
   return 1;
 }

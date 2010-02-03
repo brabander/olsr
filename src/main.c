@@ -443,7 +443,7 @@ int main(int argc, char *argv[]) {
   init_net();
 
   /* Initializing networkinterfaces */
-  if (!ifinit()) {
+  if (!olsr_init_interfacedb()) {
     if (olsr_cnf->allow_no_interfaces) {
       fprintf(
           stderr,
@@ -1008,12 +1008,12 @@ static int olsr_process_arguments(int argc, char *argv[],
         olsr_exit(__func__, EXIT_FAILURE);
       }
       printf("Queuing if %s\n", *argv);
-      queue_if(*argv, false);
+      olsr_create_olsrif(*argv, false);
 
       while ((argc - 1) && (argv[1][0] != '-')) {
         NEXT_ARG;
         printf("Queuing if %s\n", *argv);
-        queue_if(*argv, false);
+        olsr_create_olsrif(*argv, false);
       }
 
       continue;
@@ -1133,7 +1133,7 @@ static int olsr_process_arguments(int argc, char *argv[],
       }
       /* Add hemu interface */
 
-      ifa = queue_if("hcif01", true);
+      ifa = olsr_create_olsrif("hcif01", true);
 
       if (!ifa)
         continue;

@@ -46,6 +46,19 @@
 #include "olsr.h"
 #include "net_olsr.h"
 #include "ipcalc.h"
+#include "log.h"
+#include "parser.h"
+#include "socket_parser.h"
+
+#include <signal.h>
+#include <sys/types.h>
+#include <net/if.h>
+#include <net/if_arp.h>
+#include <netinet/in_systm.h>
+#include <netinet/ip.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <unistd.h>
 
 /* The interface linked-list */
 struct interface *ifnet;
@@ -73,7 +86,7 @@ struct olsr_cookie_info *hna_gen_timer_cookie = NULL;
  *@return the number of interfaces configured
  */
 int
-ifinit(void)
+olsr_init_interfacedb(void)
 {
   struct olsr_if *tmp_if;
 
@@ -109,7 +122,7 @@ ifinit(void)
 }
 
 void
-run_ifchg_cbs(struct interface *ifp, int flag)
+olsr_trigger_ifchange(struct interface *ifp, int flag)
 {
   struct ifchgf *tmp_ifchgf_list = ifchgf_list;
 
@@ -244,7 +257,7 @@ if_ifwithindex_name(const int if_index)
  *@return nada
  */
 struct olsr_if *
-queue_if(const char *name, int hemu)
+olsr_create_olsrif(const char *name, int hemu)
 {
   struct olsr_if *interf_n = olsr_cnf->interfaces;
   size_t name_size;
@@ -289,7 +302,7 @@ queue_if(const char *name, int hemu)
  *@return
  */
 int
-add_ifchgf(int (*f) (struct interface *, int))
+olsr_add_ifchange_handler(int (*f) (struct interface *, int))
 {
 
   struct ifchgf *new_ifchgf;
@@ -308,7 +321,7 @@ add_ifchgf(int (*f) (struct interface *, int))
  * Remove an ifchange function
  */
 int
-del_ifchgf(int (*f) (struct interface *, int))
+olsr_remove_ifchange_handler(int (*f) (struct interface *, int))
 {
   struct ifchgf *tmp_ifchgf, *prev;
 
@@ -332,6 +345,94 @@ del_ifchgf(int (*f) (struct interface *, int))
   }
 
   return 0;
+}
+
+void
+olsr_remove_interface(struct olsr_if * iface, bool went_down)
+{
+  struct interface *ifp, *tmp_ifp;
+  struct rt_entry *rt;
+  ifp = iface->interf;
+
+  OLSR_PRINTF(1, "Removing interface %s\n", iface->name);
+  olsr_syslog(OLSR_LOG_INFO, "Removing interface %s\n", iface->name);
+
+  olsr_delete_link_entry_by_ip(&ifp->ip_addr);
+
+  /*
+   *Call possible ifchange functions registered by plugins
+   */
+  olsr_trigger_ifchange(ifp, IFCHG_IF_REMOVE);
+
+  /*remove all routes*/
+  if (went_down) {
+    OLSR_FOR_ALL_RT_ENTRIES(rt) {
+      if (rt->rt_nexthop.iif_index == ifp->if_index) {
+        //marks route as unexisting in kernel, do this better !?
+        rt->rt_nexthop.iif_index=-1;
+      }
+    }
+    OLSR_FOR_ALL_RT_ENTRIES_END(rt);
+  }
+
+  /* Dequeue */
+  if (ifp == ifnet) {
+    ifnet = ifp->int_next;
+  } else {
+    tmp_ifp = ifnet;
+    while (tmp_ifp->int_next != ifp) {
+      tmp_ifp = tmp_ifp->int_next;
+    }
+    tmp_ifp->int_next = ifp->int_next;
+  }
+
+  /* Remove output buffer */
+  net_remove_buffer(ifp);
+
+  /* Check main addr */
+  /* deactivated to prevent change of originator IP */
+#if 0
+  if (ipequal(&olsr_cnf->main_addr, &ifp->ip_addr)) {
+    if (ifnet == NULL) {
+      /* No more interfaces */
+      memset(&olsr_cnf->main_addr, 0, olsr_cnf->ipsize);
+      OLSR_PRINTF(1, "No more interfaces...\n");
+    } else {
+      struct ipaddr_str buf;
+      olsr_cnf->main_addr = ifnet->ip_addr;
+      OLSR_PRINTF(1, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
+      olsr_syslog(OLSR_LOG_INFO, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
+    }
+  }
+#endif
+  /*
+   * Deregister functions for periodic message generation
+   */
+  olsr_stop_timer(ifp->hello_gen_timer);
+  olsr_stop_timer(ifp->tc_gen_timer);
+  olsr_stop_timer(ifp->mid_gen_timer);
+  olsr_stop_timer(ifp->hna_gen_timer);
+
+  iface->configured = 0;
+  iface->interf = NULL;
+  /* Close olsr socket */
+  close(ifp->olsr_socket);
+  remove_olsr_socket(ifp->olsr_socket, &olsr_input);
+
+  /* Free memory */
+  free(ifp->int_name);
+  free(ifp);
+
+  if ((ifnet == NULL) && (!olsr_cnf->allow_no_interfaces)) {
+    OLSR_PRINTF(1, "No more active interfaces - exiting.\n");
+    olsr_syslog(OLSR_LOG_INFO, "No more active interfaces - exiting.\n");
+    olsr_cnf->exit_value = EXIT_FAILURE;
+#ifndef win32
+    kill(getpid(), SIGINT);
+#else
+    CallSignalHandler();
+#endif
+  }
 }
 
 /*
