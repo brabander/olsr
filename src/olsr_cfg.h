@@ -286,6 +286,7 @@ struct olsrd_config {
   int ioctl_s;                         /* Socket used for ioctl calls */
 #if LINUX_POLICY_ROUTING
   int rtnl_s;                          /* Socket used for rtnetlink messages */
+  int rt_monitor_socket;
 #endif
 
 #if defined __FreeBSD__ || defined __FreeBSD_kernel__ || defined __MacOSX__ || defined __NetBSD__ || defined __OpenBSD__

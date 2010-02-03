@@ -124,23 +124,6 @@ int GetIntInfo(struct InterfaceInfo *Info, char *Name);
 
 #define MAX_INTERFACES 100
 
-int __stdcall SignalHandler(unsigned long Signal);
-
-static unsigned long __stdcall
-SignalHandlerWrapper(void *Dummy __attribute__ ((unused)))
-{
-  SignalHandler(0);
-  return 0;
-}
-
-static void
-CallSignalHandler(void)
-{
-  unsigned long ThreadId;
-
-  CreateThread(NULL, 0, SignalHandlerWrapper, NULL, 0, &ThreadId);
-}
-
 static void
 MiniIndexToIntName(char *String, int MiniIndex)
 {
@@ -504,6 +487,9 @@ add_hemu_if(struct olsr_if *iface)
 
   memset(ifp, 0, sizeof(struct interface));
 
+  /* initialize backpointer */
+  ifp->olsr_if = iface;
+
   iface->configured = true;
   iface->interf = ifp;
 
@@ -794,6 +780,9 @@ chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__ ((unused)))
     return 0;
 
   New = olsr_malloc(sizeof(struct interface), "Interface 1");
+  /* initialize backpointer */
+  New->olsr_if = IntConf;
+
 
   New->immediate_send_tc = (IntConf->cnf->tc_params.emission_interval < IntConf->cnf->hello_params.emission_interval);
   if (olsr_cnf->max_jitter == 0) {

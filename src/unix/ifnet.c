@@ -383,6 +383,9 @@ add_hemu_if(struct olsr_if *iface)
 
   memset(ifp, 0, sizeof(struct interface));
 
+  /* initialize backpointer */
+  ifp->olsr_if = iface;
+
   iface->configured = true;
   iface->interf = ifp;
 
@@ -704,6 +707,9 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__ ((unused)))
   }
 
   ifp = olsr_malloc(sizeof(struct interface), "Interface update 2");
+
+  /* initialize backpointer */
+  ifp->olsr_if = iface;
 
   iface->configured = 1;
   iface->interf = ifp;

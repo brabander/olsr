@@ -153,24 +153,34 @@ struct interface {
 
 /* Struct used to store original redirect/ingress setting */
   struct nic_state {
-    char redirect;                     /* The original state of icmp redirect */
-    char spoof;                        /* The original state of the IP spoof filter */
+    /* The original state of icmp redirect */
+    char redirect;
+
+    /* The original state of the IP spoof filter */
+    char spoof;
   } nic_state;
 #endif
 
   olsr_reltime hello_etime;
   struct vtimes valtimes;
 
-  uint32_t fwdtimer;                    /* Timeout for OLSR forwarding on this if */
+  /* Timeout for OLSR forwarding on this if */
+  uint32_t fwdtimer;
 
-  struct olsr_netbuf netbuf;           /* the buffer to construct the packet data */
+  /* the buffer to construct the packet data */
+  struct olsr_netbuf netbuf;
 
-  struct if_gen_property *gen_properties;       /* Generic interface properties */
+  /* Generic interface properties */
+  struct if_gen_property *gen_properties;
 
-  int ttl_index;                       /* index in TTL array for fish-eye */
+  /* index in TTL array for fish-eye */
+  int ttl_index;
 
-  bool immediate_send_tc;              /* Hello's are sent immediately normally, this flag prefers to send TC's */
+  /* Hello's are sent immediately normally, this flag prefers to send TC's */
+  bool immediate_send_tc;
 
+  /* backpointer to olsr_if configuration */
+  struct olsr_if *olsr_if;
   struct interface *int_next;
 };
 

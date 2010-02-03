@@ -11,8 +11,10 @@
 #define DEF_NIIT4TO6_IFNAME         "niit4to6"
 #define DEF_NIIT6TO4_IFNAME         "niit6to4"
 
+#ifdef linux
 int olsr_init_niit(void);
 void olsr_setup_niit_routes(void);
 void olsr_cleanup_niit_routes(void);
+#endif
 
 #endif /* OLSR_NIIT_H_ */

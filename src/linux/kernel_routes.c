@@ -97,22 +97,21 @@ int rtnetlink_register_socket(int rtnl_mgrp)
   struct sockaddr_nl addr;
 
   if (sock<0) {
-    OLSR_PRINTF(1,"could not create rtnetlink socket! %d",sock);
+    OLSR_PRINTF(1,"could not create rtnetlink socket! %s (%d)", strerror(errno), errno);
+    return -1;
   }
-  else {
-    memset(&addr, 0, sizeof(addr));
 
-    addr.nl_family = AF_NETLINK;
-    addr.nl_pid = 0; //kernel will assign appropiate number instead of pid (which is already used by primaray rtnetlink socket to add/delete routes)
-    addr.nl_groups = rtnl_mgrp;
-    if (bind(sock,(struct sockaddr *)&addr,sizeof(addr))<0) {
-      OLSR_PRINTF(1,"could not bind socket! (%d %s)",errno,strerror(errno));
-    }
-    else {
-      add_olsr_socket(sock, &rtnetlink_read);
-    }
-    fcntl(sock, F_SETFL, O_NONBLOCK);
+  memset(&addr, 0, sizeof(addr));
+  addr.nl_family = AF_NETLINK;
+  addr.nl_pid = 0; //kernel will assign appropiate number instead of pid (which is already used by primaray rtnetlink socket to add/delete routes)
+  addr.nl_groups = rtnl_mgrp;
+
+  if (bind(sock,(struct sockaddr *)&addr,sizeof(addr))<0) {
+    OLSR_PRINTF(1,"could not bind rtnetlink socket! %s (%d)",strerror(errno), errno);
+    return -1;
   }
+
+  add_olsr_socket(sock, &rtnetlink_read);
   return sock;
 }
 

@@ -5,13 +5,14 @@
  *      Author: henning
  */
 
-#include <net/if.h>
-
 #include "defs.h"
 #include "kernel_routes.h"
 #include "net_os.h"
 #include "olsr_niit.h"
 
+#include <net/if.h>
+
+#ifdef linux
 int olsr_init_niit(void) {
   olsr_cnf->niit4to6_if_index = if_nametoindex(DEF_NIIT4TO6_IFNAME);
   if (olsr_cnf->niit4to6_if_index <= 0 || !olsr_if_isup(DEF_NIIT4TO6_IFNAME)) {
@@ -41,3 +42,4 @@ void olsr_cleanup_niit_routes(void) {
     olsr_netlink_static_niit_routes(&h->net, false);
   }
 }
+#endif

@@ -39,6 +39,9 @@
  *
  */
 
+#include <signal.h>
+#include <unistd.h>
+
 #include "defs.h"
 #include "interfaces.h"
 #include "ifnet.h"
@@ -50,15 +53,28 @@
 #include "parser.h"
 #include "socket_parser.h"
 
-#include <signal.h>
-#include <sys/types.h>
-#include <net/if.h>
-#include <net/if_arp.h>
-#include <netinet/in_systm.h>
-#include <netinet/ip.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <unistd.h>
+#ifdef WIN32
+#include <winbase.h>
+#define close(x) closesocket(x)
+int __stdcall SignalHandler(unsigned long signo);
+
+static unsigned long __stdcall
+SignalHandlerWrapper(void *Dummy __attribute__ ((unused)))
+{
+  SignalHandler(0);
+  return 0;
+}
+
+static void
+CallSignalHandler(void)
+{
+  unsigned long ThreadId;
+
+  CreateThread(NULL, 0, SignalHandlerWrapper, NULL, 0, &ThreadId);
+}
+
+
+#endif
 
 /* The interface linked-list */
 struct interface *ifnet;
@@ -427,7 +443,7 @@ olsr_remove_interface(struct olsr_if * iface, bool went_down)
     OLSR_PRINTF(1, "No more active interfaces - exiting.\n");
     olsr_syslog(OLSR_LOG_INFO, "No more active interfaces - exiting.\n");
     olsr_cnf->exit_value = EXIT_FAILURE;
-#ifndef win32
+#ifndef WIN32
     kill(getpid(), SIGINT);
 #else
     CallSignalHandler();

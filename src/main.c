@@ -389,6 +389,14 @@ int main(int argc, char *argv[]) {
     olsr_exit(__func__, 0);
   }
   fcntl(olsr_cnf->rtnl_s, F_SETFL, O_NONBLOCK);
+
+#if LINUX_RTNETLINK_LISTEN
+  if ((olsr_cnf->rt_monitor_socket = rtnetlink_register_socket(RTMGRP_LINK)) < 0) {
+    olsr_syslog(OLSR_LOG_ERR, "rtmonitor socket: %m");
+    olsr_exit(__func__, 0);
+  }
+#endif /*LINUX_RTNETLINK_LISTEN*/
+
 #endif
 
   /*
@@ -505,11 +513,13 @@ int main(int argc, char *argv[]) {
 
   OLSR_PRINTF(1, "Main address: %s\n\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
 
+#ifdef linux
 /*deativate spoof on all, this is neede ddue to an change in kernel 2.6.31 
  * all and device-specific settings are now combined differently
  * new max(all,device) old: all && device 
  * !!?? does this change only affect rp_filter or other aswell (e.g. icmp_redirect)*/
 deactivate_spoof("all", &olsr_cnf->ipip_base_if, AF_INET );
+#endif
 
 #if LINUX_POLICY_ROUTING
   /*create smart-gateway-tunnel policy rules*/
@@ -590,10 +600,6 @@ printf("\nMain Table is %i prio %i", olsr_cnf->rttable, olsr_cnf->rttable_rule);
 
   /* Create rtnetlink socket to listen on interface change events RTMGRP_LINK and RTMGRP_IPV4_ROUTE */
   //todo listen on tunl0 events aswell
-
-#if LINUX_RTNETLINK_LISTEN
-  rtnetlink_register_socket(RTMGRP_LINK);
-#endif /*LINUX_RTNETLINK_LISTEN*/
 
 #endif
 
@@ -817,6 +823,10 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
   }
 
   close(olsr_cnf->rtnl_s);
+
+#if LINUX_RTNETLINK_LISTEN
+  close (olsr_cnf->rt_monitor_socket);
+#endif /*LINUX_RTNETLINK_LISTEN*/
 
   /*rp_filter*/
   if (olsr_cnf->ipip_base_if.if_index) printf("\nresetting of tunl0 rp_filter not implemented");//!!?? no function extists to reset a single interface
