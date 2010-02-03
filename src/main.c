@@ -90,7 +90,7 @@ static void olsr_shutdown(int) __attribute__ ((noreturn));
  */
 void olsr_reconfigure(int) __attribute__ ((noreturn));
 
-static void print_usage(void);
+static void print_usage(bool error);
 
 #ifdef linux
 static const char* ipip_default_name = "olsr_tunnel";
@@ -217,6 +217,19 @@ int main(int argc, char *argv[]) {
   assert(sizeof(int16_t) == 2);
   assert(sizeof(int32_t) == 4);
 
+  printf("\n *** %s ***\n Build date: %s on %s\n http://www.olsr.org\n\n",
+      olsrd_version, build_date, build_host);
+
+  if (argc == 2) {
+    if (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "/?") == 0) {
+      print_usage(false);
+      exit(0);
+    }
+    if (strcmp(argv[1], "-v") == 0) {
+      exit(0);
+    }
+  }
+
   debug_handle = stdout;
 #ifndef WIN32
   olsr_argv = argv;
@@ -241,9 +254,6 @@ int main(int argc, char *argv[]) {
 
   /* Open syslog */
   olsr_openlog("olsrd");
-
-  printf("\n *** %s ***\n Build date: %s on %s\n http://www.olsr.org\n\n",
-      olsrd_version, build_date, build_host);
 
   /* Using PID as random seed */
   srandom(getpid());
@@ -316,7 +326,7 @@ int main(int argc, char *argv[]) {
    * Process olsrd options.
    */
   if (olsr_process_arguments(argc, argv, olsr_cnf, default_ifcnf) < 0) {
-    print_usage();
+    print_usage(true);
     olsr_exit(__func__, EXIT_FAILURE);
   }
 
@@ -836,18 +846,19 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
 /**
  * Print the command line usage
  */
-static void print_usage(void) {
-
+static void print_usage(bool error) {
   fprintf(
       stderr,
-      "An error occured somwhere between your keyboard and your chair!\n"
+        "%s"
         "usage: olsrd [-f <configfile>] [ -i interface1 interface2 ... ]\n"
         "  [-d <debug_level>] [-ipv6] [-multi <IPv6 multicast address>]\n"
         "  [-lql <LQ level>] [-lqw <LQ winsize>] [-lqnt <nat threshold>]\n"
         "  [-bcast <broadcastaddr>] [-ipc] [-dispin] [-dispout] [-delgw]\n"
         "  [-hint <hello interval (secs)>] [-tcint <tc interval (secs)>]\n"
         "  [-midint <mid interval (secs)>] [-hnaint <hna interval (secs)>]\n"
-        "  [-T <Polling Rate (secs)>] [-nofork] [-hemu <ip_address>]\n" "  [-lql <LQ level>] [-lqa <LQ aging factor>]\n");
+        "  [-T <Polling Rate (secs)>] [-nofork] [-hemu <ip_address>]\n"
+        "  [-lql <LQ level>] [-lqa <LQ aging factor>]\n",
+        error ? "An error occured somwhere between your keyboard and your chair!\n" : "");
 }
 
 /**

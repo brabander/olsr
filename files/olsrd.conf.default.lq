@@ -302,9 +302,9 @@ LoadPlugin "olsrd_txtinfo.so.0.1"
 #   PlParam     "Ping"       "194.25.2.129"
 #}
 
-# olsrd_dyn_gw_plain.so.0.4
-# {
-# }
+#LoadPlugin "olsrd_dyn_gw_plain.so.0.4"
+#{
+#}
 
 
 # Interfaces and their rules
