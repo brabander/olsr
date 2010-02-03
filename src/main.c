@@ -495,6 +495,12 @@ int main(int argc, char *argv[]) {
 
   OLSR_PRINTF(1, "Main address: %s\n\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
 
+/*deativate spoof on all, this is neede ddue to an change in kernel 2.6.31 
+ * all and device-specific settings are now combined differently
+ * new max(all,device) old: all && device 
+ * !!?? does this change only affect rp_filter or other aswell (e.g. icmp_redirect)*/
+deactivate_spoof("all", &olsr_cnf->ipip_base_if, AF_INET );
+
 #if LINUX_POLICY_ROUTING
   /*create smart-gateway-tunnel policy rules*/
   //!!?? disable smartgateway if not ipv4?, or better: do not start olsr
@@ -796,7 +802,7 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
   }
 
   /*rp_filter*/
-  if (olsr_cnf->ipip_base_if.if_index) printf("\nresetting of tunl0 rp_filter not implemented");//!!?? no function extits to reset a single interface
+  if (olsr_cnf->ipip_base_if.if_index) printf("\nresetting of tunl0 rp_filter not implemented");//!!?? no function extists to reset a single interface
 
   /* RtTable backup rule */
   if ((olsr_cnf->rttable < 253) & (olsr_cnf->rttable > 0)) {
