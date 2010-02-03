@@ -801,16 +801,18 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
     olsr_if_set_state(TUNL_BASE, false);
   }
 
-  /*rp_filter*/
-  if (olsr_cnf->ipip_base_if.if_index) printf("\nresetting of tunl0 rp_filter not implemented");//!!?? no function extists to reset a single interface
-
   /* RtTable backup rule */
   if ((olsr_cnf->rttable < 253) & (olsr_cnf->rttable > 0)) {
     olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable, (olsr_cnf->rttable_rule?olsr_cnf->rttable_rule:65535), NULL, false);
   }
 
   close(olsr_cnf->rtnl_s);
+
+  /*rp_filter*/
+  if (olsr_cnf->ipip_base_if.if_index) printf("\nresetting of tunl0 rp_filter not implemented");//!!?? no function extists to reset a single interface
 #endif
+
+/*!!?? we need to reset rp_filter of conf/all aswell, so we really need a new rp_filter reset function*/
 
 #if defined __FreeBSD__ || defined __FreeBSD_kernel__ || defined __MacOSX__ || defined __NetBSD__ || defined __OpenBSD__
   /* routing socket */
