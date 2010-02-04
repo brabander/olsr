@@ -890,7 +890,7 @@ int olsr_if_setip(const char *dev, union olsr_ip_addr *ip, int ip_version) {
   }
   memcpy(&ifr.ifr_addr, &s, sizeof(s));
 
-  if (ioctl(olsr_cnf->ioctl_s, SIOCSIFADDR, ifr) < 0) {
+  if (ioctl(olsr_cnf->ioctl_s, SIOCSIFADDR, &ifr) < 0) {
     perror("ioctl SIOCSIFADDR (set addr)");
     return 1;
   }

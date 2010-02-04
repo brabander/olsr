@@ -638,7 +638,7 @@ chk_if_changed(struct olsr_if *IntConf)
   Int = IntConf->interf;
 
   if (GetIntInfo(&Info, IntConf->name) < 0) {
-    olsr_remove_interface(IntConf,false);
+    olsr_remove_interface(IntConf);
     return 1;
   }
 

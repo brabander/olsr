@@ -1157,7 +1157,7 @@ BmfRun(void *useless __attribute__ ((unused)))
  * Data Used  : none
  * ------------------------------------------------------------------------- */
 int
-InterfaceChange(struct interface *interf, int action)
+InterfaceChange(struct interface *interf, enum olsr_ifchg_flag action)
 {
   switch (action) {
   case (IFCHG_IF_ADD):

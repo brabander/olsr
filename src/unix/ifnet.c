@@ -358,9 +358,8 @@ chk_if_changed(struct olsr_if *iface)
 
 remove_interface:
 
-olsr_remove_interface(iface, false);
-
-return 0;
+  olsr_remove_interface(iface);
+  return 0;
 }
 
 /**
@@ -708,14 +707,14 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__ ((unused)))
 
   ifp = olsr_malloc(sizeof(struct interface), "Interface update 2");
 
-  /* initialize backpointer */
-  ifp->olsr_if = iface;
-
   iface->configured = 1;
   iface->interf = ifp;
 
   /* XXX bad code */
   memcpy(ifp, &ifs, sizeof(struct interface));
+
+  /* initialize backpointer */
+  ifp->olsr_if = iface;
 
   ifp->immediate_send_tc = (iface->cnf->tc_params.emission_interval < iface->cnf->hello_params.emission_interval);
   if (olsr_cnf->max_jitter == 0) {

@@ -41,6 +41,7 @@
  * ------------------------------------------------------------------------- */
 
 #include "olsrd_plugin.h"       /* union set_plugin_parameter_addon */
+#include "interfaces.h"
 
 /* BMF plugin data */
 #define PLUGIN_NAME "OLSRD Basic Multicast Forwarding (BMF) plugin"
@@ -62,7 +63,7 @@ extern int BroadcastRetransmitCount;
 
 void BmfPError(const char *format, ...) __attribute__ ((format(printf, 1, 2)));
 union olsr_ip_addr *MainAddressOf(union olsr_ip_addr *ip);
-int InterfaceChange(struct interface *interf, int action);
+int InterfaceChange(struct interface *interf, enum olsr_ifchg_flag action);
 int SetFanOutLimit(const char *value, void *data, set_plugin_parameter_addon addon);
 int InitBmf(struct interface *skipThisIntf);
 void CloseBmf(void);

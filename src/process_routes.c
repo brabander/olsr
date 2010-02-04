@@ -269,7 +269,6 @@ olsr_delete_outdated_routes(struct rt_entry *rt)
   struct avl_node *rtp_tree_node, *next_rtp_tree_node;
 
   for (rtp_tree_node = avl_walk_first(&rt->rt_path_tree); rtp_tree_node != NULL; rtp_tree_node = next_rtp_tree_node) {
-
     /*
      * pre-fetch the next node before loosing context.
      */
@@ -282,15 +281,15 @@ olsr_delete_outdated_routes(struct rt_entry *rt)
      * comparing for unequalness avoids handling version number wraps.
      */
     if (routingtree_version != rtp->rtp_version) {
-
       /* remove from the originator tree */
       avl_delete(&rt->rt_path_tree, rtp_tree_node);
       rtp->rtp_rt = NULL;
+
+      if (rt->rt_best == rtp) {
+        rt->rt_best = NULL;
+      }
     }
   }
-
-  /* safety measure against dangling pointers */
-  rt->rt_best = NULL;
 }
 
 /**
@@ -334,6 +333,56 @@ olsr_update_rib_routes(void)
     }
   }
   OLSR_FOR_ALL_RT_ENTRIES_END(rt);
+}
+
+void
+olsr_delete_interface_routes(int if_index) {
+  struct rt_entry *rt;
+  bool triggerUpdate = false;
+
+  OLSR_FOR_ALL_RT_ENTRIES(rt) {
+    bool mightTrigger = false;
+    struct rt_path *rtp;
+    struct avl_node *rtp_tree_node, *next_rtp_tree_node;
+
+    /* run through all routing paths of route */
+    for (rtp_tree_node = avl_walk_first(&rt->rt_path_tree); rtp_tree_node != NULL; rtp_tree_node = next_rtp_tree_node) {
+      /*
+       * pre-fetch the next node before loosing context.
+       */
+      next_rtp_tree_node = avl_walk_next(rtp_tree_node);
+
+      rtp = rtp_tree2rtp(rtp_tree_node);
+
+      /* nexthop use lost interface ? */
+      if (rtp->rtp_nexthop.iif_index == if_index) {
+        /* remove from the originator tree */
+        avl_delete(&rt->rt_path_tree, rtp_tree_node);
+        rtp->rtp_rt = NULL;
+
+        if (rt->rt_best == rtp) {
+          rt->rt_best = NULL;
+          mightTrigger = true;
+        }
+      }
+    }
+
+    if (mightTrigger) {
+      if (!rt->rt_path_tree.count) {
+        /* oops, all routes are gone - flush the route head */
+        avl_delete(&routingtree, rt_tree_node);
+
+        /* do not dequeue route because they are already gone */
+      }
+      triggerUpdate = true;
+    }
+  } OLSR_FOR_ALL_RT_ENTRIES_END(rt)
+
+  /* trigger route update if necessary */
+  if (triggerUpdate) {
+    olsr_update_rib_routes();
+    olsr_update_kernel_routes();
+  }
 }
 
 /**

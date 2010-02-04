@@ -119,7 +119,6 @@ static void netlink_process_link(struct nlmsghdr *h)
 {
   struct ifinfomsg *ifi = (struct ifinfomsg *) NLMSG_DATA(h);
   struct interface *iface;
-  struct olsr_if *tmp_if;
 
   /*monitor tunl0 and olsrtunl*/
   if (olsr_cnf->smart_gw_active) {
@@ -156,26 +155,18 @@ static void netlink_process_link(struct nlmsghdr *h)
   }
 
   iface = if_ifwithindex(ifi->ifi_index);
-  if (iface == NULL) {
-    return;
-  }
-  
-  //all IFF flags: LOOPBACK,BROADCAST;POINTOPOINT;MULTICAST;NOARP;ALLMULTI;PROMISC;MASTER;SLAVE;DEBUG;DYNAMIC;AUTOMEDIA;PORTSEL;NOTRAILERS;UP;LOWER_UP;DORMANT
-  /* check if interface is up and running? (a not running interface keeps its routes, so better not react like on ifdown!!??) */
-  if (ifi->ifi_flags&IFF_UP) {
-    OLSR_PRINTF(3,"interface %s changed but is still up!\n", iface->int_name);
-    return; //we are currently only interested in interfaces that are/go down
-  } else {
-    OLSR_PRINTF(1,"interface %s is down!\n", iface->int_name);
-  }
+  if (iface == NULL && (ifi->ifi_flags & IFF_UP) != 0) {
+    char namebuffer[IF_NAMESIZE];
+    struct olsr_if *oif;
 
-  //only for still configured interfaces (ifup has to be detected with regular interface polling)
-  for (tmp_if = olsr_cnf->interfaces; tmp_if != NULL; tmp_if = tmp_if->next) {
-    if (tmp_if->interf==iface) {
-      OLSR_PRINTF(1,"-> removing %s from olsr config!\n", iface->int_name);
-      olsr_remove_interface(tmp_if,true);
-      break;
+    if (if_indextoname(ifi->ifi_index, namebuffer)) {
+      if ((oif = olsrif_ifwithname(namebuffer)) != NULL) {
+        chk_if_up(oif, 3);
+      }
     }
+  }
+  else if (iface != NULL && (ifi->ifi_flags & IFF_UP) == 0) {
+    olsr_remove_interface(iface->olsr_if);
   }
 }
 
@@ -202,7 +193,7 @@ void rtnetlink_read(int sock)
   iov.iov_len = sizeof(buffer);
 
   while (true) { //read until ret<0;
-    ret=recvmsg(sock, &msg, 0);
+    ret=recvmsg(sock, &msg, MSG_DONTWAIT);
     if (ret<0) {
       if (errno != EAGAIN) OLSR_PRINTF(1,"netlink listen error %u - %s\n",errno,strerror(errno));
       return;

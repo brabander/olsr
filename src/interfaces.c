@@ -56,24 +56,6 @@
 #ifdef WIN32
 #include <winbase.h>
 #define close(x) closesocket(x)
-int __stdcall SignalHandler(unsigned long signo);
-
-static unsigned long __stdcall
-SignalHandlerWrapper(void *Dummy __attribute__ ((unused)))
-{
-  SignalHandler(0);
-  return 0;
-}
-
-static void
-CallSignalHandler(void)
-{
-  unsigned long ThreadId;
-
-  CreateThread(NULL, 0, SignalHandlerWrapper, NULL, 0, &ThreadId);
-}
-
-
 #endif
 
 /* The interface linked-list */
@@ -81,7 +63,7 @@ struct interface *ifnet;
 
 /* Ifchange functions */
 struct ifchgf {
-  int (*function) (struct interface *, int);
+  int (*function) (struct interface *, enum olsr_ifchg_flag);
   struct ifchgf *next;
 };
 
@@ -138,7 +120,7 @@ olsr_init_interfacedb(void)
 }
 
 void
-olsr_trigger_ifchange(struct interface *ifp, int flag)
+olsr_trigger_ifchange(struct interface *ifp, enum olsr_ifchg_flag flag)
 {
   struct ifchgf *tmp_ifchgf_list = ifchgf_list;
 
@@ -225,6 +207,28 @@ if_ifwithname(const char *if_name)
       return ifp;
     }
     ifp = ifp->int_next;
+  }
+  return NULL;
+}
+
+/**
+ *Find the olsr_if with a given label.
+ *
+ *@param if_name the label of the interface to find.
+ *
+ *@return return the interface struct representing the interface
+ *that matched the label.
+ */
+struct olsr_if *
+olsrif_ifwithname(const char *if_name)
+{
+  struct olsr_if *oifp = olsr_cnf->interfaces;
+  while (oifp) {
+    /* good ol' strcmp should be sufficcient here */
+    if (strcmp(oifp->name, if_name) == 0) {
+      return oifp;
+    }
+    oifp = oifp->next;
   }
   return NULL;
 }
@@ -318,7 +322,7 @@ olsr_create_olsrif(const char *name, int hemu)
  *@return
  */
 int
-olsr_add_ifchange_handler(int (*f) (struct interface *, int))
+olsr_add_ifchange_handler(int (*f) (struct interface *, enum olsr_ifchg_flag))
 {
 
   struct ifchgf *new_ifchgf;
@@ -337,7 +341,7 @@ olsr_add_ifchange_handler(int (*f) (struct interface *, int))
  * Remove an ifchange function
  */
 int
-olsr_remove_ifchange_handler(int (*f) (struct interface *, int))
+olsr_remove_ifchange_handler(int (*f) (struct interface *, enum olsr_ifchg_flag))
 {
   struct ifchgf *tmp_ifchgf, *prev;
 
@@ -364,10 +368,9 @@ olsr_remove_ifchange_handler(int (*f) (struct interface *, int))
 }
 
 void
-olsr_remove_interface(struct olsr_if * iface, bool went_down)
+olsr_remove_interface(struct olsr_if * iface)
 {
   struct interface *ifp, *tmp_ifp;
-  struct rt_entry *rt;
   ifp = iface->interf;
 
   OLSR_PRINTF(1, "Removing interface %s\n", iface->name);
@@ -380,16 +383,8 @@ olsr_remove_interface(struct olsr_if * iface, bool went_down)
    */
   olsr_trigger_ifchange(ifp, IFCHG_IF_REMOVE);
 
-  /*remove all routes*/
-  if (went_down) {
-    OLSR_FOR_ALL_RT_ENTRIES(rt) {
-      if (rt->rt_nexthop.iif_index == ifp->if_index) {
-        //marks route as unexisting in kernel, do this better !?
-        rt->rt_nexthop.iif_index=-1;
-      }
-    }
-    OLSR_FOR_ALL_RT_ENTRIES_END(rt);
-  }
+  /* cleanup routes over this interface */
+  olsr_delete_interface_routes(ifp->if_index);
 
   /* Dequeue */
   if (ifp == ifnet) {
@@ -431,23 +426,23 @@ olsr_remove_interface(struct olsr_if * iface, bool went_down)
 
   iface->configured = 0;
   iface->interf = NULL;
+
   /* Close olsr socket */
   close(ifp->olsr_socket);
   remove_olsr_socket(ifp->olsr_socket, &olsr_input);
+
+  if (ifp->send_socket != ifp->olsr_socket) {
+    close(ifp->send_socket);
+    remove_olsr_socket(ifp->send_socket, &olsr_input);
+  }
 
   /* Free memory */
   free(ifp->int_name);
   free(ifp);
 
   if ((ifnet == NULL) && (!olsr_cnf->allow_no_interfaces)) {
-    OLSR_PRINTF(1, "No more active interfaces - exiting.\n");
     olsr_syslog(OLSR_LOG_INFO, "No more active interfaces - exiting.\n");
-    olsr_cnf->exit_value = EXIT_FAILURE;
-#ifndef WIN32
-    kill(getpid(), SIGINT);
-#else
-    CallSignalHandler();
-#endif
+    olsr_exit("No more active interfaces - exiting.\n", EXIT_FAILURE);
   }
 }
 

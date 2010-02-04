@@ -188,9 +188,11 @@ struct interface {
 
 /* Ifchange actions */
 
-#define IFCHG_IF_ADD           1
-#define IFCHG_IF_REMOVE        2
-#define IFCHG_IF_UPDATE        3
+enum olsr_ifchg_flag {
+  IFCHG_IF_ADD = 1,
+  IFCHG_IF_REMOVE = 2,
+  IFCHG_IF_UPDATE = 3
+};
 
 /* The interface linked-list */
 extern struct interface *ifnet;
@@ -198,13 +200,14 @@ extern struct interface *ifnet;
 int olsr_init_interfacedb(void);
 void olsr_delete_interfaces(void);
 
-void olsr_trigger_ifchange(struct interface *, int);
+void olsr_trigger_ifchange(struct interface *, enum olsr_ifchg_flag);
 
 struct interface *if_ifwithsock(int);
 
 struct interface *if_ifwithaddr(const union olsr_ip_addr *);
 
 struct interface *if_ifwithname(const char *);
+struct olsr_if *olsrif_ifwithname(const char *if_name);
 
 const char *if_ifwithindex_name(const int if_index);
 
@@ -212,11 +215,11 @@ struct interface *if_ifwithindex(const int if_index);
 
 struct olsr_if *olsr_create_olsrif(const char *name, int hemu);
 
-int olsr_add_ifchange_handler(int (*f) (struct interface *, int));
+int olsr_add_ifchange_handler(int (*f) (struct interface *, enum olsr_ifchg_flag));
 
-int olsr_remove_ifchange_handler(int (*f) (struct interface *, int));
+int olsr_remove_ifchange_handler(int (*f) (struct interface *, enum olsr_ifchg_flag));
 
-void olsr_remove_interface(struct olsr_if *, bool);
+void olsr_remove_interface(struct olsr_if *);
 
 extern struct olsr_cookie_info *interface_poll_timer_cookie;
 extern struct olsr_cookie_info *hello_gen_timer_cookie;

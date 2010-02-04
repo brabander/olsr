@@ -85,13 +85,12 @@ src/builddata.c:
 
 clean:
 	-rm -f $(OBJS) $(SRCS:%.c=%.d) $(EXENAME) $(EXENAME).exe src/builddata.c $(TMPFILES)
-ifeq ($(OS), win32)
 	-rm -f libolsrd.a
+	-rm -f olsr_switch.exe
 	-rm -f gui/win32/Main/olsrd_cfgparser.lib
 	-rm -f olsr-setup.exe
 	-rm -fr gui/win32/Main/Release
 	-rm -fr gui/win32/Shim/Release
-endif
 
 uberclean:	clean clean_libs
 	-rm -f $(TAGFILE)
