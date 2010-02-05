@@ -43,7 +43,6 @@ struct gateway_entry {
   struct avl_node node;
   union olsr_ip_addr originator;
   struct olsr_ip_prefix external_prefix;
-  uint32_t last_heared;
   uint32_t uplink, downlink;
   bool ipv4, ipv4nat, ipv6;
 };

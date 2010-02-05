@@ -526,9 +526,7 @@ static bool olsr_netlink_process_smartgw(const struct rt_entry *rt, bool set) {
   return set && false;
 }
 
-int olsr_netlink_process_rt_entry(const struct rt_entry *rt, bool set);
-
-int olsr_netlink_process_rt_entry(const struct rt_entry *rt, bool set) {
+static int olsr_os_process_rt_entry(int af_family, const struct rt_entry *rt, bool set) {
   int metric, protocol, table;
   const struct rt_nexthop *nexthop;
   union olsr_ip_addr *src;
@@ -590,7 +588,7 @@ int olsr_netlink_process_rt_entry(const struct rt_entry *rt, bool set) {
   src = NULL;
 
   /* create route */
-  err = olsr_new_netlink_route(olsr_cnf->ip_version, table, nexthop->iif_index, metric, protocol,
+  err = olsr_new_netlink_route(af_family, table, nexthop->iif_index, metric, protocol,
       src, hostRoute ? NULL : &nexthop->gateway, &rt->rt_dst, set, false);
 
   /* resolve "File exist" (17) propblems (on orig and autogen routes)*/
@@ -599,11 +597,11 @@ int olsr_netlink_process_rt_entry(const struct rt_entry *rt, bool set) {
     olsr_syslog(OLSR_LOG_ERR, ". auto-deleting similar routes to resolve 'File exists' (17) while adding route!");
 
     /* erase similar rule */
-    err = olsr_new_netlink_route(olsr_cnf->ip_version, table, 0, 0, -1, NULL, NULL, &rt->rt_dst, false, true);
+    err = olsr_new_netlink_route(af_family, table, 0, 0, -1, NULL, NULL, &rt->rt_dst, false, true);
 
     if (!err) {
       /* create this rule a second time if delete worked*/
-      err = olsr_new_netlink_route(olsr_cnf->ip_version, table, nexthop->iif_index, metric, protocol,
+      err = olsr_new_netlink_route(af_family, table, nexthop->iif_index, metric, protocol,
           src, hostRoute ? NULL : &nexthop->gateway, &rt->rt_dst, set, false);
     }
     olsr_syslog(OLSR_LOG_ERR, ". %s (%d)", err == 0 ? "successful" : "failed", err);
@@ -640,11 +638,11 @@ int olsr_netlink_process_rt_entry(const struct rt_entry *rt, bool set) {
     hostPrefix.prefix = nexthop->gateway;
     hostPrefix.prefix_len = olsr_cnf->ipsize * 8;
 
-    err = olsr_new_netlink_route(olsr_cnf->ip_version, olsr_cnf->rttable, nexthop->iif_index,
+    err = olsr_new_netlink_route(af_family, olsr_cnf->rttable, nexthop->iif_index,
         metric, protocol, src, NULL, &hostPrefix, true, false);
     if (err == 0) {
       /* create this rule a second time if hostrule generation was successful */
-      err = olsr_new_netlink_route(olsr_cnf->ip_version, table, nexthop->iif_index, metric, protocol,
+      err = olsr_new_netlink_route(af_family, table, nexthop->iif_index, metric, protocol,
           src, hostRoute ? NULL : &nexthop->gateway, &rt->rt_dst, set, false);
     }
     olsr_syslog(OLSR_LOG_ERR, ". %s (%d)", err == 0 ? "successful" : "failed", err);
@@ -1147,27 +1145,7 @@ olsr_ioctl_add_route(const struct rt_entry *rt)
 
   return rslt;
 #else /* !LINUX_POLICY_ROUTING */
-#if 0
-  /*put large hnas also into RtTabledefault (if smartgateway is active) as they may be used to replace (huge parts) of a normal default route*/
-  if (0 == olsr_cnf->rttable_default && 0 == rt->rt_dst.prefix_len && 253 > olsr_cnf->rttable) {
-    /*
-     * Users start whining about not having internet with policy
-     * routing activated and no static default route in table 254.
-     * We maintain a fallback defroute in the default=253 table.
-     *
-     * which was always insane but togehter with smartgateways policy routing its too insane
-     */
-    if (!olsr_cnf->smart_gw_active) olsr_netlink_route(rt, AF_INET, 253, RTM_NEWROUTE);
-  }
-  if (0 == rt->rt_dst.prefix_len && olsr_cnf->rttable_default != 0) {
-    return olsr_netlink_route(rt, AF_INET, olsr_cnf->rttable_default, RTM_NEWROUTE);
-  }
-  else {
-    return olsr_netlink_route(rt, AF_INET, olsr_cnf->rttable, RTM_NEWROUTE);
-  }
-#endif
-
-  return olsr_netlink_process_rt_entry(rt, true);
+  return olsr_os_process_rt_entry(AF_INET, rt, true);
 #endif /* LINUX_POLICY_ROUTING */
 }
 
@@ -1215,16 +1193,7 @@ olsr_ioctl_add_route6(const struct rt_entry *rt)
   return rslt;
 #else /* !LINUX_POLICY_ROUTING */
 
-#if 0
-  if (0 == rt->rt_dst.prefix_len && olsr_cnf->rttable_default != 0) {
-    return olsr_netlink_route(rt, AF_INET6, olsr_cnf->rttable_default, RTM_NEWROUTE);
-  }
-  else {
-    return olsr_netlink_route(rt, AF_INET6, olsr_cnf->rttable, RTM_NEWROUTE);
-  }
-#endif
-
-  return olsr_netlink_process_rt_entry(rt, true);
+  return olsr_os_process_rt_entry(AF_INET6, rt, true);
 #endif /* LINUX_POLICY_ROUTING */
 }
 
@@ -1283,22 +1252,7 @@ olsr_ioctl_del_route(const struct rt_entry *rt)
 
   return rslt;
 #else /* !LINUX_POLICY_ROUTING */
-
-#if 0
-  if (0 == olsr_cnf->rttable_default && 0 == rt->rt_dst.prefix_len && 253 > olsr_cnf->rttable) {
-    /*
-     * Also remove the fallback default route
-     */
-    olsr_netlink_route(rt, AF_INET, 253, RTM_DELROUTE);
-  }
-  if (0 == rt->rt_dst.prefix_len && olsr_cnf->rttable_default != 0) {
-    return olsr_netlink_route(rt, AF_INET, olsr_cnf->rttable_default, RTM_DELROUTE);
-  }
-  else {
-    return olsr_netlink_route(rt, AF_INET, olsr_cnf->rttable, RTM_DELROUTE);
-  }
-#endif
-  return olsr_netlink_process_rt_entry(rt, false);
+  return olsr_os_process_rt_entry(AF_INET, rt, false);
 #endif /* LINUX_POLICY_ROUTING */
 }
 
@@ -1340,15 +1294,7 @@ olsr_ioctl_del_route6(const struct rt_entry *rt)
 
   return rslt;
 #else /* !LINUX_POLICY_ROUTING */
-#if 0
-  if (0 == rt->rt_dst.prefix_len && olsr_cnf->rttable_default != 0) {
-    return olsr_netlink_route(rt, AF_INET6, olsr_cnf->rttable_default, RTM_DELROUTE);
-  }
-  else {
-    return olsr_netlink_route(rt, AF_INET6, olsr_cnf->rttable, RTM_DELROUTE);
-  }
-#endif
-  return olsr_netlink_process_rt_entry(rt, false);
+  return olsr_os_process_rt_entry(AF_INET, rt, false);
 #endif /* LINUX_POLICY_ROUTING */
 }
 
