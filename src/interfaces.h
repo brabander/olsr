@@ -200,7 +200,7 @@ extern struct interface *ifnet;
 int olsr_init_interfacedb(void);
 void olsr_delete_interfaces(void);
 
-void olsr_trigger_ifchange(struct interface *, enum olsr_ifchg_flag);
+void olsr_trigger_ifchange(int if_index, struct interface *, enum olsr_ifchg_flag);
 
 struct interface *if_ifwithsock(int);
 
@@ -215,9 +215,8 @@ struct interface *if_ifwithindex(const int if_index);
 
 struct olsr_if *olsr_create_olsrif(const char *name, int hemu);
 
-int olsr_add_ifchange_handler(int (*f) (struct interface *, enum olsr_ifchg_flag));
-
-int olsr_remove_ifchange_handler(int (*f) (struct interface *, enum olsr_ifchg_flag));
+int olsr_add_ifchange_handler(void (*f) (int if_index, struct interface *, enum olsr_ifchg_flag));
+int olsr_remove_ifchange_handler(void (*f) (int if_index, struct interface *, enum olsr_ifchg_flag));
 
 void olsr_remove_interface(struct olsr_if *);
 

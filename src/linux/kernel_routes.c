@@ -119,7 +119,9 @@ static void netlink_process_link(struct nlmsghdr *h)
 {
   struct ifinfomsg *ifi = (struct ifinfomsg *) NLMSG_DATA(h);
   struct interface *iface;
+  struct olsr_if *oif;
 
+#if 0
   /*monitor tunl0 and olsrtunl*/
   if (olsr_cnf->smart_gw_active) {
     if (ifi->ifi_index==olsr_cnf->ipip_if_index) {
@@ -153,20 +155,29 @@ static void netlink_process_link(struct nlmsghdr *h)
       }
     }
   }
+#endif
 
   iface = if_ifwithindex(ifi->ifi_index);
+  oif = NULL;
   if (iface == NULL && (ifi->ifi_flags & IFF_UP) != 0) {
     char namebuffer[IF_NAMESIZE];
-    struct olsr_if *oif;
 
     if (if_indextoname(ifi->ifi_index, namebuffer)) {
       if ((oif = olsrif_ifwithname(namebuffer)) != NULL) {
+        /* try to take interface up, will trigger ifchange */
         chk_if_up(oif, 3);
       }
     }
   }
   else if (iface != NULL && (ifi->ifi_flags & IFF_UP) == 0) {
+    /* try to take interface down, will trigger ifchange */
     olsr_remove_interface(iface->olsr_if);
+  }
+
+  if (iface == NULL && oif == NULL) {
+    /* this is not an OLSR interface */
+    olsr_trigger_ifchange(ifi->ifi_index, NULL,
+        (ifi->ifi_flags & IFF_UP) == 0 ? IFCHG_IF_REMOVE : IFCHG_IF_ADD);
   }
 }
 

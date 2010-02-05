@@ -63,7 +63,7 @@ extern int BroadcastRetransmitCount;
 
 void BmfPError(const char *format, ...) __attribute__ ((format(printf, 1, 2)));
 union olsr_ip_addr *MainAddressOf(union olsr_ip_addr *ip);
-int InterfaceChange(struct interface *interf, enum olsr_ifchg_flag action);
+void InterfaceChange(int if_index, struct interface *interf, enum olsr_ifchg_flag action);
 int SetFanOutLimit(const char *value, void *data, set_plugin_parameter_addon addon);
 int InitBmf(struct interface *skipThisIntf);
 void CloseBmf(void);

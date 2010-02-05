@@ -1149,16 +1149,22 @@ BmfRun(void *useless __attribute__ ((unused)))
  * Function   : InterfaceChange
  * Description: Callback function passed to OLSRD for it to call whenever a
  *              network interface has been added, removed or updated
- * Input      : interf - the network interface to deal with
+ * Input      : if_index - interface index
+ *              interf - the network interface to deal with, might be NULL
+ *                 if interface is not an OLSR interface (tunl0 for example)
  *              action - indicates if the specified network interface was
  *                added, removed or updated.
  * Output     : none
- * Return     : always 0
  * Data Used  : none
  * ------------------------------------------------------------------------- */
-int
-InterfaceChange(struct interface *interf, enum olsr_ifchg_flag action)
+void
+InterfaceChange(int if_index  __attribute__ ((unused)), struct interface *interf, enum olsr_ifchg_flag action)
 {
+  if (interf == NULL) {
+    /* we only care for OLSR interfaces */
+    return;
+  }
+
   switch (action) {
   case (IFCHG_IF_ADD):
     AddInterface(interf);
@@ -1184,8 +1190,6 @@ InterfaceChange(struct interface *interf, enum olsr_ifchg_flag action)
     olsr_printf(1, "%s: interface %s: error - unknown action (%d)\n", PLUGIN_NAME, interf->int_name, action);
     break;
   }
-
-  return 0;
 }                               /* InterfaceChange */
 
 /* -------------------------------------------------------------------------

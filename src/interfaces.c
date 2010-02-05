@@ -63,7 +63,7 @@ struct interface *ifnet;
 
 /* Ifchange functions */
 struct ifchgf {
-  int (*function) (struct interface *, enum olsr_ifchg_flag);
+  void (*function) (int if_index, struct interface *, enum olsr_ifchg_flag);
   struct ifchgf *next;
 };
 
@@ -120,12 +120,12 @@ olsr_init_interfacedb(void)
 }
 
 void
-olsr_trigger_ifchange(struct interface *ifp, enum olsr_ifchg_flag flag)
+olsr_trigger_ifchange(int if_index, struct interface *ifp, enum olsr_ifchg_flag flag)
 {
   struct ifchgf *tmp_ifchgf_list = ifchgf_list;
 
   while (tmp_ifchgf_list != NULL) {
-    tmp_ifchgf_list->function(ifp, flag);
+    tmp_ifchgf_list->function(if_index, ifp, flag);
     tmp_ifchgf_list = tmp_ifchgf_list->next;
   }
 }
@@ -322,7 +322,7 @@ olsr_create_olsrif(const char *name, int hemu)
  *@return
  */
 int
-olsr_add_ifchange_handler(int (*f) (struct interface *, enum olsr_ifchg_flag))
+olsr_add_ifchange_handler(void (*f) (int if_index, struct interface *, enum olsr_ifchg_flag))
 {
 
   struct ifchgf *new_ifchgf;
@@ -341,7 +341,7 @@ olsr_add_ifchange_handler(int (*f) (struct interface *, enum olsr_ifchg_flag))
  * Remove an ifchange function
  */
 int
-olsr_remove_ifchange_handler(int (*f) (struct interface *, enum olsr_ifchg_flag))
+olsr_remove_ifchange_handler(void (*f) (int if_index, struct interface *, enum olsr_ifchg_flag))
 {
   struct ifchgf *tmp_ifchgf, *prev;
 
@@ -381,7 +381,7 @@ olsr_remove_interface(struct olsr_if * iface)
   /*
    *Call possible ifchange functions registered by plugins
    */
-  olsr_trigger_ifchange(ifp, IFCHG_IF_REMOVE);
+  olsr_trigger_ifchange(ifp->if_index, ifp, IFCHG_IF_REMOVE);
 
   /* cleanup routes over this interface */
   olsr_delete_interface_routes(ifp->if_index);

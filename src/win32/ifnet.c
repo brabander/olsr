@@ -755,7 +755,7 @@ chk_if_changed(struct olsr_if *IntConf)
     OLSR_PRINTF(3, "\tNo broadcast address change.\n");
 
   if (Res != 0)
-    olsr_trigger_ifchange(Int, IFCHG_IF_UPDATE);
+    olsr_trigger_ifchange(Int->if_index, Int, IFCHG_IF_UPDATE);
 
   return Res;
 }
@@ -906,7 +906,7 @@ chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__ ((unused)))
 
   New->mode = IntConf->cnf->mode;
 
-  olsr_trigger_ifchange(New, IFCHG_IF_ADD);
+  olsr_trigger_ifchange(New->if_index, New, IFCHG_IF_ADD);
 
   return 1;
 }

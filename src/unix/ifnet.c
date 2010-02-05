@@ -266,7 +266,7 @@ chk_if_changed(struct olsr_if *iface)
       memcpy(&ifp->int6_addr.sin6_addr, &tmp_saddr6.sin6_addr, olsr_cnf->ipsize);
       memcpy(&ifp->ip_addr, &tmp_saddr6.sin6_addr, olsr_cnf->ipsize);
 
-      olsr_trigger_ifchange(ifp, IFCHG_IF_UPDATE);
+      olsr_trigger_ifchange(ifp->if_index, ifp, IFCHG_IF_UPDATE);
 
       return 1;
     }
@@ -352,7 +352,7 @@ chk_if_changed(struct olsr_if *iface)
   }
 
   if (if_changes)
-    olsr_trigger_ifchange(ifp, IFCHG_IF_UPDATE);
+    olsr_trigger_ifchange(ifp->if_index, ifp, IFCHG_IF_UPDATE);
 
   return if_changes;
 
@@ -841,7 +841,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__ ((unused)))
   /*
    *Call possible ifchange functions registered by plugins
    */
-  olsr_trigger_ifchange(ifp, IFCHG_IF_ADD);
+  olsr_trigger_ifchange(ifp->if_index, ifp, IFCHG_IF_ADD);
 
   return 1;
 }
