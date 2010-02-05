@@ -224,9 +224,13 @@ olsr_chg_kernel_routes(struct list_node *head_node)
   while (!list_is_empty(head_node)) {
     rt = changelist2rt(head_node->next);
 
+/*deleting routes should not be required anymore as we use (NLM_F_CREATE | NLM_F_REPLACE) in linux rtnetlink*/
 #if !LINUX_POLICY_ROUTING
-    #should not be required anymore as we overwrite routes (NLM_F_CREATE | NLM_F_REPLACE)
+    /*no rtnetlink we have to delete routes*/
     if (rt->rt_nexthop.iif_index > -1) olsr_delete_kernel_route(rt);
+#else
+    /*delete routes with ipv6 only as it still doesn`t support NLM_F_REPLACE*/
+    if ((family != AF_INET ) && (rt->rt_nexthop.iif_index > -1)) olsr_delete_kernel_route(rt);
 #endif
 
     olsr_add_kernel_route(rt);
