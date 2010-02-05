@@ -224,7 +224,10 @@ olsr_chg_kernel_routes(struct list_node *head_node)
   while (!list_is_empty(head_node)) {
     rt = changelist2rt(head_node->next);
 
+#if !LINUX_POLICY_ROUTING
+    #should not be required anymore as we overwrite routes (NLM_F_CREATE | NLM_F_REPLACE)
     if (rt->rt_nexthop.iif_index > -1) olsr_delete_kernel_route(rt);
+#endif
 
     olsr_add_kernel_route(rt);
 
