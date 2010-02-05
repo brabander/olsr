@@ -91,7 +91,7 @@ static int ipc_socket;
 /* IPC initialization function */
 static int plugin_ipc_init(void);
 
-static void send_info(int send_what, int socket);
+static void send_info(int /*send_what*/, int /*socket*/);
 
 static void ipc_action(int);
 

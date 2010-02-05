@@ -371,7 +371,7 @@ serialize_hello4(struct hello_message *message, struct interface *ifp)
           curr_size += 4;       /* HELLO type section header */
         }
 
-        *((union olsr_ip_addr *)haddr) = nb->address;
+        memcpy(haddr, &nb->address, sizeof(union olsr_ip_addr));
 
         /* Point to next address */
         haddr += olsr_cnf->ipsize;

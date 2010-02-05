@@ -183,7 +183,7 @@ static void build_about_body(struct autobuf *);
 
 static void build_cfgfile_body(struct autobuf *);
 
-static int check_allowed_ip(const struct allowed_net *const allowed_nets, const union olsr_ip_addr *const addr);
+static int check_allowed_ip(const struct allowed_net *const /*allowed_nets*/, const union olsr_ip_addr *const /*addr*/);
 
 static void build_ip_txt(struct autobuf *, const bool want_link, const char *const ipaddrstr, const int prefix_len);
 

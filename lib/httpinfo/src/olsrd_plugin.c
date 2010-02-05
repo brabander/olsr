@@ -67,7 +67,7 @@ static void my_fini(void) __attribute__ ((destructor));
 static int add_plugin_ipnet(const char *value, void *data, set_plugin_parameter_addon);
 static int add_plugin_ipaddr(const char *value, void *data, set_plugin_parameter_addon);
 
-static int insert_plugin_ipnet(const char *sz_net, const char *sz_mask, struct allowed_net **allowed_nets);
+static int insert_plugin_ipnet(const char */*sz_net*/, const char */*sz_mask*/, struct allowed_net **/*allowed_nets*/);
 
 /*
  * Defines the version of the plugin interface that is used

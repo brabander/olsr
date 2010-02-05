@@ -869,7 +869,8 @@ int olsr_if_set_state(const char *dev, bool up) {
 
 
 int olsr_if_setip(const char *dev, union olsr_ip_addr *ip, int ip_version) {
-  struct sockaddr s;
+  struct sockaddr_in s4;
+  struct sockaddr_in6 s6;
   struct ifreq ifr;
 
   /* first activate interface */
@@ -880,15 +881,16 @@ int olsr_if_setip(const char *dev, union olsr_ip_addr *ip, int ip_version) {
   memset(&ifr, 0, sizeof(ifr));
   strscpy(ifr.ifr_name, dev, IFNAMSIZ);
 
-  memset(&s, 0, sizeof(s));
-  s.sa_family = ip_version == 0 ? olsr_cnf->ip_version : ip_version;
-  if (s.sa_family == AF_INET) {
-    ((struct sockaddr_in *)&s)->sin_addr = ip->v4;
+  if (ip_version == AF_INET) {
+    s4.sin_family = AF_INET;
+    s4.sin_addr = ip->v4;
+    memcpy(&ifr.ifr_addr, &s4, sizeof(s4));
   }
   else {
-    ((struct sockaddr_in6 *)&s)->sin6_addr = ip->v6;
+    s6.sin6_family = AF_INET6;
+    s6.sin6_addr = ip->v6;
+    memcpy(&ifr.ifr_addr, &s6, sizeof(s6));
   }
-  memcpy(&ifr.ifr_addr, &s, sizeof(s));
 
   if (ioctl(olsr_cnf->ioctl_s, SIOCSIFADDR, &ifr) < 0) {
     perror("ioctl SIOCSIFADDR (set addr)");
