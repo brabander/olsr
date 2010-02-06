@@ -212,13 +212,13 @@ ip_in_net(const union olsr_ip_addr *ipaddr, const struct olsr_ip_prefix *net)
 }
 
 bool is_prefix_inetgw(const struct olsr_ip_prefix *prefix) {
-  if (ip_prefix_is_v4_gw(prefix)) {
+  if (ip_prefix_is_v4_inetgw(prefix)) {
     return true;
   }
-  if (ip_prefix_is_v6_gw(prefix)) {
+  if (ip_prefix_is_v6_inetgw(prefix)) {
     return true;
   }
-  return ip_prefix_is_mappedv4_gw(prefix);
+  return ip_prefix_is_mappedv4_inetgw(prefix);
 }
 
 /*

@@ -52,6 +52,7 @@
 #include "net_olsr.h"
 #include "tc_set.h"
 #include "olsr_cookie.h"
+#include "olsr_niit.h"
 
 #ifdef WIN32
 char *StrError(unsigned int ErrNo);
@@ -169,6 +170,14 @@ olsr_delete_kernel_route(struct rt_entry *rt)
 
       olsr_syslog(OLSR_LOG_ERR, "Delete route %s: %s", routestr, err_msg);
     }
+    else {
+#ifdef linux
+      /* call NIIT handler */
+      if (olsr_cnf->use_niit) {
+        olsr_niit_handle_route(rt, false);
+      }
+#endif
+    }
   }
 }
 
@@ -191,12 +200,18 @@ olsr_add_kernel_route(struct rt_entry *rt)
 
       olsr_syslog(OLSR_LOG_ERR, "Add route %s: %s", routestr, err_msg);
     } else {
-
       /* route addition has suceeded */
 
       /* save the nexthop and metric in the route entry */
       rt->rt_nexthop = rt->rt_best->rtp_nexthop;
       rt->rt_metric = rt->rt_best->rtp_metric;
+
+#ifdef linux
+      /* call NIIT handler */
+      if (olsr_cnf->use_niit) {
+        olsr_niit_handle_route(rt, true);
+      }
+#endif
     }
   }
 }
@@ -225,12 +240,14 @@ olsr_chg_kernel_routes(struct list_node *head_node)
     rt = changelist2rt(head_node->next);
 
 /*deleting routes should not be required anymore as we use (NLM_F_CREATE | NLM_F_REPLACE) in linux rtnetlink*/
-#if !LINUX_POLICY_ROUTING
+#if LINUX_POLICY_ROUTING
+    /*delete routes with ipv6 only as it still doesn`t support NLM_F_REPLACE*/
+    if ((olsr_cnf->ip_version != AF_INET ) && (rt->rt_nexthop.iif_index > -1)) {
+      olsr_delete_kernel_route(rt);
+    }
+#else
     /*no rtnetlink we have to delete routes*/
     if (rt->rt_nexthop.iif_index > -1) olsr_delete_kernel_route(rt);
-#else
-    /*delete routes with ipv6 only as it still doesn`t support NLM_F_REPLACE*/
-    if ((family != AF_INET ) && (rt->rt_nexthop.iif_index > -1)) olsr_delete_kernel_route(rt);
 #endif
 
     olsr_add_kernel_route(rt);

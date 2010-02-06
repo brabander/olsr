@@ -171,30 +171,39 @@ prefix_to_netmask4(uint8_t prefixlen)
 
 static INLINE bool
 is_prefix_niit_ipv6(const struct olsr_ip_prefix *p) {
-  return olsr_cnf->ip_version == AF_INET6 && IN6_IS_ADDR_V4MAPPED(&p->prefix.v6) && p->prefix_len >= 96;
+  return olsr_cnf->ip_version == AF_INET6 && IN6_IS_ADDR_V4MAPPED(&p->prefix.v6)
+      && p->prefix_len >= mapped_v4_gw.prefix_len;
 }
 
 static INLINE struct olsr_ip_prefix *
 prefix_mappedv4_to_v4(struct olsr_ip_prefix *v4, const struct olsr_ip_prefix *v6) {
   memcpy(&v4->prefix.v4, &v6->prefix.v6.s6_addr[12], sizeof(struct in_addr));
-  v4->prefix_len = v6->prefix_len - 96;
+      v4->prefix_len = v6->prefix_len - 96;
   return v4;
 }
 
 
 static INLINE bool
-ip_prefix_is_mappedv4_gw(const struct olsr_ip_prefix *prefix) {
-  return olsr_cnf->ip_version == AF_INET6 && memcmp(prefix, &mapped_v4_gw, sizeof(struct olsr_ip_prefix)) == 0;
+ip_prefix_is_mappedv4(const struct olsr_ip_prefix *prefix) {
+  return prefix->prefix_len >= mapped_v4_gw.prefix_len
+      && memcmp(prefix, &mapped_v4_gw, mapped_v4_gw.prefix_len / 8) == 0;
 }
 
 static INLINE bool
-ip_prefix_is_v4_gw(const struct olsr_ip_prefix *prefix) {
+ip_prefix_is_mappedv4_inetgw(const struct olsr_ip_prefix *prefix) {
+  return olsr_cnf->ip_version == AF_INET6 && prefix->prefix_len == mapped_v4_gw.prefix_len
+      && memcmp(prefix, &mapped_v4_gw, mapped_v4_gw.prefix_len / 8) == 0;
+}
+
+static INLINE bool
+ip_prefix_is_v4_inetgw(const struct olsr_ip_prefix *prefix) {
   return olsr_cnf->ip_version == AF_INET && prefix->prefix_len == 0 && prefix->prefix.v4.s_addr == 0;
 }
 
 static INLINE bool
-ip_prefix_is_v6_gw(const struct olsr_ip_prefix *prefix) {
-  return olsr_cnf->ip_version == AF_INET6 && memcmp(prefix, &ipv6_internet_route, sizeof(struct olsr_ip_prefix)) == 0;
+ip_prefix_is_v6_inetgw(const struct olsr_ip_prefix *prefix) {
+  return olsr_cnf->ip_version == AF_INET6 && prefix->prefix_len == ipv6_internet_route.prefix_len
+      && memcmp(prefix, &ipv6_internet_route, ipv6_internet_route.prefix_len/8) == 0;
 }
 
 extern bool is_prefix_inetgw(const struct olsr_ip_prefix *prefix);

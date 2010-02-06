@@ -581,21 +581,21 @@ printf("\nMain Table is %i prio %i", olsr_cnf->rttable, olsr_cnf->rttable_rule);
 
       /*table with default routes for olsr interfaces*/
       for (cfg_if = olsr_cnf->interfaces; cfg_if; cfg_if = cfg_if->next) {
-        olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable_default,
+        olsr_os_policy_rule(olsr_cnf->ip_version, olsr_cnf->rttable_default,
             olsr_cnf->rttable_default_rule, cfg_if->name, true);
       }
       /*table with route into tunnel (for all interfaces)*/
-      olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable_smartgw,
+      olsr_os_policy_rule(olsr_cnf->ip_version, olsr_cnf->rttable_smartgw,
                         olsr_cnf->rttable_smartgw_rule, NULL, true);
       /*backup rule to default route table (if tunnel table gets empty)*/
-      olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable_default,
+      olsr_os_policy_rule(olsr_cnf->ip_version, olsr_cnf->rttable_default,
                         olsr_cnf->rttable_backup_rule, NULL, true);
     }
   }
 
   /* Create rule for RtTable to resolve route insertion problems*/
   if ((olsr_cnf->rttable < 253) & (olsr_cnf->rttable > 0)) {
-    olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable, (olsr_cnf->rttable_rule>0?olsr_cnf->rttable_rule:65535), NULL, true);
+    olsr_os_policy_rule(olsr_cnf->ip_version, olsr_cnf->rttable, (olsr_cnf->rttable_rule>0?olsr_cnf->rttable_rule:65535), NULL, true);
   }
 
   /* Create rtnetlink socket to listen on interface change events RTMGRP_LINK and RTMGRP_IPV4_ROUTE */
@@ -803,13 +803,13 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
   if (olsr_cnf->rttable_default_rule>0) {
     struct olsr_if * cfg_if;
     for (cfg_if = olsr_cnf->interfaces; cfg_if; cfg_if = cfg_if->next) {
-      olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable_default, olsr_cnf->rttable_default_rule, cfg_if->name, false);
+      olsr_os_policy_rule(olsr_cnf->ip_version, olsr_cnf->rttable_default, olsr_cnf->rttable_default_rule, cfg_if->name, false);
     }
   }
   if (olsr_cnf->rttable_smartgw_rule>0)
-    olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable_smartgw, olsr_cnf->rttable_smartgw_rule, NULL, false);
+    olsr_os_policy_rule(olsr_cnf->ip_version, olsr_cnf->rttable_smartgw, olsr_cnf->rttable_smartgw_rule, NULL, false);
   if (olsr_cnf->rttable_backup_rule>0)
-    olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable_default, olsr_cnf->rttable_backup_rule, NULL, false);
+    olsr_os_policy_rule(olsr_cnf->ip_version, olsr_cnf->rttable_default, olsr_cnf->rttable_backup_rule, NULL, false);
 
   /*tunl0*/
   if (olsr_cnf->ipip_base_orig_down) {
@@ -819,7 +819,7 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
 
   /* RtTable backup rule */
   if ((olsr_cnf->rttable < 253) & (olsr_cnf->rttable > 0)) {
-    olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable, (olsr_cnf->rttable_rule?olsr_cnf->rttable_rule:65535), NULL, false);
+    olsr_os_policy_rule(olsr_cnf->ip_version, olsr_cnf->rttable, (olsr_cnf->rttable_rule?olsr_cnf->rttable_rule:65535), NULL, false);
   }
 
   close(olsr_cnf->rtnl_s);

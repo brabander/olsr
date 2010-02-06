@@ -347,7 +347,7 @@ olsr_netlink_send(struct nlmsghdr *nl_hdr)
   return -l_err->error;
 }
 
-int olsr_netlink_rule(int family, int rttable, uint32_t priority, const char *if_name, bool set) {
+int olsr_os_policy_rule(int family, int rttable, uint32_t priority, const char *if_name, bool set) {
   struct olsr_rtreq req;
   int err;
 
@@ -412,7 +412,7 @@ int olsr_new_netlink_route(int family, int rttable, int if_index, int metric, in
   req.n.nlmsg_len = NLMSG_LENGTH(sizeof(struct rtmsg));
   req.n.nlmsg_flags = NLM_F_REQUEST | NLM_F_ACK;
   if (set) {
-    req.n.nlmsg_flags |= NLM_F_CREATE | NLM_F_REPLACE;
+    req.n.nlmsg_flags |= NLM_F_CREATE | NLM_F_EXCL;
   }
 
   req.n.nlmsg_type = set ? RTM_NEWROUTE : RTM_DELROUTE;
@@ -485,35 +485,21 @@ int olsr_new_netlink_route(int family, int rttable, int if_index, int metric, in
   return err;
 }
 
-int olsr_netlink_static_niit_routes(const struct olsr_ip_prefix *route, bool set) {
-  int err;
-  if (!is_prefix_niit_ipv6(route)) {
-    return 0;
-  }
-
+void olsr_os_niit_6to4_route(const struct olsr_ip_prefix *dst_v6, bool set) {
   /* TODO: in welche Table kommen die NIIT-Routen ? ne eigene ? */
-  err = olsr_new_netlink_route(AF_INET6, olsr_cnf->rttable, olsr_cnf->niit6to4_if_index,
-      RT_METRIC_DEFAULT, RTPROT_BOOT, NULL, NULL, route, set, false);
-  if (err) {
+  if (olsr_new_netlink_route(AF_INET6, olsr_cnf->rttable, olsr_cnf->niit6to4_if_index,
+      RT_METRIC_DEFAULT, RTPROT_BOOT, NULL, NULL, dst_v6, set, false)) {
     olsr_syslog(OLSR_LOG_ERR, ". error while %s static niit route to %s",
-        set ? "setting" : "removing", olsr_ip_prefix_to_string(route));
+        set ? "setting" : "removing", olsr_ip_prefix_to_string(dst_v6));
   }
-  return err;
 }
 
-static void olsr_netlink_process_niit(const struct rt_entry *rt, bool set) {
-  struct olsr_ip_prefix dst_v4;
-  if (!olsr_cnf->use_niit || !is_prefix_niit_ipv6(&rt->rt_dst)) {
-    return;
-  }
-
-  prefix_mappedv4_to_v4(&dst_v4, &rt->rt_dst);
-
+void olsr_os_niit_4to6_route(const struct olsr_ip_prefix *dst_v4, bool set) {
   /* TODO: in welche Table kommen die NIIT-Routen ? ne eigene ? */
   if (olsr_new_netlink_route(AF_INET, olsr_cnf->rttable, olsr_cnf->niit4to6_if_index,
-      RT_METRIC_DEFAULT, RTPROT_BOOT, NULL, NULL, &dst_v4, set, false)) {
+      RT_METRIC_DEFAULT, RTPROT_BOOT, NULL, NULL, dst_v4, set, false)) {
     olsr_syslog(OLSR_LOG_ERR, ". error while %s niit route to %s",
-        set ? "setting" : "removing", olsr_ip_prefix_to_string(&dst_v4));
+        set ? "setting" : "removing", olsr_ip_prefix_to_string(dst_v4));
   }
 }
 
@@ -532,9 +518,6 @@ static int olsr_os_process_rt_entry(int af_family, const struct rt_entry *rt, bo
   union olsr_ip_addr *src;
   bool hostRoute;
   int err;
-
-  /* handle NIIT special case */
-  olsr_netlink_process_niit(rt, set);
 
   /* handle smart gateway case */
   if (olsr_netlink_process_smartgw(rt, set)) {
@@ -1023,7 +1006,7 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
 
 /* external wrapper function for above patched multi purpose rtnetlink function */
 int
-olsr_netlink_rule(uint8_t family, uint8_t rttable, uint16_t cmd, uint32_t priority, char* dev)
+olsr_os_policy_rule(uint8_t family, uint8_t rttable, uint16_t cmd, uint32_t priority, char* dev)
 {
   return olsr_netlink_route_int((const struct rt_entry *) dev, family, rttable, cmd, priority);
 }
@@ -1294,7 +1277,7 @@ olsr_ioctl_del_route6(const struct rt_entry *rt)
 
   return rslt;
 #else /* !LINUX_POLICY_ROUTING */
-  return olsr_os_process_rt_entry(AF_INET, rt, false);
+  return olsr_os_process_rt_entry(AF_INET6, rt, false);
 #endif /* LINUX_POLICY_ROUTING */
 }
 

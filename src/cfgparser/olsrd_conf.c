@@ -821,8 +821,8 @@ static void update_has_gateway_fields(void) {
   olsr_cnf->has_ipv6_gateway = false;
 
   for (h = olsr_cnf->hna_entries; h != NULL; h = h->next) {
-    olsr_cnf->has_ipv4_gateway |= ip_prefix_is_v4_gw(&h->net) || ip_prefix_is_mappedv4_gw(&h->net);
-    olsr_cnf->has_ipv6_gateway |= ip_prefix_is_v6_gw(&h->net);
+    olsr_cnf->has_ipv4_gateway |= ip_prefix_is_v4_inetgw(&h->net) || ip_prefix_is_mappedv4_inetgw(&h->net);
+    olsr_cnf->has_ipv6_gateway |= ip_prefix_is_v6_inetgw(&h->net);
   }
 }
 

@@ -12,9 +12,11 @@
 #define DEF_NIIT6TO4_IFNAME         "niit6to4"
 
 #ifdef linux
-int olsr_init_niit(void);
+void olsr_init_niit(void);
 void olsr_setup_niit_routes(void);
 void olsr_cleanup_niit_routes(void);
+
+void olsr_niit_handle_route(const struct rt_entry *rt, bool set);
 #endif
 
 #endif /* OLSR_NIIT_H_ */
