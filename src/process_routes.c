@@ -170,14 +170,12 @@ olsr_delete_kernel_route(struct rt_entry *rt)
 
       olsr_syslog(OLSR_LOG_ERR, "Delete route %s: %s", routestr, err_msg);
     }
-    else {
 #ifdef linux
-      /* call NIIT handler */
-      if (olsr_cnf->use_niit) {
-        olsr_niit_handle_route(rt, false);
-      }
-#endif
+    /* call NIIT handler (always)*/
+    if (olsr_cnf->use_niit) {
+      olsr_niit_handle_route(rt, false);
     }
+#endif
   }
 }
 
@@ -248,7 +246,7 @@ olsr_chg_kernel_routes(struct list_node *head_node)
 #else
     /*no rtnetlink we have to delete routes*/
     if (rt->rt_nexthop.iif_index > -1) olsr_delete_kernel_route(rt);
-#endif
+#endif /*LINUX_POLICY_ROUTING*/
 
     olsr_add_kernel_route(rt);
 
