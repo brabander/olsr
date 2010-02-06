@@ -79,12 +79,18 @@ static int delete_all_inet_gws(void);
 #include <sys/types.h>
 #include <net/if.h>
 
-extern struct rtnl_handle rth;
+// static struct rtnl_handle rth;
 
 struct olsr_rtreq {
   struct nlmsghdr n;
   struct rtmsg r;
   char buf[512];
+};
+
+struct olsr_ipadd_req {
+  struct nlmsghdr n;
+  struct ifaddrmsg ifa;
+  char buf[256];
 };
 
 #if LINUX_RTNETLINK_LISTEN
@@ -385,11 +391,35 @@ int olsr_os_policy_rule(int family, int rttable, uint32_t priority, const char *
   return err;
 }
 
-int olsr_new_netlink_route(int family, int rttable, int if_index, int metric, int protocol,
-    const union olsr_ip_addr *src, const union olsr_ip_addr *gw, const struct olsr_ip_prefix *dst,
-    bool set, bool del_similar);
+int
+olsr_os_create_localhostif(union olsr_ip_addr *ip, bool create)
+{
+  struct olsr_ipadd_req req;
+  static char l[] = "lo:olsr";
 
-int olsr_new_netlink_route(int family, int rttable, int if_index, int metric, int protocol,
+  memset(&req, 0, sizeof(req));
+
+  req.n.nlmsg_len = NLMSG_LENGTH(sizeof(struct ifaddrmsg));
+  if (create) {
+   req.n.nlmsg_flags = NLM_F_REQUEST | NLM_F_CREATE | NLM_F_REPLACE | NLM_F_ACK;
+   req.n.nlmsg_type = RTM_NEWADDR;
+  } else {
+   req.n.nlmsg_flags = NLM_F_REQUEST | NLM_F_ACK;
+   req.n.nlmsg_type = RTM_DELADDR;
+  }
+  req.ifa.ifa_family = olsr_cnf->ip_version;
+
+  olsr_netlink_addreq(&req.n, sizeof(req), IFA_LABEL, l, strlen(l) + 1);
+  olsr_netlink_addreq(&req.n, sizeof(req), IFA_LOCAL, ip, olsr_cnf->ipsize);
+
+  req.ifa.ifa_prefixlen = olsr_cnf->ipsize * 8;
+
+  req.ifa.ifa_index = if_nametoindex("lo");
+
+  return olsr_netlink_send(&req.n);
+}
+
+static int olsr_new_netlink_route(int family, int rttable, int if_index, int metric, int protocol,
     const union olsr_ip_addr *src, const union olsr_ip_addr *gw, const struct olsr_ip_prefix *dst,
     bool set, bool del_similar) {
 
@@ -568,7 +598,12 @@ static int olsr_os_process_rt_entry(int af_family, const struct rt_entry *rt, bo
   }
 
   /* get src ip */
-  src = NULL;
+  if (olsr_cnf->use_src_ip_routes) {
+    src = &olsr_cnf->main_addr;
+  }
+  else {
+    src = NULL;
+  }
 
   /* create route */
   err = olsr_new_netlink_route(af_family, table, nexthop->iif_index, metric, protocol,

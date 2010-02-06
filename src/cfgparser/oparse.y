@@ -217,6 +217,7 @@ static int add_ipv6_addr(YYSTYPE ipaddr_arg, YYSTYPE prefixlen_arg)
 %token TOK_SMART_GW_UPLINK_NAT
 %token TOK_SMART_GW_SPEED
 %token TOK_SMART_GW_PREFIX
+%token TOK_SRC_IP_ROUTES
 
 %token TOK_HOSTLABEL
 %token TOK_NETLABEL
@@ -288,6 +289,7 @@ stmt:       idebug
           | bsmart_gw_uplink_nat
           | ismart_gw_speed
           | ismart_gw_prefix
+          | bsrc_ip_routes
 ;
 
 block:      TOK_HNA4 hna4body
@@ -1214,7 +1216,6 @@ bsmart_gw_uplink_nat: TOK_SMART_GW_UPLINK_NAT TOK_BOOLEAN
 }
 ;
 
-
 ismart_gw_prefix: TOK_SMART_GW_PREFIX TOK_IPV6_ADDR TOK_INTEGER
 {
   PARSER_DEBUG_PRINTF("Smart gateway prefix: %s %u\n", $2->string, $3->integer);
@@ -1240,6 +1241,15 @@ ismart_gw_prefix: TOK_SMART_GW_PREFIX TOK_IPV6_ADDR TOK_INTEGER
 	free($4);
 }
 ;
+
+bsrc_ip_routes: TOK_SRC_IP_ROUTES TOK_BOOLEAN
+{
+	PARSER_DEBUG_PRINTF("Use originator for routes src-ip: %s\n", $2->boolean ? "yes" : "no");
+	olsr_cnf->use_src_ip_routes = $2->boolean;
+	free($2);
+}
+;
+
 
 plblock: TOK_PLUGIN TOK_STRING
 {

@@ -613,6 +613,11 @@ printf("\nMain Table is %i prio %i", olsr_cnf->rttable, olsr_cnf->rttable_rule);
   if (olsr_cnf->use_niit) {
     olsr_setup_niit_routes();
   }
+
+  /* create lo:olsr interface */
+  if (olsr_cnf->use_src_ip_routes) {
+    olsr_os_create_localhostif(&olsr_cnf->main_addr, true);
+  }
 #endif
 
   /* Start syslog entry */
@@ -757,6 +762,11 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
   /* trigger niit static route cleanup */
   if (olsr_cnf->use_niit) {
     olsr_cleanup_niit_routes();
+  }
+
+  /* cleanup lo:olsr interface */
+  if (olsr_cnf->use_src_ip_routes) {
+    olsr_os_create_localhostif(&olsr_cnf->main_addr, false);
   }
 #endif
 

@@ -54,7 +54,6 @@
 
 #define TESTLIB_PATH 0
 #define SYSLOG_NUMBERING 0
-#define SOURCE_IP_ROUTES 0
 
 #ifndef LINUX_POLICY_ROUTING
 #if defined linux
@@ -260,6 +259,8 @@ struct olsrd_config {
   enum smart_gw_uplinktype smart_gw_type;
   uint32_t smart_gw_uplink, smart_gw_downlink;
   struct olsr_ip_prefix smart_gw_prefix;
+
+  bool use_src_ip_routes;
 
   /* Stuff set by olsrd */
   uint8_t maxplen;                     /* maximum prefix len */
