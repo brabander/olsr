@@ -218,6 +218,7 @@ static int add_ipv6_addr(YYSTYPE ipaddr_arg, YYSTYPE prefixlen_arg)
 %token TOK_SMART_GW_SPEED
 %token TOK_SMART_GW_PREFIX
 %token TOK_SRC_IP_ROUTES
+%token TOK_MAIN_IP
 
 %token TOK_HOSTLABEL
 %token TOK_NETLABEL
@@ -290,6 +291,7 @@ stmt:       idebug
           | ismart_gw_speed
           | ismart_gw_prefix
           | bsrc_ip_routes
+          | amain_ip
 ;
 
 block:      TOK_HNA4 hna4body
@@ -1250,6 +1252,16 @@ bsrc_ip_routes: TOK_SRC_IP_ROUTES TOK_BOOLEAN
 }
 ;
 
+amain_ip: TOK_MAIN_IP TOK_STRING
+{
+  PARSER_DEBUG_PRINTF("Fixed Main IP: %s\n", $2->string);
+  
+  if (inet_pton(olsr_cnf->ip_version, $2->string, &olsr_cnf->main_addr) != 1) {
+    fprintf(stderr, "Bad main IP: %s\n", $2->string);
+    YYABORT;
+  }
+  free($2);
+}
 
 plblock: TOK_PLUGIN TOK_STRING
 {

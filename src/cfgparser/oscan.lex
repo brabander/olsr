@@ -467,12 +467,14 @@ IPV6ADDR {IPV6PAT1}|{IPV6PAT2}|{IPV6PAT3}|{IPV6PAT4}|{IPV6PAT5}|{IPV6PAT6}|{IPV6
     yylval = NULL;
     return TOK_SRC_IP_ROUTES;
 }
-
 "Weight" {
     yylval = NULL;
     return TOK_IFWEIGHT;
 }
-
+"MainIp" {
+    yylval = NULL;
+    return TOK_MAIN_IP;
+}
 "Ip4Broadcast" {
     yylval = NULL;
     return TOK_IPV4BROADCAST;

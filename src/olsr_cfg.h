@@ -260,13 +260,14 @@ struct olsrd_config {
   uint32_t smart_gw_uplink, smart_gw_downlink;
   struct olsr_ip_prefix smart_gw_prefix;
 
+  /* Main address of this node */
+  union olsr_ip_addr main_addr;
   bool use_src_ip_routes;
 
   /* Stuff set by olsrd */
   uint8_t maxplen;                     /* maximum prefix len */
   size_t ipsize;                       /* Size of address */
   bool del_gws;                        /* Delete InternetGWs at startup */
-  union olsr_ip_addr main_addr;        /* Main address of this node */
   float will_int;
   float max_jitter;
   int exit_value;                      /* Global return value for process termination */
