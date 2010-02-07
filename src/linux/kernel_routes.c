@@ -121,7 +121,7 @@ olsr_netlink_send(struct nlmsghdr *n, char *buf, size_t bufSize, uint8_t flag, c
           break;
         }
         if (NLMSG_ERROR == h->nlmsg_type) {
-          if (NLMSG_LENGTH(sizeof(struct nlmsgerr) <= h->nlmsg_len)) {
+          if (NLMSG_LENGTH(sizeof(struct nlmsgerr)) <= h->nlmsg_len) {
 #ifndef REMOVE_LOG_WARN
             struct ipaddr_str ibuf;
             struct ipaddr_str gbuf;
