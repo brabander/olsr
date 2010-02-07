@@ -582,6 +582,7 @@ set_default_cnf(struct olsrd_config *cnf)
   cnf->ioctl_s = 0;
   cnf->use_niit = DEF_USE_NIIT;
   cnf->niit4to6_if_index = 0;
+  cnf->niit6to4_if_index = 0;
 
   cnf->smart_gw_active = DEF_SMART_GW;
   cnf->smart_gw_allow_nat = DEF_GW_ALLOW_NAT;
@@ -589,6 +590,9 @@ set_default_cnf(struct olsrd_config *cnf)
   cnf->smart_gw_uplink = DEF_UPLINK_SPEED;
   cnf->smart_gw_uplink_nat = DEF_GW_UPLINK_NAT;
   cnf->smart_gw_downlink = DEF_DOWNLINK_SPEED;
+
+  cnf->use_src_ip_routes = DEF_USE_SRCIP_ROUTES;
+
 #if LINUX_POLICY_ROUTING
   cnf->rtnl_s = 0;
 #endif

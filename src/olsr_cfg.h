@@ -64,61 +64,62 @@
 #endif
 
 /* Default values not declared in olsr_protocol.h */
-#define DEF_POLLRATE        0.05
-#define DEF_NICCHGPOLLRT    2.5
-#define DEF_WILL_AUTO       false
-#define DEF_WILLINGNESS     3
-#define DEF_ALLOW_NO_INTS   true
-#define DEF_TOS             16
-#define DEF_DEBUGLVL        1
-#define DEF_IPC_CONNECTIONS 0
-#define DEF_USE_HYST        false
-#define DEF_FIB_METRIC      FIBM_FLAT
-#define DEF_LQ_LEVEL        2
-#define DEF_LQ_FISH         1
-#define DEF_LQ_DIJK_LIMIT   255
-#define DEF_LQ_DIJK_INTER   0.0
-#define DEF_LQ_NAT_THRESH   0.5
-#define DEF_LQ_AGING        0.1
-#define DEF_CLEAR_SCREEN    true
-#define DEF_OLSRPORT        698
-#define DEF_RTPROTO         0 /* 0 means OS-specific default */
-#define DEF_RTTABLE         254
-#define DEF_MIN_TC_VTIME    0.0
-#define DEF_USE_NIIT        true
-#define DEF_SMART_GW        true
-#define DEF_GW_ALLOW_NAT    true
-#define DEF_GW_UPLINK_NAT   true
-#define DEF_UPLINK_SPEED    128
-#define DEF_DOWNLINK_SPEED  1024
+#define DEF_POLLRATE         0.05
+#define DEF_NICCHGPOLLRT     2.5
+#define DEF_WILL_AUTO        false
+#define DEF_WILLINGNESS      3
+#define DEF_ALLOW_NO_INTS    true
+#define DEF_TOS              16
+#define DEF_DEBUGLVL         1
+#define DEF_IPC_CONNECTIONS  0
+#define DEF_USE_HYST         false
+#define DEF_FIB_METRIC       FIBM_FLAT
+#define DEF_LQ_LEVEL         2
+#define DEF_LQ_FISH          1
+#define DEF_LQ_DIJK_LIMIT    255
+#define DEF_LQ_DIJK_INTER    0.0
+#define DEF_LQ_NAT_THRESH    0.5
+#define DEF_LQ_AGING         0.1
+#define DEF_CLEAR_SCREEN     true
+#define DEF_OLSRPORT         698
+#define DEF_RTPROTO          0 /* 0 means OS-specific default */
+#define DEF_RTTABLE          254
+#define DEF_MIN_TC_VTIME     0.0
+#define DEF_USE_NIIT         true
+#define DEF_SMART_GW         false
+#define DEF_GW_ALLOW_NAT     true
+#define DEF_GW_UPLINK_NAT    true
+#define DEF_UPLINK_SPEED     128
+#define DEF_DOWNLINK_SPEED   1024
+#define DEF_USE_SRCIP_ROUTES false;
 
 /* Bounds */
 
-#define MIN_INTERVAL        0.01
+#define MIN_INTERVAL         0.01
 
-#define MAX_POLLRATE        1.0
-#define MIN_POLLRATE        0.01
-#define MAX_NICCHGPOLLRT    100.0
-#define MIN_NICCHGPOLLRT    1.0
-#define MAX_DEBUGLVL        9
-#define MIN_DEBUGLVL        0
-#define MAX_TOS             16
-#define MIN_TOS             0
-#define MAX_WILLINGNESS     7
-#define MIN_WILLINGNESS     0
-#define MAX_MPR_COVERAGE    20
-#define MIN_MPR_COVERAGE    1
-#define MAX_TC_REDUNDANCY   2
-#define MIN_TC_REDUNDANCY   0
-#define MAX_HYST_PARAM      1.0
-#define MIN_HYST_PARAM      0.0
-#define MAX_LQ_LEVEL        2
-#define MIN_LQ_LEVEL        0
-#define MAX_LQ_AGING        1.0
-#define MIN_LQ_AGING        0.01
+#define MAX_POLLRATE         1.0
+#define MIN_POLLRATE         0.01
+#define MAX_NICCHGPOLLRT     100.0
+#define MIN_NICCHGPOLLRT     1.0
+#define MAX_DEBUGLVL         9
+#define MIN_DEBUGLVL         0
+#define MAX_TOS              16
+#define MIN_TOS              0
+#define MAX_WILLINGNESS      7
+#define MIN_WILLINGNESS      0
+#define MAX_MPR_COVERAGE     20
+#define MIN_MPR_COVERAGE     1
+#define MAX_TC_REDUNDANCY    2
+#define MIN_TC_REDUNDANCY    0
+#define MAX_HYST_PARAM       1.0
+#define MIN_HYST_PARAM       0.0
+#define MAX_LQ_LEVEL         2
+#define MIN_LQ_LEVEL         0
+#define MAX_LQ_AGING         1.0
+#define MIN_LQ_AGING         0.01
 
-#define MIN_SMARTGW_SPEED   1
-#define MAX_SMARTGW_SPEED   320000000
+#define MIN_SMARTGW_SPEED    1
+#define MAX_SMARTGW_SPEED    320000000
 
 /* Option values */
 #define CFG_FIBM_FLAT          "flat"

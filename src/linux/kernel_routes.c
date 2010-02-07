@@ -210,9 +210,11 @@ void rtnetlink_read(int sock)
   iov.iov_len = sizeof(buffer);
 
   while (true) { //read until ret<0;
-    ret=recvmsg(sock, &msg, MSG_DONTWAIT);
-    if (ret<0) {
-      if (errno != EAGAIN) OLSR_PRINTF(1,"netlink listen error %u - %s\n",errno,strerror(errno));
+    ret = recvmsg(sock, &msg, MSG_DONTWAIT);
+    if (ret < 0) {
+      if (errno != EAGAIN) {
+        OLSR_PRINTF(1,"netlink listen error %u - %s\n",errno,strerror(errno));
+      }
       return;
     }
     /*check message*/
@@ -224,7 +226,10 @@ void rtnetlink_read(int sock)
               len, ret, plen);
       return;
     }
-    if ( (nlh->nlmsg_type == RTM_NEWLINK) || ( nlh->nlmsg_type == RTM_DELLINK) ) netlink_process_link(nlh);
+    if ((nlh->nlmsg_type == RTM_NEWLINK) || ( nlh->nlmsg_type == RTM_DELLINK)) {
+      /* handle ifup/ifdown */
+      netlink_process_link(nlh);
+    }
   }
 }
 
