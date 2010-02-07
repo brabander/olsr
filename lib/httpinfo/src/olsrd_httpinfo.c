@@ -60,7 +60,6 @@
 #include "olsr_protocol.h"
 #include "net_olsr.h"
 #include "link_set.h"
-#include "socket_parser.h"
 #include "ipcalc.h"
 #include "lq_plugin.h"
 #include "common/autobuf.h"
@@ -159,7 +158,7 @@ static int get_http_socket(int);
 
 static void build_tabs(struct autobuf *, int);
 
-static void parse_http_request(int);
+static void parse_http_request(int fd, void *, unsigned int);
 
 static int build_http_header(http_header_type, bool, uint32_t, char *, uint32_t);
 
@@ -313,14 +312,14 @@ olsrd_plugin_init(void)
   }
 
   /* Register socket */
-  add_olsr_socket(http_socket, &parse_http_request);
+  add_olsr_socket(http_socket, &parse_http_request, NULL, NULL, SP_PR_READ);
 
   return 1;
 }
 
 /* Non reentrant - but we are not multithreaded anyway */
-void
-parse_http_request(int fd)
+static void
+parse_http_request(int fd, void *data __attribute__ ((unused)), unsigned int flags __attribute__ ((unused)))
 {
   struct sockaddr_in pin;
   struct autobuf body_abuf = { 0, 0, NULL };

@@ -73,7 +73,6 @@
 #include "hna_set.h"
 #include "mid_set.h"
 #include "link_set.h"
-#include "socket_parser.h"
 #include "net_olsr.h"
 #include "lq_plugin.h"
 #include "common/autobuf.h"
@@ -104,7 +103,7 @@ static int plugin_ipc_init(void);
 /* Event function to register with the sceduler */
 static int pcf_event(int, int, int);
 
-static void ipc_action(int);
+static void ipc_action(int, void *, unsigned int);
 
 static void ipc_print_neigh_link(struct autobuf *abuf, const struct neighbor_entry *neighbor);
 
@@ -243,13 +242,13 @@ plugin_ipc_init(void)
 #if 0
   printf("Adding socket with olsrd\n");
 #endif
-  add_olsr_socket(ipc_socket, &ipc_action);
+  add_olsr_socket(ipc_socket, &ipc_action, NULL, NULL, SP_PR_READ);
 
   return 1;
 }
 
 static void
-ipc_action(int fd __attribute__ ((unused)))
+ipc_action(int fd __attribute__ ((unused)), void *data __attribute__ ((unused)), unsigned int flags __attribute__ ((unused)))
 {
   struct sockaddr_in pin;
   socklen_t addrlen = sizeof(struct sockaddr_in);

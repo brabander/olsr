@@ -81,6 +81,8 @@ static int delete_all_inet_gws(void);
 
 // static struct rtnl_handle rth;
 
+static void rtnetlink_read(int sock, void *, unsigned int);
+
 struct olsr_rtreq {
   struct nlmsghdr n;
   struct rtmsg r;
@@ -95,7 +97,6 @@ struct olsr_ipadd_req {
 
 #if LINUX_RTNETLINK_LISTEN
 #include "ifnet.h"
-#include "socket_parser.h"
 
 int rtnetlink_register_socket(int rtnl_mgrp)
 {
@@ -117,7 +118,7 @@ int rtnetlink_register_socket(int rtnl_mgrp)
     return -1;
   }
 
-  add_olsr_socket(sock, &rtnetlink_read);
+  add_olsr_socket(sock, NULL, &rtnetlink_read, NULL, SP_IMM_READ);
   return sock;
 }
 
@@ -187,7 +188,7 @@ static void netlink_process_link(struct nlmsghdr *h)
   }
 }
 
-void rtnetlink_read(int sock)
+static void rtnetlink_read(int sock, void *data __attribute__ ((unused)), unsigned int flags __attribute__ ((unused)))
 {
   int len, plen;
   struct iovec iov;

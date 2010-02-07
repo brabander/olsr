@@ -51,7 +51,6 @@
 #include "ipcalc.h"
 #include "log.h"
 #include "parser.h"
-#include "socket_parser.h"
 
 #ifdef WIN32
 #include <winbase.h>
@@ -114,7 +113,7 @@ olsr_init_interfacedb(void)
 
   /* Kick a periodic timer for the network interface update function */
   olsr_start_timer((unsigned int)olsr_cnf->nic_chgs_pollrate * MSEC_PER_SEC, 5, OLSR_TIMER_PERIODIC, &check_interface_updates, NULL,
-                   interface_poll_timer_cookie->ci_id);
+                   interface_poll_timer_cookie);
 
   return (ifnet == NULL) ? 0 : 1;
 }
@@ -429,11 +428,11 @@ olsr_remove_interface(struct olsr_if * iface)
 
   /* Close olsr socket */
   close(ifp->olsr_socket);
-  remove_olsr_socket(ifp->olsr_socket, &olsr_input);
+  remove_olsr_socket(ifp->olsr_socket, &olsr_input, NULL);
 
   if (ifp->send_socket != ifp->olsr_socket) {
     close(ifp->send_socket);
-    remove_olsr_socket(ifp->send_socket, &olsr_input);
+    remove_olsr_socket(ifp->send_socket, &olsr_input, NULL);
   }
 
   /* Free memory */

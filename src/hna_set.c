@@ -303,7 +303,7 @@ olsr_update_hna_entry(const union olsr_ip_addr *gw, const union olsr_ip_addr *ne
    * Start, or refresh the timer, whatever is appropriate.
    */
   olsr_set_timer(&net_entry->hna_net_timer, vtime, OLSR_HNA_NET_JITTER, OLSR_TIMER_ONESHOT, &olsr_expire_hna_net_entry, net_entry,
-                 hna_net_timer_cookie->ci_id);
+                 hna_net_timer_cookie);
 }
 
 /**

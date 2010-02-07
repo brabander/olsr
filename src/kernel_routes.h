@@ -66,7 +66,6 @@ int olsr_del_tunl(void);
 
 #if LINUX_RTNETLINK_LISTEN
 int rtnetlink_register_socket(int);
-void rtnetlink_read(int);
 #endif /*LINUX_RTNETLINK_LISTEN*/
 
 #endif

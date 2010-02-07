@@ -64,7 +64,7 @@
 #endif
 
 /* Default values not declared in olsr_protocol.h */
-#define DEF_POLLRATE         0.05
+#define DEF_POLLRATE         0.1
 #define DEF_NICCHGPOLLRT     2.5
 #define DEF_WILL_AUTO        false
 #define DEF_WILLINGNESS      3

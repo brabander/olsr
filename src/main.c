@@ -52,7 +52,6 @@
 #include "parser.h"
 #include "generate_msg.h"
 #include "plugin_loader.h"
-#include "socket_parser.h"
 #include "apm.h"
 #include "net_os.h"
 #include "build_msg.h"
@@ -114,6 +113,7 @@ static char
 static int lock_fd = 0;
 #endif
 static char lock_file_name[FILENAME_MAX];
+struct olsr_cookie_info *def_timer_ci = NULL;
 
 /*
  * Creates a zero-length locking file and use fcntl to
@@ -371,6 +371,8 @@ int main(int argc, char *argv[]) {
   /* Disable redirects globally */
   disable_redirects_global(olsr_cnf->ip_version);
 #endif
+
+  def_timer_ci = olsr_alloc_cookie("Default Timer Cookie", OLSR_COOKIE_TYPE_TIMER);
 
   /*
    * socket for ioctl calls
