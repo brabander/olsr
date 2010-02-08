@@ -593,7 +593,7 @@ set_default_cnf(struct olsrd_config *cnf)
 
   cnf->use_src_ip_routes = DEF_USE_SRCIP_ROUTES;
 
-#if LINUX_POLICY_ROUTING
+#ifdef LINUX_NETLINK_ROUTING
   cnf->rtnl_s = 0;
 #endif
 

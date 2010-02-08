@@ -62,7 +62,11 @@
 #include <sys/types.h>
 #include <net/if.h>
 
-#ifdef LINUX_POLICY_ROUTING
+/*
+ * This file contains the rtnetlink version of the linux routing code.
+ * You will find the old ioctl version in kernel_routes_ioctl.c
+ */
+#ifdef LINUX_NETLINK_ROUTING
 /*
  * The ARM compile complains about alignment. Copied
  * from /usr/include/linux/netlink.h and adapted for ARM

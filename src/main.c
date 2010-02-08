@@ -61,7 +61,7 @@
 #include "gateway.h"
 #include "olsr_niit.h"
 
-#if LINUX_POLICY_ROUTING
+#ifdef LINUX_NETLINK_ROUTING
 #include <linux/types.h>
 #include <linux/rtnetlink.h>
 #include "kernel_routes.h"
@@ -91,7 +91,7 @@ void olsr_reconfigure(int) __attribute__ ((noreturn));
 
 static void print_usage(bool error);
 
-#if LINUX_POLICY_ROUTING
+#ifdef LINUX_NETLINK_ROUTING
 static const char* ipip_default_name = "olsr_tunnel";
 #endif
 
@@ -384,7 +384,7 @@ int main(int argc, char *argv[]) {
 #endif
     olsr_exit(__func__, 0);
   }
-#if LINUX_POLICY_ROUTING
+#ifdef LINUX_NETLINK_ROUTING
   olsr_cnf->rtnl_s = socket(PF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE);
   if (olsr_cnf->rtnl_s < 0) {
     olsr_syslog(OLSR_LOG_ERR, "rtnetlink socket: %m");
@@ -409,7 +409,7 @@ int main(int argc, char *argv[]) {
   }
 #endif
 
-#if LINUX_POLICY_ROUTING
+#ifdef LINUX_NETLINK_ROUTING
   /* initialize niit if index */
   if (olsr_cnf->use_niit) {
     olsr_init_niit();
@@ -520,7 +520,7 @@ int main(int argc, char *argv[]) {
 deactivate_spoof("all", &olsr_cnf->ipip_base_if, AF_INET );
 #endif
 
-#if LINUX_POLICY_ROUTING
+#ifdef LINUX_NETLINK_ROUTING
   /*create smart-gateway-tunnel policy rules*/
   //!!?? disable smartgateway if not ipv4?, or better: do not start olsr
   if (olsr_cnf->smart_gw_active) {
@@ -602,7 +602,7 @@ printf("\nMain Table is %i prio %i", olsr_cnf->rttable, olsr_cnf->rttable_rule);
 
 #endif
 
-#if LINUX_POLICY_ROUTING
+#ifdef LINUX_NETLINK_ROUTING
   /* trigger gateway selection */
   if (olsr_cnf->smart_gw_active) {
     olsr_trigger_inetgw_startup();
@@ -752,7 +752,7 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
   /* delete all routes */
   olsr_delete_all_kernel_routes();
 
-#if LINUX_POLICY_ROUTING
+#ifdef LINUX_NETLINK_ROUTING
   /* trigger gateway selection */
   if (olsr_cnf->smart_gw_active) {
     // TODO: cleanup smart gateway routes
@@ -801,7 +801,7 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
   /* ioctl socket */
   close(olsr_cnf->ioctl_s);
 
-#if LINUX_POLICY_ROUTING
+#ifdef LINUX_NETLINK_ROUTING
 
   /*delete smartgw tunnel if it index is known*/
   if (olsr_cnf->ipip_if_index) olsr_del_tunl();

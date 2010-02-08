@@ -50,7 +50,11 @@
 #include <linux/types.h>
 #include <linux/rtnetlink.h>
 
-#if LINUX_POLICY_ROUTING==0
+/*
+ * This file contains the old ioctl version of the linux routing code.
+ * You will find the current netlink version in kernel_routes_nl.c
+ */
+#ifndef LINUX_NETLINK_ROUTING
 
 static int
 delete_all_inet_gws(void)
@@ -305,4 +309,4 @@ olsr_ioctl_del_route6(const struct rt_entry *rt)
   return rslt;
 }
 
-#endif /* LINUX_POLICY_ROUTING */
+#endif /* LINUX_NETLINK_ROUTING */

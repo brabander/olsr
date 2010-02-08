@@ -170,7 +170,7 @@ olsr_delete_kernel_route(struct rt_entry *rt)
 
       olsr_syslog(OLSR_LOG_ERR, "Delete route %s: %s", routestr, err_msg);
     }
-#if LINUX_POLICY_ROUTING
+#ifdef LINUX_NETLINK_ROUTING
     /* call NIIT handler (always)*/
     if (olsr_cnf->use_niit) {
       olsr_niit_handle_route(rt, false);
@@ -204,7 +204,7 @@ olsr_add_kernel_route(struct rt_entry *rt)
       rt->rt_nexthop = rt->rt_best->rtp_nexthop;
       rt->rt_metric = rt->rt_best->rtp_metric;
 
-#if LINUX_POLICY_ROUTING
+#ifdef LINUX_NETLINK_ROUTING
       /* call NIIT handler */
       if (olsr_cnf->use_niit) {
         olsr_niit_handle_route(rt, true);
@@ -238,7 +238,7 @@ olsr_chg_kernel_routes(struct list_node *head_node)
     rt = changelist2rt(head_node->next);
 
 /*deleting routes should not be required anymore as we use (NLM_F_CREATE | NLM_F_REPLACE) in linux rtnetlink*/
-#if LINUX_POLICY_ROUTING
+#ifdef LINUX_NETLINK_ROUTING
     /*delete routes with ipv6 only as it still doesn`t support NLM_F_REPLACE*/
     if ((olsr_cnf->ip_version != AF_INET ) && (rt->rt_nexthop.iif_index > -1)) {
       olsr_delete_kernel_route(rt);
@@ -246,7 +246,7 @@ olsr_chg_kernel_routes(struct list_node *head_node)
 #else
     /*no rtnetlink we have to delete routes*/
     if (rt->rt_nexthop.iif_index > -1) olsr_delete_kernel_route(rt);
-#endif /*LINUX_POLICY_ROUTING*/
+#endif /*LINUX_NETLINK_ROUTING*/
 
     olsr_add_kernel_route(rt);
 
@@ -268,9 +268,9 @@ olsr_del_kernel_routes(struct list_node *head_node)
 
   while (!list_is_empty(head_node)) {
     rt = changelist2rt(head_node->prev);
-#if LINUX_POLICY_ROUTING
+#ifdef LINUX_NETLINK_ROUTING
     if (rt->rt_nexthop.iif_index >= 0)
-#endif /*LINUX_POLICY_ROUTING*/
+#endif /*LINUX_NETLINK_ROUTING*/
       olsr_delete_kernel_route(rt);
 
     list_remove(&rt->rt_change_node);

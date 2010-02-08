@@ -12,7 +12,7 @@
 
 #include <net/if.h>
 
-#if LINUX_POLICY_ROUTING
+#ifdef LINUX_NETLINK_ROUTING
 static void handle_niit_ifchange (int if_index, struct interface *iface, enum olsr_ifchg_flag);
 
 static bool niit4to6_active, niit6to4_active;

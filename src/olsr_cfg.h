@@ -274,7 +274,7 @@ struct olsrd_config {
   const char *ipip_name;
 
   int ioctl_s;                         /* Socket used for ioctl calls */
-#if LINUX_POLICY_ROUTING
+#ifdef LINUX_NETLINK_ROUTING
   int rtnl_s;                          /* Socket used for rtnetlink messages */
   int rt_monitor_socket;
 #endif
