@@ -91,7 +91,7 @@ void olsr_reconfigure(int) __attribute__ ((noreturn));
 
 static void print_usage(bool error);
 
-#ifdef linux
+#if LINUX_POLICY_ROUTING
 static const char* ipip_default_name = "olsr_tunnel";
 #endif
 
@@ -392,13 +392,10 @@ int main(int argc, char *argv[]) {
   }
   fcntl(olsr_cnf->rtnl_s, F_SETFL, O_NONBLOCK);
 
-#if LINUX_RTNETLINK_LISTEN
   if ((olsr_cnf->rt_monitor_socket = rtnetlink_register_socket(RTMGRP_LINK)) < 0) {
     olsr_syslog(OLSR_LOG_ERR, "rtmonitor socket: %m");
     olsr_exit(__func__, 0);
   }
-#endif /*LINUX_RTNETLINK_LISTEN*/
-
 #endif
 
   /*
@@ -412,7 +409,7 @@ int main(int argc, char *argv[]) {
   }
 #endif
 
-#if defined linux
+#if LINUX_POLICY_ROUTING
   /* initialize niit if index */
   if (olsr_cnf->use_niit) {
     olsr_init_niit();
@@ -605,7 +602,7 @@ printf("\nMain Table is %i prio %i", olsr_cnf->rttable, olsr_cnf->rttable_rule);
 
 #endif
 
-#if defined linux
+#if LINUX_POLICY_ROUTING
   /* trigger gateway selection */
   if (olsr_cnf->smart_gw_active) {
     olsr_trigger_inetgw_startup();
@@ -755,7 +752,7 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
   /* delete all routes */
   olsr_delete_all_kernel_routes();
 
-#if defined linux
+#if LINUX_POLICY_ROUTING
   /* trigger gateway selection */
   if (olsr_cnf->smart_gw_active) {
     // TODO: cleanup smart gateway routes
@@ -835,10 +832,7 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
   }
 
   close(olsr_cnf->rtnl_s);
-
-#if LINUX_RTNETLINK_LISTEN
   close (olsr_cnf->rt_monitor_socket);
-#endif /*LINUX_RTNETLINK_LISTEN*/
 
   /*rp_filter*/
   if (olsr_cnf->ipip_base_if.if_index) printf("\nresetting of tunl0 rp_filter not implemented");//!!?? no function extists to reset a single interface

@@ -47,21 +47,8 @@
 /*set to 1 to collect all startup sleep into one sleep (just as long as the longest sleep) useful if many errors on many interfaces*/
 #define OLSR_COLLECT_STARTUP_SLEEP 1
 
-/* set to 1 to enable a second rtnetlink socket 
- * used for listening and reating on interface change events
- * (requires LINUX_POLICY_ROUTING to be enabled aswell) */
-#define LINUX_RTNETLINK_LISTEN 1
-
 #define TESTLIB_PATH 0
 #define SYSLOG_NUMBERING 0
-
-#ifndef LINUX_POLICY_ROUTING
-#if defined linux
-#  define LINUX_POLICY_ROUTING 1
-#else
-#  define LINUX_POLICY_ROUTING 0
-#endif
-#endif
 
 /* Default values not declared in olsr_protocol.h */
 #define DEF_POLLRATE         0.1

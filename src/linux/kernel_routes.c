@@ -43,24 +43,7 @@
 #include "ipc_frontend.h"
 #include "log.h"
 #include "net_os.h"
-
-/* values for control flag to handle recursive route corrections 
- *  currently only requires in linux specific kernel_routes.c */
-
-#define RT_ORIG_REQUEST 0
-#define RT_RETRY_AFTER_ADD_GATEWAY 1
-#define RT_RETRY_AFTER_DELETE_SIMILAR 2
-#define RT_DELETE_SIMILAR_ROUTE 3
-#define RT_AUTO_ADD_GATEWAY_ROUTE 4
-#define RT_DELETE_SIMILAR_AUTO_ROUTE 5
-#define RT_NIIT 6
-#define RT_SMARTGW 7
-
-#if !LINUX_POLICY_ROUTING
-
-static int delete_all_inet_gws(void);
-
-#else /* !LINUX_POLICY_ROUTING */
+#include "ifnet.h"
 
 #include <assert.h>
 #include <linux/types.h>
@@ -79,7 +62,14 @@ static int delete_all_inet_gws(void);
 #include <sys/types.h>
 #include <net/if.h>
 
-// static struct rtnl_handle rth;
+#ifdef LINUX_POLICY_ROUTING
+/*
+ * The ARM compile complains about alignment. Copied
+ * from /usr/include/linux/netlink.h and adapted for ARM
+ */
+#define MY_NLMSG_NEXT(nlh,len)   ((len) -= NLMSG_ALIGN((nlh)->nlmsg_len), \
+          (struct nlmsghdr*)(ARM_NOWARN_ALIGN)(((char*)(nlh)) + NLMSG_ALIGN((nlh)->nlmsg_len)))
+
 
 static void rtnetlink_read(int sock, void *, unsigned int);
 
@@ -94,9 +84,6 @@ struct olsr_ipadd_req {
   struct ifaddrmsg ifa;
   char buf[256];
 };
-
-#if LINUX_RTNETLINK_LISTEN
-#include "ifnet.h"
 
 int rtnetlink_register_socket(int rtnl_mgrp)
 {
@@ -210,14 +197,7 @@ static void rtnetlink_read(int sock, void *data __attribute__ ((unused)), unsign
   iov.iov_base = (void *) buffer;
   iov.iov_len = sizeof(buffer);
 
-  while (true) { //read until ret<0;
-    ret = recvmsg(sock, &msg, MSG_DONTWAIT);
-    if (ret < 0) {
-      if (errno != EAGAIN) {
-        OLSR_PRINTF(1,"netlink listen error %u - %s\n",errno,strerror(errno));
-      }
-      return;
-    }
+  while ((ret = recvmsg(sock, &msg, MSG_DONTWAIT)) >= 0) {
     /*check message*/
     len = nlh->nlmsg_len;
     plen = len - sizeof(nlh);
@@ -232,11 +212,11 @@ static void rtnetlink_read(int sock, void *data __attribute__ ((unused)), unsign
       netlink_process_link(nlh);
     }
   }
+
+  if (errno != EAGAIN) {
+    OLSR_PRINTF(1,"netlink listen error %u - %s\n",errno,strerror(errno));
+  }
 }
-
-//!!?? listen on our own tunlx interfaces aswell
-
-#endif /*linux_rtnetlink_listen*/
 
 /*create or change a ipip tunnel ipv4 only*/
 static int set_tunl(int cmd, unsigned long int ipv4)
@@ -287,13 +267,6 @@ olsr_netlink_addreq(struct nlmsghdr *n, size_t reqSize __attribute__ ((unused)),
   rta->rta_len = RTA_LENGTH(len);
   memcpy(RTA_DATA(rta), data, len);
 }
-
-/*
- * The ARM compile complains about alignment. Copied
- * from /usr/include/linux/netlink.h and adapted for ARM
- */
-#define MY_NLMSG_NEXT(nlh,len)   ((len) -= NLMSG_ALIGN((nlh)->nlmsg_len), \
-          (struct nlmsghdr*)(ARM_NOWARN_ALIGN)(((char*)(nlh)) + NLMSG_ALIGN((nlh)->nlmsg_len)))
 
 /*rt_entry and nexthop and family and table must only be specified with an flag != RT_NONE  && != RT_LO_IP*/
 static int
@@ -675,7 +648,77 @@ static int olsr_os_process_rt_entry(int af_family, const struct rt_entry *rt, bo
   return err;
 }
 
+/**
+ * Insert a route in the kernel routing table
+ *
+ * @param destination the route to add
+ *
+ * @return negative on error
+ */
+int
+olsr_ioctl_add_route(const struct rt_entry *rt)
+{
+  OLSR_PRINTF(2, "KERN: Adding %s\n", olsr_rtp_to_string(rt->rt_best));
+  return olsr_os_process_rt_entry(AF_INET, rt, true);
+}
+
+/**
+ *Insert a route in the kernel routing table
+ *
+ *@param destination the route to add
+ *
+ *@return negative on error
+ */
+int
+olsr_ioctl_add_route6(const struct rt_entry *rt)
+{
+  OLSR_PRINTF(2, "KERN: Adding %s\n", olsr_rtp_to_string(rt->rt_best));
+  return olsr_os_process_rt_entry(AF_INET6, rt, true);
+}
+
+/**
+ *Remove a route from the kernel
+ *
+ *@param destination the route to remove
+ *
+ *@return negative on error
+ */
+int
+olsr_ioctl_del_route(const struct rt_entry *rt)
+{
+  OLSR_PRINTF(2, "KERN: Deleting %s\n", olsr_rt_to_string(rt));
+  return olsr_os_process_rt_entry(AF_INET, rt, false);
+}
+
+/**
+ *Remove a route from the kernel
+ *
+ *@param destination the route to remove
+ *
+ *@return negative on error
+ */
+int
+olsr_ioctl_del_route6(const struct rt_entry *rt)
+{
+  OLSR_PRINTF(2, "KERN: Deleting %s\n", olsr_rt_to_string(rt));
+  return olsr_os_process_rt_entry(AF_INET6, rt, false);
+}
+
+#endif
+
 #if 0
+/* values for control flag to handle recursive route corrections
+ *  currently only requires in linux specific kernel_routes.c */
+
+// #define RT_ORIG_REQUEST 0
+// #define RT_RETRY_AFTER_ADD_GATEWAY 1
+// #define RT_RETRY_AFTER_DELETE_SIMILAR 2
+// #define RT_DELETE_SIMILAR_ROUTE 3
+// #define RT_AUTO_ADD_GATEWAY_ROUTE 4
+// #define RT_DELETE_SIMILAR_AUTO_ROUTE 5
+// #define RT_NIIT 6
+// #define RT_SMARTGW 7
+
 /* returns
  * -1 on unrecoverable error (calling function will have to handle it)
  *  0 on unexpected but recoverable rtnetlink behaviour
@@ -925,7 +968,7 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
               rt_ret = 1;
             }
 
-            /* resolve "File exist" (17) propblems (on orig and autogen routes)*/	
+            /* resolve "File exist" (17) propblems (on orig and autogen routes)*/
             if ((errno == 17) && (cmd == RTM_NEWROUTE) && ((flag == RT_ORIG_REQUEST) || (flag == RT_AUTO_ADD_GATEWAY_ROUTE))) {
               /* a similar route going over another gateway may be present, which has to be deleted! */
               olsr_syslog(OLSR_LOG_ERR, ". auto-deleting similar routes to resolve 'File exists' (17) while adding route!");
@@ -976,8 +1019,8 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
  * The ARM compile complains about alignment. Copied
  * from /usr/include/linux/netlink.h and adapted for ARM
  */
-#define MY_NLMSG_NEXT(nlh,len)	 ((len) -= NLMSG_ALIGN((nlh)->nlmsg_len), \
-				  (struct nlmsghdr*)(ARM_NOWARN_ALIGN)(((char*)(nlh)) + NLMSG_ALIGN((nlh)->nlmsg_len)))
+#define MY_NLMSG_NEXT(nlh,len)   ((len) -= NLMSG_ALIGN((nlh)->nlmsg_len), \
+          (struct nlmsghdr*)(ARM_NOWARN_ALIGN)(((char*)(nlh)) + NLMSG_ALIGN((nlh)->nlmsg_len)))
         h = MY_NLMSG_NEXT(h, ret);
       }
     }
@@ -1105,285 +1148,6 @@ printf("index of new olsrtunl is %i\n",olsr_cnf->ipip_if_index);
   return olsr_netlink_route_int(rt, family, rttable, cmd, RT_ORIG_REQUEST);
 }
 #endif
-
-#endif /* LINUX_POLICY_ROUTING */
-
-/**
- * Insert a route in the kernel routing table
- *
- * @param destination the route to add
- *
- * @return negative on error
- */
-int
-olsr_ioctl_add_route(const struct rt_entry *rt)
-{
-#if !LINUX_POLICY_ROUTING
-  struct rtentry kernel_route;
-  union olsr_ip_addr mask;
-  int rslt;
-#endif /* LINUX_POLICY_ROUTING */
-
-  OLSR_PRINTF(2, "KERN: Adding %s\n", olsr_rtp_to_string(rt->rt_best));
-
-#if !LINUX_POLICY_ROUTING
-  memset(&kernel_route, 0, sizeof(struct rtentry));
-
-  ((struct sockaddr_in *)&kernel_route.rt_dst)->sin_family = AF_INET;
-  ((struct sockaddr_in *)&kernel_route.rt_gateway)->sin_family = AF_INET;
-  ((struct sockaddr_in *)&kernel_route.rt_genmask)->sin_family = AF_INET;
-
-  ((struct sockaddr_in *)&kernel_route.rt_dst)->sin_addr = rt->rt_dst.prefix.v4;
-
-  if (!olsr_prefix_to_netmask(&mask, rt->rt_dst.prefix_len)) {
-    return -1;
-  }
-  ((struct sockaddr_in *)&kernel_route.rt_genmask)->sin_addr = mask.v4;
-
-  if (rt->rt_dst.prefix.v4.s_addr != rt->rt_best->rtp_nexthop.gateway.v4.s_addr) {
-    ((struct sockaddr_in *)&kernel_route.rt_gateway)->sin_addr = rt->rt_best->rtp_nexthop.gateway.v4;
-  }
-
-  kernel_route.rt_flags = olsr_rt_flags(rt);
-  kernel_route.rt_metric = olsr_fib_metric(&rt->rt_best->rtp_metric.hops);
-
-  /*
-   * Set interface
-   */
-  kernel_route.rt_dev = if_ifwithindex_name(rt->rt_best->rtp_nexthop.iif_index);
-
-  /* delete existing default route before ? */
-  if ((olsr_cnf->del_gws) && (rt->rt_dst.prefix.v4.s_addr == INADDR_ANY) && (rt->rt_dst.prefix_len == INADDR_ANY)) {
-    delete_all_inet_gws();
-    olsr_cnf->del_gws = false;
-  }
-
-  if ((rslt = ioctl(olsr_cnf->ioctl_s, SIOCADDRT, &kernel_route)) >= 0) {
-
-    /*
-     * Send IPC route update message
-     */
-    ipc_route_send_rtentry(&rt->rt_dst.prefix, &rt->rt_best->rtp_nexthop.gateway, rt->rt_best->rtp_metric.hops, 1,
-                           if_ifwithindex_name(rt->rt_best->rtp_nexthop.iif_index));
-  }
-
-  return rslt;
-#else /* !LINUX_POLICY_ROUTING */
-  return olsr_os_process_rt_entry(AF_INET, rt, true);
-#endif /* LINUX_POLICY_ROUTING */
-}
-
-/**
- *Insert a route in the kernel routing table
- *
- *@param destination the route to add
- *
- *@return negative on error
- */
-int
-olsr_ioctl_add_route6(const struct rt_entry *rt)
-{
-#if !LINUX_POLICY_ROUTING
-  struct in6_rtmsg kernel_route;
-  int rslt;
-
-  OLSR_PRINTF(2, "KERN: Adding %s\n", olsr_rtp_to_string(rt->rt_best));
-
-  memset(&kernel_route, 0, sizeof(struct in6_rtmsg));
-
-  kernel_route.rtmsg_dst = rt->rt_dst.prefix.v6;
-  kernel_route.rtmsg_dst_len = rt->rt_dst.prefix_len;
-
-  kernel_route.rtmsg_gateway = rt->rt_best->rtp_nexthop.gateway.v6;
-
-  kernel_route.rtmsg_flags = olsr_rt_flags(rt);
-  kernel_route.rtmsg_metric = olsr_fib_metric(&rt->rt_best->rtp_metric.hops);
-
-  /*
-   * set interface
-   */
-  kernel_route.rtmsg_ifindex = rt->rt_best->rtp_nexthop.iif_index;
-
-  /* XXX delete 0/0 route before ? */
-
-  if ((rslt = ioctl(olsr_cnf->ioctl_s, SIOCADDRT, &kernel_route)) >= 0) {
-
-    /*
-     * Send IPC route update message
-     */
-    ipc_route_send_rtentry(&rt->rt_dst.prefix, &rt->rt_best->rtp_nexthop.gateway, rt->rt_best->rtp_metric.hops, 1,
-                           if_ifwithindex_name(rt->rt_best->rtp_nexthop.iif_index));
-  }
-  return rslt;
-#else /* !LINUX_POLICY_ROUTING */
-
-  return olsr_os_process_rt_entry(AF_INET6, rt, true);
-#endif /* LINUX_POLICY_ROUTING */
-}
-
-/**
- *Remove a route from the kernel
- *
- *@param destination the route to remove
- *
- *@return negative on error
- */
-int
-olsr_ioctl_del_route(const struct rt_entry *rt)
-{
-#if !LINUX_POLICY_ROUTING
-  struct rtentry kernel_route;
-  union olsr_ip_addr mask;
-  int rslt;
-#endif /* LINUX_POLICY_ROUTING */
-
-  OLSR_PRINTF(2, "KERN: Deleting %s\n", olsr_rt_to_string(rt));
-
-#if !LINUX_POLICY_ROUTING
-  memset(&kernel_route, 0, sizeof(struct rtentry));
-
-  ((struct sockaddr_in *)&kernel_route.rt_dst)->sin_family = AF_INET;
-  ((struct sockaddr_in *)&kernel_route.rt_gateway)->sin_family = AF_INET;
-  ((struct sockaddr_in *)&kernel_route.rt_genmask)->sin_family = AF_INET;
-
-  ((struct sockaddr_in *)&kernel_route.rt_dst)->sin_addr = rt->rt_dst.prefix.v4;
-
-  if (rt->rt_dst.prefix.v4.s_addr != rt->rt_nexthop.gateway.v4.s_addr) {
-    ((struct sockaddr_in *)&kernel_route.rt_gateway)->sin_addr = rt->rt_nexthop.gateway.v4;
-  }
-
-  if (!olsr_prefix_to_netmask(&mask, rt->rt_dst.prefix_len)) {
-    return -1;
-  } else {
-    ((struct sockaddr_in *)&kernel_route.rt_genmask)->sin_addr = mask.v4;
-  }
-
-  kernel_route.rt_flags = olsr_rt_flags(rt);
-  kernel_route.rt_metric = olsr_fib_metric(&rt->rt_metric.hops);
-
-  /*
-   * Set interface
-   */
-  kernel_route.rt_dev = NULL;
-
-  if ((rslt = ioctl(olsr_cnf->ioctl_s, SIOCDELRT, &kernel_route)) >= 0) {
-
-    /*
-     * Send IPC route update message
-     */
-    ipc_route_send_rtentry(&rt->rt_dst.prefix, NULL, 0, 0, NULL);
-  }
-
-  return rslt;
-#else /* !LINUX_POLICY_ROUTING */
-  return olsr_os_process_rt_entry(AF_INET, rt, false);
-#endif /* LINUX_POLICY_ROUTING */
-}
-
-/**
- *Remove a route from the kernel
- *
- *@param destination the route to remove
- *
- *@return negative on error
- */
-int
-olsr_ioctl_del_route6(const struct rt_entry *rt)
-{
-#if !LINUX_POLICY_ROUTING
-  struct in6_rtmsg kernel_route;
-  int rslt;
-#endif /* LINUX_POLICY_ROUTING */
-
-  OLSR_PRINTF(2, "KERN: Deleting %s\n", olsr_rt_to_string(rt));
-
-#if !LINUX_POLICY_ROUTING
-  memset(&kernel_route, 0, sizeof(struct in6_rtmsg));
-
-  kernel_route.rtmsg_dst = rt->rt_dst.prefix.v6;
-  kernel_route.rtmsg_dst_len = rt->rt_dst.prefix_len;
-
-  kernel_route.rtmsg_gateway = rt->rt_best->rtp_nexthop.gateway.v6;
-
-  kernel_route.rtmsg_flags = olsr_rt_flags(rt);
-  kernel_route.rtmsg_metric = olsr_fib_metric(&rt->rt_best->rtp_metric.hops);
-
-  if ((rslt = ioctl(olsr_cnf->ioctl_s, SIOCDELRT, &kernel_route) >= 0)) {
-
-    /*
-     * Send IPC route update message
-     */
-    ipc_route_send_rtentry(&rt->rt_dst.prefix, NULL, 0, 0, NULL);
-  }
-
-  return rslt;
-#else /* !LINUX_POLICY_ROUTING */
-  return olsr_os_process_rt_entry(AF_INET6, rt, false);
-#endif /* LINUX_POLICY_ROUTING */
-}
-
-#if !LINUX_POLICY_ROUTING
-static int
-delete_all_inet_gws(void)
-{
-  int s;
-  char buf[BUFSIZ], *cp, *cplim;
-  struct ifconf ifc;
-  struct ifreq *ifr;
-
-  OLSR_PRINTF(1, "Internet gateway detected...\nTrying to delete default gateways\n");
-
-  /* Get a socket */
-  if ((s = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-    olsr_syslog(OLSR_LOG_ERR, "socket: %m");
-    return -1;
-  }
-
-  ifc.ifc_len = sizeof(buf);
-  ifc.ifc_buf = buf;
-  if (ioctl(s, SIOCGIFCONF, (char *)&ifc) < 0) {
-    olsr_syslog(OLSR_LOG_ERR, "ioctl (get interface configuration)");
-    close(s);
-    return -1;
-  }
-
-  ifr = ifc.ifc_req;
-  cplim = buf + ifc.ifc_len;    /*skip over if's with big ifr_addr's */
-  for (cp = buf; cp < cplim; cp += sizeof(ifr->ifr_name) + sizeof(ifr->ifr_addr)) {
-    struct rtentry kernel_route;
-    ifr = (struct ifreq *)cp;
-
-    if (strcmp(ifr->ifr_ifrn.ifrn_name, "lo") == 0) {
-      OLSR_PRINTF(1, "Skipping loopback...\n");
-      continue;
-    }
-
-    OLSR_PRINTF(1, "Trying 0.0.0.0/0 %s...", ifr->ifr_ifrn.ifrn_name);
-
-    memset(&kernel_route, 0, sizeof(struct rtentry));
-
-    ((struct sockaddr_in *)&kernel_route.rt_dst)->sin_addr.s_addr = 0;
-    ((struct sockaddr_in *)&kernel_route.rt_dst)->sin_family = AF_INET;
-    ((struct sockaddr_in *)&kernel_route.rt_genmask)->sin_addr.s_addr = 0;
-    ((struct sockaddr_in *)&kernel_route.rt_genmask)->sin_family = AF_INET;
-
-    ((struct sockaddr_in *)&kernel_route.rt_gateway)->sin_addr.s_addr = INADDR_ANY;
-    ((struct sockaddr_in *)&kernel_route.rt_gateway)->sin_family = AF_INET;
-
-    kernel_route.rt_flags = RTF_UP | RTF_GATEWAY;
-
-    kernel_route.rt_dev = ifr->ifr_ifrn.ifrn_name;
-
-    if ((ioctl(s, SIOCDELRT, &kernel_route)) < 0)
-      OLSR_PRINTF(1, "NO\n");
-    else
-      OLSR_PRINTF(1, "YES\n");
-  }
-  close(s);
-  return 0;
-}
-#endif /* LINUX_POLICY_ROUTING */
-
 /*
  * Local Variables:
  * c-basic-offset: 2
