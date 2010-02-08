@@ -42,6 +42,7 @@
 #include "kernel_tunnel.h"
 #include "log.h"
 #include "olsr_types.h"
+#include "net_os.h"
 
 #include <assert.h>
 
@@ -61,6 +62,24 @@
 
 static const char DEV_IPV4_TUNNEL[IFNAMSIZ] = "tunl0";
 static const char DEV_IPV6_TUNNEL[IFNAMSIZ] = "ip6tnl0";
+
+static bool store_iptunnel_state;
+
+bool olsr_os_init_iptunnel(void) {
+  const char *dev = olsr_cnf->ip_version == AF_INET ? DEV_IPV4_TUNNEL : DEV_IPV6_TUNNEL;
+
+  store_iptunnel_state = olsr_if_isup(dev);
+  if (store_iptunnel_state) {
+    return true;
+  }
+  return olsr_if_set_state(dev, true) == 0;
+}
+
+void olsr_os_cleanup_iptunnel(void) {
+  if (store_iptunnel_state) {
+    olsr_if_set_state(olsr_cnf->ip_version == AF_INET ? DEV_IPV4_TUNNEL : DEV_IPV6_TUNNEL, false);
+  }
+}
 
 static const char *get_tunnelcmd_name(uint32_t cmd) {
   static const char ADD[] = "add";
