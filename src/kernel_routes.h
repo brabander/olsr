@@ -54,8 +54,6 @@ int olsr_ioctl_del_route(const struct rt_entry *);
 int olsr_ioctl_del_route6(const struct rt_entry *);
 
 #ifdef LINUX_NETLINK_ROUTING
-static const char TUNL_BASE[IFNAMSIZ] = "tunl0";
-
 int rtnetlink_register_socket(int);
 
 void olsr_os_niit_4to6_route(const struct olsr_ip_prefix *dst_v4, bool set);

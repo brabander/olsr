@@ -119,42 +119,6 @@ static void netlink_process_link(struct nlmsghdr *h)
   struct interface *iface;
   struct olsr_if *oif;
 
-#if 0
-  /*monitor tunl0 and olsrtunl*/
-  if (olsr_cnf->smart_gw_active) {
-    if (ifi->ifi_index==olsr_cnf->ipip_if_index) {
-      printf("olsrtunl state change:\n");
-      if (ifi->ifi_flags&IFF_UP)
-      {
-        printf("is up now\n");
-        olsr_cnf->ipip_if_up=true;
-      }
-      else if (olsr_cnf->ipip_if_up) {
-        /*we try to delete the interface completely (only if it is down, and was up before)*/
-        olsr_del_tunl();
-        //!!?? shall we mark the default route dirty?
-        /*we mark it unexisting -> we will create the tunnel again (if gateway changes)*/
-        olsr_cnf->ipip_if_index = olsr_cnf->ipip_if_up = false;
-      }
-      else printf("interface is down, but was never up -> ignoring!\n");
-      return;
-    }
-    if (ifi->ifi_index==olsr_cnf->ipip_base_if.if_index) {
-      if (ifi->ifi_flags&IFF_UP) {
-        /*we try to take it up again (if its only down it might workout)*/
-        printf("tunl0 is down, we try to take it up again\n");
-        if (olsr_if_set_state("tunl0",true)) return; //!!?? todo: test if we can really know that its up now
-        /*we disable -> this should stop us announcing being a smart gateway, 
- 	* and can not use tunnels as its unlikely to be able to crete them without tunl0*/
-        olsr_cnf->smart_gw_active=false;
-        /*recovery is not easy as potentially the ipip module is not loaded any more*/
-        /*but it could just mean the tunl0 is down, and the gatewaytunnel would work*/
-        return;
-      }
-    }
-  }
-#endif
-
   iface = if_ifwithindex(ifi->ifi_index);
   oif = NULL;
   if (iface == NULL && (ifi->ifi_flags & IFF_UP) != 0) {
@@ -220,44 +184,6 @@ static void rtnetlink_read(int sock, void *data __attribute__ ((unused)), unsign
   if (errno != EAGAIN) {
     OLSR_PRINTF(1,"netlink listen error %u - %s\n",errno,strerror(errno));
   }
-}
-
-/*create or change a ipip tunnel ipv4 only*/
-static int set_tunl(int cmd, unsigned long int ipv4)
-{
-  struct ifreq ifr;
-  int fd;
-  int err;
-  struct ip_tunnel_parm p;
-
-  p.iph.version = 4;
-  p.iph.ihl = 5;
-  p.iph.protocol=IPPROTO_IPIP; //IPPROTO_IPV6
-  p.iph.saddr=0x00000000;
-  p.iph.daddr=ipv4;
-
-  strncpy(p.name, olsr_cnf->ipip_name, IFNAMSIZ);
-printf("set tunl to name: %s\n",p.name);
-
-  //specify existing interface name
-  if (cmd==SIOCADDTUNNEL) strncpy(ifr.ifr_name, TUNL_BASE, IFNAMSIZ);
-  else strncpy(ifr.ifr_name, olsr_cnf->ipip_name, IFNAMSIZ);
-
-printf("set tunl %s\n",ifr.ifr_name);
-
-  ifr.ifr_ifru.ifru_data = (void *) &p;
-  fd = socket(AF_INET, SOCK_DGRAM, 0);//warning hardcoded AF_INET
-  err = ioctl(fd, cmd, &ifr);
-printf("set tunl result %i\n",err);
-  if (err) perror("ioctl");
-  close(fd);
-  return err;
-}
-
-int olsr_del_tunl(void)
-{
-  printf("-----\ndelete olsrtunle!\n");
-  return set_tunl(SIOCDELTUNNEL,0x00000000);//!!??test if this deletes tunnel
 }
 
 static void

@@ -91,10 +91,6 @@ void olsr_reconfigure(int) __attribute__ ((noreturn));
 
 static void print_usage(bool error);
 
-#ifdef LINUX_NETLINK_ROUTING
-static const char* ipip_default_name = "olsr_tunnel";
-#endif
-
 static int set_default_ifcnfs(struct olsr_if *, struct if_config_options *);
 
 static int olsr_process_arguments(int, char *[], struct olsrd_config *,
@@ -523,6 +519,7 @@ deactivate_spoof("all", &olsr_cnf->ipip_base_if, AF_INET );
 #ifdef LINUX_NETLINK_ROUTING
   /*create smart-gateway-tunnel policy rules*/
   //!!?? disable smartgateway if not ipv4?, or better: do not start olsr
+#if 0
   if (olsr_cnf->smart_gw_active) {
     int r = olsr_if_setip(TUNL_BASE, &olsr_cnf->main_addr, 0);
 printf("set interface up returned %i",r);
@@ -591,7 +588,7 @@ printf("\nMain Table is %i prio %i", olsr_cnf->rttable, olsr_cnf->rttable_rule);
                         olsr_cnf->rttable_backup_rule, NULL, true);
     }
   }
-
+#endif
   /* Create rule for RtTable to resolve route insertion problems*/
   if ((olsr_cnf->rttable < 253) & (olsr_cnf->rttable > 0)) {
     olsr_os_policy_rule(olsr_cnf->ip_version, olsr_cnf->rttable, (olsr_cnf->rttable_rule>0?olsr_cnf->rttable_rule:65535), NULL, true);
@@ -804,7 +801,9 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
 #ifdef LINUX_NETLINK_ROUTING
 
   /*delete smartgw tunnel if it index is known*/
+#if 0
   if (olsr_cnf->ipip_if_index) olsr_del_tunl();
+#endif
 
   /*!!?? we should take down the tunl0 interface*/
 
@@ -820,12 +819,13 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
   if (olsr_cnf->rttable_backup_rule>0)
     olsr_os_policy_rule(olsr_cnf->ip_version, olsr_cnf->rttable_default, olsr_cnf->rttable_backup_rule, NULL, false);
 
+#if 0
   /*tunl0*/
   if (olsr_cnf->ipip_base_orig_down) {
     printf("\ntakig down tunl0 again");
     olsr_if_set_state(TUNL_BASE, false);
   }
-
+#endif
   /* RtTable backup rule */
   if ((olsr_cnf->rttable < 253) & (olsr_cnf->rttable > 0)) {
     olsr_os_policy_rule(olsr_cnf->ip_version, olsr_cnf->rttable, (olsr_cnf->rttable_rule?olsr_cnf->rttable_rule:65535), NULL, false);
