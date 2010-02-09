@@ -53,6 +53,9 @@
 /*
  * This file contains the old ioctl version of the linux routing code.
  * You will find the current netlink version in kernel_routes_nl.c
+ *
+ * You can deactivate this code (and activating the netlink one)
+ * by adding a -DLINUX_NETLINK_ROUTING to CPPFLAGS in make/Makefile.linux
  */
 #ifndef LINUX_NETLINK_ROUTING
 

@@ -60,7 +60,8 @@ AVLNODE2STRUCT(node2gateway, struct gateway_entry, node);
 
 extern struct avl_tree gateway_tree;
 
-void olsr_init_gateways(void);
+int olsr_init_gateways(void);
+void olsr_cleanup_gateways(void);
 void olsr_trigger_inetgw_startup(void);
 int olsr_trigger_inetgw_selection(bool ipv4, bool ipv6);
 

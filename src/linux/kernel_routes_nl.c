@@ -65,6 +65,9 @@
 /*
  * This file contains the rtnetlink version of the linux routing code.
  * You will find the old ioctl version in kernel_routes_ioctl.c
+ *
+ * You can deactivate this code (and activating the ioctl one)
+ * by removing the -DLINUX_NETLINK_ROUTING from make/Makefile.linux
  */
 #ifdef LINUX_NETLINK_ROUTING
 /*

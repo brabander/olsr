@@ -12,6 +12,7 @@
 #include "olsr_cfg.h"
 #include "olsr_cookie.h"
 #include "scheduler.h"
+#include "kernel_tunnel.h"
 #include "gateway_default_handler.h"
 #include "gateway.h"
 
@@ -66,7 +67,7 @@ serialize_gw_speed(uint32_t speed) {
 /**
  * Initialize gateway system
  */
-void
+int
 olsr_init_gateways(void) {
   uint8_t *ip;
   gw_mem_cookie = olsr_alloc_cookie("Gateway cookie", OLSR_COOKIE_TYPE_MEMORY);
@@ -96,11 +97,24 @@ olsr_init_gateways(void) {
     }
   }
 
+  if (olsr_os_init_iptunnel()) {
+    return 1;
+  }
   /*
    * initialize default gateway handler,
    * can be overwritten with olsr_set_inetgw_handler
    */
   olsr_gw_default_init();
+  return 0;
+}
+
+/**
+ * Cleanup gateway tunnel system
+ */
+void olsr_cleanup_gateways(void) {
+  // TODO: inet gw tunnel cleanup
+
+  olsr_os_cleanup_iptunnel();
 }
 
 /**

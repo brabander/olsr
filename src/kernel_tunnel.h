@@ -13,7 +13,7 @@
 
 #ifdef linux
 
-bool olsr_os_init_iptunnel(void);
+int olsr_os_init_iptunnel(void);
 void olsr_os_cleanup_iptunnel(void);
 
 int olsr_os_add_ipip_tunnel(const char *name, union olsr_ip_addr *target, bool transportV4);

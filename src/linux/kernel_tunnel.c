@@ -65,18 +65,18 @@ static const char DEV_IPV6_TUNNEL[IFNAMSIZ] = "ip6tnl0";
 
 static bool store_iptunnel_state;
 
-bool olsr_os_init_iptunnel(void) {
+int olsr_os_init_iptunnel(void) {
   const char *dev = olsr_cnf->ip_version == AF_INET ? DEV_IPV4_TUNNEL : DEV_IPV6_TUNNEL;
 
   store_iptunnel_state = olsr_if_isup(dev);
   if (store_iptunnel_state) {
-    return true;
+    return 0;
   }
-  return olsr_if_set_state(dev, true) == 0;
+  return olsr_if_set_state(dev, true);
 }
 
 void olsr_os_cleanup_iptunnel(void) {
-  if (store_iptunnel_state) {
+  if (!store_iptunnel_state) {
     olsr_if_set_state(olsr_cnf->ip_version == AF_INET ? DEV_IPV4_TUNNEL : DEV_IPV6_TUNNEL, false);
   }
 }

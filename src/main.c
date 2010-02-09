@@ -406,6 +406,13 @@ int main(int argc, char *argv[]) {
 #endif
 
 #ifdef LINUX_NETLINK_ROUTING
+  /* initialize gateway system */
+  if (olsr_cnf->smart_gw_active) {
+    if (olsr_init_gateways()) {
+      olsr_exit("Cannot initialize gateway tunnels", 1);
+    }
+  }
+
   /* initialize niit if index */
   if (olsr_cnf->use_niit) {
     olsr_init_niit();
@@ -517,7 +524,6 @@ deactivate_spoof("all", &olsr_cnf->ipip_base_if, AF_INET );
 #endif
 
 #ifdef LINUX_NETLINK_ROUTING
-  /*create smart-gateway-tunnel policy rules*/
   //!!?? disable smartgateway if not ipv4?, or better: do not start olsr
 #if 0
   if (olsr_cnf->smart_gw_active) {
