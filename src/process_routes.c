@@ -160,6 +160,10 @@ olsr_enqueue_rt(struct list_node *head_node, struct rt_entry *rt)
 static void
 olsr_delete_kernel_route(struct rt_entry *rt)
 {
+  if (olsr_cnf->smart_gw_active && is_prefix_inetgw(&rt->rt_dst)) {
+    /* skip default route in smartgateway mode */
+    return;
+  }
   if (!olsr_cnf->host_emul) {
     int16_t error = olsr_cnf->ip_version == AF_INET ? olsr_delroute_function(rt) : olsr_delroute6_function(rt);
 
@@ -187,6 +191,10 @@ olsr_delete_kernel_route(struct rt_entry *rt)
 static void
 olsr_add_kernel_route(struct rt_entry *rt)
 {
+  if (olsr_cnf->smart_gw_active && is_prefix_inetgw(&rt->rt_dst)) {
+    /* skip default route in smartgateway mode */
+    return;
+  }
 
   if (!olsr_cnf->host_emul) {
     int16_t error = (olsr_cnf->ip_version == AF_INET) ? olsr_addroute_function(rt) : olsr_addroute6_function(rt);

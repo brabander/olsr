@@ -69,6 +69,7 @@ int olsr_os_init_iptunnel(void) {
   const char *dev = olsr_cnf->ip_version == AF_INET ? DEV_IPV4_TUNNEL : DEV_IPV6_TUNNEL;
 
   store_iptunnel_state = olsr_if_isup(dev);
+fprintf(stderr, "device %s was %s\n", dev, store_iptunnel_state ? "up" : "down");
   if (store_iptunnel_state) {
     return 0;
   }
@@ -77,6 +78,7 @@ int olsr_os_init_iptunnel(void) {
 
 void olsr_os_cleanup_iptunnel(void) {
   if (!store_iptunnel_state) {
+fprintf(stderr, "ifdown: %s\n", olsr_cnf->ip_version == AF_INET ? DEV_IPV4_TUNNEL : DEV_IPV6_TUNNEL);
     olsr_if_set_state(olsr_cnf->ip_version == AF_INET ? DEV_IPV4_TUNNEL : DEV_IPV6_TUNNEL, false);
   }
 }

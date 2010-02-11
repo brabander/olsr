@@ -12,8 +12,10 @@
 #include "common/list.h"
 #include "defs.h"
 #include "olsr.h"
+#include "scheduler.h"
 
 #define FORCE_DELETE_GW_ENTRY 255
+#define GW_CLEANUP_INTERVAL 30000
 
 /*
  * hack for Vienna network to remove 0.0.0.0/128.0.0.0 and 128.0.0.0/128.0.0.0 routes
@@ -45,6 +47,9 @@ struct gateway_entry {
   struct olsr_ip_prefix external_prefix;
   uint32_t uplink, downlink;
   bool ipv4, ipv4nat, ipv6;
+
+  struct timer_entry *cleanup_timer;
+  uint16_t seqno;
 };
 
 AVLNODE2STRUCT(node2gateway, struct gateway_entry, node);
@@ -66,11 +71,11 @@ void olsr_trigger_inetgw_startup(void);
 int olsr_trigger_inetgw_selection(bool ipv4, bool ipv6);
 
 struct gateway_entry *olsr_find_gateway_entry(union olsr_ip_addr *originator);
-void olsr_update_gateway_entry(union olsr_ip_addr *originator, union olsr_ip_addr *mask, int prefixlen);
+void olsr_update_gateway_entry(union olsr_ip_addr *originator, union olsr_ip_addr *mask, int prefixlen, uint16_t seqno);
 void olsr_delete_gateway_entry(union olsr_ip_addr *originator, uint8_t prefixlen);
 void olsr_print_gateway_entries(void);
 
-int olsr_set_inet_gateway(union olsr_ip_addr *originator, bool ipv4, bool ipv6, bool external);
+bool olsr_set_inet_gateway(union olsr_ip_addr *originator, bool ipv4, bool ipv6, bool external);
 struct gateway_entry *olsr_get_inet_gateway(bool ipv6);
 bool olsr_is_smart_gateway(struct olsr_ip_prefix *prefix, union olsr_ip_addr *net);
 void olsr_modifiy_inetgw_netmask(union olsr_ip_addr *mask, int prefixlen);

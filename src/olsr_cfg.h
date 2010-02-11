@@ -266,13 +266,6 @@ struct olsrd_config {
   /*many potential parameters or helper variables for smartgateway*/
   bool has_ipv4_gateway, has_ipv6_gateway;
 
-  struct interface ipip_base_if;
-  int ipip_if_index;
-  bool ipip_if_up;
-  bool ipip_base_orig_down;
-  unsigned long int ipip_remote_address;
-  const char *ipip_name;
-
   int ioctl_s;                         /* Socket used for ioctl calls */
 #ifdef LINUX_NETLINK_ROUTING
   int rtnl_s;                          /* Socket used for rtnetlink messages */

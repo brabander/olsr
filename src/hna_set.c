@@ -371,7 +371,7 @@ olsr_input_hna(union olsr_message *m, struct interface *in_if __attribute__ ((un
   uint16_t olsr_msgsize;
   union olsr_ip_addr originator;
   uint8_t hop_count;
-  uint16_t packet_seq_number;
+  uint16_t msg_seq_number;
 
   int hnasize;
   const uint8_t *curr, *curr_end;
@@ -421,7 +421,7 @@ olsr_input_hna(union olsr_message *m, struct interface *in_if __attribute__ ((un
   pkt_get_u8(&curr, &hop_count);
 
   /* seqno */
-  pkt_get_u16(&curr, &packet_seq_number);
+  pkt_get_u16(&curr, &msg_seq_number);
 
   if ((hnasize % (2 * olsr_cnf->ipsize)) != 0) {
     OLSR_PRINTF(1, "Illegal HNA message from %s with size %d!\n",
@@ -451,7 +451,7 @@ olsr_input_hna(union olsr_message *m, struct interface *in_if __attribute__ ((un
     prefix.prefix_len = olsr_netmask_to_prefix(&mask);
 
     if (olsr_cnf->smart_gw_active && olsr_is_smart_gateway(&prefix, &mask)) {
-      olsr_update_gateway_entry(&originator, &mask, prefix.prefix_len);
+      olsr_update_gateway_entry(&originator, &mask, prefix.prefix_len, msg_seq_number);
     }
 
 #ifdef MAXIMUM_GATEWAY_PREFIX_LENGTH

@@ -19,13 +19,13 @@ static bool gw_def_finished_ipv4, gw_def_finished_ipv6;
 static struct timer_entry *gw_def_timer;
 
 static void gw_default_startup_handler(void);
-void olsr_gw_default_lookup_gateway(bool ipv4, bool ipv6);
+static void gw_default_choosegw_handler(bool ipv4, bool ipv6);
 static void gw_default_update_handler(struct gateway_entry *);
 static void gw_default_delete_handler(struct gateway_entry *);
 
 static struct olsr_gw_handler gw_def_handler = {
   &gw_default_startup_handler,
-  &olsr_gw_default_lookup_gateway,
+  &gw_default_choosegw_handler,
   &gw_default_update_handler,
   &gw_default_delete_handler
 };
@@ -96,6 +96,11 @@ static void gw_default_timer(void *unused __attribute__ ((unused))) {
 
 /* gateway handler callbacks */
 static void gw_default_startup_handler(void) {
+  /* reset node count */
+  gw_def_nodecount = tc_tree.count;
+  gw_def_stablecount = 0;
+
+  /* and start looking for gateway */
   olsr_set_timer(&gw_def_timer, GW_DEFAULT_TIMER_INTERVAL, 0, true, &gw_default_timer, NULL, 0);
 }
 
@@ -117,6 +122,14 @@ static void gw_default_delete_handler(struct gateway_entry *gw) {
 
   if (gw != NULL && (isv4 || isv6)) {
     olsr_gw_default_lookup_gateway(isv4, isv6);
+  }
+}
+
+static void gw_default_choosegw_handler(bool ipv4, bool ipv6) {
+  olsr_gw_default_lookup_gateway(ipv4, ipv6);
+
+  if (!(gw_def_finished_ipv4 && gw_def_finished_ipv6)) {
+    gw_default_startup_handler();
   }
 }
 

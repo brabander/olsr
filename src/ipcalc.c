@@ -42,8 +42,15 @@
 #include "defs.h"
 #include "ipcalc.h"
 
+/* ipv4 prefix 0.0.0.0/0 */
+const struct olsr_ip_prefix ipv4_internet_route =
+{
+    .prefix.v4.s_addr = 0,
+    .prefix_len = 0
+};
+
 /* ipv6 prefix ::ffff:0:0/96 */
-const struct olsr_ip_prefix mapped_v4_gw =
+const struct olsr_ip_prefix ipv6_mappedv4_route =
 {
     .prefix.v6.s6_addr = { 0,0,0,0,0,0,0,0,0,0,0xff,0xff,0,0,0,0 },
     .prefix_len = 96

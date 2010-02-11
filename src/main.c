@@ -520,7 +520,9 @@ int main(int argc, char *argv[]) {
  * all and device-specific settings are now combined differently
  * new max(all,device) old: all && device 
  * !!?? does this change only affect rp_filter or other aswell (e.g. icmp_redirect)*/
-deactivate_spoof("all", &olsr_cnf->ipip_base_if, AF_INET );
+
+  // TODO: cleanup ?
+  // deactivate_spoof("all", &olsr_cnf->ipip_base_if, AF_INET );
 #endif
 
 #ifdef LINUX_NETLINK_ROUTING
@@ -758,7 +760,7 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
 #ifdef LINUX_NETLINK_ROUTING
   /* trigger gateway selection */
   if (olsr_cnf->smart_gw_active) {
-    // TODO: cleanup smart gateway routes
+    olsr_cleanup_gateways();
   }
 
   /* trigger niit static route cleanup */
@@ -840,8 +842,8 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
   close(olsr_cnf->rtnl_s);
   close (olsr_cnf->rt_monitor_socket);
 
-  /*rp_filter*/
-  if (olsr_cnf->ipip_base_if.if_index) printf("\nresetting of tunl0 rp_filter not implemented");//!!?? no function extists to reset a single interface
+  /*TODO: cleanup ?rp_filter*/
+  // if (olsr_cnf->ipip_base_if.if_index) printf("\nresetting of tunl0 rp_filter not implemented");//!!?? no function extists to reset a single interface
 #endif
 
 /*!!?? we need to reset rp_filter of conf/all aswell, so we really need a new rp_filter reset function*/

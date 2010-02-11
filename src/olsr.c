@@ -311,9 +311,6 @@ olsr_init_tables(void)
   /* Initialize HNA set */
   olsr_init_hna_set();
 
-  /* Initialize smart gateways */
-  olsr_init_gateways();
-
   /* Initialize duplicate handler */
 #ifndef NO_DUPLICATE_DETECTION_HANDLER
   olsr_duplicate_handler_init();

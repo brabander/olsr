@@ -354,7 +354,7 @@ static int olsr_new_netlink_route(int family, int rttable, int if_index, int met
   req.n.nlmsg_len = NLMSG_LENGTH(sizeof(struct rtmsg));
   req.n.nlmsg_flags = NLM_F_REQUEST | NLM_F_ACK;
   if (set) {
-    req.n.nlmsg_flags |= NLM_F_CREATE | NLM_F_EXCL;
+    req.n.nlmsg_flags |= NLM_F_CREATE | NLM_F_REPLACE;
   }
 
   req.n.nlmsg_type = set ? RTM_NEWROUTE : RTM_DELROUTE;
@@ -439,19 +439,32 @@ void olsr_os_niit_6to4_route(const struct olsr_ip_prefix *dst_v6, bool set) {
 void olsr_os_niit_4to6_route(const struct olsr_ip_prefix *dst_v4, bool set) {
   /* TODO: in welche Table kommen die NIIT-Routen ? ne eigene ? */
   if (olsr_new_netlink_route(AF_INET, olsr_cnf->rttable, olsr_cnf->niit4to6_if_index,
-      RT_METRIC_DEFAULT, RTPROT_BOOT, NULL, NULL, dst_v4, set, false)) {
+      RT_METRIC_DEFAULT, olsr_cnf->rtproto, NULL, NULL, dst_v4, set, false)) {
     olsr_syslog(OLSR_LOG_ERR, ". error while %s niit route to %s",
         set ? "setting" : "removing", olsr_ip_prefix_to_string(dst_v4));
   }
 }
 
-static bool olsr_netlink_process_smartgw(const struct rt_entry *rt, bool set) {
-  if (!olsr_cnf->smart_gw_active || !is_prefix_inetgw(&rt->rt_dst)) {
-    return false;
+void olsr_os_inetgw_tunnel_route(uint32_t if_idx, bool ipv4, bool set) {
+  const struct olsr_ip_prefix *dst;
+
+  if (olsr_cnf->ip_version == AF_INET) {
+    assert(ipv4);
+
+    dst = &ipv4_internet_route;
+  }
+  else if (ipv4) {
+    dst = &ipv6_mappedv4_route;
+  }
+  else {
+    dst = &ipv6_internet_route;
   }
 
-  /* TODO maybe block internet gateway route */
-  return set && false;
+  if (olsr_new_netlink_route(ipv4 ? AF_INET : AF_INET6, olsr_cnf->rttable,
+      if_idx, RT_METRIC_DEFAULT, olsr_cnf->rtproto,NULL, NULL, dst, set, false)) {
+    olsr_syslog(OLSR_LOG_ERR, ". error while %s inetgw tunnel route to %s",
+        set ? "setting" : "removing", olsr_ip_prefix_to_string(dst));
+  }
 }
 
 static int olsr_os_process_rt_entry(int af_family, const struct rt_entry *rt, bool set) {
@@ -460,12 +473,6 @@ static int olsr_os_process_rt_entry(int af_family, const struct rt_entry *rt, bo
   union olsr_ip_addr *src;
   bool hostRoute;
   int err;
-
-  /* handle smart gateway case */
-  if (olsr_netlink_process_smartgw(rt, set)) {
-    /* skip inetgw routes if smartgw is active */
-    return 0;
-  }
 
   /* calculate metric */
   if (FIBM_FLAT == olsr_cnf->fib_metric) {
