@@ -57,6 +57,7 @@
 #include "lq_packet.h"
 #include "log.h"
 #include "link_set.h"
+
 #include <signal.h>
 #include <sys/types.h>
 #include <net/if.h>
@@ -657,11 +658,8 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__ ((unused)))
     }
 
     /* Deactivate IP spoof filter */
-    deactivate_spoof(if_basename(ifr.ifr_name), &ifs, olsr_cnf->ip_version);
-
     /* Disable ICMP redirects */
-    disable_redirects(if_basename(ifr.ifr_name), &ifs, olsr_cnf->ip_version);
-
+    net_os_set_ifoptions(if_basename(ifr.ifr_name), &ifs);
   }
 
   /* Get interface index */

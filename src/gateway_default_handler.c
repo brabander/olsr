@@ -13,6 +13,7 @@
 
 #include "assert.h"
 
+#ifndef WIN32
 static uint32_t gw_def_nodecount, gw_def_stablecount;
 static bool gw_def_finished_ipv4, gw_def_finished_ipv6;
 
@@ -169,3 +170,4 @@ void olsr_gw_default_lookup_gateway(bool ipv4, bool ipv6) {
     gw_default_choose_gateway();
   }
 }
+#endif

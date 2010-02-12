@@ -88,5 +88,4 @@ struct olsr_gw_handler {
 };
 
 void olsr_set_inetgw_handler(struct olsr_gw_handler *l);
-
 #endif /* GATEWAY_H_ */

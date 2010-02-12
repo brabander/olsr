@@ -363,10 +363,6 @@ int main(int argc, char *argv[]) {
   if (olsr_cnf->debug_level > 1) {
     olsrd_print_cnf(olsr_cnf);
   }
-#ifndef WIN32
-  /* Disable redirects globally */
-  disable_redirects_global(olsr_cnf->ip_version);
-#endif
 
   def_timer_ci = olsr_alloc_cookie("Default Timer Cookie", OLSR_COOKIE_TYPE_TIMER);
 
@@ -422,10 +418,11 @@ int main(int argc, char *argv[]) {
   /* Init empty TC timer */
   set_empty_tc_timer(GET_TIMESTAMP(0));
 
-  /*
-   *enable ip forwarding on host
-   */
-  enable_ip_forwarding(olsr_cnf->ip_version);
+  /* enable ip forwarding on host */
+  /* Disable redirects globally */
+#ifndef WIN32
+  net_os_set_global_ifoptions();
+#endif
 
   /* Initialize parser */
   olsr_init_parser();
@@ -801,7 +798,7 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
   olsr_close_plugins();
 
   /* Reset network settings */
-  restore_settings(olsr_cnf->ip_version);
+  net_os_restore_ifoptions();
 
   /* ioctl socket */
   close(olsr_cnf->ioctl_s);

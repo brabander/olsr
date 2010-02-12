@@ -231,7 +231,9 @@ olsr_process_changes(void)
     olsr_print_tc_table();
 
     // TODO push this to debug level 3 or 4
+#ifndef WIN32
     olsr_print_gateway_entries();
+#endif
 #endif
   }
 

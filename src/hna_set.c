@@ -216,10 +216,12 @@ olsr_delete_hna_net_entry(struct hna_net *net_to_delete) {
   struct hna_entry *hna_gw;
   bool removed_entry = false;
 
+#ifndef WIN32
   if (is_prefix_inetgw(&net_to_delete->hna_prefix)) {
     /* modify smart gateway entry if necessary */
     olsr_delete_gateway_entry(&net_to_delete->hna_gw->A_gateway_addr, net_to_delete->hna_prefix.prefix_len);
   }
+#endif
 
   olsr_stop_timer(net_to_delete->hna_net_timer);
   net_to_delete->hna_net_timer = NULL;  /* be pedandic */
@@ -450,9 +452,11 @@ olsr_input_hna(union olsr_message *m, struct interface *in_if __attribute__ ((un
     pkt_get_ipaddress(&curr, &mask);
     prefix.prefix_len = olsr_netmask_to_prefix(&mask);
 
+#ifndef WIN32
     if (olsr_cnf->smart_gw_active && olsr_is_smart_gateway(&prefix, &mask)) {
       olsr_update_gateway_entry(&originator, &mask, prefix.prefix_len, msg_seq_number);
     }
+#endif
 
 #ifdef MAXIMUM_GATEWAY_PREFIX_LENGTH
     if (olsr_cnf->smart_gw_active && prefix.prefix_len > 0 && prefix.prefix_len <= MAXIMUM_GATEWAY_PREFIX_LENGTH) {

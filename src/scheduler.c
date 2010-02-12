@@ -52,6 +52,10 @@
 #include <unistd.h>
 #include <assert.h>
 
+#ifdef WIN32
+#define close(x) closesocket(x)
+#endif
+
 /* Timer data, global. Externed in scheduler.h */
 uint32_t now_times;                    /* relative time compared to startup (in milliseconds */
 struct timeval first_tv;               /* timevalue during startup */

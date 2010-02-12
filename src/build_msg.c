@@ -1048,11 +1048,12 @@ serialize_hna4(struct interface *ifp)
 #endif
 
     olsr_prefix_to_netmask(&ip_addr, h->net.prefix_len);
+#ifndef WIN32
     if (olsr_cnf->smart_gw_active && is_prefix_inetgw(&h->net)) {
       /* this is the default route, overwrite it with the smart gateway */
       olsr_modifiy_inetgw_netmask(&ip_addr, h->net.prefix_len);
     }
-
+#endif
     pair->addr = h->net.prefix.v4.s_addr;
     pair->netmask = ip_addr.v4.s_addr;
     pair++;
@@ -1140,11 +1141,12 @@ serialize_hna6(struct interface *ifp)
     OLSR_PRINTF(BMSG_DBGLVL, "\tNet: %s\n", olsr_ip_prefix_to_string(&h->net));
 #endif
     olsr_prefix_to_netmask(&tmp_netmask, h->net.prefix_len);
+#ifndef WIN32
     if (olsr_cnf->smart_gw_active && is_prefix_inetgw(&h->net)) {
       /* this is the default gateway, so overwrite it with the smart one */
       olsr_modifiy_inetgw_netmask(&tmp_netmask, h->net.prefix_len);
     }
-
+#endif
     pair6->addr = h->net.prefix.v6;
     pair6->netmask = tmp_netmask.v6;
     pair6++;
