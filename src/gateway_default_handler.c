@@ -10,6 +10,7 @@
 #include "gateway_default_handler.h"
 #include "scheduler.h"
 #include "tc_set.h"
+#include "log.h"
 
 #include "assert.h"
 
@@ -82,7 +83,11 @@ static void gw_default_choose_gateway(void) {
 
 /* timer for laze gateway selection */
 static void gw_default_timer(void *unused __attribute__ ((unused))) {
-  if (tc_tree.count < gw_def_nodecount) {
+  /* accept a 10% increase without trigger a stablecount reset */
+  if (tc_tree.count * 10 <= gw_def_nodecount * 11) {
+    gw_def_nodecount = tc_tree.count;
+  }
+  if (tc_tree.count <= gw_def_nodecount) {
     gw_def_stablecount++;
   }
   else {
@@ -101,18 +106,25 @@ static void gw_default_startup_handler(void) {
   gw_def_nodecount = tc_tree.count;
   gw_def_stablecount = 0;
 
-  /* and start looking for gateway */
+  /* get new ipv4 GW if we use OLSRv4 or NIIT */
+  gw_def_finished_ipv4 = olsr_cnf->ip_version == AF_INET6 && !olsr_cnf->use_niit;
+
+  /* get new ipv6 GW if we use OLSRv6 */
+  gw_def_finished_ipv6 = olsr_cnf->ip_version == AF_INET;
+
   olsr_set_timer(&gw_def_timer, GW_DEFAULT_TIMER_INTERVAL, 0, true, &gw_default_timer, NULL, 0);
 }
 
 static void gw_default_update_handler(struct gateway_entry *gw) {
   bool v4changed, v6changed;
 
-  v4changed = gw == olsr_get_inet_gateway(false)
+  v4changed = (gw == olsr_get_inet_gateway(false))
       && (!gw->ipv4 || (gw->ipv4nat && !olsr_cnf->smart_gw_allow_nat));
-  v6changed = gw == olsr_get_inet_gateway(true) && !gw->ipv6;
+  v6changed = (gw == olsr_get_inet_gateway(true)) && !gw->ipv6;
 
-  olsr_gw_default_lookup_gateway(v4changed, v6changed);
+  if (v4changed || v6changed) {
+    olsr_gw_default_lookup_gateway(v4changed, v6changed);
+  }
 }
 
 static void gw_default_delete_handler(struct gateway_entry *gw) {
