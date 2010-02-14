@@ -124,14 +124,16 @@ static int writeToProc(const char *file, char *old, char value) {
     return -1;
   }
 
-  if (lseek(fd, SEEK_SET, 0) == -1) {
-    OLSR_PRINTF(0, "Error, cannot rewind proc entry %s: %s (%d)\n", file, strerror(errno), errno);
-    return -1;
-  }
+  if (rv != value) {
+    if (lseek(fd, SEEK_SET, 0) == -1) {
+      OLSR_PRINTF(0, "Error, cannot rewind proc entry %s: %s (%d)\n", file, strerror(errno), errno);
+      return -1;
+    }
 
-  if (write(fd, &value, 1) != 1) {
-    OLSR_PRINTF(0, "Error, cannot write proc entry %s: %s (%d)\n", file, strerror(errno), errno);
-    return -1;
+    if (write(fd, &value, 1) != 1) {
+      OLSR_PRINTF(0, "Error, cannot write proc entry %s: %s (%d)\n", file, strerror(errno), errno);
+      return -1;
+    }
   }
 
   if (close(fd) != 0) {
@@ -142,7 +144,7 @@ static int writeToProc(const char *file, char *old, char value) {
   if (old) {
     *old = rv;
   }
-  olsr_syslog(OLSR_LOG_INFO, "Writing '%c' to %s", value, file);
+  olsr_syslog(OLSR_LOG_INFO, "Writing '%c' (was %c) to %s", value, rv, file);
   return 0;
 }
 
@@ -168,7 +170,7 @@ static bool is_at_least_linuxkernel_2_6_31(void) {
 void
 net_os_set_global_ifoptions(void) {
 
-  if (writeToProc(olsr_cnf->ip_version == AF_INET ? PROC_IPFORWARD_V4 : PROC_IPFORWARD_V6, &orig_fwd_state, '0')) {
+  if (writeToProc(olsr_cnf->ip_version == AF_INET ? PROC_IPFORWARD_V4 : PROC_IPFORWARD_V6, &orig_fwd_state, '1')) {
     OLSR_PRINTF(1, "Warning, could not enable IP forwarding!\n"
         "you should manually ensure that IP forwarding is enabled!\n\n");
     olsr_startup_sleep(3);

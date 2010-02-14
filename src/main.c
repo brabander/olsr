@@ -754,6 +754,14 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
   /* delete all routes */
   olsr_delete_all_kernel_routes();
 
+  /* send second shutdown message burst */
+  olsr_shutdown_messages();
+
+  /* now try to cleanup the rest of the mess */
+  olsr_delete_all_tc_entries();
+
+  olsr_delete_all_mid_entries();
+
 #ifdef LINUX_NETLINK_ROUTING
   /* trigger gateway selection */
   if (olsr_cnf->smart_gw_active) {
@@ -770,14 +778,6 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
     olsr_os_create_localhostif(&olsr_cnf->main_addr, false);
   }
 #endif
-
-  /* send second shutdown message burst */
-  olsr_shutdown_messages();
-
-  /* now try to cleanup the rest of the mess */
-  olsr_delete_all_tc_entries();
-
-  olsr_delete_all_mid_entries();
 
   olsr_destroy_parser();
 
