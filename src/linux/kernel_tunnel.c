@@ -69,7 +69,6 @@ int olsr_os_init_iptunnel(void) {
   const char *dev = olsr_cnf->ip_version == AF_INET ? DEV_IPV4_TUNNEL : DEV_IPV6_TUNNEL;
 
   store_iptunnel_state = olsr_if_isup(dev);
-fprintf(stderr, "device %s was %s\n", dev, store_iptunnel_state ? "up" : "down");
   if (store_iptunnel_state) {
     return 0;
   }
@@ -78,7 +77,6 @@ fprintf(stderr, "device %s was %s\n", dev, store_iptunnel_state ? "up" : "down")
 
 void olsr_os_cleanup_iptunnel(void) {
   if (!store_iptunnel_state) {
-fprintf(stderr, "ifdown: %s\n", olsr_cnf->ip_version == AF_INET ? DEV_IPV4_TUNNEL : DEV_IPV6_TUNNEL);
     olsr_if_set_state(olsr_cnf->ip_version == AF_INET ? DEV_IPV4_TUNNEL : DEV_IPV6_TUNNEL, false);
   }
 }
@@ -106,7 +104,7 @@ static int os_ip4_tunnel(const char *name, in_addr_t *target, uint32_t cmd)
   int err;
   struct ip_tunnel_parm p;
 
-  /* no IPIP tunnel if OLSR runs with IPv6 */
+  /* only IPIP tunnel if OLSR runs with IPv6 */
   assert (olsr_cnf->ip_version == AF_INET);
   memset(&p, 0, sizeof(p));
   p.iph.version = 4;
@@ -134,10 +132,10 @@ static int os_ip6_tunnel(const char *name, struct in6_addr *target, uint32_t cmd
   int err;
   struct ip6_tnl_parm p;
 
-  /* no IPIP tunnel if OLSR runs with IPv6 */
+  /* only IP6 tunnel if OLSR runs with IPv6 */
   assert (olsr_cnf->ip_version == AF_INET6);
   memset(&p, 0, sizeof(p));
-  p.proto = proto; //  ? IPPROTO_IPV6 : IPPROTO_IPIP;
+  p.proto = proto;
   if (target) {
     p.raddr = *target;
   }

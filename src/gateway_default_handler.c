@@ -57,9 +57,11 @@ static void gw_default_choose_gateway(void) {
 
     if (!gw_def_finished_ipv4 && gw->ipv4 && gw->ipv4nat == olsr_cnf->smart_gw_allow_nat && tc->path_cost < cost_ipv4) {
       inet_ipv4 = gw;
+      cost_ipv4 = tc->path_cost;
     }
     if (!gw_def_finished_ipv6 && gw->ipv6 && tc->path_cost < cost_ipv6) {
       inet_ipv6 = gw;
+      cost_ipv6 = tc->path_cost;
     }
   } OLSR_FOR_ALL_GATEWAY_ENTRIES_END(gw)
 
@@ -112,6 +114,11 @@ static void gw_default_startup_handler(void) {
   /* get new ipv6 GW if we use OLSRv6 */
   gw_def_finished_ipv6 = olsr_cnf->ip_version == AF_INET;
 
+  /* keep in mind we might be a gateway ourself */
+  gw_def_finished_ipv4 |= olsr_cnf->has_ipv4_gateway;
+  gw_def_finished_ipv6 |= olsr_cnf->has_ipv6_gateway;
+
+  /* start gateway selection timer */
   olsr_set_timer(&gw_def_timer, GW_DEFAULT_TIMER_INTERVAL, 0, true, &gw_default_timer, NULL, 0);
 }
 

@@ -765,7 +765,8 @@ bool olsr_if_isup(const char * dev)
   strscpy(ifr.ifr_name, dev, IFNAMSIZ);
 
   if (ioctl(olsr_cnf->ioctl_s, SIOCGIFFLAGS, &ifr) < 0) {
-    perror("ioctl SIOCGIFFLAGS (get flags)");
+    OLSR_PRINTF(1, "ioctl SIOCGIFFLAGS (get flags) error on device %s: %s (%d)\n",
+        dev, strerror(errno), errno);
     return 1;
   }
   return (ifr.ifr_flags & IFF_UP) != 0;
@@ -779,7 +780,8 @@ int olsr_if_set_state(const char *dev, bool up) {
   strscpy(ifr.ifr_name, dev, IFNAMSIZ);
 
   if (ioctl(olsr_cnf->ioctl_s, SIOCGIFFLAGS, &ifr) < 0) {
-    perror("ioctl SIOCGIFFLAGS (get flags)");
+    OLSR_PRINTF(1, "ioctl SIOCGIFFLAGS (get flags) error on device %s: %s (%d)\n",
+        dev, strerror(errno), errno);
     return 1;
   }
 
@@ -797,7 +799,8 @@ int olsr_if_set_state(const char *dev, bool up) {
   }
 
   if (ioctl(olsr_cnf->ioctl_s, SIOCSIFFLAGS, &ifr) < 0) {
-    perror("ioctl SIOCSIFFLAGS (set flags)");
+    OLSR_PRINTF(1, "ioctl SIOCSIFFLAGS (set flags %s) error on device %s: %s (%d)\n",
+        up ? "up" : "down", dev, strerror(errno), errno);
     return 1;
   }
   return 0;
@@ -829,7 +832,9 @@ int olsr_if_setip(const char *dev, union olsr_ip_addr *ip, int ip_version) {
   }
 
   if (ioctl(olsr_cnf->ioctl_s, SIOCSIFADDR, &ifr) < 0) {
-    perror("ioctl SIOCSIFADDR (set addr)");
+    struct ipaddr_str buf;
+    OLSR_PRINTF(1, "ioctl SIOCSIFADDR (set addr %s) on device %s error: %s (%d)\n",
+        inet_ntop(ip_version, &ifr.ifr_addr, buf.buf, sizeof(buf)), dev, strerror(errno), errno);
     return 1;
   }
   return 0;

@@ -218,7 +218,7 @@ olsr_set_inet_gateway(union olsr_ip_addr *originator, bool ipv4, bool ipv6, bool
       olsr_if_set_state(v4gw_tunnel, true);
 
       v4gw_index = if_nametoindex(v4gw_tunnel);
-      fprintf(stderr, "add tunnel: %s %d\n", v4gw_tunnel, v4gw_index);
+fprintf(stderr, "add tunnel: %s %d\n", v4gw_tunnel, v4gw_index);
       olsr_os_inetgw_tunnel_route(v4gw_index, true, true);
     }
     else {
@@ -233,7 +233,8 @@ olsr_set_inet_gateway(union olsr_ip_addr *originator, bool ipv4, bool ipv6, bool
       olsr_if_set_state(v6gw_tunnel, true);
 
       v6gw_index = if_nametoindex(v6gw_tunnel);
-      olsr_os_inetgw_tunnel_route(v4gw_index, false, true);
+fprintf(stderr, "add tunnel6: %s %d\n", v6gw_tunnel, v6gw_index);
+      olsr_os_inetgw_tunnel_route(v6gw_index, false, true);
     }
     else {
       olsr_os_change_ipip_tunnel(v6gw_tunnel, &current_ipv6_gw->originator, false);
