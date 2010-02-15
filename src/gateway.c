@@ -206,7 +206,7 @@ olsr_set_inet_gateway(union olsr_ip_addr *originator, bool ipv4, bool ipv6, bool
   }
 
   /* gateway missing ? */
-  if ((current_ipv4_gw != NULL || current_ipv6_gw != NULL)  && external) {
+  if (((ipv4 && current_ipv4_gw == NULL) || (ipv6 && current_ipv6_gw == NULL))  && external) {
     /* trigger automatic lookup if user failed */
     olsr_trigger_inetgw_selection(ipv4, ipv6);
   }
