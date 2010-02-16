@@ -3,11 +3,6 @@
 #
 
 PREFIX ?= /usr/local
-SBINDIR = $(PREFIX)/sbin
-ETCDIR = $(PREFIX)/etc
-LIBDIR = $(PREFIX)/lib
-DOCDIR = $(PREFIX)/share/doc
-MANDIR = $(PREFIX)/man
 
 SRCS +=		$(wildcard src/bsd/*.c) $(wildcard src/unix/*.c)
 HDRS +=		$(wildcard src/bsd/*.h) $(wildcard src/unix/*.h)
