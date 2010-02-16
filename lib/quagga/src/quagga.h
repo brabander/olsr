@@ -25,10 +25,12 @@
 #define ZEBRA_PORT 2600
 #endif
 
-#ifdef ZEBRA_HEADER_MARKER
+#ifndef ZEBRA_HEADER_MARKER
+#define ZEBRA_HEADER_MARKER 255
+#endif
+
 #ifndef ZSERV_VERSION
 #define ZSERV_VERSION 1
-#endif
 #endif
 
 struct ipv4_route {
