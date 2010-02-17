@@ -46,6 +46,7 @@
 #define OLSR_SPF_BACKOFF_JITTER 5       /* percent */
 
 void olsr_calculate_routing_table(void);
+extern struct timer_entry *spf_backoff_timer;
 
 #endif
 
