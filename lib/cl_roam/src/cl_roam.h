@@ -81,7 +81,8 @@ struct cl_roam_msg
 int check_gw(union olsr_ip_addr *net, union olsr_ip_addr *mask);
 
 /* Event function to register with the scheduler */
-void olsr_event(void *foo);
+void olsr_event1(void *foo);
+void olsr_event2(void *foo);
 
 #endif
 

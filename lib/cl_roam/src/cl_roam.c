@@ -75,7 +75,8 @@
 #define PLUGIN_INTERFACE_VERSION 5
 
 static int has_inet_gateway;
-static struct olsr_cookie_info *event_timer_cookie;
+static struct olsr_cookie_info *event_timer_cookie1;
+static struct olsr_cookie_info *event_timer_cookie2;
 static union olsr_ip_addr gw_netmask;
 
 /**
@@ -110,6 +111,22 @@ typedef struct {
 } client_list;
 
 
+
+void update_routes_now()
+{
+	//Recalculate our own routing table RIGHT NOW
+
+    printf("recalculating routes\n");
+
+    //sets timer to zero
+
+
+    spf_backoff_timer = NULL;
+    printf("timer stopped\n");
+    //actual calculation
+    olsr_calculate_routing_table();
+    printf("updated\n");
+}
 
 
 client_list *list;
@@ -181,8 +198,10 @@ olsr_parser(struct olsr_message *msg, struct interface *in_if __attribute__ ((un
 		  guest->last_seen=30.0;
 
 
-		  ip_prefix_list_remove(&olsr_cnf->hna_entries, &(guest->ip), olsr_netmask_to_prefix(&gw_netmask), olsr_cnf->ip_version);
-
+		ip_prefix_list_remove(&olsr_cnf->hna_entries, &(guest->ip), olsr_netmask_to_prefix(&gw_netmask), olsr_cnf->ip_version);
+		char route_command[50];
+		snprintf(route_command, sizeof(route_command), "route del %s dev ath0 metric 0", inet_ntoa(guest->ip));
+		system(route_command);
 
 		  single_hna(&ip, 0);
 		  }
@@ -192,6 +211,10 @@ olsr_parser(struct olsr_message *msg, struct interface *in_if __attribute__ ((un
   else
 	  printf("Not revoking\n");
 
+
+
+
+  update_routes_now();
 
 
 }
@@ -227,10 +250,12 @@ olsrd_plugin_init(void)
 
 
   /* create the cookie */
-  event_timer_cookie = olsr_alloc_cookie("cl roam: Event", OLSR_COOKIE_TYPE_TIMER);
+  event_timer_cookie1 = olsr_alloc_cookie("cl roam: Event1", OLSR_COOKIE_TYPE_TIMER);
+  event_timer_cookie2 = olsr_alloc_cookie("cl roam: Event2", OLSR_COOKIE_TYPE_TIMER);
 
   /* Register the GW check */
-  olsr_start_timer(3 * MSEC_PER_SEC, 0, OLSR_TIMER_PERIODIC, &olsr_event, NULL, event_timer_cookie);
+  olsr_start_timer(1 * MSEC_PER_SEC, 0, OLSR_TIMER_PERIODIC, &olsr_event1, NULL, event_timer_cookie1);
+  olsr_start_timer(10 * MSEC_PER_SEC, 0, OLSR_TIMER_PERIODIC, &olsr_event2, NULL, event_timer_cookie2);
   //system("echo \"1\" ");
   //pthread_create(&ping_thread, NULL, &do_ping, NULL);
   //system("echo \"2\" ");
@@ -331,9 +356,26 @@ void add_route(void* guest) {
 			printf("Added Route\n");
 			ip_prefix_list_add(&olsr_cnf->hna_entries, &(host->ip), olsr_netmask_to_prefix(&gw_netmask));
 			host->is_announced=1;
+
+
+			char route_command[50];
+			snprintf(route_command, sizeof(route_command), "route add %s dev ath0 metric 0", inet_ntoa(host->ip));
+			system(route_command);
+
+
+
+
 			spread_host(host);
 			//This really big time will be overwritten by the next normal hna-announcement
 			single_hna(&host->ip, -1);
+
+
+
+
+
+
+
+
 
 			//Append to buffer, will be send at some time. In case it didn't arrive at the old master
 			spread_host(host);
@@ -362,6 +404,9 @@ void check_for_route(guest_client * host)
       OLSR_DEBUG(LOG_PLUGINS, "Removing Route\n");
       system("echo \"Entferne route\" ");
       ip_prefix_list_remove(&olsr_cnf->hna_entries, &(host->ip), olsr_netmask_to_prefix(&gw_netmask), olsr_cnf->ip_version);
+		char route_command[50];
+		snprintf(route_command, sizeof(route_command), "route del %s dev ath0 metric 0", inet_ntoa(host->ip));
+		system(route_command);
       host->is_announced=0;
 }
 }
@@ -522,26 +567,30 @@ int check_if_associcated(guest_client *client)
   int rssi;
   float last_rx;
   int parse;
-
+  uint64_t mac;
   long long int one, two, three, four, five, six;
 
   while (1) {
     parse = fscanf (fp, "macaddr: <%llx:%llx:%llx:%llx:%llx:%llx>\n", &one, &two, &three, &four, &five, &six);
     if (parse==EOF || parse!=6)
       break;
-    if ((six | five<<8 | four<<16 | three<<24 | two<<32 | one<<40)==client->mac) {
-    	fclose(fp);
-    	return 1;
+    mac = six | five<<8 | four<<16 | three<<24 | two<<32 | one<<40;
+    //printf ("am at %llx\n", mac);
+    if (mac==client->mac) {
+      //printf("found it!\n");
+      fclose(fp);
+      return 1;
     }
+    parse = fscanf (fp, " rssi %s\n", s2);
     if (parse==EOF)
           break;
-    //printf ("rssi = %s\n", s2);
     parse = fscanf (fp, " last_rx %f\n", &last_rx);
     if (parse==EOF)
           break;
-
   }
+
   fclose(fp);
+  printf("could not find %i\n",client->mac);
   return 0;
 
 }
@@ -671,7 +720,7 @@ spread_host(guest_client * host) {
   // My message Type 134:
   pkt_put_u8(&curr, 134);
   // hna-validity
-  pkt_put_reltime(&curr, 0.00001);
+  pkt_put_reltime(&curr, 20000);
 
   length_field = curr;
   pkt_put_u16(&curr, 0); /* put in real messagesize later */
@@ -781,11 +830,17 @@ single_hna(struct in_addr * ip, uint32_t time) {
 
 
 void
-olsr_event(void *foo )
+olsr_event1(void *foo )
 {
-	struct nbr_entry *nbr;
 	check_for_new_clients(list);
     check_client_list(list);
+}
+
+
+void
+olsr_event2(void *foo )
+{
+	struct nbr_entry *nbr;
 
     OLSR_FOR_ALL_NBR_ENTRIES(nbr) {
     	int rc;
@@ -798,7 +853,6 @@ olsr_event(void *foo )
 
         }OLSR_FOR_ALL_NBR_ENTRIES_END();
 }
-
 
 
 
