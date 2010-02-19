@@ -43,10 +43,13 @@
 #include "log.h"
 #include "olsr_types.h"
 #include "net_os.h"
+#include "olsr_cookie.h"
+#include "ipcalc.h"
 
 #include <assert.h>
 
 //ipip includes
+#include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/ioctl.h>
 #include <net/if.h>
@@ -64,9 +67,15 @@ static const char DEV_IPV4_TUNNEL[IFNAMSIZ] = "tunl0";
 static const char DEV_IPV6_TUNNEL[IFNAMSIZ] = "ip6tnl0";
 
 static bool store_iptunnel_state;
+static struct olsr_cookie_info *tunnel_cookie;
+static struct avl_tree tunnel_tree;
 
 int olsr_os_init_iptunnel(void) {
   const char *dev = olsr_cnf->ip_version == AF_INET ? DEV_IPV4_TUNNEL : DEV_IPV6_TUNNEL;
+
+  tunnel_cookie = olsr_alloc_cookie("iptunnel", OLSR_COOKIE_TYPE_MEMORY);
+  olsr_cookie_set_memory_size(tunnel_cookie, sizeof(struct olsr_iptunnel_entry));
+  avl_init(&tunnel_tree, avl_comp_default);
 
   store_iptunnel_state = olsr_if_isup(dev);
   if (store_iptunnel_state) {
@@ -76,29 +85,30 @@ int olsr_os_init_iptunnel(void) {
 }
 
 void olsr_os_cleanup_iptunnel(void) {
+  while (tunnel_tree.count > 0) {
+    struct olsr_iptunnel_entry *t;
+
+    /* kill tunnel */
+    t = (struct olsr_iptunnel_entry *)avl_walk_first(&tunnel_tree);
+    t->usage = 1;
+
+    olsr_os_del_ipip_tunnel(t);
+  }
   if (!store_iptunnel_state) {
     olsr_if_set_state(olsr_cnf->ip_version == AF_INET ? DEV_IPV4_TUNNEL : DEV_IPV6_TUNNEL, false);
   }
+
+  olsr_free_cookie(tunnel_cookie);
 }
 
-static const char *get_tunnelcmd_name(uint32_t cmd) {
-  static const char ADD[] = "add";
-  static const char CHANGE[] = "change";
-  static const char DELETE[] = "delete";
-
-  switch (cmd) {
-    case SIOCADDTUNNEL:
-      return ADD;
-    case SIOCCHGTUNNEL:
-      return CHANGE;
-    case SIOCDELTUNNEL:
-      return DELETE;
-    default:
-      return NULL;
-  }
-}
-
-static int os_ip4_tunnel(const char *name, in_addr_t *target, uint32_t cmd)
+/**
+ * creates an ipip tunnel (for ipv4)
+ * @param name interface name
+ * @param target pointer to tunnel target IP, NULL if tunnel should be removed
+ * @return 0 if an error happened,
+ *   if_index for successful created tunnel, 1 for successful deleted tunnel
+ */
+static int os_ip4_tunnel(const char *name, in_addr_t *target)
 {
   struct ifreq ifr;
   int err;
@@ -116,17 +126,29 @@ static int os_ip4_tunnel(const char *name, in_addr_t *target, uint32_t cmd)
   strncpy(p.name, name, IFNAMSIZ);
 
   memset(&ifr, 0, sizeof(ifr));
-  strncpy(ifr.ifr_name, cmd == SIOCADDTUNNEL ? DEV_IPV4_TUNNEL : name, IFNAMSIZ);
+  strncpy(ifr.ifr_name, target != NULL ? DEV_IPV4_TUNNEL : name, IFNAMSIZ);
   ifr.ifr_ifru.ifru_data = (void *) &p;
 
-  if ((err = ioctl(olsr_cnf->ioctl_s, cmd, &ifr))) {
-    olsr_syslog(OLSR_LOG_ERR, "Cannot %s a tunnel %s: %s (%d)\n",
-        get_tunnelcmd_name(cmd), name, strerror(errno), errno);
+  if ((err = ioctl(olsr_cnf->ioctl_s, target != NULL ? SIOCADDTUNNEL : SIOCDELTUNNEL, &ifr))) {
+    char buffer[INET6_ADDRSTRLEN];
+
+    olsr_syslog(OLSR_LOG_ERR, "Cannot %s a tunnel %s to %s: %s (%d)\n",
+        target != NULL ? "add" : "remove", name,
+        target != NULL ? inet_ntop(olsr_cnf->ip_version, target, buffer, sizeof(buffer)) : "-",
+        strerror(errno), errno);
+    return 0;
   }
-  return err;
+  return target != NULL ? if_nametoindex(name) : 1;
 }
 
-static int os_ip6_tunnel(const char *name, struct in6_addr *target, uint32_t cmd, uint8_t proto)
+/**
+ * creates an ipip tunnel (for ipv6)
+ * @param name interface name
+ * @param target pointer to tunnel target IP, NULL if tunnel should be removed
+ * @return 0 if an error happened,
+ *   if_index for successful created tunnel, 1 for successful deleted tunnel
+ */
+static int os_ip6_tunnel(const char *name, struct in6_addr *target)
 {
   struct ifreq ifr;
   int err;
@@ -135,46 +157,121 @@ static int os_ip6_tunnel(const char *name, struct in6_addr *target, uint32_t cmd
   /* only IP6 tunnel if OLSR runs with IPv6 */
   assert (olsr_cnf->ip_version == AF_INET6);
   memset(&p, 0, sizeof(p));
-  p.proto = proto;
+  p.proto = 0; /* any protocol */
   if (target) {
     p.raddr = *target;
   }
   strncpy(p.name, name, IFNAMSIZ);
 
   memset(&ifr, 0, sizeof(ifr));
-  strncpy(ifr.ifr_name, cmd == SIOCADDTUNNEL ? DEV_IPV6_TUNNEL : name, IFNAMSIZ);
+  strncpy(ifr.ifr_name, target != NULL ? DEV_IPV6_TUNNEL : name, IFNAMSIZ);
   ifr.ifr_ifru.ifru_data = (void *) &p;
 
-  if ((err = ioctl(olsr_cnf->ioctl_s, cmd, &ifr))) {
-    olsr_syslog(OLSR_LOG_ERR, "Cannot %s a tunnel %s: %s (%d)\n",
-        get_tunnelcmd_name(cmd), name, strerror(errno), errno);
+  if ((err = ioctl(olsr_cnf->ioctl_s, target != NULL ? SIOCADDTUNNEL : SIOCDELTUNNEL, &ifr))) {
+    char buffer[INET6_ADDRSTRLEN];
+
+    olsr_syslog(OLSR_LOG_ERR, "Cannot %s a tunnel %s to %s: %s (%d)\n",
+        target != NULL ? "add" : "remove", name,
+        target != NULL ? inet_ntop(olsr_cnf->ip_version, target, buffer, sizeof(buffer)) : "-",
+        strerror(errno), errno);
+    return 0;
   }
-  return err;
+  return target != NULL ? if_nametoindex(name) : 1;
 }
 
-int olsr_os_add_ipip_tunnel(const char *name, union olsr_ip_addr *target, bool transportV4) {
-  if (olsr_cnf->ip_version == AF_INET) {
-    assert(transportV4);
+/**
+ * Dummy for generating an interface name for an olsr ipip tunnel
+ * @param target IP destination of the tunnel
+ * @param name pointer to output buffer (length IFNAMSIZ)
+ */
+static void generate_iptunnel_name(union olsr_ip_addr *target, char *name) {
+  static char PREFIX[] = "tnl_";
+  static uint32_t counter = 0;
 
-    return os_ip4_tunnel(name, &target->v4.s_addr, SIOCADDTUNNEL);
-  }
-  return os_ip6_tunnel(name, &target->v6, SIOCADDTUNNEL, transportV4 ? IPPROTO_IPIP : IPPROTO_IPV6);
+  snprintf(name, IFNAMSIZ, "%s%08x", PREFIX,
+      olsr_cnf->ip_version == AF_INET ? target->v4.s_addr : ++counter);
 }
 
-int olsr_os_change_ipip_tunnel(const char *name, union olsr_ip_addr *target, bool transportV4) {
-  if (olsr_cnf->ip_version == AF_INET) {
-    assert(transportV4);
+/**
+ * demands an ipip tunnel to a certain target. If no tunnel exists it will be created
+ * @param target ip address of the target
+ * @param transportV4 true if IPv4 traffic is used, false for IPv6 traffic
+ * @return NULL if an error happened, pointer to olsr_iptunnel_entry otherwise
+ */
+struct olsr_iptunnel_entry *olsr_os_add_ipip_tunnel(union olsr_ip_addr *target, bool transportV4) {
+  struct olsr_iptunnel_entry *t;
 
-    return os_ip4_tunnel(name, &target->v4.s_addr, SIOCCHGTUNNEL);
+  assert(olsr_cnf->ip_version == AF_INET6 || transportV4);
+
+  t = (struct olsr_iptunnel_entry *)avl_find(&tunnel_tree, target);
+  if (t == NULL) {
+    char name[IFNAMSIZ];
+    int if_idx;
+    struct ipaddr_str buf;
+
+    memset(name, 0, sizeof(name));
+    generate_iptunnel_name(target, name);
+
+    if (olsr_cnf->ip_version == AF_INET) {
+      if_idx = os_ip4_tunnel(name, &target->v4.s_addr);
+    }
+    else {
+      if_idx = os_ip6_tunnel(name, &target->v6);
+    }
+
+    if (if_idx == 0) {
+      // cannot create tunnel
+fprintf(stderr, "Cannot create tunnel %s to %s\n", name, olsr_ip_to_string(&buf, target));
+      return NULL;
+    }
+    // TODO: fehler bei setstate abfangen ?
+    olsr_if_set_state(name, true);
+
+    t = olsr_cookie_malloc(tunnel_cookie);
+    memcpy(&t->target, target, sizeof(*target));
+    t->node.key = &t->target;
+
+    strncpy(t->if_name, name, IFNAMSIZ);
+    t->if_index = if_idx;
+
+    avl_insert(&tunnel_tree, &t->node, AVL_DUP_NO);
   }
-  return os_ip6_tunnel(name, &target->v6, SIOCCHGTUNNEL, transportV4 ? IPPROTO_IPIP : IPPROTO_IPV6);
+
+  t->usage++;
+  return t;
 }
 
-int olsr_os_del_ipip_tunnel(const char *name, bool transportV4) {
-  if (olsr_cnf->ip_version == AF_INET) {
-    assert(transportV4);
+/**
+ * Release an olsr ipip tunnel. Tunnel will be deleted
+ * if this was the last user
+ * @param t pointer to olsr_iptunnel_entry
+ */
+static void internal_olsr_os_del_ipip_tunnel(struct olsr_iptunnel_entry *t, bool cleanup) {
+  if (!cleanup) {
+    if (t->usage == 0) {
+      return;
+    }
+    t->usage--;
 
-    return os_ip4_tunnel(name, NULL, SIOCDELTUNNEL);
+    if (t->usage > 0) {
+      return;
+    }
   }
-  return os_ip6_tunnel(name, NULL, SIOCDELTUNNEL, transportV4 ? IPPROTO_IPIP : IPPROTO_IPV6);
+
+  olsr_if_set_state(t->if_name, false);
+  if (olsr_cnf->ip_version == AF_INET) {
+    os_ip4_tunnel(t->if_name, NULL);
+  }
+  else {
+    os_ip6_tunnel(t->if_name, NULL);
+  }
+
+  avl_delete(&tunnel_tree, &t->node);
+  if (!cleanup) {
+    olsr_cookie_free(tunnel_cookie, t);
+  }
+}
+
+void olsr_os_del_ipip_tunnel(struct olsr_iptunnel_entry *t) {
+  internal_olsr_os_del_ipip_tunnel(t, false);
 }

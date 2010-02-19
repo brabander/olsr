@@ -413,14 +413,16 @@ static int olsr_new_netlink_route(int family, int rttable, int if_index, int met
   if (err) {
     if (gw) {
       struct ipaddr_str buf;
-      olsr_syslog(OLSR_LOG_ERR, ". error: %s route to %s via %s dev %s",
+      olsr_syslog(OLSR_LOG_ERR, ". error: %s route to %s via %s dev %s (%s %d)",
           set ? "add" : "del",
-          olsr_ip_prefix_to_string(dst), olsr_ip_to_string(&buf, gw), if_ifwithindex_name(if_index));
+          olsr_ip_prefix_to_string(dst), olsr_ip_to_string(&buf, gw),
+          if_ifwithindex_name(if_index), strerror(errno), errno);
     }
     else {
-      olsr_syslog(OLSR_LOG_ERR, ". error: %s route to %s dev %s",
+      olsr_syslog(OLSR_LOG_ERR, ". error: %s route to %s dev %s (%s %d)",
           set ? "add" : "del",
-          olsr_ip_prefix_to_string(dst), if_ifwithindex_name(if_index));
+          olsr_ip_prefix_to_string(dst), if_ifwithindex_name(if_index),
+          strerror(errno), errno);
     }
   }
 
@@ -448,22 +450,14 @@ void olsr_os_niit_4to6_route(const struct olsr_ip_prefix *dst_v4, bool set) {
 void olsr_os_inetgw_tunnel_route(uint32_t if_idx, bool ipv4, bool set) {
   const struct olsr_ip_prefix *dst;
 
-  if (olsr_cnf->ip_version == AF_INET) {
-    assert(ipv4);
+  assert(olsr_cnf->ip_version == AF_INET6 || ipv4);
 
-    dst = &ipv4_internet_route;
-  }
-  else if (ipv4) {
-    dst = &ipv6_mappedv4_route;
-  }
-  else {
-    dst = &ipv6_internet_route;
-  }
+  dst = ipv4 ? &ipv4_internet_route : &ipv6_internet_route;
 
   if (olsr_new_netlink_route(ipv4 ? AF_INET : AF_INET6, olsr_cnf->rttable,
       if_idx, RT_METRIC_DEFAULT, olsr_cnf->rtproto,NULL, NULL, dst, set, false)) {
-    olsr_syslog(OLSR_LOG_ERR, ". error while %s inetgw tunnel route to %s",
-        set ? "setting" : "removing", olsr_ip_prefix_to_string(dst));
+    olsr_syslog(OLSR_LOG_ERR, ". error while %s inetgw tunnel route to %s for if %d",
+        set ? "setting" : "removing", olsr_ip_prefix_to_string(dst), if_idx);
   }
 }
 
