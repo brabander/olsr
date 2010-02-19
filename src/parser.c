@@ -65,7 +65,7 @@ char *StrError(unsigned int ErrNo);
 #define strerror(x) StrError(x)
 #endif
 
-/* Sven-Ola: On very slow devices used in huge networks
+    /* Sven-Ola: On very slow devices used in huge networks
  * the amount of lq_tc messages is so high, that the
  * recv() loop never ends. This is a small hack to end
  * the loop in this cases
@@ -422,7 +422,7 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
  *@return nada
  */
 void
-olsr_input(int fd)
+olsr_input(int fd, void *data __attribute__ ((unused)), unsigned int flags __attribute__ ((unused)))
 {
   struct interface *olsr_in_if;
   union olsr_ip_addr from_addr;
@@ -515,7 +515,7 @@ olsr_input(int fd)
  *@return nada
  */
 void
-olsr_input_hostemu(int fd)
+olsr_input_hostemu(int fd, void *data __attribute__ ((unused)), unsigned int flags __attribute__ ((unused)))
 {
   /* sockaddr_in6 is bigger than sockaddr !!!! */
   struct sockaddr_storage from;

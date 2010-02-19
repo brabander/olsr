@@ -57,15 +57,13 @@
 #include <arpa/inet.h>
 #include <string.h>
 
-#define PARSER_DEBUG 0
+#define PARSER_DEBUG 1
 
 #if PARSER_DEBUG
 #define PARSER_DEBUG_PRINTF(x, args...)   printf(x, ##args)
 #else
 #define PARSER_DEBUG_PRINTF(x, args...)   do { } while (0)
 #endif
-
-static char interface_defaults_name[] = "[InterfaceDefaults]";
 
 #define SET_IFS_CONF(ifs, ifcnt, field, value) do { \
 	for (; ifcnt>0; ifs=ifs->next, ifcnt--) { \
@@ -213,6 +211,14 @@ static int add_ipv6_addr(YYSTYPE ipaddr_arg, YYSTYPE prefixlen_arg)
 %token TOK_MIN_TC_VTIME
 %token TOK_LOCK_FILE
 %token TOK_USE_NIIT
+%token TOK_SMART_GW
+%token TOK_SMART_GW_ALLOW_NAT
+%token TOK_SMART_GW_UPLINK
+%token TOK_SMART_GW_UPLINK_NAT
+%token TOK_SMART_GW_SPEED
+%token TOK_SMART_GW_PREFIX
+%token TOK_SRC_IP_ROUTES
+%token TOK_MAIN_IP
 
 %token TOK_HOSTLABEL
 %token TOK_NETLABEL
@@ -278,12 +284,20 @@ stmt:       idebug
           | amin_tc_vtime
           | alock_file
           | suse_niit
+          | bsmart_gw
+          | bsmart_gw_allow_nat
+          | ssmart_gw_uplink
+          | bsmart_gw_uplink_nat
+          | ismart_gw_speed
+          | ismart_gw_prefix
+          | bsrc_ip_routes
+          | amain_ip
 ;
 
 block:      TOK_HNA4 hna4body
           | TOK_HNA6 hna6body
           | TOK_IPCCON ipcbody
-          | ifdblock ifbody
+          | ifdblock ifdbody
           | ifblock ifbody
           | plblock plbody
 ;
@@ -327,6 +341,20 @@ ifnicks:   | ifnicks ifnick
 ;
 
 ifbody:     TOK_OPEN ifstmts TOK_CLOSE
+;
+
+ifdbody:     TOK_OPEN ifstmts TOK_CLOSE
+{
+  struct olsr_if *in = olsr_cnf->interfaces;
+  printf("\nInterface Defaults");
+  /*remove Interface Defaults from Interface list as they are no interface!*/
+  olsr_cnf->interfaces = in->next;
+  ifs_in_curr_cfg=0;
+  /*free interface but keep its config intact?*/
+  free(in->cnfi);
+  free(in);
+
+}
 ;
 
 ifstmts:   | ifstmts ifstmt
@@ -379,7 +407,8 @@ ifdblock: TOK_INTERFACE_DEFAULTS
     YYABORT;
   }
 
-  in->name = strdup(interface_defaults_name);
+  //should not need a name any more, as we free it on "}" again
+  //in->name = strdup(interface_defaults_name);
 
   olsr_cnf->interface_defaults = in->cnf;
 
@@ -387,6 +416,8 @@ ifdblock: TOK_INTERFACE_DEFAULTS
   in->next = olsr_cnf->interfaces;
   olsr_cnf->interfaces = in;
   ifs_in_curr_cfg=1;
+  
+  fflush(stdout);
 }
 ;
 
@@ -1133,6 +1164,104 @@ suse_niit: TOK_USE_NIIT TOK_BOOLEAN
 }
 ;
 
+bsmart_gw: TOK_SMART_GW TOK_BOOLEAN
+{
+	PARSER_DEBUG_PRINTF("Smart gateway system: %s\n", $2->boolean ? "enabled" : "disabled");
+	olsr_cnf->smart_gw_active = $2->boolean;
+	free($2);
+}
+;
+
+bsmart_gw_allow_nat: TOK_SMART_GW_ALLOW_NAT TOK_BOOLEAN
+{
+	PARSER_DEBUG_PRINTF("Smart gateway allow client nat: %s\n", $2->boolean ? "yes" : "no");
+	olsr_cnf->smart_gw_allow_nat = $2->boolean;
+	free($2);
+}
+;
+
+ssmart_gw_uplink: TOK_SMART_GW_UPLINK TOK_STRING
+{
+	PARSER_DEBUG_PRINTF("Smart gateway uplink: %s\n", $2->string);
+	if (strcasecmp($2->string, GW_UPLINK_TXT[GW_UPLINK_IPV4]) == 0) {
+		olsr_cnf->smart_gw_type = GW_UPLINK_IPV4;
+	}
+	else if (strcasecmp($2->string, GW_UPLINK_TXT[GW_UPLINK_IPV6]) == 0) {
+		olsr_cnf->smart_gw_type = GW_UPLINK_IPV6;
+	}
+	else if (strcasecmp($2->string, GW_UPLINK_TXT[GW_UPLINK_IPV46]) == 0) {
+		olsr_cnf->smart_gw_type = GW_UPLINK_IPV46;
+	}
+	else {
+		fprintf(stderr, "Bad gateway uplink type: %s\n", $2->string);
+		YYABORT;
+	}
+	free($2);
+}
+;
+
+ismart_gw_speed: TOK_SMART_GW_SPEED TOK_INTEGER TOK_INTEGER
+{
+	PARSER_DEBUG_PRINTF("Smart gateway speed: %u uplink/%u downlink kbit/s\n", $2->integer, $3->integer);
+	olsr_cnf->smart_gw_uplink = $2->integer;
+	olsr_cnf->smart_gw_downlink = $3->integer;
+	free($2);
+	free($3);
+}
+;
+
+bsmart_gw_uplink_nat: TOK_SMART_GW_UPLINK_NAT TOK_BOOLEAN
+{
+	PARSER_DEBUG_PRINTF("Smart gateway uplink nat: %s\n", $2->boolean ? "yes" : "no");
+	olsr_cnf->smart_gw_uplink_nat = $2->boolean;
+	free($2);
+}
+;
+
+ismart_gw_prefix: TOK_SMART_GW_PREFIX TOK_IPV6_ADDR TOK_INTEGER
+{
+  PARSER_DEBUG_PRINTF("Smart gateway prefix: %s %u\n", $2->string, $3->integer);
+	if (inet_pton(olsr_cnf->ip_version, $2->string, &olsr_cnf->smart_gw_prefix.prefix) == 0) {
+	  fprintf(stderr, "Bad IP part of gateway prefix: %s\n", $2->string);
+    YYABORT;
+  }
+	olsr_cnf->smart_gw_prefix.prefix_len = (uint8_t)$3->integer;
+	
+	free($2);
+	free($3);
+}
+        |       TOK_SMART_GW_PREFIX TOK_IPV6_ADDR TOK_SLASH TOK_INTEGER
+{
+	PARSER_DEBUG_PRINTF("Smart gateway prefix: %s %u\n", $2->string, $4->integer);
+	if (inet_pton(olsr_cnf->ip_version, $2->string, &olsr_cnf->smart_gw_prefix.prefix) == 0) {
+	  fprintf(stderr, "Bad IP part of gateway prefix: %s\n", $2->string);
+    YYABORT;
+  }
+	olsr_cnf->smart_gw_prefix.prefix_len = (uint8_t)$4->integer;
+	
+	free($2);
+	free($4);
+}
+;
+
+bsrc_ip_routes: TOK_SRC_IP_ROUTES TOK_BOOLEAN
+{
+	PARSER_DEBUG_PRINTF("Use originator for routes src-ip: %s\n", $2->boolean ? "yes" : "no");
+	olsr_cnf->use_src_ip_routes = $2->boolean;
+	free($2);
+}
+;
+
+amain_ip: TOK_MAIN_IP TOK_STRING
+{
+  PARSER_DEBUG_PRINTF("Fixed Main IP: %s\n", $2->string);
+  
+  if (inet_pton(olsr_cnf->ip_version, $2->string, &olsr_cnf->main_addr) != 1) {
+    fprintf(stderr, "Bad main IP: %s\n", $2->string);
+    YYABORT;
+  }
+  free($2);
+}
 
 plblock: TOK_PLUGIN TOK_STRING
 {

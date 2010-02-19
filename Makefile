@@ -39,7 +39,7 @@
 # Please also write a new version to:
 # gui/win32/Main/Frontend.rc (line 71, around "CAPTION [...]")
 # gui/win32/Inst/installer.nsi (line 57, around "MessageBox MB_YESNO [...]")
-VERS =		pre-0.5.6-r9
+VERS =		pre-0.5.7.0
 
 TOPDIR = .
 include Makefile.inc
@@ -85,13 +85,12 @@ src/builddata.c:
 
 clean:
 	-rm -f $(OBJS) $(SRCS:%.c=%.d) $(EXENAME) $(EXENAME).exe src/builddata.c $(TMPFILES)
-ifeq ($(OS), win32)
 	-rm -f libolsrd.a
+	-rm -f olsr_switch.exe
 	-rm -f gui/win32/Main/olsrd_cfgparser.lib
 	-rm -f olsr-setup.exe
 	-rm -fr gui/win32/Main/Release
 	-rm -fr gui/win32/Shim/Release
-endif
 
 uberclean:	clean clean_libs
 	-rm -f $(TAGFILE)

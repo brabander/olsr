@@ -74,7 +74,6 @@
 #include "hna_set.h"
 #include "mid_set.h"
 #include "link_set.h"
-#include "socket_parser.h"
 #include "net_olsr.h"
 #include "lq_plugin.h"
 #include "common/autobuf.h"
@@ -91,9 +90,9 @@ static int ipc_socket;
 /* IPC initialization function */
 static int plugin_ipc_init(void);
 
-static void send_info(int send_what, int socket);
+static void send_info(int /*send_what*/, int /*socket*/);
 
-static void ipc_action(int);
+static void ipc_action(int, void *, unsigned int);
 
 static void ipc_print_neigh(struct autobuf *);
 
@@ -223,7 +222,7 @@ plugin_ipc_init(void)
     }
 
     /* Register with olsrd */
-    add_olsr_socket(ipc_socket, &ipc_action);
+    add_olsr_socket(ipc_socket, &ipc_action, NULL, NULL, SP_PR_READ);
 
 #ifndef NODEBUG
     olsr_printf(2, "(TXTINFO) listening on port %d\n", ipc_port);
@@ -233,7 +232,7 @@ plugin_ipc_init(void)
 }
 
 static void
-ipc_action(int fd)
+ipc_action(int fd, void *data __attribute__ ((unused)), unsigned int flags __attribute__ ((unused)))
 {
   struct sockaddr_storage pin;
   struct sockaddr_in *sin4;
@@ -478,8 +477,8 @@ ipc_print_hna(struct autobuf *abuf)
                    olsr_ip_to_string(&mainaddrbuf, &tmp_hna->A_gateway_addr),
                    diff/1000, abs(diff%1000));
 #else
-      abuf_appendf(abuf, "%s/%d\t%s\n", olsr_ip_to_string(&buf, &tmp_net->A_network_addr), tmp_net->prefixlen,
-                olsr_ip_to_string(&mainaddrbuf, &tmp_hna->A_gateway_addr));
+      abuf_appendf(abuf, "%s/%d\t%s\n", olsr_ip_to_string(&buf, &tmp_net->hna_prefix.prefix),
+          tmp_net->hna_prefix.prefix_len, olsr_ip_to_string(&mainaddrbuf, &tmp_hna->A_gateway_addr));
 #endif /*vtime txtinfo*/
     }
   }

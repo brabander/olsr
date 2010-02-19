@@ -51,7 +51,6 @@
 #include "defs.h"
 #include "ipcalc.h"
 #include "olsr.h"
-#include "socket_parser.h"
 #include "parser.h"
 #include "scheduler.h"
 #include "net_olsr.h"

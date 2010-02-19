@@ -210,9 +210,35 @@ olsrd_write_cnf(struct olsrd_config *cnf, const char *fname)
   fprintf(fd, "# Clear screen when printing debug output?\n\n");
   fprintf(fd, "ClearScreen\t%s\n\n", cnf->clear_screen ? "yes" : "no");
 
+  fprintf(fd, "# NIIT support\n\n");
+  fprintf(fd, "UseNiit\t%s\n\n", cnf->use_niit ? "yes" : "no");
+
+  fprintf(fd, "# Smart gateway system\n\n");
+  fprintf(fd, "SmartGateway\t%s\n\n", cnf->smart_gw_active ? "yes" : "no");
+
+  fprintf(fd, "# Smart gateway allow NAT\n\n");
+  fprintf(fd, "SmartGatewayAllowNAT\t%s\n\n", cnf->smart_gw_allow_nat ? "yes" : "no");
+
+  fprintf(fd, "# Smart gateway uplink type\n\n");
+  fprintf(fd, "SmartGatewayUplink\t%s\n\n", GW_UPLINK_TXT[cnf->smart_gw_type]);
+
+  fprintf(fd, "# Smart gateway uplink use NAT\n\n");
+  fprintf(fd, "SmartGatewayUplinkNAT\t%s\n\n", cnf->smart_gw_uplink_nat ? "yes" : "no");
+
+  fprintf(fd, "# Smart gateway uplink/downlink speed (in kbit/s)\n\n");
+  fprintf(fd, "SmartGatewaySpeed\t%d %d\n\n", cnf->smart_gw_uplink, cnf->smart_gw_downlink);
+
+  fprintf(fd, "# Smart gateway prefix\n\n");
+  fprintf(fd, "SmartGatewayPrefix\t%s\n\n", olsr_ip_prefix_to_string(&cnf->smart_gw_prefix));
+
   /* Plugins */
-  fprintf(fd,
-          "# Olsrd plugins to load\n# This must be the absolute path to the file\n# or the loader will use the following scheme:\n# - Try the paths in the LD_LIBRARY_PATH \n#   environment variable.\n# - The list of libraries cached in /etc/ld.so.cache\n# - /lib, followed by /usr/lib\n\n");
+  fprintf(fd,"# Olsrd plugins to load\n"
+             "# This must be the absolute path to the file\n"
+             "# or the loader will use the following scheme:\n"
+             "# - Try the paths in the LD_LIBRARY_PATH \n"
+             "#   environment variable.\n"
+             "# - The list of libraries cached in /etc/ld.so.cache\n"
+             "# - /lib, followed by /usr/lib\n\n");
   if (pe) {
     while (pe) {
       fprintf(fd, "LoadPlugin \"%s\" {\n", pe->name);

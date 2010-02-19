@@ -63,6 +63,7 @@
 #include "common/avl.h"
 #include "net_olsr.h"
 #include "lq_plugin.h"
+#include "gateway.h"
 #include "duplicate_handler.h"
 
 #include <stdarg.h>
@@ -228,6 +229,11 @@ olsr_process_changes(void)
     olsr_print_neighbor_table();
     olsr_print_two_hop_neighbor_table();
     olsr_print_tc_table();
+
+    // TODO push this to debug level 3 or 4
+#ifndef WIN32
+    olsr_print_gateway_entries();
+#endif
 #endif
   }
 

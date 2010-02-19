@@ -39,7 +39,29 @@
  *
  */
 
+#include "defs.h"
 #include "ipcalc.h"
+
+/* ipv4 prefix 0.0.0.0/0 */
+const struct olsr_ip_prefix ipv4_internet_route =
+{
+    .prefix.v4.s_addr = 0,
+    .prefix_len = 0
+};
+
+/* ipv6 prefix ::ffff:0:0/96 */
+const struct olsr_ip_prefix ipv6_mappedv4_route =
+{
+    .prefix.v6.s6_addr = { 0,0,0,0,0,0,0,0,0,0,0xff,0xff,0,0,0,0 },
+    .prefix_len = 96
+};
+
+/* ipv6 prefix 2000::/3 */
+const struct olsr_ip_prefix ipv6_internet_route =
+{
+    .prefix.v6.s6_addr = { 0x20, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+    .prefix_len = 3
+};
 
 int
 prefix_to_netmask(uint8_t * a, int len, uint8_t prefixlen)
@@ -194,6 +216,16 @@ ip_in_net(const union olsr_ip_addr *ipaddr, const struct olsr_ip_prefix *net)
     rv = (*i & netmask) == (*n & netmask);
   }
   return rv;
+}
+
+bool is_prefix_inetgw(const struct olsr_ip_prefix *prefix) {
+  if (ip_prefix_is_v4_inetgw(prefix)) {
+    return true;
+  }
+  if (ip_prefix_is_v6_inetgw(prefix)) {
+    return true;
+  }
+  return ip_prefix_is_mappedv4_inetgw(prefix);
 }
 
 /*

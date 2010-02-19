@@ -47,71 +47,66 @@
 /*set to 1 to collect all startup sleep into one sleep (just as long as the longest sleep) useful if many errors on many interfaces*/
 #define OLSR_COLLECT_STARTUP_SLEEP 1
 
-/* set to 1 to enable a second rtnetlink socket 
- * used for listening and reating on interface change events
- * (requires LINUX_POLICY_ROUTING to be enabled aswell) */
-#define LINUX_RTNETLINK_LISTEN 1
-
 #define TESTLIB_PATH 0
 #define SYSLOG_NUMBERING 0
-#define SOURCE_IP_ROUTES 0
-
-#ifndef LINUX_POLICY_ROUTING
-#if defined linux
-#  define LINUX_POLICY_ROUTING 1
-#else
-#  define LINUX_POLICY_ROUTING 0
-#endif
-#endif
 
 /* Default values not declared in olsr_protocol.h */
-#define DEF_POLLRATE        0.05
-#define DEF_NICCHGPOLLRT    2.5
-#define DEF_WILL_AUTO       false
-#define DEF_WILLINGNESS     3
-#define DEF_ALLOW_NO_INTS   true
-#define DEF_TOS             16
-#define DEF_DEBUGLVL        1
-#define DEF_IPC_CONNECTIONS 0
-#define DEF_USE_HYST        false
-#define DEF_FIB_METRIC      FIBM_FLAT
-#define DEF_LQ_LEVEL        2
-#define DEF_LQ_FISH         1
-#define DEF_LQ_DIJK_LIMIT   255
-#define DEF_LQ_DIJK_INTER   0.0
-#define DEF_LQ_NAT_THRESH   0.5
-#define DEF_LQ_AGING        0.1
-#define DEF_CLEAR_SCREEN    true
-#define DEF_OLSRPORT        698
-#define DEF_RTPROTO         0 /* 0 means OS-specific default */
-#define DEF_RTTABLE         254
-#define DEF_MIN_TC_VTIME    0.0
-#define DEF_USE_NIIT        true
+#define DEF_POLLRATE         0.1
+#define DEF_NICCHGPOLLRT     2.5
+#define DEF_WILL_AUTO        false
+#define DEF_WILLINGNESS      3
+#define DEF_ALLOW_NO_INTS    true
+#define DEF_TOS              16
+#define DEF_DEBUGLVL         1
+#define DEF_IPC_CONNECTIONS  0
+#define DEF_USE_HYST         false
+#define DEF_FIB_METRIC       FIBM_FLAT
+#define DEF_LQ_LEVEL         2
+#define DEF_LQ_FISH          1
+#define DEF_LQ_DIJK_LIMIT    255
+#define DEF_LQ_DIJK_INTER    0.0
+#define DEF_LQ_NAT_THRESH    0.5
+#define DEF_LQ_AGING         0.1
+#define DEF_CLEAR_SCREEN     true
+#define DEF_OLSRPORT         698
+#define DEF_RTPROTO          0 /* 0 means OS-specific default */
+#define DEF_RTTABLE          254
+#define DEF_MIN_TC_VTIME     0.0
+#define DEF_USE_NIIT         true
+#define DEF_SMART_GW         false
+#define DEF_GW_ALLOW_NAT     true
+#define DEF_GW_UPLINK_NAT    true
+#define DEF_UPLINK_SPEED     128
+#define DEF_DOWNLINK_SPEED   1024
+#define DEF_USE_SRCIP_ROUTES false;
 
 /* Bounds */
 
-#define MIN_INTERVAL        0.01
+#define MIN_INTERVAL         0.01
 
-#define MAX_POLLRATE        1.0
-#define MIN_POLLRATE        0.01
-#define MAX_NICCHGPOLLRT    100.0
-#define MIN_NICCHGPOLLRT    1.0
-#define MAX_DEBUGLVL        9
-#define MIN_DEBUGLVL        0
-#define MAX_TOS             16
-#define MIN_TOS             0
-#define MAX_WILLINGNESS     7
-#define MIN_WILLINGNESS     0
-#define MAX_MPR_COVERAGE    20
-#define MIN_MPR_COVERAGE    1
-#define MAX_TC_REDUNDANCY   2
-#define MIN_TC_REDUNDANCY   0
-#define MAX_HYST_PARAM      1.0
-#define MIN_HYST_PARAM      0.0
-#define MAX_LQ_LEVEL        2
-#define MIN_LQ_LEVEL        0
-#define MAX_LQ_AGING        1.0
-#define MIN_LQ_AGING        0.01
+#define MAX_POLLRATE         1.0
+#define MIN_POLLRATE         0.01
+#define MAX_NICCHGPOLLRT     100.0
+#define MIN_NICCHGPOLLRT     1.0
+#define MAX_DEBUGLVL         9
+#define MIN_DEBUGLVL         0
+#define MAX_TOS              16
+#define MIN_TOS              0
+#define MAX_WILLINGNESS      7
+#define MIN_WILLINGNESS      0
+#define MAX_MPR_COVERAGE     20
+#define MIN_MPR_COVERAGE     1
+#define MAX_TC_REDUNDANCY    2
+#define MIN_TC_REDUNDANCY    0
+#define MAX_HYST_PARAM       1.0
+#define MIN_HYST_PARAM       0.0
+#define MAX_LQ_LEVEL         2
+#define MIN_LQ_LEVEL         0
+#define MAX_LQ_AGING         1.0
+#define MIN_LQ_AGING         0.01
+
+#define MIN_SMARTGW_SPEED    1
+#define MAX_SMARTGW_SPEED    320000000
 
 /* Option values */
 #define CFG_FIBM_FLAT          "flat"
@@ -123,6 +118,13 @@
 #endif
 
 #include "interfaces.h"
+
+enum smart_gw_uplinktype {
+  GW_UPLINK_IPV4,
+  GW_UPLINK_IPV6,
+  GW_UPLINK_IPV46,
+  GW_UPLINK_CNT,
+};
 
 struct olsr_msg_params {
   float emission_interval;
@@ -211,8 +213,8 @@ struct olsrd_config {
   bool allow_no_interfaces;
   uint16_t tos;
   uint8_t rtproto;
-  uint8_t rttable;
-  uint8_t rttable_default;
+  uint8_t rttable, rttable_default, rttable_smartgw;
+  uint16_t rttable_rule, rttable_default_rule, rttable_smartgw_rule, rttable_backup_rule;
   uint8_t willingness;
   bool willingness_auto;
   int ipc_connections;
@@ -237,24 +239,37 @@ struct olsrd_config {
   uint8_t lq_dlimit;
 
   float min_tc_vtime;
+
+  char *lock_file;
+  bool use_niit;
+
+  bool smart_gw_active, smart_gw_allow_nat, smart_gw_uplink_nat;
+  enum smart_gw_uplinktype smart_gw_type;
+  uint32_t smart_gw_uplink, smart_gw_downlink;
+  struct olsr_ip_prefix smart_gw_prefix;
+
+  /* Main address of this node */
+  union olsr_ip_addr main_addr;
+  bool use_src_ip_routes;
+
   /* Stuff set by olsrd */
   uint8_t maxplen;                     /* maximum prefix len */
   size_t ipsize;                       /* Size of address */
   bool del_gws;                        /* Delete InternetGWs at startup */
-  union olsr_ip_addr main_addr;        /* Main address of this node */
   float will_int;
   float max_jitter;
   int exit_value;                      /* Global return value for process termination */
   float max_tc_vtime;
 
-  char *lock_file;
+  int niit4to6_if_index, niit6to4_if_index;
 
-  bool use_niit;
-  int niit_if_index;
+  /*many potential parameters or helper variables for smartgateway*/
+  bool has_ipv4_gateway, has_ipv6_gateway;
 
   int ioctl_s;                         /* Socket used for ioctl calls */
-#if LINUX_POLICY_ROUTING
+#ifdef LINUX_NETLINK_ROUTING
   int rtnl_s;                          /* Socket used for rtnetlink messages */
+  int rt_monitor_socket;
 #endif
 
 #if defined __FreeBSD__ || defined __FreeBSD_kernel__ || defined __MacOSX__ || defined __NetBSD__ || defined __OpenBSD__
@@ -266,6 +281,8 @@ struct olsrd_config {
 #if defined __cplusplus
 extern "C" {
 #endif
+
+  extern const char *GW_UPLINK_TXT[];
 
 /*
  * List functions

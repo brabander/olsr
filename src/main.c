@@ -52,18 +52,20 @@
 #include "parser.h"
 #include "generate_msg.h"
 #include "plugin_loader.h"
-#include "socket_parser.h"
 #include "apm.h"
 #include "net_os.h"
 #include "build_msg.h"
 #include "net_olsr.h"
 #include "mid_set.h"
 #include "mpr_selector_set.h"
+#include "gateway.h"
+#include "olsr_niit.h"
 
-#if LINUX_POLICY_ROUTING
+#ifdef LINUX_NETLINK_ROUTING
 #include <linux/types.h>
 #include <linux/rtnetlink.h>
 #include "kernel_routes.h"
+
 #endif
 
 #ifdef WIN32
@@ -81,8 +83,6 @@ static void olsr_shutdown(int) __attribute__ ((noreturn));
 #if defined linux || __FreeBSD__ || defined __NetBSD__ || defined __OpenBSD__
 #define DEFAULT_LOCKFILE_PREFIX "/var/run/olsrd"
 #endif
-
-#define DEF_NIIT_IFNAME         "niit4to6"
 
 /*
  * Local function prototypes
@@ -109,6 +109,7 @@ static char
 static int lock_fd = 0;
 #endif
 static char lock_file_name[FILENAME_MAX];
+struct olsr_cookie_info *def_timer_ci = NULL;
 
 /*
  * Creates a zero-length locking file and use fcntl to
@@ -167,21 +168,6 @@ static void olsr_create_lock_file(void) {
 #endif
   return;
 }
-
-#ifdef linux
-static void handle_niit_config(void) {
-  int if_index;
-
-  if (olsr_cnf->ip_version == AF_INET || !olsr_cnf->use_niit) {
-    return;
-  }
-
-  if_index = if_nametoindex(DEF_NIIT_IFNAME);
-  if (if_index > 0 && olsr_check_ifup(DEF_NIIT_IFNAME)) {
-    olsr_cnf->niit_if_index = if_index;
-  }
-}
-#endif
 
 /**
  * loads a config file
@@ -360,14 +346,14 @@ int main(int argc, char *argv[]) {
   if (olsr_cnf->lock_file) {
     strscpy(lock_file_name, olsr_cnf->lock_file, sizeof(lock_file_name));
   } else {
-    size_t len;
+    size_t l;
 #ifdef DEFAULT_LOCKFILE_PREFIX
     strscpy(lock_file_name, DEFAULT_LOCKFILE_PREFIX, sizeof(lock_file_name));
 #else
     strscpy(lock_file_name, conf_file_name, sizeof(lock_file_name));
 #endif
-    len = strlen(lock_file_name);
-    snprintf(&lock_file_name[len], sizeof(lock_file_name) - len, "-ipv%d.lock",
+    l = strlen(lock_file_name);
+    snprintf(&lock_file_name[l], sizeof(lock_file_name) - l, "-ipv%d.lock",
         olsr_cnf->ip_version == AF_INET ? 4 : 6);
   }
 
@@ -377,10 +363,8 @@ int main(int argc, char *argv[]) {
   if (olsr_cnf->debug_level > 1) {
     olsrd_print_cnf(olsr_cnf);
   }
-#ifndef WIN32
-  /* Disable redirects globally */
-  disable_redirects_global(olsr_cnf->ip_version);
-#endif
+
+  def_timer_ci = olsr_alloc_cookie("Default Timer Cookie", OLSR_COOKIE_TYPE_TIMER);
 
   /*
    * socket for ioctl calls
@@ -392,13 +376,18 @@ int main(int argc, char *argv[]) {
 #endif
     olsr_exit(__func__, 0);
   }
-#if LINUX_POLICY_ROUTING
+#ifdef LINUX_NETLINK_ROUTING
   olsr_cnf->rtnl_s = socket(PF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE);
   if (olsr_cnf->rtnl_s < 0) {
     olsr_syslog(OLSR_LOG_ERR, "rtnetlink socket: %m");
     olsr_exit(__func__, 0);
   }
   fcntl(olsr_cnf->rtnl_s, F_SETFL, O_NONBLOCK);
+
+  if ((olsr_cnf->rt_monitor_socket = rtnetlink_register_socket(RTMGRP_LINK)) < 0) {
+    olsr_syslog(OLSR_LOG_ERR, "rtmonitor socket: %m");
+    olsr_exit(__func__, 0);
+  }
 #endif
 
   /*
@@ -412,18 +401,28 @@ int main(int argc, char *argv[]) {
   }
 #endif
 
-#if defined linux
+#ifdef LINUX_NETLINK_ROUTING
+  /* initialize gateway system */
+  if (olsr_cnf->smart_gw_active) {
+    if (olsr_init_gateways()) {
+      olsr_exit("Cannot initialize gateway tunnels", 1);
+    }
+  }
+
   /* initialize niit if index */
-  handle_niit_config();
+  if (olsr_cnf->use_niit) {
+    olsr_init_niit();
+  }
 #endif
 
   /* Init empty TC timer */
   set_empty_tc_timer(GET_TIMESTAMP(0));
 
-  /*
-   *enable ip forwarding on host
-   */
-  enable_ip_forwarding(olsr_cnf->ip_version);
+  /* enable ip forwarding on host */
+  /* Disable redirects globally */
+#ifndef WIN32
+  net_os_set_global_ifoptions();
+#endif
 
   /* Initialize parser */
   olsr_init_parser();
@@ -461,7 +460,7 @@ int main(int argc, char *argv[]) {
   init_net();
 
   /* Initializing networkinterfaces */
-  if (!ifinit()) {
+  if (!olsr_init_interfacedb()) {
     if (olsr_cnf->allow_no_interfaces) {
       fprintf(
           stderr,
@@ -513,18 +512,113 @@ int main(int argc, char *argv[]) {
 
   OLSR_PRINTF(1, "Main address: %s\n\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
 
-#if LINUX_POLICY_ROUTING
+#ifdef linux
+/*deativate spoof on all, this is neede ddue to an change in kernel 2.6.31 
+ * all and device-specific settings are now combined differently
+ * new max(all,device) old: all && device 
+ * !!?? does this change only affect rp_filter or other aswell (e.g. icmp_redirect)*/
+
+  // TODO: cleanup ?
+  // deactivate_spoof("all", &olsr_cnf->ipip_base_if, AF_INET );
+#endif
+
+#ifdef LINUX_NETLINK_ROUTING
+  //!!?? disable smartgateway if not ipv4?, or better: do not start olsr
+#if 0
+  if (olsr_cnf->smart_gw_active) {
+    int r = olsr_if_setip(TUNL_BASE, &olsr_cnf->main_addr, 0);
+printf("set interface up returned %i",r);
+    //take up tunl0 device or disable smartgateway
+    olsr_cnf->ipip_base_orig_down = (r == -1 ?true:false);
+printf("old ipip_base_orig_down state: %i",olsr_cnf->ipip_base_orig_down);
+    olsr_cnf->smart_gw_active = (r != 0); //!!?? kernel 2.4 may need true to function as gateway, does it harm to do anyway
+    /*create an interface structure for the tunlbase to store procnet settings*/
+    /*hmmm integrate it into the olsr_interface list to ensure spoof setting clenaup at end!???*/
+    olsr_cnf->ipip_base_if.if_index = if_nametoindex(TUNL_BASE);
+
+    deactivate_spoof(TUNL_BASE, &olsr_cnf->ipip_base_if, AF_INET );//ipip is an ipv4 tunnel
+
+    if (!olsr_cnf->smart_gw_active) 
+    {
+      printf("disabled smart Gateway! (ipip tunnels not useable for olsrd on this host)");
+    }
+    else {
+      struct olsr_if *cfg_if;
+
+      //need sanity checks for routintg tables
+
+      //question: if rttable_default unconfigured, determine one?
+      //yes use 112
+      //same with smartTable (113)
+
+      //further checks: tabledefault and smartgateway >0 < 253
+      //check if all tables are unique
+      //if not use other values for unconfigured Tables? or stop startup?
+
+      //future improvement: verify if no rule points to default and smartgateway table, with un unknown realm?
+      //nice as we can use realms to give traffic info about gateway tunnel, and ...
+
+      //question: do we set an defaulttable now, which persists if smartgateway is turned off, due to problems (or an rmmodding user) later?
+      //its easier to stick to tables and also better, 
+      //as users will always find the default route on same place.
+
+      //question: make priority of rules configureable (if configured for rttable this might means we shall create this rule (instead the 65535 dummy)
+      //question olsr did never create rules for a custom table (beside the dummy)
+      //should we start now doing so anyways? (beter not, use only new RTTableRule priority)
+
+      //as above ist neither finalized nor done in parser, we use hardcoded values
+      olsr_cnf->ipip_if_index = false;
+      olsr_cnf->ipip_name=ipip_default_name;
+      olsr_cnf->rttable_default=112;
+      olsr_cnf->rttable_smartgw=113;
+      if (olsr_cnf->rttable_default_rule==0) olsr_cnf->rttable_default_rule=65532;
+      if (olsr_cnf->rttable_smartgw_rule==0) olsr_cnf->rttable_smartgw_rule=olsr_cnf->rttable_default_rule+1;
+      if (olsr_cnf->rttable_backup_rule==0) olsr_cnf->rttable_backup_rule=olsr_cnf->rttable_smartgw_rule+1;
+
+//!!?? just a test
+olsr_cnf->rttable_rule=65531;
+
+printf("\nMain Table is %i prio %i", olsr_cnf->rttable, olsr_cnf->rttable_rule);
+
+      /*table with default routes for olsr interfaces*/
+      for (cfg_if = olsr_cnf->interfaces; cfg_if; cfg_if = cfg_if->next) {
+        olsr_os_policy_rule(olsr_cnf->ip_version, olsr_cnf->rttable_default,
+            olsr_cnf->rttable_default_rule, cfg_if->name, true);
+      }
+      /*table with route into tunnel (for all interfaces)*/
+      olsr_os_policy_rule(olsr_cnf->ip_version, olsr_cnf->rttable_smartgw,
+                        olsr_cnf->rttable_smartgw_rule, NULL, true);
+      /*backup rule to default route table (if tunnel table gets empty)*/
+      olsr_os_policy_rule(olsr_cnf->ip_version, olsr_cnf->rttable_default,
+                        olsr_cnf->rttable_backup_rule, NULL, true);
+    }
+  }
+#endif
   /* Create rule for RtTable to resolve route insertion problems*/
   if ((olsr_cnf->rttable < 253) & (olsr_cnf->rttable > 0)) {
-    olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable, RTM_NEWRULE);
+    olsr_os_policy_rule(olsr_cnf->ip_version, olsr_cnf->rttable, (olsr_cnf->rttable_rule>0?olsr_cnf->rttable_rule:65535), NULL, true);
   }
 
   /* Create rtnetlink socket to listen on interface change events RTMGRP_LINK and RTMGRP_IPV4_ROUTE */
+  //todo listen on tunl0 events aswell
 
-#if LINUX_RTNETLINK_LISTEN
-  rtnetlink_register_socket(RTMGRP_LINK);
-#endif /*LINUX_RTNETLINK_LISTEN*/
+#endif
 
+#ifdef LINUX_NETLINK_ROUTING
+  /* trigger gateway selection */
+  if (olsr_cnf->smart_gw_active) {
+    olsr_trigger_inetgw_startup();
+  }
+
+  /* trigger niit static route setup */
+  if (olsr_cnf->use_niit) {
+    olsr_setup_niit_routes();
+  }
+
+  /* create lo:olsr interface */
+  if (olsr_cnf->use_src_ip_routes) {
+    olsr_os_create_localhostif(&olsr_cnf->main_addr, true);
+  }
 #endif
 
   /* Start syslog entry */
@@ -668,6 +762,23 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
 
   olsr_delete_all_mid_entries();
 
+#ifdef LINUX_NETLINK_ROUTING
+  /* trigger gateway selection */
+  if (olsr_cnf->smart_gw_active) {
+    olsr_cleanup_gateways();
+  }
+
+  /* trigger niit static route cleanup */
+  if (olsr_cnf->use_niit) {
+    olsr_cleanup_niit_routes();
+  }
+
+  /* cleanup lo:olsr interface */
+  if (olsr_cnf->use_src_ip_routes) {
+    olsr_os_create_localhostif(&olsr_cnf->main_addr, false);
+  }
+#endif
+
   olsr_destroy_parser();
 
   OLSR_PRINTF(1, "Closing sockets...\n");
@@ -687,19 +798,52 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
   olsr_close_plugins();
 
   /* Reset network settings */
-  restore_settings(olsr_cnf->ip_version);
+  net_os_restore_ifoptions();
 
   /* ioctl socket */
   close(olsr_cnf->ioctl_s);
 
-#if LINUX_POLICY_ROUTING
-  /* RtTable (linux only!!) */
+#ifdef LINUX_NETLINK_ROUTING
+
+  /*delete smartgw tunnel if it index is known*/
+#if 0
+  if (olsr_cnf->ipip_if_index) olsr_del_tunl();
+#endif
+
+  /*!!?? we should take down the tunl0 interface*/
+
+  /*we shall delete all rules with an configured prio*/
+  if (olsr_cnf->rttable_default_rule>0) {
+    struct olsr_if * cfg_if;
+    for (cfg_if = olsr_cnf->interfaces; cfg_if; cfg_if = cfg_if->next) {
+      olsr_os_policy_rule(olsr_cnf->ip_version, olsr_cnf->rttable_default, olsr_cnf->rttable_default_rule, cfg_if->name, false);
+    }
+  }
+  if (olsr_cnf->rttable_smartgw_rule>0)
+    olsr_os_policy_rule(olsr_cnf->ip_version, olsr_cnf->rttable_smartgw, olsr_cnf->rttable_smartgw_rule, NULL, false);
+  if (olsr_cnf->rttable_backup_rule>0)
+    olsr_os_policy_rule(olsr_cnf->ip_version, olsr_cnf->rttable_default, olsr_cnf->rttable_backup_rule, NULL, false);
+
+#if 0
+  /*tunl0*/
+  if (olsr_cnf->ipip_base_orig_down) {
+    printf("\ntakig down tunl0 again");
+    olsr_if_set_state(TUNL_BASE, false);
+  }
+#endif
+  /* RtTable backup rule */
   if ((olsr_cnf->rttable < 253) & (olsr_cnf->rttable > 0)) {
-    olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable, RTM_DELRULE);
+    olsr_os_policy_rule(olsr_cnf->ip_version, olsr_cnf->rttable, (olsr_cnf->rttable_rule?olsr_cnf->rttable_rule:65535), NULL, false);
   }
 
   close(olsr_cnf->rtnl_s);
+  close (olsr_cnf->rt_monitor_socket);
+
+  /*TODO: cleanup ?rp_filter*/
+  // if (olsr_cnf->ipip_base_if.if_index) printf("\nresetting of tunl0 rp_filter not implemented");//!!?? no function extists to reset a single interface
 #endif
+
+/*!!?? we need to reset rp_filter of conf/all aswell, so we really need a new rp_filter reset function*/
 
 #if defined __FreeBSD__ || defined __FreeBSD_kernel__ || defined __MacOSX__ || defined __NetBSD__ || defined __OpenBSD__
   /* routing socket */
@@ -896,12 +1040,12 @@ static int olsr_process_arguments(int argc, char *argv[],
         olsr_exit(__func__, EXIT_FAILURE);
       }
       printf("Queuing if %s\n", *argv);
-      queue_if(*argv, false);
+      olsr_create_olsrif(*argv, false);
 
       while ((argc - 1) && (argv[1][0] != '-')) {
         NEXT_ARG;
         printf("Queuing if %s\n", *argv);
-        queue_if(*argv, false);
+        olsr_create_olsrif(*argv, false);
       }
 
       continue;
@@ -1021,7 +1165,7 @@ static int olsr_process_arguments(int argc, char *argv[],
       }
       /* Add hemu interface */
 
-      ifa = queue_if("hcif01", true);
+      ifa = olsr_create_olsrif("hcif01", true);
 
       if (!ifa)
         continue;
