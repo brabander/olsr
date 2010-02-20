@@ -55,6 +55,9 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#ifdef linux
+#include <linux/rtnetlink.h>
+#endif
 
 extern FILE *yyin;
 extern int yyparse(void);
@@ -350,7 +353,6 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
   }
 
   /* Link quality level */
-
   if (cnf->lq_level > MAX_LQ_LEVEL) {
     fprintf(stderr, "LQ level %d is not allowed\n", cnf->lq_level);
     return -1;
@@ -367,6 +369,71 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
     fprintf(stderr, "NAT threshold %f is not allowed\n", cnf->lq_nat_thresh);
     return -1;
   }
+
+#ifdef linux
+  /* calculate rt_policy defaults if necessary */
+  if (!cnf->rt_policy) {
+    /* get non policy routing entries */
+    cnf->rt_table = DEF_RTTABLE;
+    cnf->rt_table_default = DEF_RTTABLE;
+    cnf->rt_table_tunnel = DEF_RTTABLE;
+
+    cnf->rt_table_pri = 0;
+    cnf->rt_table_default_pri = 0;
+    cnf->rt_table_defaultolsr_pri = 0;
+    cnf->rt_table_tunnel_pri = 0;
+  }
+  else {
+    /* first fill in missing values */
+    if (cnf->rt_table_pri == 0) {
+      cnf->rt_table_pri = 32766; /* main table */
+      fprintf(stderr, "Choose table %u for rt_table_pri\n", cnf->rt_table_pri);
+    }
+    if (cnf->rt_table_defaultolsr_pri == 0) {
+      cnf->rt_table_defaultolsr_pri = cnf->rt_table_pri + 10;
+      fprintf(stderr, "Choose table %u for rt_table_defaultolsr_pri\n", cnf->rt_table_defaultolsr_pri);
+    }
+    if (cnf->rt_table_tunnel_pri == 0) {
+      cnf->rt_table_tunnel_pri = cnf->rt_table_defaultolsr_pri + 10;
+      fprintf(stderr, "Choose table %u for rt_table_tunnel_pri\n", cnf->rt_table_tunnel_pri);
+    }
+    if (cnf->rt_table_default_pri == 0) {
+      cnf->rt_table_default_pri = cnf->rt_table_tunnel_pri + 10;
+      fprintf(stderr, "Choose table %u for rt_table_default_pri\n", cnf->rt_table_default_pri);
+    }
+
+    /* check tables */
+    if (cnf->rt_table == cnf->rt_table_default
+        || cnf->rt_table == cnf->rt_table_tunnel
+        || cnf->rt_table_default == cnf->rt_table_tunnel) {
+      fprintf(stderr, "all three rttables must be unique\n");
+      return -1;
+    }
+
+    /* check priorities */
+    if (cnf->rt_table_pri >= cnf->rt_table_defaultolsr_pri) {
+      fprintf(stderr, "rttable priority must be lesser than rttable_defaultolsr priority\n");
+      return -1;
+    }
+    if (cnf->rt_table_defaultolsr_pri >= cnf->rt_table_tunnel) {
+      fprintf(stderr, "rttable_defaultolsr priority must be lesser than rttable_tunnel priority\n");
+      return -1;
+    }
+    if (cnf->rt_table_tunnel >= cnf->rt_table_default_pri) {
+      fprintf(stderr, "rttable_tunnel priority must be lesser than rttable_default priority\n");
+      return -1;
+    }
+  }
+
+  /* filter rt_proto entry */
+  if (cnf->rt_proto == 1) {
+    /* protocol 1 is reserved, so better use 0 */
+    cnf->rt_proto = 0;
+  }
+  else if (cnf->rt_proto == 0) {
+    cnf->rt_proto = RTPROT_BOOT;
+  }
+#endif
 
   if (in == NULL) {
     fprintf(stderr, "No interfaces configured!\n");
@@ -547,9 +614,11 @@ set_default_cnf(struct olsrd_config *cnf)
   cnf->allow_no_interfaces = DEF_ALLOW_NO_INTS;
   cnf->tos = DEF_TOS;
   cnf->olsrport = DEF_OLSRPORT;
-  cnf->rttable = DEF_RTTABLE;
-  cnf->rtproto = DEF_RTPROTO;
-  cnf->rttable_default = 0;
+  cnf->rt_policy = true;
+  cnf->rt_proto = DEF_RTPROTO;
+  cnf->rt_table = DEF_RTTABLE;
+  cnf->rt_table_default = DEF_RTTABLE_DEFAULT;
+  cnf->rt_table_tunnel = DEF_RTTABLE_TUNNEL;
   cnf->willingness_auto = DEF_WILL_AUTO;
   cnf->willingness = DEF_WILLINGNESS;
   cnf->ipc_connections = DEF_IPC_CONNECTIONS;
@@ -658,8 +727,9 @@ olsrd_print_cnf(struct olsrd_config *cnf)
     printf("No interfaces    : NOT ALLOWED\n");
   printf("TOS              : 0x%02x\n", cnf->tos);
   printf("OlsrPort          : 0x%03x\n", cnf->olsrport);
-  printf("RtTable          : 0x%02x\n", cnf->rttable);
-  printf("RtTableDefault   : 0x%02x\n", cnf->rttable_default);
+  printf("RtTable          : %u\n", cnf->rt_table);
+  printf("RtTableDefault   : %u\n", cnf->rt_table_default);
+  printf("RtTableTunnel    : %u\n", cnf->rt_table_tunnel);
   if (cnf->willingness_auto)
     printf("Willingness      : AUTO\n");
   else

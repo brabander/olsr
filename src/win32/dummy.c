@@ -68,7 +68,7 @@ int olsr_os_policy_rule(int family __attribute__ ((unused)),
   return -1;
 }
 
-int olsr_os_create_localhostif(union olsr_ip_addr *ip __attribute__ ((unused)),
+int olsr_os_localhost_if(union olsr_ip_addr *ip __attribute__ ((unused)),
     bool create __attribute__ ((unused))) {
   return -1;
 }

@@ -112,18 +112,27 @@ olsrd_write_cnf(struct olsrd_config *cnf, const char *fname)
   fprintf(fd, "# Port to use. Default is 698! and using other port than IANA assigned one needs a really good reason!\n#possible values 698 or >1000\n\n");
   fprintf(fd, "OlsrPort\t\t%d\n\n", cnf->olsrport);
 
+  /* RtPolicy */
+  fprintf(fd, "# Switch the policy routing system on/off (default is true)\n");
+  fprintf(fd, "%sRtPolicy %s\n", cnf->rt_policy ? "# " : "", cnf->rt_policy ? "true" : "false");
+
   /* RtTable */
   fprintf(fd, "# Policy Routing Table to use. Default is 254\n\n");
-  fprintf(fd, "RtTable\t\t%d\n\n", cnf->rttable);
+  fprintf(fd, "RtTable\t\t%d\n\n", cnf->rt_table);
 
   /* RtProto */
   fprintf(fd, "# Policy Routing Proto to use. Default is 3\n\n");
-  fprintf(fd, "RtProto\t\t%d\n\n", cnf->rtproto);
+  fprintf(fd, "RtProto\t\t%d\n\n", cnf->rt_proto);
 
   /* RtTableDefault */
   fprintf(fd,
           "# Policy Routing Table to use for the default Route. Default is 0 (Take the same table as specified by RtTable)\n\n");
-  fprintf(fd, "RtTableDefault\t\t%d\n\n", cnf->rttable_default);
+  fprintf(fd, "RtTableDefault\t\t%d\n\n", cnf->rt_table_default);
+
+  /* RtTableTunnel */
+  fprintf(fd,
+          "# Policy Routing Table to use for the tunnel Routes. Default is 0 (Take the same table as specified by RtTable)\n\n");
+  fprintf(fd, "RtTableTunnel\t\t%d\n\n", cnf->rt_table_tunnel);
 
   /* Willingness */
   fprintf(fd,
@@ -445,11 +454,11 @@ olsrd_write_cnf_buf(struct olsrd_config *cnf, char *buf, uint32_t bufsize)
 
   /* RtTable */
   WRITE_TO_BUF("# Policy Routing Table to use. Default is 254\n\n");
-  WRITE_TO_BUF("RtTable\t\t%d\n\n", cnf->rttable);
+  WRITE_TO_BUF("RtTable\t\t%d\n\n", cnf->rt_table);
 
   /* RtProto */
   WRITE_TO_BUF("# Routing proto flag to use. Default is 3 (BOOT)\n\n");
-  WRITE_TO_BUF("RtProto\t\t%d\n\n", cnf->rtproto);
+  WRITE_TO_BUF("RtProto\t\t%d\n\n", cnf->rt_proto);
 
   /* Willingness */
   WRITE_TO_BUF

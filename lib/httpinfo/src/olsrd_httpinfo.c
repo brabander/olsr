@@ -868,9 +868,11 @@ build_config_body(struct autobuf *abuf)
 
   abuf_appendf(abuf, "<td>Fisheye: %s</td>\n", olsr_cnf->lq_fish ? "Enabled" : "Disabled");
   abuf_appendf(abuf, "<td>TOS: 0x%04x</td>\n", olsr_cnf->tos);
-  abuf_appendf(abuf, "<td>RtTable: 0x%04x/%d</td>\n", olsr_cnf->rttable, olsr_cnf->rttable);
-  abuf_appendf(abuf, "<td>RtTableDefault: 0x%04x/%d</td>\n", olsr_cnf->rttable_default,
-             olsr_cnf->rttable_default);
+  abuf_appendf(abuf, "<td>RtTable: 0x%04x/%d</td>\n", olsr_cnf->rt_table, olsr_cnf->rt_table);
+  abuf_appendf(abuf, "<td>RtTableDefault: 0x%04x/%d</td>\n", olsr_cnf->rt_table_default,
+             olsr_cnf->rt_table_default);
+  abuf_appendf(abuf, "<td>RtTableTunnel: 0x%04x/%d</td>\n", olsr_cnf->rt_table_tunnel,
+             olsr_cnf->rt_table_tunnel);
   abuf_appendf(abuf, "<td>Willingness: %d %s</td>\n", olsr_cnf->willingness,
              olsr_cnf->willingness_auto ? "(auto)" : "");
 

@@ -307,9 +307,9 @@ IPV6ADDR {IPV6PAT1}|{IPV6PAT2}|{IPV6PAT3}|{IPV6PAT4}|{IPV6PAT5}|{IPV6PAT6}|{IPV6
   return TOK_OLSRPORT;
 }
 
-"RtTable" {
+"RtPolicy" {
   yylval = NULL;
-  return TOK_RTTABLE;
+  return TOK_RTPOLICY;
 }
 
 "RtProto" {
@@ -317,9 +317,39 @@ IPV6ADDR {IPV6PAT1}|{IPV6PAT2}|{IPV6PAT3}|{IPV6PAT4}|{IPV6PAT5}|{IPV6PAT6}|{IPV6
   return TOK_RTPROTO;
 }
 
+"RtTable" {
+  yylval = NULL;
+  return TOK_RTTABLE;
+}
+
 "RtTableDefault" {
   yylval = NULL;
   return TOK_RTTABLE_DEFAULT;
+}
+
+"RtTableTunnel" {
+  yylval = NULL;
+  return TOK_RTTABLE_TUNNEL;
+}
+
+"RtTablePriority" {
+  yylval = NULL;
+  return TOK_RTTABLE_PRIORITY;
+}
+
+"RtTableDefaultOlsrPriority" {
+  yylval = NULL;
+  return TOK_RTTABLE_DEFAULTOLSR_PRIORITY;
+}
+
+"RtTableTunnelPriority" {
+  yylval = NULL;
+  return TOK_RTTABLE_TUNNEL_PRIORITY;
+}
+
+"RtTableDefaultPriority" {
+  yylval = NULL;
+  return TOK_RTTABLE_DEFAULT_PRIORITY;
 }
 
 "Willingness" {

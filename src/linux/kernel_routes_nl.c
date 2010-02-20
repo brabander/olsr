@@ -304,7 +304,7 @@ int olsr_os_policy_rule(int family, int rttable, uint32_t priority, const char *
 }
 
 int
-olsr_os_create_localhostif(union olsr_ip_addr *ip, bool create)
+olsr_os_localhost_if(union olsr_ip_addr *ip, bool create)
 {
   struct olsr_ipadd_req req;
   static char l[] = "lo:olsr";
@@ -431,8 +431,8 @@ static int olsr_new_netlink_route(int family, int rttable, int if_index, int met
 
 void olsr_os_niit_6to4_route(const struct olsr_ip_prefix *dst_v6, bool set) {
   /* TODO: in welche Table kommen die NIIT-Routen ? ne eigene ? */
-  if (olsr_new_netlink_route(AF_INET6, olsr_cnf->rttable, olsr_cnf->niit6to4_if_index,
-      RT_METRIC_DEFAULT, RTPROT_BOOT, NULL, NULL, dst_v6, set, false)) {
+  if (olsr_new_netlink_route(AF_INET6, olsr_cnf->rt_table, olsr_cnf->niit6to4_if_index,
+      RT_METRIC_DEFAULT, olsr_cnf->rt_proto, NULL, NULL, dst_v6, set, false)) {
     olsr_syslog(OLSR_LOG_ERR, ". error while %s static niit route to %s",
         set ? "setting" : "removing", olsr_ip_prefix_to_string(dst_v6));
   }
@@ -440,8 +440,8 @@ void olsr_os_niit_6to4_route(const struct olsr_ip_prefix *dst_v6, bool set) {
 
 void olsr_os_niit_4to6_route(const struct olsr_ip_prefix *dst_v4, bool set) {
   /* TODO: in welche Table kommen die NIIT-Routen ? ne eigene ? */
-  if (olsr_new_netlink_route(AF_INET, olsr_cnf->rttable, olsr_cnf->niit4to6_if_index,
-      RT_METRIC_DEFAULT, olsr_cnf->rtproto, NULL, NULL, dst_v4, set, false)) {
+  if (olsr_new_netlink_route(AF_INET, olsr_cnf->rt_table, olsr_cnf->niit4to6_if_index,
+      RT_METRIC_DEFAULT, olsr_cnf->rt_proto, NULL, NULL, dst_v4, set, false)) {
     olsr_syslog(OLSR_LOG_ERR, ". error while %s niit route to %s",
         set ? "setting" : "removing", olsr_ip_prefix_to_string(dst_v4));
   }
@@ -454,15 +454,15 @@ void olsr_os_inetgw_tunnel_route(uint32_t if_idx, bool ipv4, bool set) {
 
   dst = ipv4 ? &ipv4_internet_route : &ipv6_internet_route;
 
-  if (olsr_new_netlink_route(ipv4 ? AF_INET : AF_INET6, olsr_cnf->rttable,
-      if_idx, RT_METRIC_DEFAULT, olsr_cnf->rtproto,NULL, NULL, dst, set, false)) {
+  if (olsr_new_netlink_route(ipv4 ? AF_INET : AF_INET6, olsr_cnf->rt_table_tunnel,
+      if_idx, RT_METRIC_DEFAULT, olsr_cnf->rt_proto, NULL, NULL, dst, set, false)) {
     olsr_syslog(OLSR_LOG_ERR, ". error while %s inetgw tunnel route to %s for if %d",
         set ? "setting" : "removing", olsr_ip_prefix_to_string(dst), if_idx);
   }
 }
 
 static int olsr_os_process_rt_entry(int af_family, const struct rt_entry *rt, bool set) {
-  int metric, protocol, table;
+  int metric, table;
   const struct rt_nexthop *nexthop;
   union olsr_ip_addr *src;
   bool hostRoute;
@@ -481,18 +481,9 @@ static int olsr_os_process_rt_entry(int af_family, const struct rt_entry *rt, bo
     metric += 2;
   }
 
-  /* get protocol
-   * 0 gets replaced by OS-specifc default (3)
-   * 1 is reserved so we take 0 instead (this really makes some sense)
-   * other numbers are used directly without change */
-  protocol = olsr_cnf->rtproto;
-  if (protocol <= 1) {
-    protocol = protocol < 1 ? RTPROT_BOOT : 0;
-  }
-
   /* get table */
   table = is_prefix_inetgw(&rt->rt_dst)
-      ? olsr_cnf->rttable_default : olsr_cnf->rttable;
+      ? olsr_cnf->rt_table_default : olsr_cnf->rt_table;
 
   /* get next hop */
   if (rt->rt_best && set) {
@@ -526,7 +517,7 @@ static int olsr_os_process_rt_entry(int af_family, const struct rt_entry *rt, bo
   }
 
   /* create route */
-  err = olsr_new_netlink_route(af_family, table, nexthop->iif_index, metric, protocol,
+  err = olsr_new_netlink_route(af_family, table, nexthop->iif_index, metric, olsr_cnf->rt_proto,
       src, hostRoute ? NULL : &nexthop->gateway, &rt->rt_dst, set, false);
 
   /* resolve "File exist" (17) propblems (on orig and autogen routes)*/
@@ -539,7 +530,7 @@ static int olsr_os_process_rt_entry(int af_family, const struct rt_entry *rt, bo
 
     if (!err) {
       /* create this rule a second time if delete worked*/
-      err = olsr_new_netlink_route(af_family, table, nexthop->iif_index, metric, protocol,
+      err = olsr_new_netlink_route(af_family, table, nexthop->iif_index, metric, olsr_cnf->rt_proto,
           src, hostRoute ? NULL : &nexthop->gateway, &rt->rt_dst, set, false);
     }
     olsr_syslog(OLSR_LOG_ERR, ". %s (%d)", err == 0 ? "successful" : "failed", err);
@@ -576,11 +567,11 @@ static int olsr_os_process_rt_entry(int af_family, const struct rt_entry *rt, bo
     hostPrefix.prefix = nexthop->gateway;
     hostPrefix.prefix_len = olsr_cnf->ipsize * 8;
 
-    err = olsr_new_netlink_route(af_family, olsr_cnf->rttable, nexthop->iif_index,
-        metric, protocol, src, NULL, &hostPrefix, true, false);
+    err = olsr_new_netlink_route(af_family, olsr_cnf->rt_table, nexthop->iif_index,
+        metric, olsr_cnf->rt_proto, src, NULL, &hostPrefix, true, false);
     if (err == 0) {
       /* create this rule a second time if hostrule generation was successful */
-      err = olsr_new_netlink_route(af_family, table, nexthop->iif_index, metric, protocol,
+      err = olsr_new_netlink_route(af_family, table, nexthop->iif_index, metric, olsr_cnf->rt_proto,
           src, hostRoute ? NULL : &nexthop->gateway, &rt->rt_dst, set, false);
     }
     olsr_syslog(OLSR_LOG_ERR, ". %s (%d)", err == 0 ? "successful" : "failed", err);

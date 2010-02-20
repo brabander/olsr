@@ -71,6 +71,9 @@
 #define DEF_OLSRPORT         698
 #define DEF_RTPROTO          0 /* 0 means OS-specific default */
 #define DEF_RTTABLE          254
+#define DEF_RTTABLE_DEFAULT  111
+#define DEF_RTTABLE_TUNNEL   112
+#define DEF_RTTABLE          254
 #define DEF_MIN_TC_VTIME     0.0
 #define DEF_USE_NIIT         true
 #define DEF_SMART_GW         false
@@ -212,9 +215,11 @@ struct olsrd_config {
   int ip_version;
   bool allow_no_interfaces;
   uint16_t tos;
-  uint8_t rtproto;
-  uint8_t rttable, rttable_default, rttable_smartgw;
-  uint16_t rttable_rule, rttable_default_rule, rttable_smartgw_rule, rttable_backup_rule;
+  bool rt_policy;
+  uint8_t rt_proto;
+  uint8_t rt_table, rt_table_default, rt_table_tunnel;
+  uint16_t rt_table_pri, rt_table_tunnel_pri;
+  uint16_t rt_table_defaultolsr_pri, rt_table_default_pri;
   uint8_t willingness;
   bool willingness_auto;
   int ipc_connections;
