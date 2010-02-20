@@ -387,19 +387,19 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
     /* first fill in missing values */
     if (cnf->rt_table_pri == 0) {
       cnf->rt_table_pri = 32766; /* main table */
-      fprintf(stderr, "Choose table %u for rt_table_pri\n", cnf->rt_table_pri);
+      fprintf(stderr, "Choose priority %u for rt_table_pri\n", cnf->rt_table_pri);
     }
     if (cnf->rt_table_defaultolsr_pri == 0) {
       cnf->rt_table_defaultolsr_pri = cnf->rt_table_pri + 10;
-      fprintf(stderr, "Choose table %u for rt_table_defaultolsr_pri\n", cnf->rt_table_defaultolsr_pri);
+      fprintf(stderr, "Choose priority %u for rt_table_defaultolsr_pri\n", cnf->rt_table_defaultolsr_pri);
     }
     if (cnf->rt_table_tunnel_pri == 0) {
       cnf->rt_table_tunnel_pri = cnf->rt_table_defaultolsr_pri + 10;
-      fprintf(stderr, "Choose table %u for rt_table_tunnel_pri\n", cnf->rt_table_tunnel_pri);
+      fprintf(stderr, "Choose priority %u for rt_table_tunnel_pri\n", cnf->rt_table_tunnel_pri);
     }
     if (cnf->rt_table_default_pri == 0) {
       cnf->rt_table_default_pri = cnf->rt_table_tunnel_pri + 10;
-      fprintf(stderr, "Choose table %u for rt_table_default_pri\n", cnf->rt_table_default_pri);
+      fprintf(stderr, "Choose priority %u for rt_table_default_pri\n", cnf->rt_table_default_pri);
     }
 
     /* check tables */
@@ -415,11 +415,11 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
       fprintf(stderr, "rttable priority must be lesser than rttable_defaultolsr priority\n");
       return -1;
     }
-    if (cnf->rt_table_defaultolsr_pri >= cnf->rt_table_tunnel) {
+    if (cnf->rt_table_defaultolsr_pri >= cnf->rt_table_tunnel_pri) {
       fprintf(stderr, "rttable_defaultolsr priority must be lesser than rttable_tunnel priority\n");
       return -1;
     }
-    if (cnf->rt_table_tunnel >= cnf->rt_table_default_pri) {
+    if (cnf->rt_table_tunnel_pri >= cnf->rt_table_default_pri) {
       fprintf(stderr, "rttable_tunnel priority must be lesser than rttable_default priority\n");
       return -1;
     }
