@@ -76,7 +76,8 @@ void olsr_delete_gateway_entry(union olsr_ip_addr *originator, uint8_t prefixlen
 void olsr_print_gateway_entries(void);
 
 bool olsr_set_inet_gateway(union olsr_ip_addr *originator, bool ipv4, bool ipv6, bool external);
-struct gateway_entry *olsr_get_inet_gateway(bool ipv6);
+struct gateway_entry *olsr_get_ipv4_inet_gateway(bool *);
+struct gateway_entry *olsr_get_ipv6_inet_gateway(bool *);
 bool olsr_is_smart_gateway(struct olsr_ip_prefix *prefix, union olsr_ip_addr *net);
 void olsr_modifiy_inetgw_netmask(union olsr_ip_addr *mask, int prefixlen);
 

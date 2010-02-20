@@ -125,9 +125,9 @@ static void gw_default_startup_handler(void) {
 static void gw_default_update_handler(struct gateway_entry *gw) {
   bool v4changed, v6changed;
 
-  v4changed = (gw == olsr_get_inet_gateway(false))
+  v4changed = (gw == olsr_get_ipv4_inet_gateway(NULL))
       && (!gw->ipv4 || (gw->ipv4nat && !olsr_cnf->smart_gw_allow_nat));
-  v6changed = (gw == olsr_get_inet_gateway(true)) && !gw->ipv6;
+  v6changed = (gw == olsr_get_ipv6_inet_gateway(NULL)) && !gw->ipv6;
 
   if (v4changed || v6changed) {
     olsr_gw_default_lookup_gateway(v4changed, v6changed);
@@ -137,8 +137,8 @@ static void gw_default_update_handler(struct gateway_entry *gw) {
 static void gw_default_delete_handler(struct gateway_entry *gw) {
   bool isv4, isv6;
 
-  isv4 = gw == olsr_get_inet_gateway(false);
-  isv6 = gw == olsr_get_inet_gateway(true);
+  isv4 = gw == olsr_get_ipv4_inet_gateway(NULL);
+  isv6 = gw == olsr_get_ipv6_inet_gateway(NULL);
 
   if (gw != NULL && (isv4 || isv6)) {
     olsr_gw_default_lookup_gateway(isv4, isv6);

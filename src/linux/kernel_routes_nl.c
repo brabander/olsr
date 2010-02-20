@@ -476,6 +476,11 @@ static int olsr_os_process_rt_entry(int af_family, const struct rt_entry *rt, bo
     metric = set ? rt->rt_best->rtp_metric.hops : rt->rt_metric.hops;
   }
 
+  if (olsr_cnf->smart_gw_active && is_prefix_inetgw(&rt->rt_dst)) {
+    /* make space for the tunnel gateway route */
+    metric += 2;
+  }
+
   /* get protocol
    * 0 gets replaced by OS-specifc default (3)
    * 1 is reserved so we take 0 instead (this really makes some sense)
@@ -501,7 +506,8 @@ static int olsr_os_process_rt_entry(int af_family, const struct rt_entry *rt, bo
   hostRoute = rt->rt_dst.prefix_len == olsr_cnf->ipsize * 8
       && ipequal(&nexthop->gateway, &rt->rt_dst.prefix);
 
-  if (0) {
+#if 0
+  {
     struct ipaddr_str buf1, buf2;
     olsr_syslog(OLSR_LOG_INFO, "hostroute (%s) = %d == %d && %s == %s",
         hostRoute ? "true" : "false",
@@ -509,6 +515,7 @@ static int olsr_os_process_rt_entry(int af_family, const struct rt_entry *rt, bo
         olsr_ip_to_string(&buf1, &nexthop->gateway),
         olsr_ip_to_string(&buf2, &rt->rt_dst.prefix));
   }
+#endif
 
   /* get src ip */
   if (olsr_cnf->use_src_ip_routes) {

@@ -16,6 +16,7 @@
 #include "kernel_tunnel.h"
 #include "net_os.h"
 #include "duplicate_set.h"
+#include "log.h"
 #include "gateway_default_handler.h"
 #include "gateway.h"
 
@@ -31,6 +32,7 @@ static struct gateway_entry *current_ipv4_gw, *current_ipv6_gw;
 static struct olsr_gw_handler *gw_handler;
 
 static struct olsr_iptunnel_entry *v4gw_tunnel, *v6gw_tunnel;
+static bool v4gw_choosen_external, v6gw_choosen_external;
 
 /**
  * Reconstructs an uplink/downlink speed value from the encoded
@@ -206,20 +208,15 @@ olsr_set_inet_gateway(union olsr_ip_addr *originator, bool ipv4, bool ipv6, bool
     }
   }
 
-  /* gateway missing ? */
-  if (((ipv4 && current_ipv4_gw == NULL) || (ipv6 && current_ipv6_gw == NULL))  && external) {
-    /* trigger automatic lookup if user failed */
-    olsr_trigger_inetgw_selection(ipv4, ipv6);
-  }
-
   /* handle IPv4 */
   if (oldV4 != current_ipv4_gw) {
     if ((v4gw_tunnel = olsr_os_add_ipip_tunnel(&current_ipv4_gw->originator, true)) != NULL) {
       olsr_os_inetgw_tunnel_route(v4gw_tunnel->if_index, true, true);
+      v4gw_choosen_external = external;
     }
     else {
-      // TODO handle error
-fprintf(stderr, "add tunnel failed !\n");
+      // TODO: what to do now ? Choose another one ? Fire up a timer ?
+      current_ipv4_gw = NULL;
     }
     if (oldV4 != NULL) {
       olsr_os_del_ipip_tunnel(tunnelV4);
@@ -229,10 +226,11 @@ fprintf(stderr, "add tunnel failed !\n");
   if (oldV6 != current_ipv6_gw) {
     if ((v6gw_tunnel = olsr_os_add_ipip_tunnel(&current_ipv6_gw->originator, false)) != NULL) {
       olsr_os_inetgw_tunnel_route(v6gw_tunnel->if_index, false, true);
+      v6gw_choosen_external = external;
     }
     else {
-      // TODO handle error
-fprintf(stderr, "add tunnel failed !\n");
+      // TODO: what to do now ? Choose another one ? Fire up a timer ?
+      current_ipv6_gw = NULL;
     }
     if (oldV6 != NULL) {
       olsr_os_del_ipip_tunnel(tunnelV6);
@@ -242,12 +240,25 @@ fprintf(stderr, "add tunnel failed !\n");
 }
 
 /**
- * returns the gateway_entry of the current internet gw.
- * @param ipv6 true to lookup ipv6 gateway, false to lookup ipv4
+ * returns the gateway_entry of the current ipv4 internet gw.
  * @return pointer to gateway_entry or NULL if not set
  */
-struct gateway_entry *olsr_get_inet_gateway(bool ipv6) {
-  return ipv6 ? current_ipv6_gw : current_ipv4_gw;
+struct gateway_entry *olsr_get_ipv4_inet_gateway(bool *ext) {
+  if (ext) {
+    *ext = v4gw_choosen_external;
+  }
+  return current_ipv4_gw;
+}
+
+/**
+ * returns the gateway_entry of the current ipv6 internet gw.
+ * @return pointer to gateway_entry or NULL if not set
+ */
+struct gateway_entry *olsr_get_ipv6_inet_gateway(bool *ext) {
+  if (ext) {
+    *ext = v6gw_choosen_external;
+  }
+  return current_ipv6_gw;
 }
 
 /**

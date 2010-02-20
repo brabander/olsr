@@ -77,6 +77,7 @@
 #include "net_olsr.h"
 #include "lq_plugin.h"
 #include "common/autobuf.h"
+#include "gateway.h"
 
 #include "olsrd_txtinfo.h"
 #include "olsrd_plugin.h"
@@ -106,6 +107,8 @@ static void ipc_print_hna(struct autobuf *);
 
 static void ipc_print_mid(struct autobuf *);
 
+static void ipc_print_gateway(struct autobuf *);
+
 #define TXT_IPC_BUFSIZE 256
 
 #define SIW_ALL 0
@@ -116,6 +119,7 @@ static void ipc_print_mid(struct autobuf *);
 #define SIW_MID 5
 #define SIW_TOPO 6
 #define SIW_NEIGHLINK 7
+#define SIW_GATEWAY 8
 
 #define MAX_CLIENTS 3
 
@@ -310,6 +314,8 @@ ipc_action(int fd, void *data __attribute__ ((unused)), unsigned int flags __att
         send_what = SIW_MID;
       else if (0 != strstr(requ, "/topo"))
         send_what = SIW_TOPO;
+      else if (0 != strstr(requ, "/gateway"))
+        send_what = SIW_GATEWAY;
     }
   }
 
@@ -539,6 +545,60 @@ ipc_print_mid(struct autobuf *abuf)
 }
 
 static void
+ipc_print_gateway(struct autobuf *abuf)
+{
+  static const char IPV4[] = "ipv4";
+  static const char IPV4_NAT[] = "ipv4(n)";
+  static const char IPV6[] = "ipv6";
+  static const char NONE[] = "-";
+
+  struct ipaddr_str buf;
+  struct gateway_entry *gw;
+  struct lqtextbuffer lqbuf;
+
+  // Status IP ETX Hopcount Uplink-Speed Downlink-Speed ipv4/ipv4-nat/- ipv6/- ipv6-prefix/-
+  abuf_puts(abuf, "Table: Gateways\n   Gateway\tETX\tHopcnt\tUplink\tDownlnk\tIPv4\tIPv6\tPrefix\n");
+  OLSR_FOR_ALL_GATEWAY_ENTRIES(gw) {
+    char v4 = '-', v6 = '-';
+    bool autoV4 = false, autoV6 = false;
+    const char *v4type = NONE, *v6type = NONE;
+    struct tc_entry *tc;
+
+    if ((tc = olsr_lookup_tc_entry(&gw->originator)) == NULL) {
+      continue;
+    }
+
+    if (gw == olsr_get_ipv4_inet_gateway(&autoV4)) {
+      v4 = autoV4 ? 'a' : 's';
+    }
+    else if (gw->ipv4 && (olsr_cnf->ip_version == AF_INET || olsr_cnf->use_niit)
+        && (olsr_cnf->smart_gw_allow_nat || !gw->ipv4nat)) {
+      v4 = 'u';
+    }
+
+    if (gw == olsr_get_ipv6_inet_gateway(&autoV6)) {
+      v6 = autoV6 ? 'a' : 's';
+    }
+    else if (gw->ipv6 && olsr_cnf->ip_version == AF_INET6) {
+      v6 = 'u';
+    }
+
+    if (gw->ipv4) {
+      v4type = gw->ipv4nat ? IPV4_NAT : IPV4;
+    }
+    if (gw->ipv6) {
+      v6type = IPV6;
+    }
+
+    abuf_appendf(abuf, "%c%c %s\t%s\t%d\t%u\t%u\t%s\t%s\t%s\n",
+        v4, v6, olsr_ip_to_string(&buf, &gw->originator),
+        get_linkcost_text(tc->path_cost, true, &lqbuf), tc->hops,
+        gw->uplink, gw->downlink, v4type, v6type,
+        gw->external_prefix.prefix_len == 0 ? NONE : olsr_ip_prefix_to_string(&gw->external_prefix));
+  } OLSR_FOR_ALL_GATEWAY_ENTRIES_END(gw)
+}
+
+static void
 txtinfo_write_data(void *foo __attribute__ ((unused))) {
   fd_set set;
   int result, i, j, max;
@@ -625,6 +685,10 @@ send_info(int send_what, int the_socket)
   /* routes */
   if ((send_what == SIW_ALL) || (send_what == SIW_ROUTE))
     ipc_print_routes(&abuf);
+
+  /* gateways */
+  if ((send_what == SIW_ALL) || (send_what == SIW_GATEWAY))
+    ipc_print_gateway(&abuf);
 
   outbuffer[outbuffer_count] = olsr_malloc(abuf.len, "txt output buffer");
   outbuffer_size[outbuffer_count] = abuf.len;

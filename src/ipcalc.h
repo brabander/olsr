@@ -185,6 +185,12 @@ prefix_mappedv4_to_v4(struct olsr_ip_prefix *v4, const struct olsr_ip_prefix *v6
 
 
 static INLINE bool
+ip_is_linklocal(const union olsr_ip_addr *ip) {
+  return olsr_cnf->ip_version == AF_INET6
+      && ip->v6.s6_addr[0] == 0xfe && (ip->v6.s6_addr[1] & 0xc0) == 0xc0;
+}
+
+static INLINE bool
 ip_prefix_is_mappedv4(const struct olsr_ip_prefix *prefix) {
   return prefix->prefix_len >= ipv6_mappedv4_route.prefix_len
       && memcmp(prefix, &ipv6_mappedv4_route, ipv6_mappedv4_route.prefix_len / 8) == 0;
