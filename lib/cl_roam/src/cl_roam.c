@@ -101,6 +101,10 @@ typedef struct {
 	char is_announced;
 	float last_seen;
 	pthread_t ping_thread;
+	pthread_t ping_thread_add;
+	struct olsr_cookie_info *arping_timer_cookie;
+	char ping_thread_done;
+	struct timer_entry *arping_timer;
  } guest_client;
 
 
@@ -116,16 +120,16 @@ void update_routes_now()
 {
 	//Recalculate our own routing table RIGHT NOW
 
-    printf("recalculating routes\n");
+	  OLSR_INFO(LOG_PLUGINS, "Forcing recalculation of routing-table\n");
 
     //sets timer to zero
 
 
     spf_backoff_timer = NULL;
-    printf("timer stopped\n");
+    ///printf("timer stopped\n");
     //actual calculation
     olsr_calculate_routing_table();
-    printf("updated\n");
+    //printf("updated\n");
 }
 
 
@@ -143,14 +147,6 @@ olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *
 }
 
 
-
-void *PrintHello(void *threadid)
-{
-   long tid;
-   tid = (long)threadid;
-   printf("Hello World! It's me, thread #%ld!\n", tid);
-   pthread_exit(NULL);
-}
 
 
 
@@ -179,7 +175,7 @@ olsr_parser(struct olsr_message *msg, struct interface *in_if __attribute__ ((un
 	  printf("recieved something else\n");
     return;
   }
-  printf("recieved my Message\n");
+  OLSR_INFO(LOG_PLUGINS, "Recieved roaming-messagetype\n");
   curr = msg->payload;
   struct in_addr ip;
   pkt_get_ipaddress(&curr, &ip);
@@ -193,23 +189,22 @@ olsr_parser(struct olsr_message *msg, struct interface *in_if __attribute__ ((un
 
   if (guest!=NULL) {
 	  if ((guest->is_announced)!=0) {
-		  printf("Having to revoke \n");
+		  OLSR_INFO(LOG_PLUGINS, "Having to revoke announcement for %s\n", inet_ntoa(guest->ip));
 		  guest->is_announced=0;
 		  guest->last_seen=30.0;
 
-
-		ip_prefix_list_remove(&olsr_cnf->hna_entries, &(guest->ip), olsr_netmask_to_prefix(&gw_netmask), olsr_cnf->ip_version);
-		char route_command[50];
-		snprintf(route_command, sizeof(route_command), "route del %s dev ath0 metric 0", inet_ntoa(guest->ip));
-		system(route_command);
-
+		  ip_prefix_list_remove(&olsr_cnf->hna_entries, &(guest->ip), olsr_netmask_to_prefix(&gw_netmask), olsr_cnf->ip_version);
+		  char route_command[50];
+		  snprintf(route_command, sizeof(route_command), "route del %s dev ath0 metric 0", inet_ntoa(guest->ip));
+		  system(route_command);
 		  single_hna(&ip, 0);
+
 		  }
-	  else
-		  printf("Not revoking \n");
+	 // else
+		//  printf("Not revoking \n");
   }
-  else
-	  printf("Not revoking\n");
+  //else
+	//  printf("Not revoking\n");
 
 
 
@@ -256,15 +251,6 @@ olsrd_plugin_init(void)
   /* Register the GW check */
   olsr_start_timer(1 * MSEC_PER_SEC, 0, OLSR_TIMER_PERIODIC, &olsr_event1, NULL, event_timer_cookie1);
   olsr_start_timer(10 * MSEC_PER_SEC, 0, OLSR_TIMER_PERIODIC, &olsr_event2, NULL, event_timer_cookie2);
-  //system("echo \"1\" ");
-  //pthread_create(&ping_thread, NULL, &do_ping, NULL);
-  //system("echo \"2\" ");
-  //CreateThread(NULL, 0, do_ping, NULL, 0, &ThreadId);
-  //if (pthread_create(&ping_thread, NULL, do_ping, NULL) != 0) {
-   // OLSR_WARN(LOG_PLUGINS, "pthread_create() error");
-   // return 0;
-  //}
-
 
 
   /* register functions with olsrd */
@@ -278,14 +264,19 @@ olsrd_plugin_init(void)
 
 
 
-int ping_thread(guest_client * target)
-{
+int ping_thread(void* guest) {
+
+	guest_client * target = (guest_client *) guest;
+    target->ping_thread_done=0;
 
     char ping_command[50];
 
-
     snprintf(ping_command, sizeof(ping_command), "arping -I ath0 -w 1 -c 1 -q %s", inet_ntoa(target->ip));
-    return system(ping_command);
+    //printf("%s\n",ping_command);
+    int result = system(ping_command);
+    target->ping_thread_done=1;
+    //printf("ping thread finished\n");
+    return result;
 
 }
 
@@ -305,17 +296,6 @@ void ping_thread_infinite(guest_client * target)
 
 
 
-void ping(guest_client * target)
-{
-	int rc;
-	pthread_t thread;
-    rc = pthread_create(&thread, NULL, ping_thread, (void *) target   );
-    if (rc){
-       printf("ERROR; return code from pthread_create() is %d\n", rc);
-       exit(-1);
-    }
-}
-
 void ping_infinite(guest_client * target)
 {
 	int rc;
@@ -327,9 +307,10 @@ void ping_infinite(guest_client * target)
 		   exit(-1);
 		}
 		target->ping_thread=thread;
+		OLSR_INFO(LOG_PLUGINS, "Set up ping-thread for %s\n", inet_ntoa(target->ip));
 	}
 	else
-		printf("already pinging\n");
+		OLSR_INFO(LOG_PLUGINS, "Ping-thread for %s already exists!\n", inet_ntoa(target->ip));
 }
 
 
@@ -341,19 +322,24 @@ void ping_infinite(guest_client * target)
 
 struct olsr_message msg;
 
+void
+check_ping_result(void *foo )
+{
+	guest_client * host = (guest_client *) foo;
 
+	if (! host->ping_thread_done) {
+		OLSR_DEBUG(LOG_PLUGINS, "Ping-thread for %s not finished\n", inet_ntoa(host->ip));
 
-void add_route(void* guest) {
+	}
+	else {
+		olsr_stop_timer(host->arping_timer);
+		int ping_res;
+		pthread_join(host->ping_thread_add, &ping_res);
+		host->arping_timer=NULL;
+		host->ping_thread_done=0;
+		if(ping_res==0) {
+			OLSR_INFO(LOG_PLUGINS, "Adding Route for %s\n", inet_ntoa(host->ip));
 
-	guest_client * host = (guest_client *) guest;
-
-	if (ping_thread(host)==0) {
-		if (host->is_announced==1) {
-			printf("Host already announced!!");
-		}
-		else {
-			OLSR_DEBUG(LOG_PLUGINS, "Adding Route\n");
-			printf("Added Route\n");
 			ip_prefix_list_add(&olsr_cnf->hna_entries, &(host->ip), olsr_netmask_to_prefix(&gw_netmask));
 			host->is_announced=1;
 
@@ -370,39 +356,42 @@ void add_route(void* guest) {
 			single_hna(&host->ip, -1);
 
 
-
-
-
-
-
-
-
 			//Append to buffer, will be send at some time. In case it didn't arrive at the old master
 			spread_host(host);
+
+
+
 		}
-	} else {
-		  printf("Decided not to\n");
+		else {
 		  host->last_seen+=0.5;
+		  check_for_route(host);
 	}
+	}
+
 }
+
+
+
 
 
 
 
 void check_for_route(guest_client * host)
 {
+//printf("%f, %i, %x\n",host->last_seen , host->is_announced  ,host->ping_thread_add );
+  if (host->last_seen < 5.0 && ! host->is_announced  && host->arping_timer==NULL) {
 
-  if (host->last_seen < 5.0 && ! host->is_announced) {
-	  pthread_t add;
-	  printf("maybe add something\n");
-	  int rc = pthread_create(&add, NULL, add_route, (void *)host);
-	  if (rc){
-	           printf("ERROR; return code from pthread_create() is %d\n", rc);
-	           exit(-1);
-	        }
+	  //printf("maybe add something\n");
+	  if (host->arping_timer_cookie==NULL)
+		  host->arping_timer_cookie = olsr_alloc_cookie("cl roam: Maybe add something", OLSR_COOKIE_TYPE_TIMER);
+	  //printf("timer started\n");
+	  host->arping_timer = olsr_start_timer(250, 5, OLSR_TIMER_PERIODIC, &check_ping_result, host, host->arping_timer_cookie);
+	  int rc = pthread_create(&(host->ping_thread_add), NULL, ping_thread, (void *)host);
+
+
+
   } else if ((host->last_seen > 20.0) &&  host->is_announced) {
-      OLSR_DEBUG(LOG_PLUGINS, "Removing Route\n");
-      system("echo \"Entferne route\" ");
+      OLSR_INFO(LOG_PLUGINS, "Removing Route for %s\n", inet_ntoa(host->ip));
       ip_prefix_list_remove(&olsr_cnf->hna_entries, &(host->ip), olsr_netmask_to_prefix(&gw_netmask), olsr_cnf->ip_version);
 		char route_command[50];
 		snprintf(route_command, sizeof(route_command), "route del %s dev ath0 metric 0", inet_ntoa(host->ip));
@@ -421,12 +410,13 @@ void check_client_list(client_list * clist) {
 				  clist->client->last_seen+=5;
 			  }
 			  if (clist->client->ping_thread!=NULL) {
-				  printf("attempting to kill ping-thread\n");
+				  //printf("attempting to kill ping-thread\n");
 				  pthread_detach(clist->client->ping_thread);
 				  //pthread_kill(clist->client->ping_thread, 1);
 				  //pthread_cancel(clist->client->ping_thread);
 				  pthread_cancel(clist->client->ping_thread);
-				  printf("killed ping-thread\n");
+				  //printf("killed ping-thread\n");
+				  OLSR_INFO(LOG_PLUGINS, "Killed ping-thread for %s\n", inet_ntoa(clist->client->ip));
 				  clist->client->ping_thread=NULL;
 			  }
 		  }
@@ -477,6 +467,10 @@ void check_local_leases(client_list * clist){
 
 void check_leases(client_list * clist, char file[], float def_last_seen) {
 	  FILE * fp = fopen(file, "r");
+	  if(fp == NULL) {
+	          printf("failed to open %s\n", file);
+	          return EXIT_FAILURE;
+	      }
 	  char s1[50];
 	  char s2[50];
 	  char s3[50];
@@ -510,7 +504,15 @@ void check_leases(client_list * clist, char file[], float def_last_seen) {
 
 void check_remote_leases(client_list * clist){
 	  FILE * fp = fopen("/tmp/otherclient", "r");
+	  if(fp == NULL) {
+	          printf("failed to open %s\n", "/tmp/otherclient");
+	          return EXIT_FAILURE;
+	      }
 	  FILE * my_leases =fopen ("/var/dhcp.leases", "a");
+	  if(my_leases == NULL) {
+	          printf("failed to open %s\n","/var/dhcp.leases");
+	          return EXIT_FAILURE;
+	      }
 	  char s1[50];
 	  char s2[50];
 	  char s3[50];
@@ -538,7 +540,7 @@ void check_remote_leases(client_list * clist){
 	    	// Why the fuck cant I do it in one step!?
 	    	 snprintf(leases, sizeof(leases), "%s %llx:%llx:%llx:%llx:%llx:%llx", s1, one, two, three, four, five, six);
 	    	 snprintf(leases, sizeof(leases), "%s %s * *\n", leases, s3);
-	    	printf(leases);
+	    	//printf(leases);
 	    	fprintf(my_leases, leases);
 	    }
 
@@ -560,6 +562,10 @@ void check_remote_leases(client_list * clist){
 int check_if_associcated(guest_client *client)
 {
   FILE * fp = fopen("/proc/net/madwifi/ath0/associated_sta", "r");
+  if(fp == NULL) {
+          printf("failed to open %s\n", "/proc/net/madwifi/ath0/associated_sta");
+          return EXIT_FAILURE;
+      }
   //FILE * fp = fopen("/home/raphael/tmp/leases", "r");
   char s1[50];
   char s2[50];
@@ -590,7 +596,7 @@ int check_if_associcated(guest_client *client)
   }
 
   fclose(fp);
-  printf("could not find %i\n",client->mac);
+
   return 0;
 
 }
@@ -605,6 +611,10 @@ int check_if_associcated(guest_client *client)
 // Will be handy to identify when a client roamed to us. Not used yet.
 void check_associations(client_list * clist){
   FILE * fp = fopen("/proc/net/madwifi/ath0/associated_sta", "r");
+  if(fp == NULL) {
+           printf("failed to open %s\n", "/proc/net/madwifi/ath0/associated_sta");
+           return EXIT_FAILURE;
+       }
   //FILE * fp = fopen("/home/raphael/tmp/leases", "r");
   char s1[50];
   char s2[50];
@@ -635,7 +645,7 @@ void check_associations(client_list * clist){
     	node->last_seen=last_rx;
     	if(node->ping_thread==NULL) {
     		ping_infinite(node);
-    	}
+    		    	}
     }
 
   }
@@ -663,10 +673,10 @@ void add_client_to_list(client_list * clist, guest_client * host) {
       this_one->client = host;
       this_one->list=clist->list;
       clist->list=this_one;
-      printf("added something\n");
+      OLSR_INFO(LOG_PLUGINS, "Keeping track of %s\n", inet_ntoa(host->ip));
     } else {
       clist->client=host;
-      printf("added something\n");
+      OLSR_INFO(LOG_PLUGINS, "Keeping track of %s\n", inet_ntoa(host->ip));
     }
     ping_infinite(host);
   }
@@ -768,7 +778,7 @@ spread_host(guest_client * host) {
 // sends packet immedeately!
 void
 single_hna(struct in_addr * ip, uint32_t time) {
-	  printf("single hna %x with time %i\n",*ip, time);
+	  //printf("single hna %x with time %i\n",*ip, time);
 
 
 
