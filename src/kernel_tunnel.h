@@ -9,6 +9,12 @@
 #define KERNEL_TUNNEL_H_
 
 #include <net/if.h>
+#ifdef WIN32
+/* compat for win32 */
+#include <iprtrmib.h>
+#define IF_NAMESIZE MAX_INTERFACE_NAME_LEN
+#endif
+
 
 #include "defs.h"
 #include "olsr_types.h"
@@ -18,7 +24,7 @@ struct olsr_iptunnel_entry {
   struct avl_node node;
   union olsr_ip_addr target;
 
-  char if_name[IFNAMSIZ];
+  char if_name[IF_NAMESIZE];
   int if_index;
 
   int usage;

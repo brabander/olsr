@@ -17,21 +17,13 @@ int olsr_os_init_iptunnel(void) {
 void olsr_os_cleanup_iptunnel(void) {
 }
 
-int olsr_os_add_ipip_tunnel(const char *name __attribute__ ((unused)),
-    union olsr_ip_addr *target __attribute__ ((unused)),
+struct olsr_iptunnel_entry *olsr_os_add_ipip_tunnel(union olsr_ip_addr *target __attribute__ ((unused)),
     bool transportV4 __attribute__ ((unused))) {
-  return -1;
+  return NULL;
 }
 
-int olsr_os_change_ipip_tunnel(const char *name __attribute__ ((unused)),
-    union olsr_ip_addr *target __attribute__ ((unused)),
-    bool transportV4 __attribute__ ((unused))) {
-  return -1;
-}
-
-int olsr_os_del_ipip_tunnel(const char *name __attribute__ ((unused)),
-    bool transportV4 __attribute__ ((unused))) {
-  return -1;
+void olsr_os_del_ipip_tunnel(struct olsr_iptunnel_entry *t __attribute__ ((unused))) {
+  return;
 }
 
 bool olsr_if_isup(const char * dev __attribute__ ((unused))) {

@@ -547,6 +547,9 @@ ipc_print_mid(struct autobuf *abuf)
 static void
 ipc_print_gateway(struct autobuf *abuf)
 {
+#ifndef linux
+  abuf_puts(abuf, "Gateway mode is only supported in linux\n");
+#else
   static const char IPV4[] = "ipv4";
   static const char IPV4_NAT[] = "ipv4(n)";
   static const char IPV6[] = "ipv6";
@@ -596,6 +599,7 @@ ipc_print_gateway(struct autobuf *abuf)
         gw->uplink, gw->downlink, v4type, v6type,
         gw->external_prefix.prefix_len == 0 ? NONE : olsr_ip_prefix_to_string(&gw->external_prefix));
   } OLSR_FOR_ALL_GATEWAY_ENTRIES_END(gw)
+#endif
 }
 
 static void

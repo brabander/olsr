@@ -286,7 +286,7 @@ olsr_delete_tc_entry(struct tc_entry *tc)
 #endif
 
   /* delete gateway if available */
-#ifndef WIN32
+#ifdef LINUX_NETLINK_ROUTING
   olsr_delete_gateway_entry(&tc->addr, FORCE_DELETE_GW_ENTRY);
 #endif
   /*
