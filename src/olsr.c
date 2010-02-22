@@ -337,7 +337,7 @@ olsr_forward_message(union olsr_message *m, struct interface *in_if, union olsr_
   struct neighbor_entry *neighbor;
   int msgsize;
   struct interface *ifn;
-
+  bool is_ttl_1 = false;
 
   /*
    * Sven-Ola: We should not flood the mesh with overdue messages. Because
@@ -346,10 +346,10 @@ olsr_forward_message(union olsr_message *m, struct interface *in_if, union olsr_
    */
   if (AF_INET == olsr_cnf->ip_version) {
     if (m->v4.ttl < 2 || 255 < (int)m->v4.hopcnt + (int)m->v4.ttl)
-      return 0;
+      is_ttl_1 = true;
   } else {
     if (m->v6.ttl < 2 || 255 < (int)m->v6.hopcnt + (int)m->v6.ttl)
-      return 0;
+      is_ttl_1 = true;
   }
 
   /* Lookup sender address */
@@ -377,15 +377,17 @@ olsr_forward_message(union olsr_message *m, struct interface *in_if, union olsr_
     return 0;
   }
 
-  /* Treat TTL hopcnt */
-  if (olsr_cnf->ip_version == AF_INET) {
-    /* IPv4 */
-    m->v4.hopcnt++;
-    m->v4.ttl--;
-  } else {
-    /* IPv6 */
-    m->v6.hopcnt++;
-    m->v6.ttl--;
+  /* Treat TTL hopcnt except for ethernet link */
+  if (!is_ttl_1) {
+    if (olsr_cnf->ip_version == AF_INET) {
+      /* IPv4 */
+      m->v4.hopcnt++;
+      m->v4.ttl--;
+    } else {
+      /* IPv6 */
+      m->v6.hopcnt++;
+      m->v6.ttl--;
+    }
   }
 
   /* Update packet data */
@@ -393,11 +395,13 @@ olsr_forward_message(union olsr_message *m, struct interface *in_if, union olsr_
 
   /* looping trough interfaces */
   for (ifn = ifnet; ifn; ifn = ifn->int_next) {
+    /* do not retransmit out through the same interface if it has mode == ether */
+    if (ifn == in_if && ifn->mode == IF_MODE_ETHER) continue;
+
+    /* do not forward TTL 1 messages to non-ether interfaces */
+    if (is_ttl_1 && ifn->mode != IF_MODE_ETHER) continue;
+
     if (net_output_pending(ifn)) {
-
-      /* dont forward to incoming interface if interface is mode ether */
-      if (in_if->mode == IF_MODE_ETHER && ifn == in_if) continue;
-
       /*
        * Check if message is to big to be piggybacked
        */
