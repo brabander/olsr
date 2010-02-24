@@ -195,7 +195,7 @@
 
 # The fixed willingness to use (0-7)
 # If not set willingness will be calculated
-# dynammically based on battery/power status
+# dynamically based on battery/power status
 # (default is 3)
 
 # Willingness     3
