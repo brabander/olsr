@@ -987,8 +987,7 @@ atos: TOK_TOS TOK_INTEGER
 aolsrport: TOK_OLSRPORT TOK_INTEGER
 {
   PARSER_DEBUG_PRINTF("OlsrPort: %d\n", $2->integer);
-  if ($2->integer>=1000) olsr_cnf->olsrport = $2->integer;
-  else olsr_cnf->olsrport = DEF_OLSRPORT;
+  olsr_cnf->olsrport = $2->integer;
   free($2);
 }
 ;
@@ -1242,6 +1241,9 @@ bsmart_gw_allow_nat: TOK_SMART_GW_ALLOW_NAT TOK_BOOLEAN
 ssmart_gw_uplink: TOK_SMART_GW_UPLINK TOK_STRING
 {
 	PARSER_DEBUG_PRINTF("Smart gateway uplink: %s\n", $2->string);
+	if (strcasecmp($2->string, GW_UPLINK_TXT[GW_UPLINK_NONE]) == 0) {
+		olsr_cnf->smart_gw_type = GW_UPLINK_NONE;
+	}
 	if (strcasecmp($2->string, GW_UPLINK_TXT[GW_UPLINK_IPV4]) == 0) {
 		olsr_cnf->smart_gw_type = GW_UPLINK_IPV4;
 	}

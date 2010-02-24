@@ -65,6 +65,7 @@ extern int yyparse(void);
 static char interface_defaults_name[] = "[InterfaceDefaults]";
 
 const char *GW_UPLINK_TXT[] = {
+  "none",
   "ipv4",
   "ipv6",
   "both"
@@ -273,8 +274,7 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
   }
 
   /* TOS */
-  if (                          //cnf->tos < MIN_TOS ||
-       cnf->tos > MAX_TOS) {
+  if (cnf->tos > MAX_TOS) {
     fprintf(stderr, "TOS %d is not allowed\n", cnf->tos);
     return -1;
   }
@@ -353,7 +353,7 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
   }
 
   /* Link quality level */
-  if (cnf->lq_level > MAX_LQ_LEVEL) {
+  if (cnf->lq_level != 0 && cnf->lq_level != 2) {
     fprintf(stderr, "LQ level %d is not allowed\n", cnf->lq_level);
     return -1;
   }
@@ -614,7 +614,7 @@ set_default_cnf(struct olsrd_config *cnf)
   cnf->allow_no_interfaces = DEF_ALLOW_NO_INTS;
   cnf->tos = DEF_TOS;
   cnf->olsrport = DEF_OLSRPORT;
-  cnf->rt_policy = true;
+  cnf->rt_policy = DEF_RTPOLICY;
   cnf->rt_proto = DEF_RTPROTO;
   cnf->rt_table = DEF_RTTABLE;
   cnf->rt_table_default = DEF_RTTABLE_DEFAULT;
@@ -655,7 +655,7 @@ set_default_cnf(struct olsrd_config *cnf)
 
   cnf->smart_gw_active = DEF_SMART_GW;
   cnf->smart_gw_allow_nat = DEF_GW_ALLOW_NAT;
-  cnf->smart_gw_type = GW_UPLINK_IPV4;
+  cnf->smart_gw_type = DEF_GW_TYPE;
   cnf->smart_gw_uplink = DEF_UPLINK_SPEED;
   cnf->smart_gw_uplink_nat = DEF_GW_UPLINK_NAT;
   cnf->smart_gw_downlink = DEF_DOWNLINK_SPEED;

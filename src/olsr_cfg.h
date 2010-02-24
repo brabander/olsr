@@ -51,7 +51,7 @@
 #define SYSLOG_NUMBERING 0
 
 /* Default values not declared in olsr_protocol.h */
-#define DEF_POLLRATE         0.1
+#define DEF_POLLRATE         0.05
 #define DEF_NICCHGPOLLRT     2.5
 #define DEF_WILL_AUTO        false
 #define DEF_WILLINGNESS      3
@@ -65,19 +65,21 @@
 #define DEF_LQ_FISH          1
 #define DEF_LQ_DIJK_LIMIT    255
 #define DEF_LQ_DIJK_INTER    0.0
-#define DEF_LQ_NAT_THRESH    0.5
-#define DEF_LQ_AGING         0.1
+#define DEF_LQ_NAT_THRESH    1.0
+#define DEF_LQ_AGING         0.05
 #define DEF_CLEAR_SCREEN     true
 #define DEF_OLSRPORT         698
+#define DEF_RTPOLICY         true
 #define DEF_RTPROTO          0 /* 0 means OS-specific default */
 #define DEF_RTTABLE          254
-#define DEF_RTTABLE_DEFAULT  111
-#define DEF_RTTABLE_TUNNEL   112
+#define DEF_RTTABLE_DEFAULT  112
+#define DEF_RTTABLE_TUNNEL   113
 #define DEF_RTTABLE          254
 #define DEF_MIN_TC_VTIME     0.0
 #define DEF_USE_NIIT         true
 #define DEF_SMART_GW         false
 #define DEF_GW_ALLOW_NAT     true
+#define DEF_GW_TYPE          GW_UPLINK_IPV46
 #define DEF_GW_UPLINK_NAT    true
 #define DEF_UPLINK_SPEED     128
 #define DEF_DOWNLINK_SPEED   1024
@@ -123,6 +125,7 @@
 #include "interfaces.h"
 
 enum smart_gw_uplinktype {
+  GW_UPLINK_NONE,
   GW_UPLINK_IPV4,
   GW_UPLINK_IPV6,
   GW_UPLINK_IPV46,
