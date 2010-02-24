@@ -303,7 +303,7 @@ olsr_expire_spf_backoff(void *context __attribute__ ((unused)))
 }
 
 void
-olsr_calculate_routing_table(void)
+olsr_calculate_routing_table(bool force)
 {
 #ifdef SPF_PROFILING
   struct timeval t1, t2, t3, t4, t5, spf_init, spf_run, route, kernel, total;
@@ -319,10 +319,13 @@ olsr_calculate_routing_table(void)
   int path_count = 0;
 
   /* We are done if our backoff timer is running */
-  if (!spf_backoff_timer) {
+  if (!force) {
+    if (spf_backoff_timer) {
+      return;
+    }
+
+    /* start new backoff timer */
     spf_backoff_timer = olsr_start_timer(1000, 5, OLSR_TIMER_ONESHOT, &olsr_expire_spf_backoff, NULL, 0);
-  } else {
-    return;
   }
 
 #ifdef SPF_PROFILING

@@ -210,7 +210,7 @@ olsr_process_changes(void)
 
   /* calculate the routing table */
   if (changes_neighborhood || changes_topology || changes_hna) {
-    olsr_calculate_routing_table();
+    olsr_calculate_routing_table(false);
   }
 
   if (olsr_cnf->debug_level > 0) {

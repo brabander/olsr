@@ -439,6 +439,19 @@ olsr_update_kernel_routes(void)
 #endif
 }
 
+void
+olsr_force_kernelroutes_refresh(void) {
+  struct rt_entry *rt;
+
+  /* enqueue all existing routes for a rewrite */
+  OLSR_FOR_ALL_RT_ENTRIES(rt) {
+    olsr_enqueue_rt(&chg_kernel_list, rt);
+  } OLSR_FOR_ALL_RT_ENTRIES_END(rt)
+
+  /* trigger kernel route refresh */
+  olsr_chg_kernel_routes(&chg_kernel_list);
+}
+
 /*
  * Local Variables:
  * c-basic-offset: 2

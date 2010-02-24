@@ -407,6 +407,7 @@ add_hemu_if(struct olsr_if *iface)
   memset(&null_addr, 0, olsr_cnf->ipsize);
   if (ipequal(&null_addr, &olsr_cnf->main_addr)) {
     olsr_cnf->main_addr = iface->hemu_ip;
+    olsr_cnf->unicast_src_ip = iface->hemu_ip;
     OLSR_PRINTF(1, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
     olsr_syslog(OLSR_LOG_INFO, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
   }
@@ -803,6 +804,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__ ((unused)))
   if (ipequal(&null_addr, &olsr_cnf->main_addr)) {
     struct ipaddr_str buf;
     olsr_cnf->main_addr = ifp->ip_addr;
+    olsr_cnf->unicast_src_ip = ifp->ip_addr;
     OLSR_PRINTF(1, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
     olsr_syslog(OLSR_LOG_INFO, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
   }

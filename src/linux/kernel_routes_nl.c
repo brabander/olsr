@@ -510,7 +510,7 @@ static int olsr_os_process_rt_entry(int af_family, const struct rt_entry *rt, bo
 
   /* get src ip */
   if (olsr_cnf->use_src_ip_routes) {
-    src = &olsr_cnf->main_addr;
+    src = &olsr_cnf->unicast_src_ip;
   }
   else {
     src = NULL;

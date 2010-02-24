@@ -257,7 +257,7 @@ struct olsrd_config {
   struct olsr_ip_prefix smart_gw_prefix;
 
   /* Main address of this node */
-  union olsr_ip_addr main_addr;
+  union olsr_ip_addr main_addr, unicast_src_ip;
   bool use_src_ip_routes;
 
   /* Stuff set by olsrd */
