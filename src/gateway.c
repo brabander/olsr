@@ -154,6 +154,29 @@ olsr_trigger_inetgw_selection(bool ipv4, bool ipv6) {
 }
 
 /**
+ * Triggers a check if the one of the gateways have been lost
+ * through ETX = infinity
+ */
+void olsr_trigger_gatewayloss_check(void) {
+  struct tc_entry *tc;
+  bool ipv4 = false, ipv6 = false;
+  if (current_ipv4_gw) {
+    tc = olsr_lookup_tc_entry(&current_ipv4_gw->originator);
+    if (tc == NULL || tc->path_cost == ROUTE_COST_BROKEN) {
+      ipv4 = true;
+    }
+  }
+  if (current_ipv6_gw) {
+    tc = olsr_lookup_tc_entry(&current_ipv6_gw->originator);
+    if (tc == NULL || tc->path_cost == ROUTE_COST_BROKEN) {
+      ipv6 = true;
+    }
+  }
+  if (ipv4 || ipv6) {
+    olsr_trigger_inetgw_selection(ipv4, ipv6);
+  }
+}
+/**
  * Set a new gateway handler. Do only call this once during startup from
  * a plugin to overwrite the default handler.
  * @param h pointer to gateway handler struct

@@ -11,6 +11,7 @@
 #include "scheduler.h"
 #include "tc_set.h"
 #include "log.h"
+#include "lq_plugin.h"
 
 #include "assert.h"
 
@@ -43,8 +44,8 @@ static void gw_default_choose_gateway(void) {
   struct gateway_entry *gw;
   bool dual;
 
-  cost_ipv4 = UINT32_MAX;
-  cost_ipv6 = UINT32_MAX;
+  cost_ipv4 = ROUTE_COST_BROKEN;
+  cost_ipv6 = ROUTE_COST_BROKEN;
 
   inet_ipv4 = NULL;
   inet_ipv6 = NULL;

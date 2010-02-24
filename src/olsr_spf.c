@@ -66,6 +66,7 @@
 #include "olsr_spf.h"
 #include "net_olsr.h"
 #include "lq_plugin.h"
+#include "gateway.h"
 
 struct timer_entry *spf_backoff_timer = NULL;
 
@@ -483,6 +484,9 @@ olsr_calculate_routing_table(void)
       }
     }
   }
+
+  /* check gateway tunnels */
+  olsr_trigger_gatewayloss_check();
 
   /* Update the RIB based on the new SPF results */
 
