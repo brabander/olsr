@@ -155,7 +155,7 @@ Hna6
 # 2 = use link quality for MPR selection and routing
 # (default is 2)
 
-# LinkQualityLevel 0
+LinkQualityLevel 0
 
 # Fisheye mechanism for TCs (0 meansoff, 1 means on)
 # (default is 1)
