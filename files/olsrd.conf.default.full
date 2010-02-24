@@ -114,7 +114,6 @@
 # RtTable is for host routes, RtTableDefault for the route to the default
 # internet gateway (2 in case of IPv6+NIIT) and RtTableTunnel is for
 # routes to the ipip tunnels, valid values are 1 to 254
-# (freifunkfirmware currently uses 111/111/111 for its policy routing)
 # (default is 254/112/113, the first is the "main" table in linux)
 
 # RtTable 254
@@ -134,7 +133,8 @@
 # RtTableTunnelPriority 32786
 # RtTableDefaultPriority 32796
 
-# Activates the automatic use of NIIT (see README_NIIT_SMARTGW)
+# Activates (in IPv6 mode) the automatic use of NIIT
+# (see README_NIIT_SMARTGW)
 # (default is "yes")
 
 # UseNiit "yes"
@@ -188,7 +188,8 @@
 
 # OlsrPort 698
 
-# Sets the main IP (originator ip) of the router
+# Sets the main IP (originator ip) of the router. This IP will NEVER
+# change during the uptime of olsrd.
 # (default is 0.0.0.0, which triggers usage of the IP of the first interface)
 
 # MainIp 10.0.0.1

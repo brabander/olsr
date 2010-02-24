@@ -76,7 +76,8 @@
 
 # RtPolicy "yes"
 
-# Activates the automatic use of NIIT (see README_NIIT_SMARTGW)
+# Activates (in IPv6 mode) the automatic use of NIIT
+# (see README_NIIT_SMARTGW)
 # (default is "yes")
 
 # UseNiit "yes"

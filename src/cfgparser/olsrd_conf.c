@@ -370,6 +370,11 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
     return -1;
   }
 
+  if (cnf->smart_gw_active && cnf->lq_nat_thresh < 1.0) {
+    fprintf(stderr, "Don't use Nat threshold together with smart gateway mode.\n");
+    return -1;
+  }
+
 #ifdef linux
   /* calculate rt_policy defaults if necessary */
   if (!cnf->rt_policy) {
