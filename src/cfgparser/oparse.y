@@ -206,8 +206,6 @@ static int add_ipv6_addr(YYSTYPE ipaddr_arg, YYSTYPE prefixlen_arg)
 %token TOK_MPRCOVERAGE
 %token TOK_LQ_LEVEL
 %token TOK_LQ_FISH
-%token TOK_LQ_DLIMIT
-%token TOK_LQ_WSIZE
 %token TOK_LQ_AGING
 %token TOK_LQ_PLUGIN
 %token TOK_LQ_NAT_THRESH
@@ -287,9 +285,7 @@ stmt:       idebug
           | alq_level
           | alq_plugin
           | alq_fish
-          | alq_dlimit
           | anat_thresh
-          | alq_wsize
           | alq_aging
           | bclear_screen
           | vcomment
@@ -1148,21 +1144,6 @@ alq_fish: TOK_LQ_FISH TOK_INTEGER
 {
   PARSER_DEBUG_PRINTF("Link quality fish eye %d\n", $2->integer);
   olsr_cnf->lq_fish = $2->integer;
-  free($2);
-}
-;
-
-alq_dlimit: TOK_LQ_DLIMIT TOK_INTEGER TOK_FLOAT
-{
-  PARSER_DEBUG_PRINTF("Link quality dijkstra limit %d, %0.2f\n", $2->integer, $3->floating);
-  olsr_cnf->lq_dlimit = $2->integer;
-  olsr_cnf->lq_dinter = $3->floating;
-  free($2);
-}
-;
-
-alq_wsize: TOK_LQ_WSIZE TOK_INTEGER
-{
   free($2);
 }
 ;

@@ -63,8 +63,6 @@
 #define DEF_FIB_METRIC       FIBM_FLAT
 #define DEF_LQ_LEVEL         2
 #define DEF_LQ_FISH          1
-#define DEF_LQ_DIJK_LIMIT    255
-#define DEF_LQ_DIJK_INTER    0.0
 #define DEF_LQ_NAT_THRESH    1.0
 #define DEF_LQ_AGING         0.05
 #define DEF_CLEAR_SCREEN     true
@@ -241,10 +239,8 @@ struct olsrd_config {
   uint8_t mpr_coverage;
   uint8_t lq_level;
   uint8_t lq_fish;
-  float lq_dinter;
   float lq_aging;
   char *lq_algorithm;
-  uint8_t lq_dlimit;
 
   float min_tc_vtime;
 

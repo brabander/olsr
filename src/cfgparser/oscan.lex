@@ -413,11 +413,6 @@ IPV6ADDR {IPV6PAT1}|{IPV6PAT2}|{IPV6PAT3}|{IPV6PAT4}|{IPV6PAT5}|{IPV6PAT6}|{IPV6
     return TOK_LQ_FISH;
 }
 
-"LinkQualityDijkstraLimit" {
-    yylval = NULL;
-    return TOK_LQ_DLIMIT;
-}
-
 "LinkQualityAging" {
     yylval = NULL;
     return TOK_LQ_AGING;
@@ -426,11 +421,6 @@ IPV6ADDR {IPV6PAT1}|{IPV6PAT2}|{IPV6PAT3}|{IPV6PAT4}|{IPV6PAT5}|{IPV6PAT6}|{IPV6
 "LinkQualityAlgorithm" {
     yylval = NULL;
     return TOK_LQ_PLUGIN;
-}
-
-"LinkQualityWinSize" {
-    yylval = NULL;
-    return TOK_LQ_WSIZE;
 }
 
 "NatThreshold" {

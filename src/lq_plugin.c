@@ -476,13 +476,8 @@ olsr_malloc_link_entry(const char *id)
  * @param newcost new cost of this link
  */
 void olsr_relevant_linkcost_change(void) {
-  if (olsr_cnf->lq_dlimit > 0) {
-    changes_neighborhood = true;
-    changes_topology = true;
-  }
-  else {
-    OLSR_PRINTF(3, "Skipping Dijkstra (1)\n");
-  }
+  changes_neighborhood = true;
+  changes_topology = true;
 
   /* XXX - we should check whether we actually announce this neighbour */
   signal_link_changes(true);

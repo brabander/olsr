@@ -313,16 +313,6 @@ Hna6
 
 # NatThreshold  1.0
 
-# LinkQualityDijkstraLimit is a special command for small embedded
-# devices to prevent triggering the dijkstra too often. Even without
-# this parameter OLSRd only triggers one dijkstra per second.
-# The first parameter is the time between two dijkstra runs in seconds.
-# The second parameter is a hopcount. Each TC from a node within the
-# specified distance can trigger a dijkstra directly.
-# We suggest NOT using this parameter.
-
-# LinkQualityDijkstraLimit 3.0 3
-
 #############################################################
 ### Configuration of the IPC to the windows GUI interface ###
 #############################################################

@@ -308,14 +308,7 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
     }
   }
 
-  /* Check Link quality dijkstra limit */
-  if (olsr_cnf->lq_dinter < cnf->pollrate && olsr_cnf->lq_dlimit != 255) {
-    fprintf(stderr, "Link quality dijkstra limit must be higher than pollrate\n");
-    return -1;
-  }
-
   /* Pollrate */
-
   if (cnf->pollrate < MIN_POLLRATE || cnf->pollrate > MAX_POLLRATE) {
     fprintf(stderr, "Pollrate %0.2f is not allowed\n", cnf->pollrate);
     return -1;
@@ -641,8 +634,6 @@ set_default_cnf(struct olsrd_config *cnf)
   cnf->mpr_coverage = MPR_COVERAGE;
   cnf->lq_level = DEF_LQ_LEVEL;
   cnf->lq_fish = DEF_LQ_FISH;
-  cnf->lq_dlimit = DEF_LQ_DIJK_LIMIT;
-  cnf->lq_dinter = DEF_LQ_DIJK_INTER;
   cnf->lq_aging = DEF_LQ_AGING;
   cnf->lq_algorithm = NULL;
   cnf->lq_nat_thresh = DEF_LQ_NAT_THRESH;
@@ -762,8 +753,6 @@ olsrd_print_cnf(struct olsrd_config *cnf)
   printf("LQ level         : %d\n", cnf->lq_level);
 
   printf("LQ fish eye      : %d\n", cnf->lq_fish);
-
-  printf("LQ Dijkstra limit: %d, %0.2f\n", cnf->lq_dlimit, cnf->lq_dinter);
 
   printf("LQ aging factor  : %f\n", cnf->lq_aging);
 

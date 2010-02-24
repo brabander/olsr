@@ -668,9 +668,7 @@ olsr_tc_update_edge(struct tc_entry *tc, uint16_t ansn, const unsigned char **cu
      * Update the etx.
      */
     if (olsr_calc_tc_edge_entry_etx(tc_edge)) {
-      if (tc->msg_hops <= olsr_cnf->lq_dlimit) {
-        edge_change = 1;
-      }
+      edge_change = 1;
     }
 #if DEBUG
     if (edge_change) {

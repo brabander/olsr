@@ -189,9 +189,6 @@ olsr_process_changes(void)
     OLSR_PRINTF(3, "CHANGES IN HNA\n");
 #endif
 
-  if (!changes_force && 2 <= olsr_cnf->lq_level && 0 >= olsr_cnf->lq_dlimit)
-    return;
-
   if (!changes_neighborhood && !changes_topology && !changes_hna)
     return;
 
@@ -241,21 +238,6 @@ olsr_process_changes(void)
   changes_topology = false;
   changes_hna = false;
   changes_force = false;
-}
-
-/*
- * Callback for the periodic route calculation.
- */
-void
-olsr_trigger_forced_update(void *unused __attribute__ ((unused)))
-{
-
-  changes_force = true;
-  changes_neighborhood = true;
-  changes_topology = true;
-  changes_hna = true;
-
-  olsr_process_changes();
 }
 
 /**
@@ -313,12 +295,6 @@ olsr_init_tables(void)
 #ifndef NO_DUPLICATE_DETECTION_HANDLER
   olsr_duplicate_handler_init();
 #endif
-
-  /* Start periodic SPF and RIB recalculation */
-  if (olsr_cnf->lq_dinter > 0.0) {
-    olsr_start_timer((unsigned int)(olsr_cnf->lq_dinter * MSEC_PER_SEC), 5, OLSR_TIMER_PERIODIC, &olsr_trigger_forced_update, NULL,
-                     0);
-  }
 }
 
 /**
