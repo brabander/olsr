@@ -311,6 +311,7 @@ zebra_send_command(unsigned char command, unsigned char *options, int optlen)
     if (ret < 0) {
       if ((errno == EINTR) || (errno == EAGAIN)) {
         errno = 0;
+        ret = 0;
         continue;
       } else {
         olsr_printf(1, "(QUAGGA) Disconnected from zebra\n");
