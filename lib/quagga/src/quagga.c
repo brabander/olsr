@@ -602,6 +602,7 @@ static int
 parse_ipv4_route(unsigned char *opt, size_t len, struct ipv4_route *r)
 {
   int c;
+  size_t size;
 
   if (len < 4)
     return -1;
@@ -616,8 +617,10 @@ parse_ipv4_route(unsigned char *opt, size_t len, struct ipv4_route *r)
   if ((int)len < r->prefixlen / 8 + (r->prefixlen % 8 ? 1 : 0))
     return -1;
 
-  memcpy(&r->prefix, opt, r->prefixlen / 8 + (r->prefixlen % 8 ? 1 : 0));
-  opt += r->prefixlen / 8 + (r->prefixlen % 8 ? 1 : 0);
+  size = r->prefixlen/8 + (r->prefixlen % 8 ? 1 : 0);
+  memcpy (&r->prefix, opt, size);
+  opt += size;
+  len -= size;
 
   if (r->message & ZAPI_MESSAGE_NEXTHOP) {
     if (len < 1)
@@ -629,10 +632,12 @@ parse_ipv4_route(unsigned char *opt, size_t len, struct ipv4_route *r)
     r->nexthops =
       olsr_malloc((sizeof r->nexthops->type + sizeof r->nexthops->payload) * r->nh_count, "quagga: parse_ipv4_route_add");
     for (c = 0; c < r->nh_count; c++) {
-      r->nexthops[c].type = *opt++;
+// Quagga Bug! nexthop type is NOT sent by zebra
+//      r->nexthops[c].type = *opt++;
+//      len--;
       memcpy(&r->nexthops[c].payload.v4, opt, sizeof(uint32_t));
       opt += sizeof(uint32_t);
-      len -= sizeof(uint32_t) + 1;
+      len -= sizeof(uint32_t);
     }
   }
 
@@ -640,6 +645,7 @@ parse_ipv4_route(unsigned char *opt, size_t len, struct ipv4_route *r)
     if (len < 1)
       return -1;
     r->ind_num = *opt++;
+    len--;
     if (len < sizeof(uint32_t) * r->ind_num)
       return -1;
     r->index = olsr_malloc(sizeof(uint32_t) * r->ind_num, "quagga: parse_ipv4_route_add");
