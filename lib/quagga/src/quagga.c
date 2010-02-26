@@ -309,7 +309,7 @@ zebra_send_command(unsigned char command, unsigned char *options, int optlen)
   do {
     ret = write(zebra.sock, p, length);
     if (ret < 0) {
-      if (errno == EINTR) {
+      if ((errno == EINTR) || (errno == EAGAIN)) {
         errno = 0;
         continue;
       } else {
