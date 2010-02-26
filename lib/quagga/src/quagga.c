@@ -469,7 +469,7 @@ try_read(ssize_t * len)
       bsize += BUFSIZE;
       buf = my_realloc(buf, bsize, "Zebra try_read");
     }
-    ret = read(zebra.sock, buf + l, bsize - l);
+    ret = read (zebra.sock, buf + *len, bsize - *len);
     if (!ret) {                 // nothing more to read, packet is broken, discard!
       free(buf);
       return NULL;
@@ -485,19 +485,15 @@ try_read(ssize_t * len)
     }
 
     *len += ret;
-    while ((*len - l) > length) {
-      l += length;
+    do {
       memcpy(&length, buf + l, 2);
       length = ntohs(length);
-    }
-    if (((*len) - l) == length)
-      break;                    // GOT FULL PACKAGE!!
-    if (*len < l) {
+      l += length;
+    } while (*len > l);
+    if (*len < l)
       fcntl(zebra.sock, F_SETFL, sockstate);
-      continue;
-    }
   }
-  while (1);
+  while (*len != l); // GOT FULL PACKAGE!!
 
   fcntl(zebra.sock, F_SETFL, sockstate);
   return buf;
