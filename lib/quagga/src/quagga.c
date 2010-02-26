@@ -46,7 +46,7 @@
 #define ZEBRA_MESSAGE_MAX		23
 
 #define ZEBRA_ROUTE_OLSR		11
-#define ZEBRA_ROUTE_MAX			12
+#define ZEBRA_ROUTE_MAX			13
 
 #define ZEBRA_FLAG_SELECTED		0x10
 
