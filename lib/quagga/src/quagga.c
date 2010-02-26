@@ -760,7 +760,7 @@ delete_hna4_route(struct ipv4_route r)
 
   net.v4.s_addr = r.prefix;
 
-  ip_prefix_list_remove(&olsr_cnf->hna_entries, &net, r.prefixlen) ? 0 : -1;
+  ip_prefix_list_remove(&olsr_cnf->hna_entries, &net, r.prefixlen);
   free_ipv4_route(r);
   return 0;
 
