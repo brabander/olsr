@@ -39,6 +39,8 @@
 #define ZEBRA_SOCKET "/var/run/quagga/zserv.api"
 #endif
 
+#define ZEBRA_MAX_PACKET_SIZ		4096
+
 #define ZEBRA_IPV4_ROUTE_ADD		7
 #define ZEBRA_IPV4_ROUTE_DELETE		8
 #define ZEBRA_REDISTRIBUTE_ADD		11
@@ -50,6 +52,7 @@
 
 #define ZEBRA_FLAG_SELECTED		0x10
 
+#define ZEBRA_NEXTHOP_IFINDEX		1
 #define ZEBRA_NEXTHOP_IPV4		3
 #define ZEBRA_NEXTHOP_IPV4_IFINDEX	4
 
@@ -74,6 +77,7 @@ static struct {
 } zebra;
 
 /* prototypes intern */
+#if 0
 static unsigned char *try_read(ssize_t *);
 static unsigned char *zebra_route_packet(struct ipv4_route r, ssize_t *);
 static int parse_interface_add(unsigned char *, size_t);
@@ -87,8 +91,10 @@ static int ipv4_route_add(unsigned char *, size_t);
 static int ipv4_route_delete(unsigned char *, size_t);
 static int parse_ipv6_route_add(unsigned char *, size_t);
 static void zebra_reconnect(void);
+#endif
 static void zebra_connect(void);
 
+#if 0
 static void free_ipv4_route(struct ipv4_route);
 
 /*
@@ -99,6 +105,7 @@ static struct ipv4_route *zebra_create_ipv4_route_table_entry (uint32_t,
 static struct ipv4_route *zebra_create_ipv4_route_table (void);
 static void zebra_free_ipv4_route_table (struct ipv4_route*);
 */
+#endif
 
 /*static uint8_t masktoprefixlen (uint32_t);*/
 
@@ -125,21 +132,26 @@ init_zebra(void)
 void
 zebra_cleanup(void)
 {
+#if 0
   int i;
+#endif
   struct rt_entry *tmp;
 
   if (zebra.options & OPTION_EXPORT) {
     OLSR_FOR_ALL_RT_ENTRIES(tmp) {
-      zebra_del_olsr_v4_route(tmp);
+      zebra_del_route(tmp);
     }
     OLSR_FOR_ALL_RT_ENTRIES_END(tmp);
   }
 
+#if 0
   for (i = 0; i < ZEBRA_ROUTE_MAX; i++)
     if (zebra.redistribute[i])
       zebra_disable_redistribute(i + 1);
+#endif
 }
 
+#if 0
 static void
 zebra_reconnect(void)
 {
@@ -152,7 +164,7 @@ zebra_reconnect(void)
 
   if (zebra.options & OPTION_EXPORT) {
     OLSR_FOR_ALL_RT_ENTRIES(tmp) {
-      zebra_add_olsr_v4_route(tmp);
+      zebra_add_route(tmp);
     }
     OLSR_FOR_ALL_RT_ENTRIES_END(tmp);
   }
@@ -163,6 +175,7 @@ zebra_reconnect(void)
   /* Zebra sends us all routes of type it knows after
      zebra_redistribute(type) */
 }
+#endif
 
 /* Connect to the zebra-daemon, returns a socket */
 static void
@@ -209,45 +222,23 @@ zebra_connect(void)
    the command defined in zebra.h, options is the packet-payload,
    optlen the length, of the payload */
 unsigned char
-zebra_send_command(unsigned char command, unsigned char *options, int optlen)
+zebra_send_command(unsigned char *options)
 {
 
-  char *p, *pnt;
+  unsigned char *pnt;
   uint16_t len;
   int ret;
-
-#ifdef ZEBRA_HEADER_MARKER
-  uint16_t cmd;
-  uint16_t length = optlen + 6;        /* length of option + command + packet_length +
-                                          marker + zserv-version */
-#else
-  uint16_t length = optlen + 3;        // length of option + command + packet_length
-#endif
 
   if (!(zebra.status & STATUS_CONNECTED))
     return 0;
 
-  p = olsr_malloc(length, "zebra_send_command");
-  pnt = p;
+  pnt = options;
+  memcpy(&len, pnt, 2);
 
-  len = htons(length);
-
-  memcpy(p, &len, 2);
-
-#ifdef ZEBRA_HEADER_MARKER
-  p[2] = ZEBRA_HEADER_MARKER;
-  p[3] = ZSERV_VERSION;
-  cmd = htons(command);
-  memcpy(p + 4, &cmd, 2);
-#else
-  p[2] = command;
-#endif
-  memcpy(p + length - optlen, options, optlen);
-
-  errno = 0;
+  len = ntohs(len);
 
   do {
-    ret = write(zebra.sock, p, length);
+    ret = write(zebra.sock, pnt, len);
     if (ret < 0) {
       if ((errno == EINTR) || (errno == EAGAIN)) {
         errno = 0;
@@ -256,80 +247,70 @@ zebra_send_command(unsigned char command, unsigned char *options, int optlen)
       } else {
         OLSR_PRINTF(1, "(QUAGGA) Disconnected from zebra\n");
         zebra.status &= ~STATUS_CONNECTED;
-        free(pnt);
+        free(options);
         return -1;
       }
     }
-    p = p + ret;
-  }
-  while ((length -= ret));
-  free(pnt);
+    pnt = pnt + ret;
+  } while ((len -= ret));
+  free(options);
   return 0;
 }
 
 /* Creates a Route-Packet-Payload, needs address, netmask, nexthop,
    distance, and a pointer of an size_t */
 static unsigned char *
-zebra_route_packet(struct ipv4_route r, ssize_t * optlen)
+zebra_route_packet(uint32_t cmd, struct ipv4_route r)
 {
 
   int count;
+  uint8_t len;
+  uint16_t size;
+  uint32_t ind, metric;
 
   unsigned char *cmdopt, *t;
-  *optlen = 4;                  // first: type, flags, message, prefixlen
-  *optlen += r.prefixlen / 8 + (r.prefixlen % 8 ? 1 : 0);       // + prefix
-  if (r.message & ZAPI_MESSAGE_NEXTHOP) {
-    if (r.nexthops->type == ZEBRA_NEXTHOP_IPV4 || r.nexthops->type == ZEBRA_NEXTHOP_IPV4_IFINDEX) {
-      *optlen += (sizeof r.nexthops->payload.v4 + sizeof r.nexthops->type) * r.nh_count + 1;
-    } else if (r.nexthops->type == 0)
-      *optlen += 5;
-  }
-  if (r.message & ZAPI_MESSAGE_IFINDEX)
-    *optlen += r.ind_num * sizeof *r.index + 1;
-  if (r.message & ZAPI_MESSAGE_DISTANCE)
-    (*optlen)++;
-  if (r.message & ZAPI_MESSAGE_METRIC)
-    *optlen += sizeof r.metric;
 
-  cmdopt = olsr_malloc(*optlen, "zebra add_v4_route");
+  cmdopt = olsr_malloc(ZEBRA_MAX_PACKET_SIZ, "zebra add_v4_route");
 
-  t = cmdopt;
+  t = &cmdopt[2];
+  *t++ = cmd;
   *t++ = r.type;
   *t++ = r.flags;
   *t++ = r.message;
   *t++ = r.prefixlen;
-  for (count = 0; count < r.prefixlen / 8 + (r.prefixlen % 8 ? 1 : 0); count++) {
-    *t++ = *((char *)&r.prefix + count);        /* this is so sick!! */
-  }
+  len = (r.prefixlen + 7) / 8;
+  memcpy(t, &r.prefix.v4.s_addr, len);
+  t = t + len;
 
   if (r.message & ZAPI_MESSAGE_NEXTHOP) {
-    *t++ = r.nh_count;
-    *t++ = r.nexthops->type;
-    if (r.nexthops->type == ZEBRA_NEXTHOP_IPV4 || r.nexthops->type == ZEBRA_NEXTHOP_IPV4_IFINDEX) {
-      for (count = 0; count != r.nh_count; count++) {
-        memcpy(t, &r.nexthops[count].payload.v4, sizeof r.nexthops->payload.v4);
-        t += sizeof r.nexthops->payload.v4;
+    *t++ = r.nh_count + r.ind_num;
+
+      for (count = 0; count < r.nh_count; count++) {
+        *t++ = ZEBRA_NEXTHOP_IPV4;
+        memcpy(t, &r.nexthop[count].v4.s_addr, sizeof r.nexthop[count].v4.s_addr);
+        t += sizeof r.nexthop[count].v4.s_addr;
       }
-    } else if (r.nexthops->type == 0) {
-      *t++ = 0;
-      *t++ = 0;
-      *t++ = 0;
-    }
+      for (count = 0; count < r.ind_num; count++) {
+        *t++ = ZEBRA_NEXTHOP_IFINDEX;
+        ind = htonl(r.index[count]);
+        memcpy(t, &ind, sizeof ind);
+        t += sizeof ind;
+      }
   }
-  if (r.message & ZAPI_MESSAGE_IFINDEX) {
-    *t++ = r.ind_num;
-    memcpy(t, r.index, sizeof *r.index * r.ind_num);
-    t += sizeof r.index * r.ind_num;
-  }
-  if (r.message & ZAPI_MESSAGE_DISTANCE)
+  if ((r.message & ZAPI_MESSAGE_DISTANCE) > 0)
     *t++ = r.distance;
-  if (r.message & ZAPI_MESSAGE_METRIC) {
-    memcpy(t, &r.metric, sizeof r.metric);
-    t += sizeof r.metric;
+  if ((r.message & ZAPI_MESSAGE_METRIC) > 0) {
+    metric = htonl(r.metric);
+    memcpy(t, &metric, sizeof metric);
+    t += sizeof metric;
   }
+  size = htons(t - cmdopt);
+  memcpy(cmdopt, &size, 2);
+
   return cmdopt;
 }
 
+#if 0
 /* adds a route to zebra-daemon */
 int
 zebra_add_v4_route(const struct ipv4_route r)
@@ -704,6 +685,7 @@ free_ipv4_route(struct ipv4_route r)
     free(r.nexthops);
 
 }
+#endif
 
 /*
 static uint8_t masktoprefixlen (uint32_t mask) {
@@ -720,78 +702,76 @@ static uint8_t masktoprefixlen (uint32_t mask) {
 */
 
 int
-zebra_add_olsr_v4_route(const struct rt_entry *r)
+zebra_add_route(const struct rt_entry *r)
 {
 
   struct ipv4_route route;
   int retval;
 
-  route.index = NULL;
   route.distance = 0;
-  route.type = ZEBRA_ROUTE_OLSR;        // OLSR
-  route.message = ZAPI_MESSAGE_METRIC;
+  route.type = ZEBRA_ROUTE_OLSR;
   route.flags = zebra.flags;
+  route.message = ZAPI_MESSAGE_NEXTHOP | ZAPI_MESSAGE_METRIC;
   route.prefixlen = r->rt_dst.prefix_len;
-  route.prefix = r->rt_dst.prefix.v4.s_addr;
-  if ((r->rt_best->rtp_nexthop.gateway.v4.s_addr == r->rt_dst.prefix.v4.s_addr && route.prefixlen == 32)) {
-    route.message |= ZAPI_MESSAGE_IFINDEX | ZAPI_MESSAGE_NEXTHOP;
-    route.ind_num = 1;
-    route.index = olsr_malloc(sizeof *route.index, "zebra_add_olsr_v4_route");
-    *route.index = htonl(r->rt_best->rtp_nexthop.iif_index);
-    route.nexthops = olsr_malloc(sizeof route.nexthops->type + sizeof route.nexthops->payload, "zebra_add_olsr_v4_route");
-    route.nh_count = 1;
-    route.nexthops->type = 0;
+  route.prefix.v4.s_addr = r->rt_dst.prefix.v4.s_addr;
+  route.ind_num = 0;
+  route.index = NULL;
+  route.nh_count = 0;
+  route.nexthop = NULL;
+
+  if (r->rt_best->rtp_nexthop.gateway.v4.s_addr == r->rt_dst.prefix.v4.s_addr && route.prefixlen == 32) {
+    return 0;			/* Quagga BUG workaround: don't add routes with destination = gateway
+				   see http://lists.olsr.org/pipermail/olsr-users/2006-June/001726.html */
+    route.ind_num++;
+    route.index = olsr_malloc(sizeof *route.index, "zebra_add_route");
+    *route.index = r->rt_best->rtp_nexthop.iif_index;
   } else {
-    route.message |= ZAPI_MESSAGE_NEXTHOP;
-    route.nh_count = 1;
-    route.nexthops =
-      olsr_malloc(route.nh_count * (sizeof route.nexthops->type + sizeof route.nexthops->payload), "zebra_add_olsr_v4_route");
-    route.nexthops->type = ZEBRA_NEXTHOP_IPV4;
-    route.nexthops->payload.v4 = r->rt_best->rtp_nexthop.gateway.v4.s_addr;
+    route.nh_count++;
+    route.nexthop = olsr_malloc(sizeof *route.nexthop, "zebra_add_route");
+    route.nexthop->v4.s_addr = r->rt_best->rtp_nexthop.gateway.v4.s_addr;
   }
 
   route.metric = r->rt_best->rtp_metric.hops;
-  route.metric = htonl(route.metric);
 
   if (zebra.distance) {
     route.message |= ZAPI_MESSAGE_DISTANCE;
     route.distance = zebra.distance;
   }
 
-  retval = zebra_add_v4_route(route);
-  free_ipv4_route(route);
+  retval = zebra_send_command(zebra_route_packet(ZEBRA_IPV4_ROUTE_ADD, route));
+
   return retval;
 }
 
 int
-zebra_del_olsr_v4_route(const struct rt_entry *r)
+zebra_del_route(const struct rt_entry *r)
 {
 
   struct ipv4_route route;
   int retval;
-  route.index = NULL;
   route.distance = 0;
-  route.type = ZEBRA_ROUTE_OLSR;        // OLSR
-  route.message = ZAPI_MESSAGE_METRIC;
+  route.type = ZEBRA_ROUTE_OLSR;
   route.flags = zebra.flags;
+  route.message = ZAPI_MESSAGE_NEXTHOP | ZAPI_MESSAGE_METRIC;
   route.prefixlen = r->rt_dst.prefix_len;
-  route.prefix = r->rt_dst.prefix.v4.s_addr;
-  if ((r->rt_nexthop.gateway.v4.s_addr == r->rt_dst.prefix.v4.s_addr && route.prefixlen == 32)) {
-    route.message |= ZAPI_MESSAGE_IFINDEX;
-    route.ind_num = 1;
-    route.index = olsr_malloc(sizeof *route.index, "zebra_add_olsr_v4_route");
-    *route.index = htonl(r->rt_nexthop.iif_index);
-    route.nexthops = olsr_malloc(sizeof route.nexthops->type + sizeof route.nexthops->payload, "zebra_add_olsr_v4_route");
-    route.nh_count = 1;
-    route.nexthops->type = 0;
+  route.prefix.v4.s_addr = r->rt_dst.prefix.v4.s_addr;
+  route.ind_num = 0;
+  route.index = NULL;
+  route.nh_count = 0;
+  route.nexthop = NULL;
+
+  if (r->rt_nexthop.gateway.v4.s_addr == r->rt_dst.prefix.v4.s_addr && route.prefixlen == 32) {
+    return 0;			/* Quagga BUG workaround: don't delete routes with destination = gateway
+				   see http://lists.olsr.org/pipermail/olsr-users/2006-June/001726.html */
+    route.ind_num++;
+    route.index = olsr_malloc(sizeof *route.index, "zebra_del_route");
+    *route.index = r->rt_nexthop.iif_index;
   } else {
-    route.message |= ZAPI_MESSAGE_NEXTHOP;
-    route.nh_count = 1;
-    route.nexthops =
-      olsr_malloc(route.nh_count * (sizeof route.nexthops->type + sizeof route.nexthops->payload), "zebra_add_olsr_v4_route");
-    route.nexthops->type = ZEBRA_NEXTHOP_IPV4;
-    route.nexthops->payload.v4 = r->rt_nexthop.gateway.v4.s_addr;
+    route.nh_count++;
+    route.nexthop = olsr_malloc(sizeof *route.nexthop, "zebra_del_route");
+    route.nexthop->v4.s_addr = r->rt_nexthop.gateway.v4.s_addr;
   }
+
   route.metric = 0;
 
   if (zebra.distance) {
@@ -799,9 +779,8 @@ zebra_del_olsr_v4_route(const struct rt_entry *r)
     route.distance = zebra.distance;
   }
 
-  retval = zebra_delete_v4_route(route);
+  retval = zebra_send_command(zebra_route_packet(ZEBRA_IPV4_ROUTE_DELETE, route));
 
-  free_ipv4_route(route);
   return retval;
 }
 

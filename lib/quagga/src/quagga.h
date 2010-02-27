@@ -35,28 +35,23 @@
 #endif
 
 struct ipv4_route {
-  uint8_t type;
-  uint8_t flags;
-  uint8_t message;
-  uint8_t prefixlen;
-  uint32_t prefix;
-  uint8_t nh_count;
-  struct {
-    uint8_t type;
-    union {
-      uint32_t v4;
-    } payload;
-  } *nexthops;
-  uint8_t ind_num;
+  unsigned char type;
+  unsigned char flags;
+  unsigned char message;
+  unsigned char prefixlen;
+  union olsr_ip_addr prefix;
+  unsigned char nh_count;
+  union olsr_ip_addr *nexthop;
+  unsigned char ind_num;
   uint32_t *index;
   uint32_t metric;
   uint8_t distance;
-  struct ipv4_route *next;
 };
 
 void init_zebra(void);
 void zebra_cleanup(void);
-unsigned char zebra_send_command(unsigned char, unsigned char *, int);
+unsigned char zebra_send_command(unsigned char *);
+#if 0
 int zebra_add_v4_route(const struct ipv4_route r);
 int zebra_delete_v4_route(const struct ipv4_route r);
 void zebra_check(void *);
@@ -65,9 +60,10 @@ int zebra_redistribute(unsigned char);
 int zebra_disable_redistribute(unsigned char);
 int add_hna4_route(struct ipv4_route);
 int delete_hna4_route(struct ipv4_route);
+#endif
 void *my_realloc(void *, size_t, const char *);
-int zebra_add_olsr_v4_route(const struct rt_entry *);
-int zebra_del_olsr_v4_route(const struct rt_entry *);
+int zebra_add_route(const struct rt_entry *);
+int zebra_del_route(const struct rt_entry *);
 void zebra_olsr_localpref(void);
 void zebra_olsr_distance(unsigned char);
 void zebra_export_routes(unsigned char);
