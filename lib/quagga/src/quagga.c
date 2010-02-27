@@ -15,10 +15,6 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifdef MY_DEBUG
-#include <stdio.h>
-#endif
-
 #define HAVE_SOCKLEN_T
 
 #include <stdint.h>
@@ -101,66 +97,6 @@ static void zebra_free_ipv4_route_table (struct ipv4_route*);
 */
 
 /*static uint8_t masktoprefixlen (uint32_t);*/
-
-#ifdef MY_DEBUG
-static void
-dump_ipv4_route(struct ipv4_route r, char *c)
-{
-  int i = 0, x = 0;
-
-  puts(c);
-  printf("type: %d\n", r.type);
-  puts("flags:");
-  printf("  Internal: %s\n", r.flags & ZEBRA_FLAG_INTERNAL ? "yes" : "no");
-  printf("  Selfroute %s\n", r.flags & ZEBRA_FLAG_SELFROUTE ? "yes" : "no");
-  printf("  Blackhole %s\n", r.flags & ZEBRA_FLAG_BLACKHOLE ? "yes" : "no");
-  printf("  IBGP: %s\n", r.flags & ZEBRA_FLAG_IBGP ? "yes" : "no");
-  printf("  Selected: %s\n", r.flags & ZEBRA_FLAG_SELECTED ? "yes" : "no");
-  printf("  Changed: %s\n", r.flags & ZEBRA_FLAG_CHANGED ? "yes" : "no");
-  printf("  static: %s\n", r.flags & ZEBRA_FLAG_STATIC ? "yes" : "no");
-  printf("  reject: %s\n", r.flags & ZEBRA_FLAG_REJECT ? "yes" : "no");
-  puts("message:");
-  printf("  nexthop: %s\n", r.message & ZAPI_MESSAGE_NEXTHOP ? "yes" : "no");
-  printf("  ifindex: %s\n", r.message & ZAPI_MESSAGE_IFINDEX ? "yes" : "no");
-  printf("  distance: %s\n", r.message & ZAPI_MESSAGE_DISTANCE ? "yes" : "no");
-  printf("  metric: %s\n", r.message & ZAPI_MESSAGE_METRIC ? "yes" : "no");
-  printf("Prefixlen: %d\n", r.prefixlen);
-  printf("Prefix: %d", (unsigned char)r.prefix);
-  c = (char *)&r.prefix;
-  while (++i < (r.prefixlen / 8 + (r.prefixlen % 8 ? 1 : 0)))
-    printf(".%d", (unsigned char)*(c + i));
-  while (i++ < 4)
-    printf(".0");
-  puts("");
-  i = 0;
-  if (r.message & ZAPI_MESSAGE_NEXTHOP) {
-    printf("nexthop-count: %d\n", r.nh_count);
-    while (i++ < r.nh_count) {
-      if (r.nexthops[i].type == ZEBRA_NEXTHOP_IPV4) {
-        c = (unsigned char *)&r.nexthops[i].payload.v4;
-        printf("Nexthop %d: %d", i, (unsigned char)*c);
-        while (++x < 4) {
-          printf(".%d", (unsigned char)c[x]);
-        }
-        puts("");
-      }
-    }
-    i = 0;
-  }
-  if (r.message & ZAPI_MESSAGE_IFINDEX) {
-
-    printf("index-number: %d\n", r.ind_num);
-    while (i++ < r.ind_num)
-      printf("Index: %d: %d\n", i, r.index[i]);
-    i = 0;
-    if (r.message & ZAPI_MESSAGE_DISTANCE)
-      printf("Distance: %d\n", r.distance);
-    if (r.message & ZAPI_MESSAGE_METRIC)
-      printf("Metric: %d\n", r.metric);
-    puts("\n");
-  }
-}
-#endif
 
 void *
 my_realloc(void *buf, size_t s, const char *c)
@@ -516,10 +452,6 @@ zebra_parse_packet(unsigned char *packet, ssize_t maxlen)
   uint16_t length;
   int ret;
 
-#ifdef MY_DEBUG
-  puts("DEBUG: zebra_parse_packet");
-#endif
-
   memcpy(&length, packet, 2);
   length = ntohs(length);
 
@@ -737,10 +669,6 @@ add_hna4_route(struct ipv4_route r)
 {
   union olsr_ip_addr net;
 
-#ifdef MY_DEBUG
-  dump_ipv4_route(r, "add_hna4_route");
-#endif
-
   net.v4.s_addr = r.prefix;
 
   ip_prefix_list_add(&olsr_cnf->hna_entries, &net, r.prefixlen);
@@ -753,10 +681,6 @@ delete_hna4_route(struct ipv4_route r)
 {
 
   union olsr_ip_addr net;
-
-#ifdef MY_DEBUG
-  dump_ipv4_route(r, "delete_hna4_route");
-#endif
 
   net.v4.s_addr = r.prefix;
 
