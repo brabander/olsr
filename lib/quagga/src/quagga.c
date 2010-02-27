@@ -254,7 +254,7 @@ zebra_send_command(unsigned char command, unsigned char *options, int optlen)
         ret = 0;
         continue;
       } else {
-        olsr_printf(1, "(QUAGGA) Disconnected from zebra\n");
+        OLSR_PRINTF(1, "(QUAGGA) Disconnected from zebra\n");
         zebra.status &= ~STATUS_CONNECTED;
         free(pnt);
         return -1;
@@ -418,7 +418,7 @@ try_read(ssize_t * len)
 
     if (ret < 0) {
       if (errno != EAGAIN) {    // oops - we got disconnected
-        olsr_printf(1, "(QUAGGA) Disconnected from zebra\n");
+        OLSR_PRINTF(1, "(QUAGGA) Disconnected from zebra\n");
         zebra.status &= ~STATUS_CONNECTED;
       }
       free(buf);
@@ -460,7 +460,7 @@ zebra_parse_packet(unsigned char *packet, ssize_t maxlen)
   length = ntohs(length);
 
   if (maxlen < length) {
-    olsr_printf(1, "(QUAGGA) maxlen = %lu, packet_length = %d\n", (unsigned long)maxlen, length);
+    OLSR_PRINTF(1, "(QUAGGA) maxlen = %lu, packet_length = %d\n", (unsigned long)maxlen, length);
     olsr_exit("(QUAGGA) programmer is an idiot", EXIT_FAILURE);
   }
 #ifdef ZEBRA_HEADER_MARKER
@@ -479,11 +479,11 @@ zebra_parse_packet(unsigned char *packet, ssize_t maxlen)
     if (!(ret = foo[command] (packet + skip, length - skip)))
       return length;
     else
-      olsr_printf(1, "(QUAGGA) Parse error: %d\n", ret);
+      OLSR_PRINTF(1, "(QUAGGA) Parse error: %d\n", ret);
   } else
-    olsr_printf(1, "(QUAGGA) Unknown packet type: %d\n", packet[2]);
+    OLSR_PRINTF(1, "(QUAGGA) Unknown packet type: %d\n", packet[2]);
 
-  olsr_printf(1, "(Quagga) RECIVED PACKET FROM ZEBRA THAT I CAN'T PARSE");
+  OLSR_PRINTF(1, "(Quagga) RECIVED PACKET FROM ZEBRA THAT I CAN'T PARSE");
 
   return length;
 }
