@@ -77,9 +77,9 @@ static struct {
 } zebra;
 
 /* prototypes intern */
+static unsigned char *zebra_route_packet(uint32_t, struct ipv4_route *);
 #if 0
 static unsigned char *try_read(ssize_t *);
-static unsigned char *zebra_route_packet(struct ipv4_route r, ssize_t *);
 static int parse_interface_add(unsigned char *, size_t);
 static int parse_interface_delete(unsigned char *, size_t);
 static int parse_interface_up(unsigned char *, size_t);
@@ -260,7 +260,7 @@ zebra_send_command(unsigned char *options)
 /* Creates a Route-Packet-Payload, needs address, netmask, nexthop,
    distance, and a pointer of an size_t */
 static unsigned char *
-zebra_route_packet(uint32_t cmd, struct ipv4_route r)
+zebra_route_packet(uint32_t cmd, struct ipv4_route *r)
 {
 
   int count;
@@ -274,33 +274,33 @@ zebra_route_packet(uint32_t cmd, struct ipv4_route r)
 
   t = &cmdopt[2];
   *t++ = cmd;
-  *t++ = r.type;
-  *t++ = r.flags;
-  *t++ = r.message;
-  *t++ = r.prefixlen;
-  len = (r.prefixlen + 7) / 8;
-  memcpy(t, &r.prefix.v4.s_addr, len);
+  *t++ = r->type;
+  *t++ = r->flags;
+  *t++ = r->message;
+  *t++ = r->prefixlen;
+  len = (r->prefixlen + 7) / 8;
+  memcpy(t, &r->prefix.v4.s_addr, len);
   t = t + len;
 
-  if (r.message & ZAPI_MESSAGE_NEXTHOP) {
-    *t++ = r.nh_count + r.ind_num;
+  if (r->message & ZAPI_MESSAGE_NEXTHOP) {
+    *t++ = r->nh_count + r->ind_num;
 
-      for (count = 0; count < r.nh_count; count++) {
+      for (count = 0; count < r->nh_count; count++) {
         *t++ = ZEBRA_NEXTHOP_IPV4;
-        memcpy(t, &r.nexthop[count].v4.s_addr, sizeof r.nexthop[count].v4.s_addr);
-        t += sizeof r.nexthop[count].v4.s_addr;
+        memcpy(t, &r->nexthop[count].v4.s_addr, sizeof r->nexthop[count].v4.s_addr);
+        t += sizeof r->nexthop[count].v4.s_addr;
       }
-      for (count = 0; count < r.ind_num; count++) {
+      for (count = 0; count < r->ind_num; count++) {
         *t++ = ZEBRA_NEXTHOP_IFINDEX;
-        ind = htonl(r.index[count]);
+        ind = htonl(r->index[count]);
         memcpy(t, &ind, sizeof ind);
         t += sizeof ind;
       }
   }
-  if ((r.message & ZAPI_MESSAGE_DISTANCE) > 0)
-    *t++ = r.distance;
-  if ((r.message & ZAPI_MESSAGE_METRIC) > 0) {
-    metric = htonl(r.metric);
+  if ((r->message & ZAPI_MESSAGE_DISTANCE) > 0)
+    *t++ = r->distance;
+  if ((r->message & ZAPI_MESSAGE_METRIC) > 0) {
+    metric = htonl(r->metric);
     memcpy(t, &metric, sizeof metric);
     t += sizeof metric;
   }
@@ -738,7 +738,7 @@ zebra_add_route(const struct rt_entry *r)
     route.distance = zebra.distance;
   }
 
-  retval = zebra_send_command(zebra_route_packet(ZEBRA_IPV4_ROUTE_ADD, route));
+  retval = zebra_send_command(zebra_route_packet(ZEBRA_IPV4_ROUTE_ADD, &route));
 
   return retval;
 }
@@ -779,7 +779,7 @@ zebra_del_route(const struct rt_entry *r)
     route.distance = zebra.distance;
   }
 
-  retval = zebra_send_command(zebra_route_packet(ZEBRA_IPV4_ROUTE_DELETE, route));
+  retval = zebra_send_command(zebra_route_packet(ZEBRA_IPV4_ROUTE_DELETE, &route));
 
   return retval;
 }
