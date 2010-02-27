@@ -41,8 +41,6 @@ static set_plugin_parameter set_exportroutes;
 static set_plugin_parameter set_distance;
 static set_plugin_parameter set_localpref;
 
-static export_route_function orig_addroute_function;
-static export_route_function orig_delroute_function;
 
 int
 olsrd_plugin_interface_version(void)
@@ -61,7 +59,7 @@ void
 olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size)
 {
   *params = plugin_parameters;
-  *size = sizeof plugin_parameters / sizeof *plugin_parameters;
+  *size = ARRAYSIZE(plugin_parameters);
 }
 
 static int
@@ -86,14 +84,10 @@ static int
 set_exportroutes(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused)))
 {
   if (!strcmp(value, "only")) {
-    orig_addroute_function = NULL;
-    orig_delroute_function = NULL;
     olsr_addroute_function = zebra_add_olsr_v4_route;
     olsr_delroute_function = zebra_del_olsr_v4_route;
     zebra_export_routes(1);
   } else if (!strcmp(value, "additional")) {
-    orig_addroute_function = olsr_addroute_function;
-    orig_delroute_function = olsr_delroute_function;
     olsr_addroute_function = zebra_add_olsr_v4_route;
     olsr_delroute_function = zebra_del_olsr_v4_route;
     zebra_export_routes(1);
