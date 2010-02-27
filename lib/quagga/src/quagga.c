@@ -17,18 +17,22 @@
 
 #define HAVE_SOCKLEN_T
 
-#include <stdint.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <fcntl.h>
-#include <unistd.h>
-
 #include "quagga.h"
 #include "olsr.h"
 #include "log.h"
 #include "defs.h"
 #include "routing_table.h"
+
+#include <stdint.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 #ifdef USE_UNIX_DOMAIN_SOCKET
 #include <sys/un.h>

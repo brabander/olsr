@@ -15,10 +15,11 @@
  *                                                                         *
  ***************************************************************************/
 
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include "routing_table.h"
+
+#include <stdint.h>
+#include <stdlib.h>
+
 #define HAVE_SOCKLEN_T
 
 #ifndef ZEBRA_PORT
