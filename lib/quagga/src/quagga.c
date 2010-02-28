@@ -35,35 +35,7 @@
 
 #ifdef USE_UNIX_DOMAIN_SOCKET
 #include <sys/un.h>
-#define ZEBRA_SOCKET "/var/run/quagga/zserv.api"
 #endif
-
-#define ZEBRA_MAX_PACKET_SIZ		4096
-
-#define ZEBRA_IPV4_ROUTE_ADD		7
-#define ZEBRA_IPV4_ROUTE_DELETE		8
-#define ZEBRA_REDISTRIBUTE_ADD		11
-#define ZEBRA_REDISTRIBUTE_DELETE	12
-#define ZEBRA_MESSAGE_MAX		23
-
-#define ZEBRA_ROUTE_OLSR		11
-#define ZEBRA_ROUTE_MAX			13
-
-#define ZEBRA_FLAG_SELECTED		0x10
-
-#define ZEBRA_NEXTHOP_IFINDEX		1
-#define ZEBRA_NEXTHOP_IPV4		3
-#define ZEBRA_NEXTHOP_IPV4_IFINDEX	4
-
-#define ZAPI_MESSAGE_NEXTHOP  0x01
-#define ZAPI_MESSAGE_IFINDEX  0x02
-#define ZAPI_MESSAGE_DISTANCE 0x04
-#define ZAPI_MESSAGE_METRIC   0x08
-
-#define BUFSIZE 1024
-
-#define STATUS_CONNECTED 1
-#define OPTION_EXPORT 1
 
 static struct {
   char status;                         // internal status

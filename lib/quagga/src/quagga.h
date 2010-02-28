@@ -23,10 +23,12 @@
 
 #define HAVE_SOCKLEN_T
 
+/* Zebra port */
 #ifndef ZEBRA_PORT
 #define ZEBRA_PORT 2600
 #endif
 
+/* Zebra version */
 #ifndef ZEBRA_HEADER_MARKER
 #define ZEBRA_HEADER_MARKER 255
 #endif
@@ -34,6 +36,44 @@
 #ifndef ZSERV_VERSION
 #define ZSERV_VERSION 1
 #endif
+
+/* Zebra socket */
+#define ZEBRA_SOCKET "/var/run/quagga/zserv.api"
+
+/* Zebra packet size */
+#define ZEBRA_MAX_PACKET_SIZ		4096
+
+/* Zebra message types */
+#define ZEBRA_IPV4_ROUTE_ADD		7
+#define ZEBRA_IPV4_ROUTE_DELETE		8
+#define ZEBRA_REDISTRIBUTE_ADD		11
+#define ZEBRA_REDISTRIBUTE_DELETE	12
+#define ZEBRA_MESSAGE_MAX		23
+
+/* Zebra route types */
+#define ZEBRA_ROUTE_OLSR		11
+#define ZEBRA_ROUTE_MAX			13
+
+/* Zebra flags */
+#define ZEBRA_FLAG_SELECTED		0x10
+
+/* Zebra nexthop flags */
+#define ZEBRA_NEXTHOP_IFINDEX		1
+#define ZEBRA_NEXTHOP_IPV4		3
+#define ZEBRA_NEXTHOP_IPV4_IFINDEX	4
+
+/* Zebra message flags */
+#define ZAPI_MESSAGE_NEXTHOP		0x01
+#define ZAPI_MESSAGE_IFINDEX		0x02
+#define ZAPI_MESSAGE_DISTANCE		0x04
+#define ZAPI_MESSAGE_METRIC		0x08
+
+/* Buffer size */
+#define BUFSIZE 1024
+
+/* Quagga plugin flags */
+#define STATUS_CONNECTED 1
+#define OPTION_EXPORT 1
 
 struct ipv4_route {
   unsigned char type;
