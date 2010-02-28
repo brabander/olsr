@@ -60,7 +60,6 @@
 /* Zebra nexthop flags */
 #define ZEBRA_NEXTHOP_IFINDEX		1
 #define ZEBRA_NEXTHOP_IPV4		3
-#define ZEBRA_NEXTHOP_IPV4_IFINDEX	4
 
 /* Zebra message flags */
 #define ZAPI_MESSAGE_NEXTHOP		0x01
@@ -95,13 +94,6 @@ int zebra_send_command(unsigned char *);
 void zebra_parse(void*);
 int zebra_redistribute(unsigned char);
 int zebra_disable_redistribute(unsigned char);
-#if 0
-int zebra_add_v4_route(const struct ipv4_route r);
-int zebra_delete_v4_route(const struct ipv4_route r);
-int zebra_parse_packet(unsigned char *, ssize_t);
-int add_hna4_route(struct ipv4_route);
-int delete_hna4_route(struct ipv4_route);
-#endif
 void *my_realloc(void *, size_t, const char *);
 int zebra_add_route(const struct rt_entry *);
 int zebra_del_route(const struct rt_entry *);

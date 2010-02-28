@@ -37,6 +37,7 @@
 #include <sys/un.h>
 #endif
 
+/* prototypes intern */
 static struct {
   char status;                         // internal status
   char options;                        // internal options
@@ -47,37 +48,14 @@ static struct {
   struct ipv4_route *v4_rt;            // routes currently exportet to zebra
 } zebra;
 
-/* prototypes intern */
 static unsigned char *zebra_route_packet(uint16_t, struct ipv4_route *);
 static struct ipv4_route *zebra_parse_route (unsigned char *);
 static unsigned char *try_read(ssize_t *);
 #if 0
-static int parse_interface_add(unsigned char *, size_t);
-static int parse_interface_delete(unsigned char *, size_t);
-static int parse_interface_up(unsigned char *, size_t);
-static int parse_interface_down(unsigned char *, size_t);
-static int parse_interface_address_add(unsigned char *, size_t);
-static int parse_interface_address_delete(unsigned char *, size_t);
-static int ipv4_route_add(unsigned char *, size_t);
-static int ipv4_route_delete(unsigned char *, size_t);
-static int parse_ipv6_route_add(unsigned char *, size_t);
 static void zebra_reconnect(void);
 #endif
 static void zebra_connect(void);
 static void free_ipv4_route(struct ipv4_route *);
-#if 0
-
-/*
-static void update_olsr_zebra_routes (struct ipv4_route*, struct ipv4_route*);
-static struct ipv4_route *zebra_create_ipv4_route_table_entry (uint32_t,
-							       uint32_t,
-							       uint32_t);
-static struct ipv4_route *zebra_create_ipv4_route_table (void);
-static void zebra_free_ipv4_route_table (struct ipv4_route*);
-*/
-#endif
-
-/*static uint8_t masktoprefixlen (uint32_t);*/
 
 void *
 my_realloc(void *buf, size_t s, const char *c)
@@ -276,43 +254,6 @@ zebra_route_packet(uint16_t cmd, struct ipv4_route *r)
   return cmdopt;
 }
 
-#if 0
-/* adds a route to zebra-daemon */
-int
-zebra_add_v4_route(const struct ipv4_route r)
-{
-
-  unsigned char *cmdopt;
-  ssize_t optlen;
-  int retval;
-
-  cmdopt = zebra_route_packet(r, &optlen);
-
-  retval = zebra_send_command(ZEBRA_IPV4_ROUTE_ADD, cmdopt, optlen);
-  free(cmdopt);
-  return retval;
-
-}
-
-/* deletes a route from the zebra-daemon */
-int
-zebra_delete_v4_route(struct ipv4_route r)
-{
-
-  unsigned char *cmdopt;
-  ssize_t optlen;
-  int retval;
-
-  cmdopt = zebra_route_packet(r, &optlen);
-
-  retval = zebra_send_command(ZEBRA_IPV4_ROUTE_DELETE, cmdopt, optlen);
-  free(cmdopt);
-
-  return retval;
-
-}
-#endif
-
 /* Check wether there is data from zebra aviable */
 void
 zebra_parse(void *foo __attribute__ ((unused)))
@@ -410,101 +351,6 @@ try_read(ssize_t * len)
   return buf;
 }
 
-#if 0
-/* Parse a packet recived from zebra */
-int
-zebra_parse_packet(unsigned char *packet, ssize_t maxlen)
-{
-
-  uint16_t command;
-  int skip;
-
-  /* Array of functions */
-  int (*foo[ZEBRA_MESSAGE_MAX]) (unsigned char *, size_t) = {
-  parse_interface_add, parse_interface_delete, parse_interface_address_add, parse_interface_address_delete, parse_interface_up,
-      parse_interface_down, ipv4_route_add, ipv4_route_delete, parse_ipv6_route_add};
-
-  uint16_t length;
-  int ret;
-
-  memcpy(&length, packet, 2);
-  length = ntohs(length);
-
-  if (maxlen < length) {
-    OLSR_PRINTF(1, "(QUAGGA) maxlen = %lu, packet_length = %d\n", (unsigned long)maxlen, length);
-    olsr_exit("(QUAGGA) programmer is an idiot", EXIT_FAILURE);
-  }
-#ifdef ZEBRA_HEADER_MARKER
-  if (packet[2] == 255) {       // found header marker!!
-    //packet[3] == ZSERV_VERSION: FIXME: HANDLE THIS!
-    memcpy(&command, packet + 4, sizeof command);       // two bytes command now!
-    command = ntohs(command) - 1;
-    skip = 6;
-  }
-#else
-  command = packet[2] - 1;
-  skip = 3;
-#endif
-
-  if (command < ZEBRA_MESSAGE_MAX && foo[command]) {
-    if (!(ret = foo[command] (packet + skip, length - skip)))
-      return length;
-    else
-      OLSR_PRINTF(1, "(QUAGGA) Parse error: %d\n", ret);
-  } else
-    OLSR_PRINTF(1, "(QUAGGA) Unknown packet type: %d\n", packet[2]);
-
-  OLSR_PRINTF(1, "(Quagga) RECIVED PACKET FROM ZEBRA THAT I CAN'T PARSE");
-
-  return length;
-}
-
-static int
-parse_interface_add(unsigned char *opt __attribute__ ((unused)), size_t len __attribute__ ((unused)))
-{
-  //todo
-  return 0;
-}
-
-static int
-parse_interface_delete(unsigned char *opt __attribute__ ((unused)), size_t len __attribute__ ((unused)))
-{
-  //todo
-  return 0;
-}
-
-static int
-parse_interface_address_add(unsigned char *opt __attribute__ ((unused)), size_t len __attribute__ ((unused)))
-{
-
-  //todo
-  return 0;
-}
-
-static int
-parse_interface_up(unsigned char *opt __attribute__ ((unused)), size_t len __attribute__ ((unused)))
-{
-
-  //todo
-  return 0;
-}
-
-static int
-parse_interface_down(unsigned char *opt __attribute__ ((unused)), size_t len __attribute__ ((unused)))
-{
-
-  //todo
-  return 0;
-}
-
-static int
-parse_interface_address_delete(unsigned char *opt __attribute__ ((unused)), size_t len __attribute__ ((unused)))
-{
-  //todo
-  return 0;
-}
-#endif
-
 /* Parse an ipv4-route-packet recived from zebra
  */
 struct ipv4_route
@@ -571,43 +417,6 @@ struct ipv4_route
   return r;
 }
 
-#if 0
-static int
-ipv4_route_add(unsigned char *opt, size_t len)
-{
-
-  struct ipv4_route r;
-  int f;
-
-  f = parse_ipv4_route(opt, len, &r);
-  if (f < 0)
-    return f;
-
-  return add_hna4_route(r);
-}
-
-static int
-ipv4_route_delete(unsigned char *opt, size_t len)
-{
-  struct ipv4_route r;
-  int f;
-
-  f = parse_ipv4_route(opt, len, &r);
-  if (f < 0)
-    return f;
-
-  return delete_hna4_route(r);
-
-}
-
-static int
-parse_ipv6_route_add(unsigned char *opt __attribute__ ((unused)), size_t len __attribute__ ((unused)))
-{
-  //todo
-  return 0;
-}
-#endif
-
 static unsigned char
 *zebra_redistribute_packet (unsigned char cmd, unsigned char type)
 {
@@ -657,34 +466,6 @@ zebra_disable_redistribute(unsigned char type)
 
 }
 
-#if 0
-int
-add_hna4_route(struct ipv4_route r)
-{
-  union olsr_ip_addr net;
-
-  net.v4.s_addr = r.prefix;
-
-  ip_prefix_list_add(&olsr_cnf->hna_entries, &net, r.prefixlen);
-  free_ipv4_route(r);
-  return 0;
-}
-
-int
-delete_hna4_route(struct ipv4_route r)
-{
-
-  union olsr_ip_addr net;
-
-  net.v4.s_addr = r.prefix;
-
-  ip_prefix_list_remove(&olsr_cnf->hna_entries, &net, r.prefixlen);
-  free_ipv4_route(r);
-  return 0;
-
-}
-#endif
-
 static void
 free_ipv4_route(struct ipv4_route *r)
 {
@@ -695,20 +476,6 @@ free_ipv4_route(struct ipv4_route *r)
     free(r->nexthop);
 
 }
-
-/*
-static uint8_t masktoprefixlen (uint32_t mask) {
-
-  uint8_t prefixlen = 0;
-
-  mask = htonl (mask);
-
-  if (mask) while (mask << ++prefixlen && prefixlen < 32);
-
-  return prefixlen;
-
-}
-*/
 
 int
 zebra_add_route(const struct rt_entry *r)
