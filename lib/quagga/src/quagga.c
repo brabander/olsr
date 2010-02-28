@@ -11,7 +11,9 @@
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License version 2 as     *
- *   published by the Free Software Foundation.                            *
+ *   published by the Free Software Foundation or - at your option - under *
+ *   the terms of the GNU General Public Licence version 2 but can be      *
+ *   linked to any BSD-Licenced Software with public available sourcecode. *
  *                                                                         *
  ***************************************************************************/
 

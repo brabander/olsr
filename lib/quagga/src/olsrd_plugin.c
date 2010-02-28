@@ -1,17 +1,12 @@
 
-/***************************************************************************
- projekt              : olsrd-quagga
- file                 : olsrd_plugin.c
- usage                : olsrd-plugin-handler-stuff
- copyright            : (C) 2006 by Immo 'FaUl' Wehrenberg
- e-mail               : immo@chaostreff-dortmund.de
- ***************************************************************************/
 
 /***************************************************************************
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License version 2 as     *
- *   published by the Free Software Foundation.                            *
+ *   published by the Free Software Foundation or - at your option - under *
+ *   the terms of the GNU General Public Licence version 2 but can be      *
+ *   linked to any BSD-Licenced Software with public available sourcecode. *
  *                                                                         *
  ***************************************************************************/
 
