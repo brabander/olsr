@@ -15,7 +15,8 @@
  *                                                                         *
  ***************************************************************************/
 
-#include "routing_table.h"
+#include "routing_table.h" /* rt_entry */
+#include "olsr_types.h" /* olsr_ip_addr */
 
 #include <stdint.h>
 #include <stdlib.h>

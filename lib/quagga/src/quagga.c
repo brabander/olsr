@@ -18,10 +18,9 @@
 #define HAVE_SOCKLEN_T
 
 #include "quagga.h"
-#include "olsr.h"
-#include "log.h"
-#include "defs.h"
-#include "routing_table.h"
+#include "olsr.h" /* olsr_exit
+                     olsr_malloc */
+#include "log.h" /* olsr_syslog */
 
 #include <stdint.h>
 #include <stdlib.h>
