@@ -50,14 +50,14 @@ struct ipv4_route {
 
 void init_zebra(void);
 void zebra_cleanup(void);
-unsigned char zebra_send_command(unsigned char *);
+int zebra_send_command(unsigned char *);
+void zebra_parse(void*);
+int zebra_redistribute(unsigned char);
+int zebra_disable_redistribute(unsigned char);
 #if 0
 int zebra_add_v4_route(const struct ipv4_route r);
 int zebra_delete_v4_route(const struct ipv4_route r);
-void zebra_check(void *);
 int zebra_parse_packet(unsigned char *, ssize_t);
-int zebra_redistribute(unsigned char);
-int zebra_disable_redistribute(unsigned char);
 int add_hna4_route(struct ipv4_route);
 int delete_hna4_route(struct ipv4_route);
 #endif
