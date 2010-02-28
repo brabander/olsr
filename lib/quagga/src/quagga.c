@@ -48,16 +48,18 @@ static struct {
   struct zebra_route *v4_rt;           // routes currently exportet to zebra
 } zebra;
 
-static unsigned char *zebra_route_packet(uint16_t, struct zebra_route *);
-static struct zebra_route *zebra_parse_route (unsigned char *);
+static void *my_realloc(void *, size_t, const char *);
+static void zebra_connect(void);
 static unsigned char *try_read(ssize_t *);
+static int zebra_send_command(unsigned char *);
+static unsigned char *zebra_route_packet(uint16_t, struct zebra_route *);
+static struct zebra_route *zebra_parse_route(unsigned char *);
 #if 0
 static void zebra_reconnect(void);
 #endif
-static void zebra_connect(void);
 static void free_ipv4_route(struct zebra_route *);
 
-void *
+static void *
 my_realloc(void *buf, size_t s, const char *c)
 {
   buf = realloc(buf, s);
@@ -165,7 +167,7 @@ zebra_connect(void)
 /* Sends a command to zebra, command is
    the command defined in zebra.h, options is the packet-payload,
    optlen the length, of the payload */
-int
+static int
 zebra_send_command(unsigned char *options)
 {
 
@@ -353,7 +355,7 @@ try_read(ssize_t * len)
 
 /* Parse an ipv4-route-packet recived from zebra
  */
-struct zebra_route
+static struct zebra_route
 *zebra_parse_route(unsigned char *opt)
 {
   struct zebra_route *r;

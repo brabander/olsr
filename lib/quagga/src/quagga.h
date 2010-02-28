@@ -90,11 +90,9 @@ struct zebra_route {
 
 void init_zebra(void);
 void zebra_cleanup(void);
-int zebra_send_command(unsigned char *);
 void zebra_parse(void*);
 int zebra_redistribute(unsigned char);
 int zebra_disable_redistribute(unsigned char);
-void *my_realloc(void *, size_t, const char *);
 int zebra_add_route(const struct rt_entry *);
 int zebra_del_route(const struct rt_entry *);
 void zebra_olsr_localpref(void);
