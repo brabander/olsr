@@ -53,6 +53,7 @@ static void zebra_connect(void);
 static unsigned char *try_read(ssize_t *);
 static int zebra_send_command(unsigned char *);
 static unsigned char *zebra_route_packet(uint16_t, struct zebra_route *);
+static unsigned char *zebra_redistribute_packet(unsigned char, unsigned char);
 static struct zebra_route *zebra_parse_route(unsigned char *);
 #if 0
 static void zebra_reconnect(void);
