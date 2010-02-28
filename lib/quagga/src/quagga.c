@@ -45,17 +45,17 @@ static struct {
   char redistribute[ZEBRA_ROUTE_MAX];
   char distance;
   char flags;
-  struct ipv4_route *v4_rt;            // routes currently exportet to zebra
+  struct zebra_route *v4_rt;           // routes currently exportet to zebra
 } zebra;
 
-static unsigned char *zebra_route_packet(uint16_t, struct ipv4_route *);
-static struct ipv4_route *zebra_parse_route (unsigned char *);
+static unsigned char *zebra_route_packet(uint16_t, struct zebra_route *);
+static struct zebra_route *zebra_parse_route (unsigned char *);
 static unsigned char *try_read(ssize_t *);
 #if 0
 static void zebra_reconnect(void);
 #endif
 static void zebra_connect(void);
-static void free_ipv4_route(struct ipv4_route *);
+static void free_ipv4_route(struct zebra_route *);
 
 void *
 my_realloc(void *buf, size_t s, const char *c)
@@ -204,7 +204,7 @@ zebra_send_command(unsigned char *options)
 /* Creates a Route-Packet-Payload, needs address, netmask, nexthop,
    distance, and a pointer of an size_t */
 static unsigned char *
-zebra_route_packet(uint16_t cmd, struct ipv4_route *r)
+zebra_route_packet(uint16_t cmd, struct zebra_route *r)
 {
 
   int count;
@@ -227,16 +227,16 @@ zebra_route_packet(uint16_t cmd, struct ipv4_route *r)
   t = t + len;
 
   if (r->message & ZAPI_MESSAGE_NEXTHOP) {
-    *t++ = r->nh_count + r->ind_num;
+    *t++ = r->nexthop_num + r->ifindex_num;
 
-      for (count = 0; count < r->nh_count; count++) {
+      for (count = 0; count < r->nexthop_num; count++) {
         *t++ = ZEBRA_NEXTHOP_IPV4;
         memcpy(t, &r->nexthop[count].v4.s_addr, sizeof r->nexthop[count].v4.s_addr);
         t += sizeof r->nexthop[count].v4.s_addr;
       }
-      for (count = 0; count < r->ind_num; count++) {
+      for (count = 0; count < r->ifindex_num; count++) {
         *t++ = ZEBRA_NEXTHOP_IFINDEX;
-        ind = htonl(r->index[count]);
+        ind = htonl(r->ifindex[count]);
         memcpy(t, &ind, sizeof ind);
         t += sizeof ind;
       }
@@ -262,7 +262,7 @@ zebra_parse(void *foo __attribute__ ((unused)))
   unsigned char command;
   uint16_t length;
   ssize_t len;
-  struct ipv4_route *route;
+  struct zebra_route *route;
 
   if (!(zebra.status & STATUS_CONNECTED)) {
 //    zebra_reconnect();
@@ -353,10 +353,10 @@ try_read(ssize_t * len)
 
 /* Parse an ipv4-route-packet recived from zebra
  */
-struct ipv4_route
+struct zebra_route
 *zebra_parse_route(unsigned char *opt)
 {
-  struct ipv4_route *r;
+  struct zebra_route *r;
   int c;
   size_t size;
   uint16_t length;
@@ -378,21 +378,21 @@ struct ipv4_route
   pnt += size;
 
   if (r->message & ZAPI_MESSAGE_NEXTHOP) {
-    r->nh_count = *pnt++;
-    r->nexthop = olsr_malloc((sizeof *r->nexthop) * r->nh_count, "quagga: zebra_parse_route");
-    for (c = 0; c < r->nh_count; c++) {
+    r->nexthop_num = *pnt++;
+    r->nexthop = olsr_malloc((sizeof *r->nexthop) * r->nexthop_num, "quagga: zebra_parse_route");
+    for (c = 0; c < r->nexthop_num; c++) {
       memcpy(&r->nexthop[c].v4.s_addr, pnt, sizeof r->nexthop[c].v4.s_addr);
       pnt += sizeof r->nexthop[c].v4.s_addr;
     }
   }
 
   if (r->message & ZAPI_MESSAGE_IFINDEX) {
-    r->ind_num = *pnt++;
-    r->index = olsr_malloc(sizeof(uint32_t) * r->ind_num, "quagga: zebra_parse_route");
-    for (c = 0; c < r->ind_num; c++) {
-      memcpy(&r->index[c], pnt, sizeof r->index[c]);
-      r->index[c] = ntohl (r->index[c]);
-      pnt += sizeof r->index[c];
+    r->ifindex_num = *pnt++;
+    r->ifindex = olsr_malloc(sizeof(uint32_t) * r->ifindex_num, "quagga: zebra_parse_route");
+    for (c = 0; c < r->ifindex_num; c++) {
+      memcpy(&r->ifindex[c], pnt, sizeof r->ifindex[c]);
+      r->ifindex[c] = ntohl (r->ifindex[c]);
+      pnt += sizeof r->ifindex[c];
     }
   }
 
@@ -467,12 +467,12 @@ zebra_disable_redistribute(unsigned char type)
 }
 
 static void
-free_ipv4_route(struct ipv4_route *r)
+free_ipv4_route(struct zebra_route *r)
 {
 
-  if(r->ind_num)
-    free(r->index);
-  if(r->nh_count)
+  if(r->ifindex_num)
+    free(r->ifindex);
+  if(r->nexthop_num)
     free(r->nexthop);
 
 }
@@ -481,7 +481,7 @@ int
 zebra_add_route(const struct rt_entry *r)
 {
 
-  struct ipv4_route route;
+  struct zebra_route route;
   int retval;
 
   route.distance = 0;
@@ -490,19 +490,19 @@ zebra_add_route(const struct rt_entry *r)
   route.message = ZAPI_MESSAGE_NEXTHOP | ZAPI_MESSAGE_METRIC;
   route.prefixlen = r->rt_dst.prefix_len;
   route.prefix.v4.s_addr = r->rt_dst.prefix.v4.s_addr;
-  route.ind_num = 0;
-  route.index = NULL;
-  route.nh_count = 0;
+  route.ifindex_num = 0;
+  route.ifindex = NULL;
+  route.nexthop_num = 0;
   route.nexthop = NULL;
 
   if (r->rt_best->rtp_nexthop.gateway.v4.s_addr == r->rt_dst.prefix.v4.s_addr && route.prefixlen == 32) {
     return 0;			/* Quagga BUG workaround: don't add routes with destination = gateway
 				   see http://lists.olsr.org/pipermail/olsr-users/2006-June/001726.html */
-    route.ind_num++;
-    route.index = olsr_malloc(sizeof *route.index, "zebra_add_route");
-    *route.index = r->rt_best->rtp_nexthop.iif_index;
+    route.ifindex_num++;
+    route.ifindex = olsr_malloc(sizeof *route.ifindex, "zebra_add_route");
+    *route.ifindex = r->rt_best->rtp_nexthop.iif_index;
   } else {
-    route.nh_count++;
+    route.nexthop_num++;
     route.nexthop = olsr_malloc(sizeof *route.nexthop, "zebra_add_route");
     route.nexthop->v4.s_addr = r->rt_best->rtp_nexthop.gateway.v4.s_addr;
   }
@@ -523,7 +523,7 @@ int
 zebra_del_route(const struct rt_entry *r)
 {
 
-  struct ipv4_route route;
+  struct zebra_route route;
   int retval;
   route.distance = 0;
   route.type = ZEBRA_ROUTE_OLSR;
@@ -531,19 +531,19 @@ zebra_del_route(const struct rt_entry *r)
   route.message = ZAPI_MESSAGE_NEXTHOP | ZAPI_MESSAGE_METRIC;
   route.prefixlen = r->rt_dst.prefix_len;
   route.prefix.v4.s_addr = r->rt_dst.prefix.v4.s_addr;
-  route.ind_num = 0;
-  route.index = NULL;
-  route.nh_count = 0;
+  route.ifindex_num = 0;
+  route.ifindex = NULL;
+  route.nexthop_num = 0;
   route.nexthop = NULL;
 
   if (r->rt_nexthop.gateway.v4.s_addr == r->rt_dst.prefix.v4.s_addr && route.prefixlen == 32) {
     return 0;			/* Quagga BUG workaround: don't delete routes with destination = gateway
 				   see http://lists.olsr.org/pipermail/olsr-users/2006-June/001726.html */
-    route.ind_num++;
-    route.index = olsr_malloc(sizeof *route.index, "zebra_del_route");
-    *route.index = r->rt_nexthop.iif_index;
+    route.ifindex_num++;
+    route.ifindex = olsr_malloc(sizeof *route.ifindex, "zebra_del_route");
+    *route.ifindex = r->rt_nexthop.iif_index;
   } else {
-    route.nh_count++;
+    route.nexthop_num++;
     route.nexthop = olsr_malloc(sizeof *route.nexthop, "zebra_del_route");
     route.nexthop->v4.s_addr = r->rt_nexthop.gateway.v4.s_addr;
   }

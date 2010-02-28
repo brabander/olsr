@@ -74,16 +74,16 @@
 #define STATUS_CONNECTED 1
 #define OPTION_EXPORT 1
 
-struct ipv4_route {
+struct zebra_route {
   unsigned char type;
   unsigned char flags;
   unsigned char message;
   unsigned char prefixlen;
   union olsr_ip_addr prefix;
-  unsigned char nh_count;
+  unsigned char nexthop_num;
   union olsr_ip_addr *nexthop;
-  unsigned char ind_num;
-  uint32_t *index;
+  unsigned char ifindex_num;
+  uint32_t *ifindex;
   uint32_t metric;
   uint8_t distance;
 };
