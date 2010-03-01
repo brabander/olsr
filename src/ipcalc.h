@@ -187,7 +187,7 @@ prefix_mappedv4_to_v4(struct olsr_ip_prefix *v4, const struct olsr_ip_prefix *v6
 static INLINE bool
 ip_is_linklocal(const union olsr_ip_addr *ip) {
   return olsr_cnf->ip_version == AF_INET6
-      && ip->v6.s6_addr[0] == 0xfe && (ip->v6.s6_addr[1] & 0xc0) == 0xc0;
+      && ip->v6.s6_addr[0] == 0xfe && (ip->v6.s6_addr[1] & 0xc0) == 0x80;
 }
 
 static INLINE bool
