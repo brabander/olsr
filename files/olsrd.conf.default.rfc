@@ -195,7 +195,7 @@ LoadPlugin "olsrd_txtinfo.so.0.1"
 # multiple configuration blocks can be specified
 
 # WARNING, don't forget to insert your interface names here !
-Interface "<OLSRd-Interface1> "<OLSRd-Interface2>"
+Interface "<OLSRd-Interface1>" "<OLSRd-Interface2>"
 {
     # Emission intervals in seconds.
     # If not defined, Freifunk network defaults are used

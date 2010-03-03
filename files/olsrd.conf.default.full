@@ -456,7 +456,7 @@ InterfaceDefaults {
 # multiple configuration blocks can be specified
 
 # WARNING, don't forget to insert your interface names here !
-Interface "<OLSRd-Interface1> "<OLSRd-Interface2>"
+Interface "<OLSRd-Interface1>" "<OLSRd-Interface2>"
 {
     # Interface Mode is used to prevent unnecessary
     # packet forwarding on switched ethernet interfaces
