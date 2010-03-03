@@ -56,6 +56,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #ifdef linux
+#include <linux/types.h>
 #include <linux/rtnetlink.h>
 #endif
 
