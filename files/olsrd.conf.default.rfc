@@ -54,19 +54,19 @@
 # to handle more complicated routing setups with SmartGateway
 # (Default is "yes")
 
-RtPolicy "no"
+RtPolicy no
 
 # Activates (in IPv6 mode) the automatic use of NIIT
 # (see README_NIIT_SMARTGW)
 # (default is "yes")
 
-UseNiit "no"
+UseNiit no
 
 # Activates the smartgateway ipip tunnel feature.
 # See README_NIIT_SMARTGW for a description of smartgateways.
 # (default is "yes")
 
-SmartGateway "no"
+SmartGateway no
 
 ##############################
 ### OLSR protocol settings ###

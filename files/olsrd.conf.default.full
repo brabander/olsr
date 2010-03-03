@@ -88,7 +88,7 @@
 # to make sure the returning traffic can be received.
 # (Default is "no")
 
-# SrcIpRoutes "no"
+# SrcIpRoutes no
 
 # Specify the proto tag to be used for routes olsr inserts into kernel
 # currently only implemented for linux
@@ -108,7 +108,7 @@
 # to handle more complicated routing setups with SmartGateway
 # (Default is "yes")
 
-# RtPolicy "yes"
+# RtPolicy yes
 
 # Specifies the routing Table olsr uses
 # RtTable is for host routes, RtTableDefault for the route to the default
@@ -137,18 +137,18 @@
 # (see README_NIIT_SMARTGW)
 # (default is "yes")
 
-# UseNiit "yes"
+# UseNiit yes
 
 # Activates the smartgateway ipip tunnel feature.
 # See README_NIIT_SMARTGW for a description of smartgateways.
 # (default is "yes")
 
-# SmartGateway "yes"
+# SmartGateway yes
 
 # Allows the selection of a smartgateway with NAT (only for IPv4)
 # (default is "yes")
 
-# SmartGatewayAllowNAT "yes"
+# SmartGatewayAllowNAT yes
 
 # Defines what kind of Uplink this node will publish as a
 # smartgateway. The existence of the uplink is detected by
@@ -161,7 +161,7 @@
 # Specifies if the local ipv4 uplink use NAT
 # (default is "yes")
 
-# SmartGatewayUplinkNAT "yes"
+# SmartGatewayUplinkNAT yes
 
 # Specifies the speed of the uplink in kilobit/s.
 # First parameter is upstream, second parameter is downstream
