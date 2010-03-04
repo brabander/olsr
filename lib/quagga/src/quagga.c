@@ -55,6 +55,8 @@ static unsigned char *try_read(ssize_t *);
 static int zebra_send_command(unsigned char *);
 static unsigned char *zebra_route_packet(uint16_t, struct zebra_route *);
 static unsigned char *zebra_redistribute_packet(unsigned char, unsigned char);
+static void zebra_enable_redistribute(void);
+static void zebra_disable_redistribute(void);
 static struct zebra_route *zebra_parse_route(unsigned char *);
 #if 0
 static void zebra_reconnect(void);
@@ -81,12 +83,13 @@ init_zebra(void)
   zebra_connect();
   if (!(zebra.status & STATUS_CONNECTED))
     olsr_exit("(QUAGGA) AIIIII, could not connect to zebra! is zebra running?", EXIT_FAILURE);
+  zebra_enable_redistribute();
+
 }
 
 void
 zebra_cleanup(void)
 {
-  int i;
   struct rt_entry *tmp;
 
   if (zebra.options & OPTION_EXPORT) {
@@ -95,10 +98,8 @@ zebra_cleanup(void)
     }
     OLSR_FOR_ALL_RT_ENTRIES_END(tmp);
   }
+  zebra_disable_redistribute();
 
-  for (i = 0; i < ZEBRA_ROUTE_MAX; i++)
-    if (zebra.redistribute[i])
-      zebra_disable_redistribute(i);
 }
 
 #if 0
@@ -462,9 +463,6 @@ int
 zebra_redistribute(unsigned char type)
 {
 
-  if (zebra_send_command(zebra_redistribute_packet(ZEBRA_REDISTRIBUTE_ADD, type)) < 0)
-    olsr_exit("(QUAGGA) could not send redistribute add command", EXIT_FAILURE);
-
   if (type > ZEBRA_ROUTE_MAX - 1)
     return -1;
   zebra.redistribute[type] = 1;
@@ -473,19 +471,31 @@ zebra_redistribute(unsigned char type)
 
 }
 
-/* end redistribution FROM zebra */
-int
-zebra_disable_redistribute(unsigned char type)
+/* start redistribution FROM zebra */
+static void
+zebra_enable_redistribute(void)
 {
+  unsigned char type;
 
-  if (zebra_send_command(zebra_redistribute_packet(ZEBRA_REDISTRIBUTE_DELETE, type)) < 0)
-    olsr_exit("(QUAGGA) could not send redistribute delete command", EXIT_FAILURE);
+  for (type = 0; type < ZEBRA_ROUTE_MAX; type++)
+    if (zebra.redistribute[type]) {
+      if (zebra_send_command(zebra_redistribute_packet(ZEBRA_REDISTRIBUTE_ADD, type)) < 0)
+        olsr_exit("(QUAGGA) could not send redistribute add command", EXIT_FAILURE);
+    }
 
-  if (type > ZEBRA_ROUTE_MAX - 1)
-    return -1;
-  zebra.redistribute[type] = 0;
+}
 
-  return 0;
+/* end redistribution FROM zebra */
+static void
+zebra_disable_redistribute(void)
+{
+  unsigned char type;
+
+  for (type = 0; type < ZEBRA_ROUTE_MAX; type++)
+    if (zebra.redistribute[type]) {
+      if (zebra_send_command(zebra_redistribute_packet(ZEBRA_REDISTRIBUTE_DELETE, type)) < 0)
+        olsr_exit("(QUAGGA) could not send redistribute delete command", EXIT_FAILURE);
+    }
 
 }
 

@@ -94,7 +94,6 @@ void init_zebra(void);
 void zebra_cleanup(void);
 void zebra_parse(void*);
 int zebra_redistribute(unsigned char);
-int zebra_disable_redistribute(unsigned char);
 int zebra_add_route(const struct rt_entry *);
 int zebra_del_route(const struct rt_entry *);
 void zebra_olsr_localpref(void);
