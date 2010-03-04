@@ -47,6 +47,7 @@ static struct {
   char redistribute[ZEBRA_ROUTE_MAX];
   char distance;
   char flags;
+  char *sockpath;
 } zebra;
 
 static void *my_realloc(void *, size_t, const char *);
@@ -78,6 +79,8 @@ init_zebra(void)
 {
 
   memset(&zebra, 0, sizeof zebra);
+  zebra.sockpath = olsr_malloc(sizeof ZEBRA_SOCKPATH  + 1, "zebra_sockpath");
+  strscpy(zebra.sockpath, ZEBRA_SOCKPATH, sizeof ZEBRA_SOCKPATH);
 
 }
 
@@ -93,6 +96,7 @@ zebra_cleanup(void)
     OLSR_FOR_ALL_RT_ENTRIES_END(tmp);
   }
   zebra_disable_redistribute();
+  free(zebra.sockpath);
 
 }
 
@@ -146,7 +150,7 @@ zebra_connect(void)
   i.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 #else
   i.sun_family = AF_UNIX;
-  strscpy(i.sun_path, ZEBRA_SOCKET, sizeof(i.sun_path));
+  strscpy(i.sun_path, zebra.sockpath, sizeof(i.sun_path));
 #endif
 
   ret = connect(zebra.sock, (struct sockaddr *)&i, sizeof i);
@@ -601,6 +605,17 @@ zebra_export_routes(unsigned char t)
     zebra.options |= OPTION_EXPORT;
   else
     zebra.options &= ~OPTION_EXPORT;
+}
+
+void
+zebra_sockpath(char *sockpath)
+{
+  size_t len;
+
+  len = strlen(sockpath) + 1;
+  zebra.sockpath = my_realloc(zebra.sockpath, len, "zebra_sockpath");
+  memcpy(zebra.sockpath, sockpath, len);
+
 }
 
 /*

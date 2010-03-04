@@ -40,7 +40,7 @@
 #endif
 
 /* Zebra socket */
-#define ZEBRA_SOCKET "/var/run/quagga/zserv.api"
+#define ZEBRA_SOCKPATH "/var/run/quagga/zserv.api"
 
 /* Zebra packet size */
 #define ZEBRA_MAX_PACKET_SIZ		4096
@@ -99,6 +99,7 @@ int zebra_del_route(const struct rt_entry *);
 void zebra_olsr_localpref(void);
 void zebra_olsr_distance(unsigned char);
 void zebra_export_routes(unsigned char);
+void zebra_sockpath(char *);
 
 /*
  * Local Variables:

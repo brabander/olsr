@@ -37,7 +37,11 @@ PlParam "LocalPref" "<true/false>"
 PlParam "Distance" "0-255"
         allows to set the administrative distance to routes exported 
 	to zebra.
-	
+
+PlParam "SockPath" "<path>"
+        sets the path to zebra socket
+	defaults to "/var/run/quagga/zserv.api" if not set.
+
 ---------------------------------------------------------------------
 SAMPLE CONFIG
 ---------------------------------------------------------------------
@@ -51,8 +55,9 @@ LoadPlugin "olsrd_quagga.so.0.2.2"
 	PlParam "ExportRoutes" "only"
 	PlParam "Distance" "125" 
 	PlParam "LocalPref" "false"
+	PlParam "SockPath" "/var/run/zserv.api"
 }
 
 
 ---------------------------------------------------------------------
-EOF / 29.12.2008
+EOF / 05.03.2010
