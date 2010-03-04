@@ -536,7 +536,7 @@ zebra_add_route(const struct rt_entry *r)
 
   struct zebra_route route;
   int retval;
-
+  route.distance = 0;
   route.type = ZEBRA_ROUTE_OLSR;
   route.flags = zebra.flags;
   route.message = ZAPI_MESSAGE_NEXTHOP | ZAPI_MESSAGE_METRIC;
@@ -575,7 +575,7 @@ zebra_del_route(const struct rt_entry *r)
 
   struct zebra_route route;
   int retval;
-
+  route.distance = 0;
   route.type = ZEBRA_ROUTE_OLSR;
   route.flags = zebra.flags;
   route.message = ZAPI_MESSAGE_NEXTHOP | ZAPI_MESSAGE_METRIC;
