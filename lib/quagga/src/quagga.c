@@ -58,9 +58,7 @@ static unsigned char *zebra_redistribute_packet(unsigned char, unsigned char);
 static void zebra_enable_redistribute(void);
 static void zebra_disable_redistribute(void);
 static struct zebra_route *zebra_parse_route(unsigned char *);
-#if 0
 static void zebra_reconnect(void);
-#endif
 static void free_ipv4_route(struct zebra_route *);
 
 static void *
@@ -80,10 +78,6 @@ init_zebra(void)
 {
 
   memset(&zebra, 0, sizeof zebra);
-  zebra_connect();
-  if (!(zebra.status & STATUS_CONNECTED))
-    olsr_exit("(QUAGGA) AIIIII, could not connect to zebra! is zebra running?", EXIT_FAILURE);
-  zebra_enable_redistribute();
 
 }
 
@@ -102,12 +96,10 @@ zebra_cleanup(void)
 
 }
 
-#if 0
 static void
 zebra_reconnect(void)
 {
   struct rt_entry *tmp;
-  int i;
 
   zebra_connect();
   if (!(zebra.status & STATUS_CONNECTED))
@@ -119,14 +111,9 @@ zebra_reconnect(void)
     }
     OLSR_FOR_ALL_RT_ENTRIES_END(tmp);
   }
+  zebra_enable_redistribute();
 
-  for (i = 0; i < ZEBRA_ROUTE_MAX; i++)
-    if (zebra.redistribute[i])
-      zebra_redistribute(i + 1);
-  /* Zebra sends us all routes of type it knows after
-     zebra_redistribute(type) */
 }
-#endif
 
 /* Connect to the zebra-daemon, returns a socket */
 static void
@@ -198,6 +185,7 @@ zebra_send_command(unsigned char *options)
       } else {
         OLSR_PRINTF(1, "(QUAGGA) Disconnected from zebra\n");
         zebra.status &= ~STATUS_CONNECTED;
+        /* TODO: Remove HNAs added from redistribution */
         free(options);
         return -1;
       }
@@ -273,7 +261,7 @@ zebra_parse(void *foo __attribute__ ((unused)))
   struct zebra_route *route;
 
   if (!(zebra.status & STATUS_CONNECTED)) {
-//    zebra_reconnect();
+    zebra_reconnect();
     return;
   }
   data = try_read(&len);
@@ -350,6 +338,7 @@ try_read(ssize_t * size)
       if (errno != EAGAIN) {    // oops - we got disconnected
         OLSR_PRINTF(1, "(QUAGGA) Disconnected from zebra\n");
         zebra.status &= ~STATUS_CONNECTED;
+        /* TODO: Remove HNAs added from redistribution */
       }
       free(buf);
       return NULL;
