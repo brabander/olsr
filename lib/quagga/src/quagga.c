@@ -47,7 +47,6 @@ static struct {
   char redistribute[ZEBRA_ROUTE_MAX];
   char distance;
   char flags;
-  struct zebra_route *v4_rt;           // routes currently exportet to zebra
 } zebra;
 
 static void *my_realloc(void *, size_t, const char *);
