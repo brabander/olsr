@@ -77,6 +77,8 @@ my_realloc(void *buf, size_t s, const char *c)
 void
 init_zebra(void)
 {
+
+  memset(&zebra, 0, sizeof zebra);
   zebra_connect();
   if (!(zebra.status & STATUS_CONNECTED))
     olsr_exit("(QUAGGA) AIIIII, could not connect to zebra! is zebra running?", EXIT_FAILURE);
