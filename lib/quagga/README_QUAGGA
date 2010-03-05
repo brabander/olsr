@@ -42,6 +42,10 @@ PlParam "SockPath" "<path>"
         sets the path to zebra socket
 	defaults to "/var/run/quagga/zserv.api" if not set.
 
+PlParam "Port" "<port>"
+        sets the port on which zebra is listening
+	overrides 'SockPath' parameter if set.
+
 ---------------------------------------------------------------------
 SAMPLE CONFIG
 ---------------------------------------------------------------------

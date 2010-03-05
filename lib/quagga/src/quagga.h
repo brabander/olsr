@@ -25,11 +25,6 @@
 
 #define HAVE_SOCKLEN_T
 
-/* Zebra port */
-#ifndef ZEBRA_PORT
-#define ZEBRA_PORT 2600
-#endif
-
 /* Zebra version */
 #ifndef ZEBRA_HEADER_MARKER
 #define ZEBRA_HEADER_MARKER 255
@@ -40,7 +35,9 @@
 #endif
 
 /* Zebra socket */
+#ifndef ZEBRA_SOCKPATH
 #define ZEBRA_SOCKPATH "/var/run/quagga/zserv.api"
+#endif
 
 /* Zebra packet size */
 #define ZEBRA_MAX_PACKET_SIZ		4096
@@ -100,6 +97,7 @@ void zebra_olsr_localpref(void);
 void zebra_olsr_distance(unsigned char);
 void zebra_export_routes(unsigned char);
 void zebra_sockpath(char *);
+void zebra_port(unsigned int);
 
 /*
  * Local Variables:

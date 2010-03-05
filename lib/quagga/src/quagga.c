@@ -34,10 +34,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-
-#ifdef USE_UNIX_DOMAIN_SOCKET
 #include <sys/un.h>
-#endif
 
 /* prototypes intern */
 static struct {
@@ -48,6 +45,7 @@ static struct {
   char distance;
   char flags;
   char *sockpath;
+  unsigned int port;
 } zebra;
 
 static void *my_realloc(void *, size_t, const char *);
@@ -125,35 +123,31 @@ zebra_connect(void)
 {
 
   int ret;
+  union {
+    struct sockaddr_in sin;
+    struct sockaddr_un sun;
+  } sockaddr;
 
-#ifndef USE_UNIX_DOMAIN_SOCKET
-  struct sockaddr_in i;
   if (close(zebra.sock) < 0)
     olsr_exit("(QUAGGA) Could not close socket!", EXIT_FAILURE);
-
-  zebra.sock = socket(AF_INET, SOCK_STREAM, 0);
-#else
-  struct sockaddr_un i;
-  if (close(zebra.sock) < 0)
-    olsr_exit("(QUAGGA) Could not close socket!", EXIT_FAILURE);
-
-  zebra.sock = socket(AF_UNIX, SOCK_STREAM, 0);
-#endif
+  zebra.sock = socket(zebra.port ? AF_INET : AF_UNIX, SOCK_STREAM, 0);
 
   if (zebra.sock < 0)
     olsr_exit("(QUAGGA) Could not create socket!", EXIT_FAILURE);
 
-  memset(&i, 0, sizeof i);
-#ifndef USE_UNIX_DOMAIN_SOCKET
-  i.sin_family = AF_INET;
-  i.sin_port = htons(ZEBRA_PORT);
-  i.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-#else
-  i.sun_family = AF_UNIX;
-  strscpy(i.sun_path, zebra.sockpath, sizeof(i.sun_path));
-#endif
+  memset(&sockaddr, 0, sizeof sockaddr);
 
-  ret = connect(zebra.sock, (struct sockaddr *)&i, sizeof i);
+  if (zebra.port) {
+    sockaddr.sin.sin_family = AF_INET;
+    sockaddr.sin.sin_port = htons(zebra.port);
+    sockaddr.sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    ret = connect(zebra.sock, (struct sockaddr *)&sockaddr.sin, sizeof sockaddr.sin);
+  } else {
+    sockaddr.sun.sun_family = AF_UNIX;
+    strscpy(sockaddr.sun.sun_path, zebra.sockpath, sizeof(sockaddr.sun.sun_path));
+    ret = connect(zebra.sock, (struct sockaddr *)&sockaddr.sun, sizeof sockaddr.sun);
+  }
+
   if (ret < 0)
     zebra.status &= ~STATUS_CONNECTED;
   else
@@ -615,6 +609,14 @@ zebra_sockpath(char *sockpath)
   len = strlen(sockpath) + 1;
   zebra.sockpath = my_realloc(zebra.sockpath, len, "zebra_sockpath");
   memcpy(zebra.sockpath, sockpath, len);
+
+}
+
+void
+zebra_port(unsigned int port)
+{
+
+  zebra.port = port;
 
 }
 

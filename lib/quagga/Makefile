@@ -44,7 +44,6 @@ TOPDIR = ../..
 include $(TOPDIR)/Makefile.inc
 
 CFLAGS += -g
-CPPFLAGS +=-DUSE_UNIX_DOMAIN_SOCKET
 
 #uncomment the following line only if you are sure what you're doing, it will 
 #probably break things! 

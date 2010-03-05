@@ -43,6 +43,7 @@ static set_plugin_parameter set_exportroutes;
 static set_plugin_parameter set_distance;
 static set_plugin_parameter set_localpref;
 static set_plugin_parameter set_sockpath;
+static set_plugin_parameter set_port;
 
 
 int
@@ -57,6 +58,7 @@ static const struct olsrd_plugin_parameters plugin_parameters[] = {
   {.name = "Distance",.set_plugin_parameter = &set_distance,},
   {.name = "LocalPref",.set_plugin_parameter = &set_localpref,},
   {.name = "SockPath",.set_plugin_parameter = &set_sockpath,.addon = {PATH_MAX},},
+  {.name = "Port",.set_plugin_parameter = &set_port,},
 };
 
 void
@@ -132,6 +134,18 @@ set_sockpath(const char *value, void *data __attribute__ ((unused)), set_plugin_
   if (set_plugin_string(value, &sockpath, addon))
     return 1;
   zebra_sockpath(sockpath);
+  return 0;
+}
+
+static int
+set_port(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused)))
+{
+  unsigned int port;
+
+  if (set_plugin_port(value, &port, addon))
+    return 1;
+  zebra_port(port);
+
   return 0;
 }
 
