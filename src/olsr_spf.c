@@ -487,9 +487,10 @@ olsr_calculate_routing_table(bool force)
       }
     }
   }
-
+#if defined linux
   /* check gateway tunnels */
   olsr_trigger_gatewayloss_check();
+#endif
 
   /* Update the RIB based on the new SPF results */
 
