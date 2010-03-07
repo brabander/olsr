@@ -55,7 +55,10 @@
 #include <net/if.h>
 #include <linux/ip.h>
 #include <linux/if_tunnel.h>
+#include <linux/version.h>
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
 #include <linux/ip6_tunnel.h>
+#endif
 
 //ifup includes
 #include <sys/socket.h>
@@ -148,6 +151,7 @@ static int os_ip4_tunnel(const char *name, in_addr_t *target)
  * @return 0 if an error happened,
  *   if_index for successful created tunnel, 1 for successful deleted tunnel
  */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
 static int os_ip6_tunnel(const char *name, struct in6_addr *target)
 {
   struct ifreq ifr;
@@ -178,6 +182,7 @@ static int os_ip6_tunnel(const char *name, struct in6_addr *target)
   }
   return target != NULL ? if_nametoindex(name) : 1;
 }
+#endif
 
 /**
  * Dummy for generating an interface name for an olsr ipip tunnel
@@ -216,7 +221,11 @@ struct olsr_iptunnel_entry *olsr_os_add_ipip_tunnel(union olsr_ip_addr *target, 
       if_idx = os_ip4_tunnel(name, &target->v4.s_addr);
     }
     else {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
       if_idx = os_ip6_tunnel(name, &target->v6);
+#else
+      if_idx = 0;
+#endif
     }
 
     if (if_idx == 0) {
@@ -263,7 +272,9 @@ static void internal_olsr_os_del_ipip_tunnel(struct olsr_iptunnel_entry *t, bool
     os_ip4_tunnel(t->if_name, NULL);
   }
   else {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
     os_ip6_tunnel(t->if_name, NULL);
+#endif
   }
 
   avl_delete(&tunnel_tree, &t->node);
