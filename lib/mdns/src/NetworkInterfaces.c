@@ -52,9 +52,11 @@
 #include <assert.h>             /* assert() */
 #include <net/if.h>             /* socket(), ifreq, if_indextoname(), if_nametoindex() */
 #include <netinet/in.h>         /* htons() */
+#if defined linux
 #include <linux/if_ether.h>     /* ETH_P_IP */
 #include <linux/if_packet.h>    /* packet_mreq, PACKET_MR_PROMISC, PACKET_ADD_MEMBERSHIP */
 #include <linux/if_tun.h>       /* IFF_TAP */
+#endif
 #include <netinet/ip.h>         /* struct ip */
 #include <netinet/udp.h>        /* SOL_UDP */
 #include <stdlib.h>             /* atoi, malloc */

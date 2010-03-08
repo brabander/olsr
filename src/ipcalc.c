@@ -63,6 +63,11 @@ const struct olsr_ip_prefix ipv6_internet_route =
     .prefix_len = 3
 };
 
+/* Default IPv6 multicast addresses FF02::6D(linklocal manet routers, see RFC 5498) */
+const union olsr_ip_addr ipv6_def_multicast = {
+    .v6.s6_addr = { 0xFF, 0x02, 0,0,0,0,0,0,0,0,0,0,0,0,0, 0x6D }
+};
+
 int
 prefix_to_netmask(uint8_t * a, int len, uint8_t prefixlen)
 {

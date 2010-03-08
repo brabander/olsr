@@ -326,15 +326,11 @@ IpcConnect
      # MaxConnections  0
 
      # By default only 127.0.0.1 is allowed
-     # to connect. Here allowed hosts can
+     # to connect. Here allowed hosts and networks can
      # be added
 
      # Host            127.0.0.1
      # Host            10.0.0.5
-
-     # Specify entire net-ranges that are 
-     # allowed to connect
-
      # Net             192.168.1.0 255.255.255.0     
 }
 
@@ -476,7 +472,7 @@ Interface "<OLSRd-Interface1>" "<OLSRd-Interface2>"
     # Ip4Broadcast      0.0.0.0
 
     # IPv6 multicast address
-    # (default is FF02::6D, the "manet-router linklocal multicast)
+    # (default is FF02::6D, the manet-router linklocal multicast)
 
     # IPv6Multicast	FF02::6D
 

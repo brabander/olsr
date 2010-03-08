@@ -89,9 +89,6 @@
 #define WEIGHT_HIGH             4096    /* High                 */
 #define WEIGHT_HIGHEST          8192    /* Really high          */
 
-#define IF_MODE_MESH   	0
-#define IF_MODE_ETHER   1
-
 struct if_gen_property {
   uint32_t owner_id;
   void *data;

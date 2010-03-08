@@ -43,6 +43,7 @@
 #define _OLSRD_CFGPARSER_H
 
 #include "olsr_types.h"
+#include "common/autobuf.h"
 
 /*set to 1 to collect all startup sleep into one sleep (just as long as the longest sleep) useful if many errors on many interfaces*/
 #define OLSR_COLLECT_STARTUP_SLEEP 1
@@ -51,6 +52,7 @@
 #define SYSLOG_NUMBERING 0
 
 /* Default values not declared in olsr_protocol.h */
+#define DEF_IP_VERSION       AF_INET
 #define DEF_POLLRATE         0.05
 #define DEF_NICCHGPOLLRT     2.5
 #define DEF_WILL_AUTO        false
@@ -62,6 +64,7 @@
 #define DEF_USE_HYST         false
 #define DEF_FIB_METRIC       FIBM_FLAT
 #define DEF_LQ_LEVEL         2
+#define DEF_LQ_ALGORITHM     "etxff"
 #define DEF_LQ_FISH          1
 #define DEF_LQ_NAT_THRESH    1.0
 #define DEF_LQ_AGING         0.05
@@ -81,7 +84,9 @@
 #define DEF_GW_UPLINK_NAT    true
 #define DEF_UPLINK_SPEED     128
 #define DEF_DOWNLINK_SPEED   1024
-#define DEF_USE_SRCIP_ROUTES false;
+#define DEF_USE_SRCIP_ROUTES false
+
+#define DEF_IF_MODE          IF_MODE_MESH
 
 /* Bounds */
 
@@ -111,11 +116,6 @@
 #define MIN_SMARTGW_SPEED    1
 #define MAX_SMARTGW_SPEED    320000000
 
-/* Option values */
-#define CFG_FIBM_FLAT          "flat"
-#define CFG_FIBM_CORRECT       "correct"
-#define CFG_FIBM_APPROX        "approx"
-
 #ifndef IPV6_ADDR_SITELOCAL
 #define IPV6_ADDR_SITELOCAL    0x0040U
 #endif
@@ -129,6 +129,21 @@ enum smart_gw_uplinktype {
   GW_UPLINK_IPV46,
   GW_UPLINK_CNT,
 };
+
+
+typedef enum {
+  FIBM_FLAT,
+  FIBM_CORRECT,
+  FIBM_APPROX,
+  FIBM_CNT
+} olsr_fib_metric_options;
+
+enum olsr_if_mode {
+  IF_MODE_MESH,
+  IF_MODE_ETHER,
+  IF_MODE_CNT
+};
+
 
 struct olsr_msg_params {
   float emission_interval;
@@ -197,12 +212,6 @@ struct plugin_entry {
   struct plugin_param *params;
   struct plugin_entry *next;
 };
-
-typedef enum {
-  FIBM_FLAT,
-  FIBM_CORRECT,
-  FIBM_APPROX
-} olsr_fib_metric_options;
 
 /*
  * The config struct
@@ -287,6 +296,8 @@ extern "C" {
 #endif
 
   extern const char *GW_UPLINK_TXT[];
+  extern const char *FIB_METRIC_TXT[];
+  extern const char *OLSR_IF_MODE[];
 
 /*
  * List functions
@@ -310,9 +321,9 @@ extern "C" {
 
   void olsrd_print_cnf(struct olsrd_config *);
 
-  int olsrd_write_cnf(struct olsrd_config *, const char *);
+  void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf);
 
-  int olsrd_write_cnf_buf(struct olsrd_config *, char *, uint32_t);
+  int olsrd_write_cnf(struct olsrd_config *, const char *);
 
   struct if_config_options *get_default_if_config(void);
 

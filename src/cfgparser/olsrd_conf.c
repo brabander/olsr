@@ -66,11 +66,22 @@ extern int yyparse(void);
 
 static char interface_defaults_name[] = "[InterfaceDefaults]";
 
+const char *FIB_METRIC_TXT[] = {
+  "flat",
+  "correct",
+  "approx",
+};
+
 const char *GW_UPLINK_TXT[] = {
   "none",
   "ipv4",
   "ipv6",
   "both"
+};
+
+const char *OLSR_IF_MODE[] = {
+  "mesh",
+  "ether"
 };
 
 static char copyright_string[] __attribute__ ((unused)) =
@@ -370,12 +381,13 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
     return -1;
   }
 
-#if defined linux && LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
+#if defined linux
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
   if (cnf->ip_version == AF_INET6 && cnf->smart_gw_active) {
     fprintf(stderr, "Smart gateways are not supported for linux kernel 2.4 and ipv6\n");
     return -1;
   }
-
+#endif
 #endif
 
 #ifdef linux
@@ -680,7 +692,6 @@ set_default_cnf(struct olsrd_config *cnf)
 struct if_config_options *
 get_default_if_config(void)
 {
-  struct in6_addr in6;
   struct if_config_options *io = malloc(sizeof(*io));
 
   if (io == NULL) {
@@ -690,8 +701,9 @@ get_default_if_config(void)
 
   memset(io, 0, sizeof(*io));
 
-  inet_pton(AF_INET6, OLSR_IPV6_MCAST, &in6);
-  io->ipv6_multicast.v6 = in6;
+  io->mode = DEF_IF_MODE;
+
+  io->ipv6_multicast = ipv6_def_multicast;
 
   io->lq_mult = NULL;
 

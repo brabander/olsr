@@ -799,15 +799,16 @@ iipversion:    TOK_IPVERSION TOK_INTEGER
 
 fibmetric:    TOK_FIBMETRIC TOK_STRING
 {
+  int i;
   PARSER_DEBUG_PRINTF("FIBMetric: %s\n", $2->string);
-  if (strcmp($2->string, CFG_FIBM_FLAT) == 0) {
-      olsr_cnf->fib_metric = FIBM_FLAT;
-  } else if (strcmp($2->string, CFG_FIBM_CORRECT) == 0) {
-      olsr_cnf->fib_metric = FIBM_CORRECT;
-  } else if (strcmp($2->string, CFG_FIBM_APPROX) == 0) {
-      olsr_cnf->fib_metric = FIBM_APPROX;
-  } else {
-    fprintf(stderr, "FIBMetric must be \"%s\", \"%s\", or \"%s\"!\n", CFG_FIBM_FLAT, CFG_FIBM_CORRECT, CFG_FIBM_APPROX);
+  for (i=0; i<FIBM_CNT; i++) {
+    if (strcmp($2->string, FIB_METRIC_TXT[i]) == 0) {
+      olsr_cnf->fib_metric = i;
+      break;
+    }
+  }
+  if (i == FIBM_CNT) {
+    fprintf(stderr, "Bad FIBMetric value: %s\n", $2->string);
     YYABORT;
   }
   free($1);
