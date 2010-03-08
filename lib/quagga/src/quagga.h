@@ -98,6 +98,7 @@ void zebra_olsr_distance(unsigned char);
 void zebra_export_routes(unsigned char);
 void zebra_sockpath(char *);
 void zebra_port(unsigned int);
+void zebra_version(char);
 
 /*
  * Local Variables:

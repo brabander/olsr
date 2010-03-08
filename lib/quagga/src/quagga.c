@@ -46,6 +46,7 @@ static struct {
   char flags;
   char *sockpath;
   unsigned int port;
+  char version;
 } zebra;
 
 static void *my_realloc(void *, size_t, const char *);
@@ -53,7 +54,7 @@ static void zebra_connect(void);
 static unsigned char *try_read(ssize_t *);
 static int zebra_send_command(unsigned char *);
 static unsigned char *zebra_route_packet(uint16_t, struct zebra_route *);
-static unsigned char *zebra_redistribute_packet(unsigned char, unsigned char);
+static unsigned char *zebra_redistribute_packet(uint16_t, unsigned char);
 static void zebra_enable_redistribute(void);
 static void zebra_disable_redistribute(void);
 static struct zebra_route *zebra_parse_route(unsigned char *);
@@ -211,7 +212,14 @@ zebra_route_packet(uint16_t cmd, struct zebra_route *r)
   cmdopt = olsr_malloc(ZEBRA_MAX_PACKET_SIZ, "zebra add_v4_route");
 
   t = &cmdopt[2];
-  *t++ = cmd;
+  if (zebra.version) {
+    *t++ = ZEBRA_HEADER_MARKER;
+    *t++ = zebra.version;
+    cmd = htons(cmd);
+    memcpy(t, &cmd, sizeof cmd);
+    t += sizeof cmd;
+  } else
+      *t++ = (unsigned char) cmd;
   *t++ = r->type;
   *t++ = r->flags;
   *t++ = r->message;
@@ -253,7 +261,7 @@ void
 zebra_parse(void *foo __attribute__ ((unused)))
 {
   unsigned char *data, *f;
-  unsigned char command;
+  uint16_t command;
   uint16_t length;
   ssize_t len;
   struct zebra_route *route;
@@ -270,7 +278,14 @@ zebra_parse(void *foo __attribute__ ((unused)))
       length = ntohs (length);
       if (!length) // something wired happened
         olsr_exit("(QUAGGA) Zero message length??? ", EXIT_FAILURE);
-      command = f[2];
+      if (zebra.version) {
+        if ((f[2] != ZEBRA_HEADER_MARKER) || (f[3] != zebra.version))
+          olsr_exit("(QUAGGA) Invalid zebra header received!", EXIT_FAILURE);
+        memcpy(&command, &f[4], sizeof command);
+        command = ntohs (command);
+      } else
+          command = f[2];
+OLSR_PRINTF(1, "(QUAGGA) DEBUG: %d\n", command);
       switch (command) {
         case ZEBRA_IPV4_ROUTE_ADD:
           route = zebra_parse_route(f);
@@ -379,7 +394,7 @@ static struct zebra_route
   length = ntohs (length);
 
   r = olsr_malloc(sizeof *r, "zebra_parse_route");
-  pnt = &opt[3];
+  pnt = (zebra.version ? &opt[6] : &opt[3]);
   r->type = *pnt++;
   r->flags = *pnt++;
   r->message = *pnt++;
@@ -390,23 +405,31 @@ static struct zebra_route
   memcpy(&r->prefix.v4.s_addr, pnt, size);
   pnt += size;
 
-  if (r->message & ZAPI_MESSAGE_NEXTHOP) {
-    r->nexthop_num = *pnt++;
-    r->nexthop = olsr_malloc((sizeof *r->nexthop) * r->nexthop_num, "quagga: zebra_parse_route");
-    for (c = 0; c < r->nexthop_num; c++) {
-      memcpy(&r->nexthop[c].v4.s_addr, pnt, sizeof r->nexthop[c].v4.s_addr);
-      pnt += sizeof r->nexthop[c].v4.s_addr;
-    }
-  }
+  switch (zebra.version) {
+    case 0:
+    case 1:
+      if (r->message & ZAPI_MESSAGE_NEXTHOP) {
+        r->nexthop_num = *pnt++;
+        r->nexthop = olsr_malloc((sizeof *r->nexthop) * r->nexthop_num, "quagga: zebra_parse_route");
+        for (c = 0; c < r->nexthop_num; c++) {
+          memcpy(&r->nexthop[c].v4.s_addr, pnt, sizeof r->nexthop[c].v4.s_addr);
+          pnt += sizeof r->nexthop[c].v4.s_addr;
+        }
+      }
 
-  if (r->message & ZAPI_MESSAGE_IFINDEX) {
-    r->ifindex_num = *pnt++;
-    r->ifindex = olsr_malloc(sizeof(uint32_t) * r->ifindex_num, "quagga: zebra_parse_route");
-    for (c = 0; c < r->ifindex_num; c++) {
-      memcpy(&r->ifindex[c], pnt, sizeof r->ifindex[c]);
-      r->ifindex[c] = ntohl (r->ifindex[c]);
-      pnt += sizeof r->ifindex[c];
-    }
+      if (r->message & ZAPI_MESSAGE_IFINDEX) {
+        r->ifindex_num = *pnt++;
+        r->ifindex = olsr_malloc(sizeof(uint32_t) * r->ifindex_num, "quagga: zebra_parse_route");
+        for (c = 0; c < r->ifindex_num; c++) {
+          memcpy(&r->ifindex[c], pnt, sizeof r->ifindex[c]);
+          r->ifindex[c] = ntohl (r->ifindex[c]);
+          pnt += sizeof r->ifindex[c];
+        }
+      }
+      break;
+    default:
+      OLSR_PRINTF(1, "(QUAGGA) Unsupported zebra packet version!\n");
+      break;
   }
 
   if (r->message & ZAPI_MESSAGE_DISTANCE) {
@@ -429,7 +452,7 @@ static struct zebra_route
 }
 
 static unsigned char
-*zebra_redistribute_packet (unsigned char cmd, unsigned char type)
+*zebra_redistribute_packet (uint16_t cmd, unsigned char type)
 {
   unsigned char *data, *pnt;
   uint16_t size;
@@ -437,7 +460,14 @@ static unsigned char
   data = olsr_malloc(ZEBRA_MAX_PACKET_SIZ , "zebra_redistribute_packet");
 
   pnt = &data[2];
-  *pnt++ = cmd;
+  if (zebra.version) {
+    *pnt++ = ZEBRA_HEADER_MARKER;
+    *pnt++ = zebra.version;
+    cmd = htons(cmd);
+    memcpy(pnt, &cmd, sizeof cmd);
+    pnt += sizeof cmd;
+  } else
+      *pnt++ = (unsigned char) cmd;
   *pnt++ = type;
   size = htons(pnt - data);
   memcpy(data, &size, 2);
@@ -617,6 +647,14 @@ zebra_port(unsigned int port)
 {
 
   zebra.port = port;
+
+}
+
+void
+zebra_version(char version)
+{
+
+  zebra.version = version;
 
 }
 

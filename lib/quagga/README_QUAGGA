@@ -46,6 +46,11 @@ PlParam "Port" "<port>"
         sets the port on which zebra is listening
 	overrides 'SockPath' parameter if set.
 
+PlParam "Version" "<version>"
+        sets the version of packet format to communicate with zebra.
+	use "0" for Quagga 0.98.x and "1" for Quagga 0.99.x.
+	defaults to "0".
+
 ---------------------------------------------------------------------
 SAMPLE CONFIG
 ---------------------------------------------------------------------
