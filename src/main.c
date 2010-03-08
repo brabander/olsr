@@ -520,14 +520,25 @@ int main(int argc, char *argv[]) {
   /* create policy routing priorities if necessary */
   if (olsr_cnf->rt_policy) {
     struct interface *ifn;
-    olsr_os_policy_rule(olsr_cnf->ip_version, olsr_cnf->rt_table, olsr_cnf->rt_table_pri, NULL, true);
-    olsr_os_policy_rule(olsr_cnf->ip_version, olsr_cnf->rt_table_tunnel, olsr_cnf->rt_table_tunnel_pri, NULL, true);
-    olsr_os_policy_rule(olsr_cnf->ip_version, olsr_cnf->rt_table_default, olsr_cnf->rt_table_default_pri, NULL, true);
+    if (olsr_cnf->rt_table_pri) {
+      olsr_os_policy_rule(olsr_cnf->ip_version,
+          olsr_cnf->rt_table, olsr_cnf->rt_table_pri, NULL, true);
+    }
+    if (olsr_cnf->rt_table_tunnel_pri) {
+      olsr_os_policy_rule(olsr_cnf->ip_version,
+          olsr_cnf->rt_table_tunnel, olsr_cnf->rt_table_tunnel_pri, NULL, true);
+    }
+    if (olsr_cnf->rt_table_default_pri) {
+      olsr_os_policy_rule(olsr_cnf->ip_version,
+          olsr_cnf->rt_table_default, olsr_cnf->rt_table_default_pri, NULL, true);
+    }
 
     /* OLSR sockets */
-    for (ifn = ifnet; ifn; ifn = ifn->int_next) {
-      olsr_os_policy_rule(olsr_cnf->ip_version, olsr_cnf->rt_table_default,
+    if (olsr_cnf->rt_table_defaultolsr_pri) {
+      for (ifn = ifnet; ifn; ifn = ifn->int_next) {
+        olsr_os_policy_rule(olsr_cnf->ip_version, olsr_cnf->rt_table_default,
             olsr_cnf->rt_table_defaultolsr_pri, ifn->int_name, true);
+      }
     }
   }
   /* trigger gateway selection */
@@ -719,7 +730,7 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
     close(ifn->send_socket);
 
 #ifdef LINUX_NETLINK_ROUTING
-    if (olsr_cnf->rt_policy) {
+    if (olsr_cnf->rt_policy && olsr_cnf->rt_table_defaultolsr_pri) {
       olsr_os_policy_rule(olsr_cnf->ip_version, olsr_cnf->rt_table_default,
           olsr_cnf->rt_table_defaultolsr_pri, ifn->int_name, false);
     }
@@ -737,9 +748,18 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
 
 #ifdef LINUX_NETLINK_ROUTING
   if (olsr_cnf->rt_policy) {
-    olsr_os_policy_rule(olsr_cnf->ip_version, olsr_cnf->rt_table, olsr_cnf->rt_table_pri, NULL, false);
-    olsr_os_policy_rule(olsr_cnf->ip_version, olsr_cnf->rt_table_tunnel, olsr_cnf->rt_table_tunnel_pri, NULL, false);
-    olsr_os_policy_rule(olsr_cnf->ip_version, olsr_cnf->rt_table_default, olsr_cnf->rt_table_default_pri, NULL, false);
+    if (olsr_cnf->rt_table_pri) {
+      olsr_os_policy_rule(olsr_cnf->ip_version,
+          olsr_cnf->rt_table, olsr_cnf->rt_table_pri, NULL, false);
+    }
+    if (olsr_cnf->rt_table_tunnel_pri) {
+      olsr_os_policy_rule(olsr_cnf->ip_version,
+          olsr_cnf->rt_table_tunnel, olsr_cnf->rt_table_tunnel_pri, NULL, false);
+    }
+    if (olsr_cnf->rt_table_default_pri) {
+      olsr_os_policy_rule(olsr_cnf->ip_version,
+          olsr_cnf->rt_table_default, olsr_cnf->rt_table_default_pri, NULL, false);
+    }
   }
   close(olsr_cnf->rtnl_s);
   close (olsr_cnf->rt_monitor_socket);
