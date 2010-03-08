@@ -58,6 +58,7 @@
 #ifdef linux
 #include <linux/types.h>
 #include <linux/rtnetlink.h>
+#include <linux/version.h>
 #endif
 
 extern FILE *yyin;
@@ -368,6 +369,14 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
     fprintf(stderr, "Don't use Nat threshold together with smart gateway mode.\n");
     return -1;
   }
+
+#if defined linux && LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
+  if (cnf->ip_version == AF_INET6 && cnf->smart_gw_active) {
+    fprintf(stderr, "Smart gateways are not supported for linux kernel 2.4 and ipv6\n");
+    return -1;
+  }
+
+#endif
 
 #ifdef linux
   /* calculate rt_policy defaults if necessary */
