@@ -513,8 +513,8 @@ InUdpDestPortList(int ip_version, union olsr_ip_addr *addr, uint16_t port)
  * Function   : P2pdPacketCaptured
  * Description: Handle a captured IP packet
  * Input      : encapsulationUdpData - space for the encapsulation header, 
- * 							followed by the captured IP packet
- * 							nBytes - The number of bytes in the data packet 
+ *              followed by the captured IP packet
+ *              nBytes - The number of bytes in the data packet
  * Output     : none
  * Return     : none
  * Data Used  : P2pdInterfaces
