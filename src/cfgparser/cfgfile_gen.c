@@ -84,11 +84,13 @@ if_appendf(struct autobuf *autobuf, bool comments, const char *fmt, ...)
   va_list ap;
   char *first;
 
-  va_start(ap, fmt);
-  first = va_arg(ap, char*);
-  va_end(ap);
-  if (!comments && *first) {
-    return 0;
+  if (!comments) {
+    va_start(ap, fmt);
+    first = va_arg(ap, char*);
+    va_end(ap);
+    if (*first) {
+      return 0;
+    }
   }
 
   va_start(ap, fmt);
