@@ -57,13 +57,13 @@
 RtPolicy no
 
 # Activates (in IPv6 mode) the automatic use of NIIT
-# (see README_NIIT_SMARTGW)
+# (see README-Olsr-Extensions)
 # (default is "yes")
 
 UseNiit no
 
 # Activates the smartgateway ipip tunnel feature.
-# See README_NIIT_SMARTGW for a description of smartgateways.
+# See README-Olsr-Extensions for a description of smartgateways.
 # (default is "yes")
 
 SmartGateway no

@@ -1,0 +1,258 @@
+=======================================================
+      OLSRd (version 0.5.7.0) protocol extensions
+=======================================================
+
+1.) Credits
+2.) Link quality algorithms
+3.) Fisheye
+4.) NIIT (ipv4 over ipv6 traffic)
+5.) Smart gateways (asymmetric gateway tunnels)
+6.) NatThreshold
+
+NIIT and Smart gateways are only supported for linux at the moment.
+
+    1.) Credits:
+********************
+
+The concept of ETX (expected transmission count) has been developed by
+Douglas S. J. De Couto at the Massachusetts Institute of Technology
+(see http://en.wikipedia.org/wiki/Expected_Transmission_Count).
+
+The original ETX design has been done by the Berlin Freifunk Network
+(see www.freifunk.net and www.c-base.org), the code and message format
+was coded by Thomas Lopatic.
+
+Fisheye was implemented by Thomas Lopatic in 2005.
+
+The LQ-Plugin rewrite was done by Henning Rogge in 2008.
+
+The NIIT kernel module was written by lynxis in 2009.
+
+The asymmetric gateway tunnels was written by Markus Kittenberg
+and Henning Rogge, but were used by BATMAN before OLSRd.
+
+
+    2.) Link quality algorithm
+**********************************
+
+Concept:
+--------
+
+OLSRd (since version 0.5.6) use a dimensionless integer value for a
+representation of the 'cost' of each link. There are multiple LQ-Plugins,
+each of them calculating a cost for the links of the router. At the moment
+(version 0.5.7.0) all lq_plugins are using an ETX-metric (expected
+transmission count).
+
+Each link is described by a LQ (link quality) and a NLQ (neighbor link
+quality) value, which describe the quality towards the router (LQ) and
+towards the neighbor (NLQ). Both LQ and NLQ can be a value between 0 and 1.
+The total cost of the link is calculated as ETX - 1.0/(LQ * NLQ). The
+ETX value of a link could be considered as the number of retransmissions
+necessary to deliver the packet to the target. ETX 1.0 mean a perfect
+link without packet loss.
+
+OLSRd chooses the route towards a target by using the path with the
+smallest sum of link costs.
+
+Configuration:
+--------------
+
+The link quality system is activated by setting the config variable
+"LinkQualityLevel" to 2.
+
+You can use the "LinkQualityAlgorithm" parameter to choose the current
+link quality algorithm in the config file. Some embedded OLSRd versions
+are only compiled with one plugin (mostly etx_ff), so don't use the
+configuration option with this agents.
+
+There are four different link quality algorithms in OLSRd 0.5.7.0, two
+current Freifunk ETX implementations and two legacy implementations.
+
+LinkQuality-Algorithm "etx_ff":
+-------------------------------
+
+"Etx_ff" (etx freifunk) is the current default lq algorithm for OLSRd.
+It uses the sequence number of the OLSR packages (which are link specific)
+to determine the current loss rate. Etx_ff includes a hysteresis
+mechanism to suppress small fluctuations of the LQ and NLQ value. If
+no packages are received from a certain neighbor at all, a timer begins
+to lower the calculated LQ value until the next package is received or
+the link is dropped.
+Etx_ff only uses integer arithmetic, so it performs well on embedded
+hardware having no FPU.
+
+The message format of etx_ff is compatible with etx_fpm and etx_float.
+
+LinkQuality-Algorithm "etx_ffeth"
+--------------------------------
+
+"Etx_ffeth" is an experimental and INCOMPATIBLE extension of etx_ff.
+The problem with etx_ff, etx_float and etx_fpm is that they calculate
+ethernet links with the same cost as a wireless link without packet loss
+(ETX 1.0) because the encoding of etx_ff cannot encode link costs
+lower than 1.0. This means OLSRd prefers a single wireless link with
+some loss (e.g. ETX 1.5) over a two hop route with one ethernet link
+(ETX 1.0) and one perfect wireless link (ETX 1.0).
+
+"Etx_ffeth" tries to work around this problem by introducing a special
+LQ encoding for the value ETX 0.1, which is only used for ethernet
+links without packet loss. Because of the different encoding etx_ffeth
+is not compatible with etx_ff, etx_fpm or etx_float. These three
+implementations detect etx_ffeth nodes with LQ 0 (ETX infinite).
+
+etx_ffeth only use integer arithmetic, so it performs well on embedded
+hardware.
+
+Legacy LinkQuality-Algorithm "etx_float"
+----------------------------------------
+
+"Etx_float" calculates the ETX value by using exponential aging (with
+a configurable aging parameter) on the incoming (or lost) Hellos.
+It's easier to understand than etx_ff, but the results are not as
+good as in etx_ff, because it cannot use the TC messages for link
+quality calculation.
+Etx_float uses floating point math, so it might use more CPU on embedded
+hardware.
+
+The message format of etx_float is compatible with etx_fpm and etx_ff.
+
+Legacy LinkQuality-Algorithm "etx_fpm"
+--------------------------------------
+
+"Etx_fpm" is a fixed point math implementation of etx_float. It
+calculates the same link qualities as etx_float, but is much faster
+on embedded hardware.
+
+The message format of etx_fpm is compatible with etx_float and etx_ff.
+
+
+    3.) Fisheye
+*******************
+
+Normally OLSR floods all topology control (TC) messages to all
+routes in the mesh, which can create a lot of overhead for large
+meshs with hundreds of routers. Reducing the rate of TCs can reduce
+this overhead, but delay route changes and correction of errors
+in the routing tables.
+
+The Fisheye (sometimes called Hazy Sighted Link State Routing)
+mechanism implements a strategy to reach a compromise between
+this two problems. When activated only every 8th TC is send
+to all mesh nodes. Most TCs are given a reduced TTL (time to live)
+and are only transmitted to the neighborhood of the router.
+
+The current sequence of TTLs with active fisheye mechanism is
+2, 8, 2, 16, 2, 8, 2 and 255 (maximum TTL).
+
+The problem with Fisheye is that it introduce artifical borders
+for flooding TCs, which can theoretically lead to inconsistent routes
+and routing loops at the border of the fisheye circles. In practice
+fisheye seems to work well enough that it is a mandatory feature
+for most larger Freifunk meshs.
+
+
+    4.) NIIT (ipv4 over ipv6 traffic)
+*****************************************
+(see https://dev.dd19.de/cgi-bin/gitweb.cgi?p=niit.git;a=summary)
+
+NIIT is a special linux kernel device that allows easy transmission
+of IPv4 unicast traffic through an IPv6 network. Since OLSRd 0.5.7.0
+there is integrated support for NIIT in the routing daemon, so
+setting up IPv4 traffic over IPv6 OLSR meshs is very easy. Instead
+of creating routes and tunnels by hand all the administrator of a
+router has to do is to set up his own IPv4 targets as "IPv4-mapped"
+IPv6 HNAs.
+
+Example configurations:
+- connect a local 192.168.1.0/8 net to the mesh
+
+HNA6 {
+  0::ffff:C0A8:01:00 120
+}
+
+- announce an IPv4 internet gateway
+
+HNA6 {
+  0::ffff:0:0 96
+}
+
+
+    5.) Smart gateways (asymmetric gateway tunnels)
+*******************************************************
+
+The smartgateway mechanism was written by Markus Kittenberg and
+Henning Rogge to allow an OLSR user to directly choose their default
+internet gateway instead of relying on the hop by hop decisions on
+the way to the gateway. OLSRd 0.5.7.0 can create an IPIP tunnel
+to the gateways OLSRd address to sidestep the same nasty effects
+described in the Nat-Threshold section.
+
+The smartgateway code can be split into two sections, one is
+responsible for announcing the existence of a smartgateway uplink
+and one on the client nodes to choose an uplink and create the
+tunnel to the gateway. It use a modified (but backward compatible)
+special HNA to signal the gateways to the clients. The clients can
+use a plugin (or the integrated default code) to choose one of the
+available gateways and change it if necessary. 
+
+The smartgateway system is setup by several configuration parameters,
+most of them with a sane default setting. The whole system can be
+switched on/off by the following parameter:
+
+SmartGateway <yes/no>
+
+All other parameters will be ignored if SmartGateway is set to "no"
+(the default is "yes").
+
+On the client side there is a single additional parameter which
+controls if you want to allow the selection of an outgoing ipv4
+gateway with NAT (network address translation).
+
+SmartGatewayAllowNAT <yes/no>
+
+The uplink side of the smartgateway code has four parameters to
+set up the type of the uplink.
+
+SmartGatewayUplink defines which kind of uplink is exported to the
+other mesh nodes. The existence of the uplink is detected by looking
+for a local HNA of 0.0.0.0/0, ::ffff:0:0/96 or 2000::/3. The default
+setting is "both".
+SmartGatewayUplinkNAT defines if the ipv4 part of the uplink use NAT.
+The default of this setting is "yes".
+SmartGatewaySpeed sets the uplink and downlink speed of the gateway,
+which could be used by a plugin to choose the right gateway for a
+client. The default is 128/1024 kbit/s.
+The final parameter SmartGatewayPrefix can be used to signal the
+external IPv6 prefix of the uplink to the clients. This might allow
+a client to change it's local IPv6 address to use the IPv6 gateway
+without any kind of address translation. The maximum prefix length
+is 64 bits, the default is ::/0 (no prefix).
+
+SmartGatewayUplink <none/ipv4/ipv6/both>
+SmartGatewayUplinkNAT <yes/no>
+SmartGatewaySpeed <uplink> <downlink>
+SmartGatewayPrefix <prefix>
+
+
+    6.) NatThreshold
+************************
+
+The NatThreshold option was introduced by Sven Ola to suppress a very
+annoying problem with OLSRd, switching default gateways. If a router
+is located between two internet gateways with similar path costs the
+default route (0.0.0.0/0) will constantly switch between the two
+gateways because of normal fluctuations of the link metrics. Each
+change will terminate all connected sessions (tcp and http), which will
+make using the internet rather painful.
+
+NatThreshold tries to help by introducing a hysteresis factor for
+choosing the route to the default gateway. Only if the new gateway has
+a lower cost than the current gateways path cost multiplied by
+NatThreshold the node will switch the gateway. Practical experience
+shows that this leads to much better quality of default gateway
+selection, even if (in theory) a small NatThreshold together with
+Fisheye can lead to a persistent routing loop.
+
+The introduction of smart gateways should make NatThreshold not
+necessary anymore.
