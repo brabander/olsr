@@ -410,7 +410,7 @@ createSockAddr(struct sockaddr *sockAddr, const struct ipAddr *addr, int port)
   memset(sockAddr, 0, sizeof(struct sockaddr));
 
   if (addr->domain == PF_INET) {
-    sockAddr4 = (struct sockaddr_in *)(ARM_NOWARN_ALIGN)sockAddr;
+    sockAddr4 = (struct sockaddr_in *)ARM_NOWARN_ALIGN(sockAddr);
 
     sockAddr4->sin_family = AF_INET;
     sockAddr4->sin_port = htons((short)port);
@@ -420,7 +420,7 @@ createSockAddr(struct sockaddr *sockAddr, const struct ipAddr *addr, int port)
   }
 
   if (addr->domain == PF_INET6) {
-    sockAddr6 = (struct sockaddr_in6 *)(ARM_NOWARN_ALIGN)sockAddr;
+    sockAddr6 = (struct sockaddr_in6 *)ARM_NOWARN_ALIGN(sockAddr);
 
     sockAddr6->sin6_family = AF_INET6;
     sockAddr6->sin6_port = htons((short)port);
@@ -436,8 +436,8 @@ createSockAddr(struct sockaddr *sockAddr, const struct ipAddr *addr, int port)
 static int
 addrFromSockAddr(struct ipAddr *addr, const struct sockaddr *sockAddr)
 {
-  const struct sockaddr_in *sockAddr4 = (const struct sockaddr_in *)(const ARM_NOWARN_ALIGN)sockAddr;
-  const struct sockaddr_in6 *sockAddr6 = (const struct sockaddr_in6 *)(const ARM_NOWARN_ALIGN)sockAddr;
+  const struct sockaddr_in *sockAddr4 = (const struct sockaddr_in *)CONST_ARM_NOWARN_ALIGN(sockAddr);
+  const struct sockaddr_in6 *sockAddr6 = (const struct sockaddr_in6 *)CONST_ARM_NOWARN_ALIGN(sockAddr);
 
   memset(addr, 0, sizeof(struct ipAddr));
 
