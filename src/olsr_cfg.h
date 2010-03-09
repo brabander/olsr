@@ -64,7 +64,7 @@
 #define DEF_USE_HYST         false
 #define DEF_FIB_METRIC       FIBM_FLAT
 #define DEF_LQ_LEVEL         2
-#define DEF_LQ_ALGORITHM     "etxff"
+#define DEF_LQ_ALGORITHM     "etx_ff"
 #define DEF_LQ_FISH          1
 #define DEF_LQ_NAT_THRESH    1.0
 #define DEF_LQ_AGING         0.05
