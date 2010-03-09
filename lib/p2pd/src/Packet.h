@@ -48,6 +48,12 @@
 #include <net/if.h>             /* IFNAMSIZ, IFHWADDRLEN */
 #include <sys/types.h>          /* u_int8_t, u_int16_t */
 
+struct TSaveTtl
+{
+  u_int8_t ttl;
+  u_int16_t check;
+} __attribute__((__packed__));
+
 /* P2PD-encapsulated packets are Ethernet-IP-UDP packets, which start
  * with a 8-bytes header (struct TEncapHeader), followed by the
  * encapsulated Ethernet-IP packet itself */
@@ -62,11 +68,17 @@ struct TEncapHeader {
 
 #define ENCAP_HDR_LEN ((int)sizeof(struct TEncapHeader))
 
+int IsIpFragment(unsigned char* ipPacket);
+u_int16_t GetIpTotalLength(unsigned char* ipPacket);
 int IsIpv4Fragment(struct ip*);
 int IsMulticastv4(struct ip*);
 int IsBroadcast(struct ip*);
 int IsIpv6Fragment(struct ip6_hdr*);
 int IsMulticastv6(struct ip6_hdr*);
+u_int8_t GetTtl(unsigned char* ipPacket);
+void SaveTtlAndChecksum(unsigned char* ipPacket, struct TSaveTtl* sttl);
+void RestoreTtlAndChecksum(unsigned char* ipPacket, struct TSaveTtl* sttl);
+void DecreaseTtlAndUpdateHeaderChecksum(unsigned char* ipPacket);
 unsigned int GetIpHeaderLength(unsigned char *ipPacket);
 unsigned char *GetIpPacket(unsigned char *encapsulationUdpData);
 

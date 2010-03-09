@@ -76,8 +76,9 @@
 
 /* plugin includes */
 #include "NetworkInterfaces.h"  /* NonOlsrInterface, CreateBmfNetworkInterfaces(), CloseBmfNetworkInterfaces() */
-//#include "Address.h"            /* IsMulticast() */
+//#include "Address.h"          /* IsMulticast() */
 #include "Packet.h"             /* ENCAP_HDR_LEN, BMF_ENCAP_TYPE, BMF_ENCAP_LEN etc. */
+#include "PacketHistory.h"
 #include "dllist.h"
 
 int P2pdTtl=0;
@@ -90,6 +91,8 @@ struct UdpDestPort *                 UdpDestPortList = NULL;
  */
 struct node *                        dupFilterHead = NULL;
 struct node *                        dupFilterTail = NULL;
+
+clockid_t clockid = CLOCK_MONOTONIC;
 
 bool is_broadcast(const struct sockaddr_in addr);
 bool is_multicast(const struct sockaddr_in addr);
@@ -109,9 +112,35 @@ PacketReceivedFromOLSR(unsigned char *encapsulationUdpData, int len)
   struct ip6_hdr *ip6Header;  /* IP header inside the encapsulated IP packet */
   struct NonOlsrInterface *walker;
   int stripped_len = 0;
+  unsigned char * ipPacket;
+  uint16_t ipPacketLen;
+  uint32_t crc32;
   ipHeader = (struct ip *)encapsulationUdpData;
   ip6Header = (struct ip6_hdr *)encapsulationUdpData;
   //OLSR_DEBUG(LOG_PLUGINS, "P2PD PLUGIN got packet from OLSR message\n");
+
+  /* Check for duplicate IP packets now based on a hash */
+  ipPacket = GetIpPacket(encapsulationUdpData);
+  if (IsIpFragment(ipPacket))
+  {
+    return;
+  }
+  ipPacketLen = GetIpTotalLength(ipPacket);
+
+  /* Calculate packet fingerprint */
+  crc32 = PacketCrc32(ipPacket, ipPacketLen);
+
+  /* Check if this packet was seen recently */
+  if (CheckAndMarkRecentPacket(crc32))
+  {
+    OLSR_PRINTF(
+      8,
+      "%s: --> discarding: packet is duplicate\n",
+      PLUGIN_NAME_SHORT);
+    return;
+  }
+
+  PrunePacketHistory(NULL);
 
   /* Check with each network interface what needs to be done on it */
   for (walker = nonOlsrInterfaces; walker != NULL; walker = walker->next) {
@@ -156,7 +185,7 @@ PacketReceivedFromOLSR(unsigned char *encapsulationUdpData, int len)
           dest.sll_addr[0] = 0x01;
           dest.sll_addr[1] = 0x00;
           dest.sll_addr[2] = 0x5E;
-          dest.sll_addr[3] = (ipHeader->ip_dst.s_addr >> 16) & 0xFF;
+          dest.sll_addr[3] = (ipHeader->ip_dst.s_addr >> 16) & 0x7F;
           dest.sll_addr[4] = (ipHeader->ip_dst.s_addr >> 8) & 0xFF;
           dest.sll_addr[5] = ipHeader->ip_dst.s_addr & 0xFF;
         } else /* if (IsBroadcast(ipHeader)) */ {
@@ -315,7 +344,7 @@ olsr_parser(union olsr_message *m, struct interface *in_if __attribute__ ((unuse
   if (ipequal(&originator, &olsr_cnf->main_addr))
     return false;          /* Don't forward either */
 
-  /* Check for duplicates for processing */
+  /* Check for duplicate messages for processing */
   if (p2pd_is_duplicate_message(m))
     return true;  /* Don't process but allow to be forwarded */
 
@@ -637,6 +666,9 @@ DoP2pd(int skfd, void *data __attribute__ ((unused)), unsigned int flags __attri
 int
 InitP2pd(struct interface *skipThisIntf)
 {
+  // Initialize hash table for hash based duplicate IP packet check
+  InitPacketHistory();
+  
   //Tells OLSR to launch olsr_parser when the packets for this plugin arrive
   //olsr_parser_add_function(&olsr_parser, PARSER_TYPE,1);
   olsr_parser_add_function(&olsr_parser, PARSER_TYPE);
