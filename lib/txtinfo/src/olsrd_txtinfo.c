@@ -378,7 +378,7 @@ ipc_print_link(struct autobuf *abuf)
               get_link_entry_text(my_link, '\t', &lqbuffer1),
               get_linkcost_text(my_link->linkcost, false, &lqbuffer2));
 #else
-    abuf_appendf(abuf, "%s\t%s\t\t%s\t%s\t\n", olsr_ip_to_string(&buf1, &my_link->local_iface_addr),
+    abuf_appendf(abuf, "%s\t%s\t0.00\t%s\t%s\t\n", olsr_ip_to_string(&buf1, &my_link->local_iface_addr),
               olsr_ip_to_string(&buf2, &my_link->neighbor_iface_addr),
               get_link_entry_text(my_link, '\t', &lqbuffer1),
               get_linkcost_text(my_link->linkcost, false, &lqbuffer2));
