@@ -101,7 +101,7 @@ int IsBroadcast(struct ip* hdr)
  * Return     : true (1) or false (0)
  * Data Used  : none
  * ------------------------------------------------------------------------- */
-int IsIpv6Fragment(struct ip6_hdr* hdr)
+int IsIpv6Fragment(struct ip6_hdr* hdr __attribute__ ((unused)))
 {
   assert(hdr != NULL);
   
@@ -112,7 +112,7 @@ int IsIpv6Fragment(struct ip6_hdr* hdr)
   return 0;
 }
 
-int IsMulticastv6(struct ip6_hdr* hdr)
+int IsMulticastv6(struct ip6_hdr* hdr __attribute__ ((unused)))
 {
   assert(hdr != NULL);
 
