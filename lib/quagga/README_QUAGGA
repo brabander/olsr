@@ -59,8 +59,8 @@ add in /usr/local/etc/olsrd.conf:
 
 LoadPlugin "olsrd_quagga.so.0.2.2"
 {
-	PlParam "redistribute" "ospf"
-	PlParam "redistribute" "bgp"
+	PlParam "Redistribute" "ospf"
+	PlParam "Redistribute" "bgp"
 	PlParam "ExportRoutes" "only"
 	PlParam "Distance" "125" 
 	PlParam "LocalPref" "false"

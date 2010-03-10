@@ -54,7 +54,7 @@ olsrd_plugin_interface_version(void)
 }
 
 static const struct olsrd_plugin_parameters plugin_parameters[] = {
-  {.name = "redistribute",.set_plugin_parameter = &set_redistribute,},
+  {.name = "Redistribute",.set_plugin_parameter = &set_redistribute,},
   {.name = "ExportRoutes",.set_plugin_parameter = &set_exportroutes,},
   {.name = "Distance",.set_plugin_parameter = &set_distance,},
   {.name = "LocalPref",.set_plugin_parameter = &set_localpref,},
