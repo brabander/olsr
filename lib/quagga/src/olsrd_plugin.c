@@ -93,10 +93,14 @@ set_exportroutes(const char *value, void *data __attribute__ ((unused)), set_plu
   if (!strcmp(value, "only")) {
     olsr_addroute_function = zebra_add_route;
     olsr_delroute_function = zebra_del_route;
+    olsr_addroute6_function = zebra_add_route;
+    olsr_delroute6_function = zebra_del_route;
     zebra_export_routes(1);
   } else if (!strcmp(value, "additional")) {
     olsr_addroute_function = zebra_add_route;
     olsr_delroute_function = zebra_del_route;
+    olsr_addroute6_function = zebra_add_route;
+    olsr_delroute6_function = zebra_del_route;
     zebra_export_routes(1);
   } else
     zebra_export_routes(0);
@@ -168,10 +172,6 @@ set_version(const char *value, void *data __attribute__ ((unused)), set_plugin_p
 int
 olsrd_plugin_init(void)
 {
-  if (olsr_cnf->ip_version != AF_INET) {
-    fputs("see the source - ipv6 so far not supported\n", stderr);
-    return 1;
-  }
 
   olsr_start_timer(1 * MSEC_PER_SEC, 0, OLSR_TIMER_PERIODIC, &zebra_parse, NULL, 0);
 

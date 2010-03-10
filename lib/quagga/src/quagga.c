@@ -224,16 +224,25 @@ zebra_route_packet(uint16_t cmd, struct zebra_route *r)
   *t++ = r->message;
   *t++ = r->prefixlen;
   len = (r->prefixlen + 7) / 8;
-  memcpy(t, &r->prefix.v4.s_addr, len);
+  if (olsr_cnf->ip_version == AF_INET)
+    memcpy(t, &r->prefix.v4.s_addr, len);
+  else
+    memcpy(t, r->prefix.v6.s6_addr, len);
   t = t + len;
 
   if (r->message & ZAPI_MESSAGE_NEXTHOP) {
     *t++ = r->nexthop_num + r->ifindex_num;
 
       for (count = 0; count < r->nexthop_num; count++) {
-        *t++ = ZEBRA_NEXTHOP_IPV4;
-        memcpy(t, &r->nexthop[count].v4.s_addr, sizeof r->nexthop[count].v4.s_addr);
-        t += sizeof r->nexthop[count].v4.s_addr;
+        if (olsr_cnf->ip_version == AF_INET) {
+          *t++ = ZEBRA_NEXTHOP_IPV4;
+          memcpy(t, &r->nexthop[count].v4.s_addr, sizeof r->nexthop[count].v4.s_addr);
+          t += sizeof r->nexthop[count].v4.s_addr;
+        } else {
+          *t++ = ZEBRA_NEXTHOP_IPV6;
+          memcpy(t, r->nexthop[count].v6.s6_addr, sizeof r->nexthop[count].v6.s6_addr);
+          t += sizeof r->nexthop[count].v6.s6_addr;
+        }
       }
       for (count = 0; count < r->ifindex_num; count++) {
         *t++ = ZEBRA_NEXTHOP_IFINDEX;
@@ -284,22 +293,42 @@ zebra_parse(void *foo __attribute__ ((unused)))
         command = ntohs (command);
       } else
           command = f[2];
-      switch (command) {
-        case ZEBRA_IPV4_ROUTE_ADD:
-          route = zebra_parse_route(f);
-          ip_prefix_list_add(&olsr_cnf->hna_entries, &route->prefix, route->prefixlen);
-          free_ipv4_route(route);
-          free(route);
-          break;
-        case ZEBRA_IPV4_ROUTE_DELETE:
-          route = zebra_parse_route(f);
-          ip_prefix_list_remove(&olsr_cnf->hna_entries, &route->prefix, route->prefixlen);
-          free_ipv4_route(route);
-          free(route);
-          break;
-        default:
-          break;
+      if (olsr_cnf->ip_version == AF_INET) {
+        switch (command) {
+          case ZEBRA_IPV4_ROUTE_ADD:
+            route = zebra_parse_route(f);
+            ip_prefix_list_add(&olsr_cnf->hna_entries, &route->prefix, route->prefixlen);
+            free_ipv4_route(route);
+            free(route);
+            break;
+          case ZEBRA_IPV4_ROUTE_DELETE:
+            route = zebra_parse_route(f);
+            ip_prefix_list_remove(&olsr_cnf->hna_entries, &route->prefix, route->prefixlen);
+            free_ipv4_route(route);
+            free(route);
+            break;
+          default:
+            break;
+        }
+      } else {
+        switch (command) {
+          case ZEBRA_IPV6_ROUTE_ADD:
+            route = zebra_parse_route(f);
+            ip_prefix_list_add(&olsr_cnf->hna_entries, &route->prefix, route->prefixlen);
+            free_ipv4_route(route);
+            free(route);
+            break;
+          case ZEBRA_IPV6_ROUTE_DELETE:
+            route = zebra_parse_route(f);
+            ip_prefix_list_remove(&olsr_cnf->hna_entries, &route->prefix, route->prefixlen);
+            free_ipv4_route(route);
+            free(route);
+            break;
+          default:
+            break;
+        }
       }
+
       f += length;
     }
     while ((f - data) < len);
@@ -397,10 +426,12 @@ static struct zebra_route
   r->flags = *pnt++;
   r->message = *pnt++;
   r->prefixlen = *pnt++;
-  r->prefix.v4.s_addr = 0;
-
   size = (r->prefixlen + 7) / 8;
-  memcpy(&r->prefix.v4.s_addr, pnt, size);
+  memset(&r->prefix, 0, sizeof r->prefix);
+  if (olsr_cnf->ip_version == AF_INET)
+    memcpy(&r->prefix.v4.s_addr, pnt, size);
+  else
+    memcpy(r->prefix.v6.s6_addr, pnt, size);
   pnt += size;
 
   switch (zebra.version) {
@@ -410,8 +441,13 @@ static struct zebra_route
         r->nexthop_num = *pnt++;
         r->nexthop = olsr_malloc((sizeof *r->nexthop) * r->nexthop_num, "quagga: zebra_parse_route");
         for (c = 0; c < r->nexthop_num; c++) {
-          memcpy(&r->nexthop[c].v4.s_addr, pnt, sizeof r->nexthop[c].v4.s_addr);
-          pnt += sizeof r->nexthop[c].v4.s_addr;
+          if (olsr_cnf->ip_version == AF_INET) {
+            memcpy(&r->nexthop[c].v4.s_addr, pnt, sizeof r->nexthop[c].v4.s_addr);
+            pnt += sizeof r->nexthop[c].v4.s_addr;
+          } else {
+            memcpy(r->nexthop[c].v6.s6_addr, pnt, sizeof r->nexthop[c].v6.s6_addr);
+            pnt += sizeof r->nexthop[c].v6.s6_addr;
+          }
         }
       }
 
@@ -537,13 +573,20 @@ zebra_add_route(const struct rt_entry *r)
   route.flags = zebra.flags;
   route.message = ZAPI_MESSAGE_NEXTHOP | ZAPI_MESSAGE_METRIC;
   route.prefixlen = r->rt_dst.prefix_len;
-  route.prefix.v4.s_addr = r->rt_dst.prefix.v4.s_addr;
+  if (olsr_cnf->ip_version == AF_INET)
+    route.prefix.v4.s_addr = r->rt_dst.prefix.v4.s_addr;
+  else
+    memcpy(route.prefix.v6.s6_addr, r->rt_dst.prefix.v6.s6_addr, sizeof route.prefix.v6.s6_addr);
   route.ifindex_num = 0;
   route.ifindex = NULL;
   route.nexthop_num = 0;
   route.nexthop = NULL;
 
-  if (r->rt_best->rtp_nexthop.gateway.v4.s_addr == r->rt_dst.prefix.v4.s_addr && route.prefixlen == 32) {
+  if ((olsr_cnf->ip_version == AF_INET && r->rt_best->rtp_nexthop.gateway.v4.s_addr == r->rt_dst.prefix.v4.s_addr &&
+        route.prefixlen == 32) ||
+      (olsr_cnf->ip_version == AF_INET6 &&
+        !memcmp(r->rt_best->rtp_nexthop.gateway.v6.s6_addr, r->rt_dst.prefix.v6.s6_addr, sizeof r->rt_best->rtp_nexthop.gateway.v6.s6_addr) &&
+        route.prefixlen == 128)) {
     return 0;			/* Quagga BUG workaround: don't add routes with destination = gateway
 				   see http://lists.olsr.org/pipermail/olsr-users/2006-June/001726.html */
     route.ifindex_num++;
@@ -552,7 +595,10 @@ zebra_add_route(const struct rt_entry *r)
   } else {
     route.nexthop_num++;
     route.nexthop = olsr_malloc(sizeof *route.nexthop, "zebra_add_route");
-    route.nexthop->v4.s_addr = r->rt_best->rtp_nexthop.gateway.v4.s_addr;
+    if (olsr_cnf->ip_version == AF_INET)
+      route.nexthop->v4.s_addr = r->rt_best->rtp_nexthop.gateway.v4.s_addr;
+    else
+      memcpy(route.nexthop->v6.s6_addr, r->rt_best->rtp_nexthop.gateway.v6.s6_addr, sizeof route.nexthop->v6.s6_addr);
   }
 
   route.metric = r->rt_best->rtp_metric.hops;
@@ -562,7 +608,7 @@ zebra_add_route(const struct rt_entry *r)
     route.distance = zebra.distance;
   }
 
-  retval = zebra_send_command(zebra_route_packet(ZEBRA_IPV4_ROUTE_ADD, &route));
+  retval = zebra_send_command(zebra_route_packet(olsr_cnf->ip_version == AF_INET ? ZEBRA_IPV4_ROUTE_ADD : ZEBRA_IPV6_ROUTE_ADD, &route));
 
   return retval;
 }
@@ -578,13 +624,20 @@ zebra_del_route(const struct rt_entry *r)
   route.flags = zebra.flags;
   route.message = ZAPI_MESSAGE_NEXTHOP | ZAPI_MESSAGE_METRIC;
   route.prefixlen = r->rt_dst.prefix_len;
-  route.prefix.v4.s_addr = r->rt_dst.prefix.v4.s_addr;
+  if (olsr_cnf->ip_version == AF_INET)
+    route.prefix.v4.s_addr = r->rt_dst.prefix.v4.s_addr;
+  else
+    memcpy(route.prefix.v6.s6_addr, r->rt_dst.prefix.v6.s6_addr, sizeof route.prefix.v6.s6_addr);
   route.ifindex_num = 0;
   route.ifindex = NULL;
   route.nexthop_num = 0;
   route.nexthop = NULL;
 
-  if (r->rt_nexthop.gateway.v4.s_addr == r->rt_dst.prefix.v4.s_addr && route.prefixlen == 32) {
+  if ((olsr_cnf->ip_version == AF_INET && r->rt_nexthop.gateway.v4.s_addr == r->rt_dst.prefix.v4.s_addr &&
+        route.prefixlen == 32) ||
+       (olsr_cnf->ip_version == AF_INET6 &&
+        !memcmp(r->rt_nexthop.gateway.v6.s6_addr, r->rt_dst.prefix.v6.s6_addr, sizeof r->rt_nexthop.gateway.v6.s6_addr) &&
+        route.prefixlen == 128)) {
     return 0;			/* Quagga BUG workaround: don't delete routes with destination = gateway
 				   see http://lists.olsr.org/pipermail/olsr-users/2006-June/001726.html */
     route.ifindex_num++;
@@ -593,7 +646,10 @@ zebra_del_route(const struct rt_entry *r)
   } else {
     route.nexthop_num++;
     route.nexthop = olsr_malloc(sizeof *route.nexthop, "zebra_del_route");
-    route.nexthop->v4.s_addr = r->rt_nexthop.gateway.v4.s_addr;
+    if (olsr_cnf->ip_version == AF_INET)
+      route.nexthop->v4.s_addr = r->rt_nexthop.gateway.v4.s_addr;
+    else
+      memcpy(route.nexthop->v6.s6_addr, r->rt_nexthop.gateway.v6.s6_addr, sizeof route.nexthop->v6.s6_addr);
   }
 
   route.metric = 0;
@@ -603,7 +659,7 @@ zebra_del_route(const struct rt_entry *r)
     route.distance = zebra.distance;
   }
 
-  retval = zebra_send_command(zebra_route_packet(ZEBRA_IPV4_ROUTE_DELETE, &route));
+  retval = zebra_send_command(zebra_route_packet(olsr_cnf->ip_version == AF_INET ? ZEBRA_IPV4_ROUTE_DELETE : ZEBRA_IPV6_ROUTE_DELETE, &route));
 
   return retval;
 }
