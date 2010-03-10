@@ -53,36 +53,9 @@ zebra_fini(void)
 
 }
 
-void
-zebra_enable_redistribute(void)
-{
-  unsigned char type;
-
-  for (type = 0; type < ZEBRA_ROUTE_MAX; type++)
-    if (zebra.redistribute[type]) {
-      if (zclient_write(zpacket_redistribute(ZEBRA_REDISTRIBUTE_ADD, type)) < 0)
-        olsr_exit("(QUAGGA) could not send redistribute add command", EXIT_FAILURE);
-    }
-
-}
-
-void
-zebra_disable_redistribute(void)
-{
-  unsigned char type;
-
-  for (type = 0; type < ZEBRA_ROUTE_MAX; type++)
-    if (zebra.redistribute[type]) {
-      if (zclient_write(zpacket_redistribute(ZEBRA_REDISTRIBUTE_DELETE, type)) < 0)
-        olsr_exit("(QUAGGA) could not send redistribute delete command", EXIT_FAILURE);
-    }
-
-}
-
 int
 zebra_addroute(const struct rt_entry *r)
 {
-
   struct zroute route;
   int retval;
 
@@ -134,9 +107,9 @@ zebra_addroute(const struct rt_entry *r)
 int
 zebra_delroute(const struct rt_entry *r)
 {
-
   struct zroute route;
   int retval;
+
   route.distance = 0;
   route.type = ZEBRA_ROUTE_OLSR;
   route.flags = zebra.flags;
@@ -180,6 +153,32 @@ zebra_delroute(const struct rt_entry *r)
   retval = zclient_write(zpacket_route(olsr_cnf->ip_version == AF_INET ? ZEBRA_IPV4_ROUTE_DELETE : ZEBRA_IPV6_ROUTE_DELETE, &route));
 
   return retval;
+}
+
+void
+zebra_enable_redistribute(void)
+{
+  unsigned char type;
+
+  for (type = 0; type < ZEBRA_ROUTE_MAX; type++)
+    if (zebra.redistribute[type]) {
+      if (zclient_write(zpacket_redistribute(ZEBRA_REDISTRIBUTE_ADD, type)) < 0)
+        olsr_exit("(QUAGGA) could not send redistribute add command", EXIT_FAILURE);
+    }
+
+}
+
+void
+zebra_disable_redistribute(void)
+{
+  unsigned char type;
+
+  for (type = 0; type < ZEBRA_ROUTE_MAX; type++)
+    if (zebra.redistribute[type]) {
+      if (zclient_write(zpacket_redistribute(ZEBRA_REDISTRIBUTE_DELETE, type)) < 0)
+        olsr_exit("(QUAGGA) could not send redistribute delete command", EXIT_FAILURE);
+    }
+
 }
 
 /*

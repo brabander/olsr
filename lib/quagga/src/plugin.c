@@ -34,12 +34,14 @@ static void *my_realloc(void *, size_t, const char *);
 static void
 *my_realloc(void *buf, size_t s, const char *c)
 {
+
   buf = realloc(buf, s);
   if (!buf) {
     OLSR_PRINTF(1, "(QUAGGA) OUT OF MEMORY: %s\n", strerror(errno));
     olsr_syslog(OLSR_LOG_ERR, "olsrd: out of memory!: %m\n");
     olsr_exit(c, EXIT_FAILURE);
   }
+
   return buf;
 }
 

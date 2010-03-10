@@ -24,38 +24,12 @@
 #include "packet.h"
 
 unsigned char
-*zpacket_redistribute (uint16_t cmd, unsigned char type)
-{
-  unsigned char *data, *pnt;
-  uint16_t size;
-
-  data = olsr_malloc(ZEBRA_MAX_PACKET_SIZ , "zebra_redistribute_packet");
-
-  pnt = &data[2];
-  if (zebra.version) {
-    *pnt++ = ZEBRA_HEADER_MARKER;
-    *pnt++ = zebra.version;
-    cmd = htons(cmd);
-    memcpy(pnt, &cmd, sizeof cmd);
-    pnt += sizeof cmd;
-  } else
-      *pnt++ = (unsigned char) cmd;
-  *pnt++ = type;
-  size = htons(pnt - data);
-  memcpy(data, &size, sizeof size);
-
-  return data;
-}
-
-unsigned char
 *zpacket_route(uint16_t cmd, struct zroute *r)
 {
-
   int count;
   uint8_t len;
   uint16_t size;
   uint32_t ind, metric;
-
   unsigned char *cmdopt, *t;
 
   cmdopt = olsr_malloc(ZEBRA_MAX_PACKET_SIZ, "zebra add_v4_route");
@@ -112,6 +86,30 @@ unsigned char
   memcpy(cmdopt, &size, sizeof size);
 
   return cmdopt;
+}
+
+unsigned char
+*zpacket_redistribute (uint16_t cmd, unsigned char type)
+{
+  unsigned char *data, *pnt;
+  uint16_t size;
+
+  data = olsr_malloc(ZEBRA_MAX_PACKET_SIZ , "zebra_redistribute_packet");
+
+  pnt = &data[2];
+  if (zebra.version) {
+    *pnt++ = ZEBRA_HEADER_MARKER;
+    *pnt++ = zebra.version;
+    cmd = htons(cmd);
+    memcpy(pnt, &cmd, sizeof cmd);
+    pnt += sizeof cmd;
+  } else
+      *pnt++ = (unsigned char) cmd;
+  *pnt++ = type;
+  size = htons(pnt - data);
+  memcpy(data, &size, sizeof size);
+
+  return data;
 }
 
 /*

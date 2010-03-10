@@ -31,45 +31,28 @@
 #include "quagga.h"
 #include "client.h"
 
-static void zclient_connect(void);
 static void *my_realloc(void *, size_t, const char *);
+static void zclient_connect(void);
 
 static void *
 my_realloc(void *buf, size_t s, const char *c)
 {
+
   buf = realloc(buf, s);
   if (!buf) {
     OLSR_PRINTF(1, "(QUAGGA) OUT OF MEMORY: %s\n", strerror(errno));
     olsr_syslog(OLSR_LOG_ERR, "olsrd: out of memory!: %m\n");
     olsr_exit(c, EXIT_FAILURE);
   }
+
   return buf;
-}
-
-void
-zclient_reconnect(void)
-{
-  struct rt_entry *tmp;
-
-  zclient_connect();
-  if (!(zebra.status & STATUS_CONNECTED))
-    return;                     // try again next time
-
-  if (zebra.options & OPTION_EXPORT) {
-    OLSR_FOR_ALL_RT_ENTRIES(tmp) {
-      zebra_addroute(tmp);
-    }
-    OLSR_FOR_ALL_RT_ENTRIES_END(tmp);
-  }
-  zebra_enable_redistribute();
-
 }
 
 static void
 zclient_connect(void)
 {
-
   int ret;
+
   union {
     struct sockaddr_in sin;
     struct sockaddr_un sun;
@@ -99,12 +82,31 @@ zclient_connect(void)
     zebra.status &= ~STATUS_CONNECTED;
   else
     zebra.status |= STATUS_CONNECTED;
+
+}
+
+void
+zclient_reconnect(void)
+{
+  struct rt_entry *tmp;
+
+  zclient_connect();
+  if (!(zebra.status & STATUS_CONNECTED))
+    return;                     // try again next time
+
+  if (zebra.options & OPTION_EXPORT) {
+    OLSR_FOR_ALL_RT_ENTRIES(tmp) {
+      zebra_addroute(tmp);
+    }
+    OLSR_FOR_ALL_RT_ENTRIES_END(tmp);
+  }
+  zebra_enable_redistribute();
+
 }
 
 int
 zclient_write(unsigned char *options)
 {
-
   unsigned char *pnt;
   uint16_t len;
   int ret;
@@ -136,6 +138,7 @@ zclient_write(unsigned char *options)
   }
   while ((len -= ret));
   free(options);
+
   return 0;
 }
 

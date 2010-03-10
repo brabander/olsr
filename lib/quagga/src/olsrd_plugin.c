@@ -37,6 +37,7 @@ static void __attribute__ ((destructor)) my_fini(void);
 int
 olsrd_plugin_interface_version(void)
 {
+
   return PLUGIN_INTERFACE_VERSION;
 }
 
@@ -53,8 +54,10 @@ static const struct olsrd_plugin_parameters plugin_parameters[] = {
 void
 olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size)
 {
+
   *params = plugin_parameters;
   *size = ARRAYSIZE(plugin_parameters);
+
 }
 
 int
@@ -69,13 +72,17 @@ olsrd_plugin_init(void)
 static void
 my_init(void)
 {
+
   zebra_init();
+
 }
 
 static void
 my_fini(void)
 {
+
   zebra_fini();
+
 }
 
 /*

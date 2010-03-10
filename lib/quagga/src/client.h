@@ -22,8 +22,8 @@
 /* Buffer size */
 #define BUFSIZE 1024
 
-int zclient_write(unsigned char *);
 void zclient_reconnect(void);
+int zclient_write(unsigned char *);
 unsigned char *zclient_read(ssize_t *);
 
 /*

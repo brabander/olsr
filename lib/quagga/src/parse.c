@@ -25,78 +25,18 @@
 #include "client.h"
 #include "parse.h"
 
-static struct zroute *zparse_route(unsigned char *);
 static void free_zroute(struct zroute *);
+static struct zroute *zparse_route(unsigned char *);
 
-void
-zparse(void *foo __attribute__ ((unused)))
+static void
+free_zroute(struct zroute *r)
 {
-  unsigned char *data, *f;
-  uint16_t command;
-  uint16_t length;
-  ssize_t len;
-  struct zroute *route;
 
-  if (!(zebra.status & STATUS_CONNECTED)) {
-    zclient_reconnect();
-    return;
-  }
-  data = zclient_read(&len);
-  if (data) {
-    f = data;
-    do {
-      memcpy(&length, f, sizeof length);
-      length = ntohs (length);
-      if (!length) // something weired happened
-        olsr_exit("(QUAGGA) Zero message length??? ", EXIT_FAILURE);
-      if (zebra.version) {
-        if ((f[2] != ZEBRA_HEADER_MARKER) || (f[3] != zebra.version))
-          olsr_exit("(QUAGGA) Invalid zebra header received!", EXIT_FAILURE);
-        memcpy(&command, &f[4], sizeof command);
-        command = ntohs (command);
-      } else
-          command = f[2];
-      if (olsr_cnf->ip_version == AF_INET) {
-        switch (command) {
-          case ZEBRA_IPV4_ROUTE_ADD:
-            route = zparse_route(f);
-            ip_prefix_list_add(&olsr_cnf->hna_entries, &route->prefix, route->prefixlen);
-            free_zroute(route);
-            free(route);
-            break;
-          case ZEBRA_IPV4_ROUTE_DELETE:
-            route = zparse_route(f);
-            ip_prefix_list_remove(&olsr_cnf->hna_entries, &route->prefix, route->prefixlen);
-            free_zroute(route);
-            free(route);
-            break;
-          default:
-            break;
-        }
-      } else {
-        switch (command) {
-          case ZEBRA_IPV6_ROUTE_ADD:
-            route = zparse_route(f);
-            ip_prefix_list_add(&olsr_cnf->hna_entries, &route->prefix, route->prefixlen);
-            free_zroute(route);
-            free(route);
-            break;
-          case ZEBRA_IPV6_ROUTE_DELETE:
-            route = zparse_route(f);
-            ip_prefix_list_remove(&olsr_cnf->hna_entries, &route->prefix, route->prefixlen);
-            free_zroute(route);
-            free(route);
-            break;
-          default:
-            break;
-        }
-      }
+  if(r->ifindex_num)
+    free(r->ifindex);
+  if(r->nexthop_num)
+    free(r->nexthop);
 
-      f += length;
-    }
-    while ((f - data) < len);
-    free(data);
-  }
 }
 
 static struct zroute
@@ -176,14 +116,75 @@ static struct zroute
   return r;
 }
 
-static void
-free_zroute(struct zroute *r)
+void
+zparse(void *foo __attribute__ ((unused)))
 {
+  unsigned char *data, *f;
+  uint16_t command;
+  uint16_t length;
+  ssize_t len;
+  struct zroute *route;
 
-  if(r->ifindex_num)
-    free(r->ifindex);
-  if(r->nexthop_num)
-    free(r->nexthop);
+  if (!(zebra.status & STATUS_CONNECTED)) {
+    zclient_reconnect();
+    return;
+  }
+  data = zclient_read(&len);
+  if (data) {
+    f = data;
+    do {
+      memcpy(&length, f, sizeof length);
+      length = ntohs (length);
+      if (!length) // something weired happened
+        olsr_exit("(QUAGGA) Zero message length??? ", EXIT_FAILURE);
+      if (zebra.version) {
+        if ((f[2] != ZEBRA_HEADER_MARKER) || (f[3] != zebra.version))
+          olsr_exit("(QUAGGA) Invalid zebra header received!", EXIT_FAILURE);
+        memcpy(&command, &f[4], sizeof command);
+        command = ntohs (command);
+      } else
+          command = f[2];
+      if (olsr_cnf->ip_version == AF_INET) {
+        switch (command) {
+          case ZEBRA_IPV4_ROUTE_ADD:
+            route = zparse_route(f);
+            ip_prefix_list_add(&olsr_cnf->hna_entries, &route->prefix, route->prefixlen);
+            free_zroute(route);
+            free(route);
+            break;
+          case ZEBRA_IPV4_ROUTE_DELETE:
+            route = zparse_route(f);
+            ip_prefix_list_remove(&olsr_cnf->hna_entries, &route->prefix, route->prefixlen);
+            free_zroute(route);
+            free(route);
+            break;
+          default:
+            break;
+        }
+      } else {
+        switch (command) {
+          case ZEBRA_IPV6_ROUTE_ADD:
+            route = zparse_route(f);
+            ip_prefix_list_add(&olsr_cnf->hna_entries, &route->prefix, route->prefixlen);
+            free_zroute(route);
+            free(route);
+            break;
+          case ZEBRA_IPV6_ROUTE_DELETE:
+            route = zparse_route(f);
+            ip_prefix_list_remove(&olsr_cnf->hna_entries, &route->prefix, route->prefixlen);
+            free_zroute(route);
+            free(route);
+            break;
+          default:
+            break;
+        }
+      }
+
+      f += length;
+    }
+    while ((f - data) < len);
+    free(data);
+  }
 
 }
 
