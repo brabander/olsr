@@ -51,7 +51,7 @@ static struct zroute
   memcpy(&length, opt, sizeof length);
   length = ntohs (length);
 
-  r = olsr_malloc(sizeof *r, "zebra_parse_route");
+  r = olsr_malloc(sizeof *r, "QUAGGA: New zebra route");
   pnt = (zebra.version ? &opt[6] : &opt[3]);
   r->type = *pnt++;
   r->flags = *pnt++;
@@ -70,7 +70,7 @@ static struct zroute
     case 1:
       if (r->message & ZAPI_MESSAGE_NEXTHOP) {
         r->nexthop_num = *pnt++;
-        r->nexthop = olsr_malloc((sizeof *r->nexthop) * r->nexthop_num, "quagga: zebra_parse_route");
+        r->nexthop = olsr_malloc((sizeof *r->nexthop) * r->nexthop_num, "QUAGGA: New zebra route nexthop");
         for (c = 0; c < r->nexthop_num; c++) {
           if (olsr_cnf->ip_version == AF_INET) {
             memcpy(&r->nexthop[c].v4.s_addr, pnt, sizeof r->nexthop[c].v4.s_addr);
@@ -84,7 +84,7 @@ static struct zroute
 
       if (r->message & ZAPI_MESSAGE_IFINDEX) {
         r->ifindex_num = *pnt++;
-        r->ifindex = olsr_malloc(sizeof(uint32_t) * r->ifindex_num, "quagga: zebra_parse_route");
+        r->ifindex = olsr_malloc(sizeof(uint32_t) * r->ifindex_num, "QUAGGA: New zebra route ifindex");
         for (c = 0; c < r->ifindex_num; c++) {
           memcpy(&r->ifindex[c], pnt, sizeof r->ifindex[c]);
           r->ifindex[c] = ntohl (r->ifindex[c]);
@@ -110,7 +110,7 @@ static struct zroute
 //  }
 
   if (pnt - opt != length) {
-    olsr_exit("(QUAGGA) length does not match ??? ", EXIT_FAILURE);
+    olsr_exit("(QUAGGA) Length does not match!", EXIT_FAILURE);
   }
 
   return r;
@@ -136,7 +136,7 @@ zparse(void *foo __attribute__ ((unused)))
       memcpy(&length, f, sizeof length);
       length = ntohs (length);
       if (!length) // something weired happened
-        olsr_exit("(QUAGGA) Zero message length??? ", EXIT_FAILURE);
+        olsr_exit("(QUAGGA) Zero message length!", EXIT_FAILURE);
       if (zebra.version) {
         if ((f[2] != ZEBRA_HEADER_MARKER) || (f[3] != zebra.version))
           olsr_exit("(QUAGGA) Invalid zebra header received!", EXIT_FAILURE);

@@ -32,7 +32,7 @@ unsigned char
   uint32_t ind, metric;
   unsigned char *cmdopt, *t;
 
-  cmdopt = olsr_malloc(ZEBRA_MAX_PACKET_SIZ, "zebra add_v4_route");
+  cmdopt = olsr_malloc(ZEBRA_MAX_PACKET_SIZ, "QUAGGA: New route packet");
 
   t = &cmdopt[2];
   if (zebra.version) {
@@ -94,7 +94,7 @@ unsigned char
   unsigned char *data, *pnt;
   uint16_t size;
 
-  data = olsr_malloc(ZEBRA_MAX_PACKET_SIZ , "zebra_redistribute_packet");
+  data = olsr_malloc(ZEBRA_MAX_PACKET_SIZ , "QUAGGA: New redistribute packet");
 
   pnt = &data[2];
   if (zebra.version) {

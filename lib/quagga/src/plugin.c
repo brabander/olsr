@@ -37,8 +37,8 @@ static void
 
   buf = realloc(buf, s);
   if (!buf) {
-    OLSR_PRINTF(1, "(QUAGGA) OUT OF MEMORY: %s\n", strerror(errno));
-    olsr_syslog(OLSR_LOG_ERR, "olsrd: out of memory!: %m\n");
+    OLSR_PRINTF(1, "(QUAGGA) Out of memory: %s!\n", strerror(errno));
+    olsr_syslog(OLSR_LOG_ERR, "(QUAGGA) Out of memory!\n");
     olsr_exit(c, EXIT_FAILURE);
   }
 
@@ -119,7 +119,7 @@ zplugin_sockpath(const char *value, void *data __attribute__ ((unused)), set_plu
   if (set_plugin_string(value, &sockpath, addon))
     return 1;
   len = strlen(sockpath) + 1;
-  zebra.sockpath = my_realloc(zebra.sockpath, len, "zebra_sockpath");
+  zebra.sockpath = my_realloc(zebra.sockpath, len, "QUAGGA: Grow socket path");
   memcpy(zebra.sockpath, sockpath, len);
 
   return 0;

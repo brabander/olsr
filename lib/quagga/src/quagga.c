@@ -33,7 +33,7 @@ zebra_init(void)
 {
 
   memset(&zebra, 0, sizeof zebra);
-  zebra.sockpath = olsr_malloc(sizeof ZEBRA_SOCKPATH  + 1, "zebra_sockpath");
+  zebra.sockpath = olsr_malloc(sizeof ZEBRA_SOCKPATH  + 1, "QUAGGA: New socket path");
   strscpy(zebra.sockpath, ZEBRA_SOCKPATH, sizeof ZEBRA_SOCKPATH);
 
 }
@@ -81,11 +81,11 @@ zebra_addroute(const struct rt_entry *r)
     return 0;			/* Quagga BUG workaround: don't add routes with destination = gateway
 				   see http://lists.olsr.org/pipermail/olsr-users/2006-June/001726.html */
     route.ifindex_num++;
-    route.ifindex = olsr_malloc(sizeof *route.ifindex, "zebra_add_route");
+    route.ifindex = olsr_malloc(sizeof *route.ifindex, "QUAGGA: New zebra route ifindex");
     *route.ifindex = r->rt_best->rtp_nexthop.iif_index;
   } else {
     route.nexthop_num++;
-    route.nexthop = olsr_malloc(sizeof *route.nexthop, "zebra_add_route");
+    route.nexthop = olsr_malloc(sizeof *route.nexthop, "QUAGGA: New zebra route nexthop");
     if (olsr_cnf->ip_version == AF_INET)
       route.nexthop->v4.s_addr = r->rt_best->rtp_nexthop.gateway.v4.s_addr;
     else
@@ -132,11 +132,11 @@ zebra_delroute(const struct rt_entry *r)
     return 0;			/* Quagga BUG workaround: don't delete routes with destination = gateway
 				   see http://lists.olsr.org/pipermail/olsr-users/2006-June/001726.html */
     route.ifindex_num++;
-    route.ifindex = olsr_malloc(sizeof *route.ifindex, "zebra_del_route");
+    route.ifindex = olsr_malloc(sizeof *route.ifindex, "QUAGGA: New zebra route ifindex");
     *route.ifindex = r->rt_nexthop.iif_index;
   } else {
     route.nexthop_num++;
-    route.nexthop = olsr_malloc(sizeof *route.nexthop, "zebra_del_route");
+    route.nexthop = olsr_malloc(sizeof *route.nexthop, "QUAGGA: New zebra route nexthop");
     if (olsr_cnf->ip_version == AF_INET)
       route.nexthop->v4.s_addr = r->rt_nexthop.gateway.v4.s_addr;
     else
@@ -163,7 +163,7 @@ zebra_enable_redistribute(void)
   for (type = 0; type < ZEBRA_ROUTE_MAX; type++)
     if (zebra.redistribute[type]) {
       if (zclient_write(zpacket_redistribute(ZEBRA_REDISTRIBUTE_ADD, type)) < 0)
-        olsr_exit("(QUAGGA) could not send redistribute add command", EXIT_FAILURE);
+        olsr_exit("(QUAGGA) Could not write redistribute packet!", EXIT_FAILURE);
     }
 
 }
@@ -176,7 +176,7 @@ zebra_disable_redistribute(void)
   for (type = 0; type < ZEBRA_ROUTE_MAX; type++)
     if (zebra.redistribute[type]) {
       if (zclient_write(zpacket_redistribute(ZEBRA_REDISTRIBUTE_DELETE, type)) < 0)
-        olsr_exit("(QUAGGA) could not send redistribute delete command", EXIT_FAILURE);
+        olsr_exit("(QUAGGA) Could not write redistribute packet!", EXIT_FAILURE);
     }
 
 }

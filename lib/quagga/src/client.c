@@ -40,8 +40,8 @@ my_realloc(void *buf, size_t s, const char *c)
 
   buf = realloc(buf, s);
   if (!buf) {
-    OLSR_PRINTF(1, "(QUAGGA) OUT OF MEMORY: %s\n", strerror(errno));
-    olsr_syslog(OLSR_LOG_ERR, "olsrd: out of memory!: %m\n");
+    OLSR_PRINTF(1, "(QUAGGA) Out of memory: %s!\n", strerror(errno));
+    olsr_syslog(OLSR_LOG_ERR, "(QUAGGA) Out of memory!\n");
     olsr_exit(c, EXIT_FAILURE);
   }
 
@@ -127,7 +127,7 @@ zclient_write(unsigned char *options)
         ret = 0;
         continue;
       } else {
-        OLSR_PRINTF(1, "(QUAGGA) Disconnected from zebra\n");
+        OLSR_PRINTF(1, "(QUAGGA) Disconnected from zebra.\n");
         zebra.status &= ~STATUS_CONNECTED;
         /* TODO: Remove HNAs added from redistribution */
         free(options);
@@ -166,7 +166,7 @@ zclient_read(ssize_t * size)
     /* (re)allocate buffer */
     if (*size == bufsize) {
       bufsize += BUFSIZE;
-      buf = my_realloc(buf, bufsize, "Zebra try_read");
+      buf = my_realloc(buf, bufsize, "QUAGGA: Grow read buffer");
     }
 
     /* read from socket */
