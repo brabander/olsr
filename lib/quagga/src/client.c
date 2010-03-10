@@ -29,6 +29,7 @@
 
 #include "common.h"
 #include "quagga.h"
+#include "packet.h"
 #include "client.h"
 
 static void *my_realloc(void *, size_t, const char *);
@@ -100,7 +101,7 @@ zclient_reconnect(void)
     }
     OLSR_FOR_ALL_RT_ENTRIES_END(tmp);
   }
-  zebra_enable_redistribute();
+  zebra_redistribute(ZEBRA_REDISTRIBUTE_ADD);
 
 }
 

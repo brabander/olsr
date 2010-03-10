@@ -49,7 +49,7 @@ zebra_fini(void)
     }
     OLSR_FOR_ALL_RT_ENTRIES_END(tmp);
   }
-  zebra_disable_redistribute();
+  zebra_redistribute(ZEBRA_REDISTRIBUTE_DELETE);
 
 }
 
@@ -156,26 +156,13 @@ zebra_delroute(const struct rt_entry *r)
 }
 
 void
-zebra_enable_redistribute(void)
+zebra_redistribute(uint16_t cmd)
 {
   unsigned char type;
 
   for (type = 0; type < ZEBRA_ROUTE_MAX; type++)
     if (zebra.redistribute[type]) {
-      if (zclient_write(zpacket_redistribute(ZEBRA_REDISTRIBUTE_ADD, type)) < 0)
-        olsr_exit("(QUAGGA) Could not write redistribute packet!", EXIT_FAILURE);
-    }
-
-}
-
-void
-zebra_disable_redistribute(void)
-{
-  unsigned char type;
-
-  for (type = 0; type < ZEBRA_ROUTE_MAX; type++)
-    if (zebra.redistribute[type]) {
-      if (zclient_write(zpacket_redistribute(ZEBRA_REDISTRIBUTE_DELETE, type)) < 0)
+      if (zclient_write(zpacket_redistribute(cmd, type)) < 0)
         olsr_exit("(QUAGGA) Could not write redistribute packet!", EXIT_FAILURE);
     }
 

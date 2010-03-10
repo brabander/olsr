@@ -30,8 +30,7 @@ void zebra_init(void);
 void zebra_fini(void);
 int zebra_addroute(const struct rt_entry *);
 int zebra_delroute(const struct rt_entry *);
-void zebra_enable_redistribute(void);
-void zebra_disable_redistribute(void);
+void zebra_redistribute(uint16_t cmd);
 
 /*
  * Local Variables:
