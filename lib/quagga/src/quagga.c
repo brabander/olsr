@@ -95,7 +95,6 @@ zebra_cleanup(void)
     OLSR_FOR_ALL_RT_ENTRIES_END(tmp);
   }
   zebra_disable_redistribute();
-  free(zebra.sockpath);
 
 }
 
@@ -285,7 +284,6 @@ zebra_parse(void *foo __attribute__ ((unused)))
         command = ntohs (command);
       } else
           command = f[2];
-OLSR_PRINTF(1, "(QUAGGA) DEBUG: %d\n", command);
       switch (command) {
         case ZEBRA_IPV4_ROUTE_ADD:
           route = zebra_parse_route(f);
