@@ -45,7 +45,9 @@
 #include "olsr_types.h"
 #include "common/autobuf.h"
 
-/*set to 1 to collect all startup sleep into one sleep (just as long as the longest sleep) useful if many errors on many interfaces*/
+/* set to 1 to collect all startup sleep into one sleep
+ * (just as long as the longest sleep)
+ * useful if many errors on many interfaces */
 #define OLSR_COLLECT_STARTUP_SLEEP 1
 
 #define TESTLIB_PATH 0
