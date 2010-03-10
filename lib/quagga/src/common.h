@@ -24,15 +24,15 @@
 #define ZEBRA_ROUTE_MAX			13
 
 struct zebra {
-  char status;                         // internal status
-  char options;                        // internal options
-  int sock;                            // Socket to zebra...
-  char redistribute[ZEBRA_ROUTE_MAX];
-  char distance;
-  char flags;
+  unsigned char status;
+  unsigned char options;
+  int sock;
+  unsigned char redistribute[ZEBRA_ROUTE_MAX];
+  unsigned char distance;
+  unsigned char flags;
   char *sockpath;
   unsigned int port;
-  char version;
+  unsigned char version;
 };
 
 extern struct zebra zebra;
