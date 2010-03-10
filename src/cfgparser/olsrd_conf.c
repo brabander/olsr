@@ -376,11 +376,6 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
     return -1;
   }
 
-  if (cnf->smart_gw_active && cnf->lq_nat_thresh < 1.0) {
-    fprintf(stderr, "Don't use Nat threshold together with smart gateway mode.\n");
-    return -1;
-  }
-
 #if defined linux
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
   if (cnf->ip_version == AF_INET6 && cnf->smart_gw_active) {

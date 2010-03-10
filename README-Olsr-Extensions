@@ -254,5 +254,6 @@ shows that this leads to much better quality of default gateway
 selection, even if (in theory) a small NatThreshold together with
 Fisheye can lead to a persistent routing loop.
 
-The introduction of smart gateways should make NatThreshold not
-necessary anymore.
+Smart Gateways can replace NatThreshold because they allow to send
+traffic directly to a gateway instead of hop-by-hop.
+
