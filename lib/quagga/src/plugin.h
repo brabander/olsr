@@ -17,13 +17,13 @@
  * Description        : header file for plugin.c
  * ------------------------------------------------------------------------- */
 
-int zplugin_redistribute(unsigned char);
-void zplugin_localpref(void);
-void zplugin_distance(unsigned char);
-void zplugin_exportroutes(unsigned char);
-void zplugin_sockpath(char *);
-void zplugin_port(unsigned int);
-void zplugin_version(char);
+int zplugin_redistribute(const char*, void*, set_plugin_parameter_addon);
+int zplugin_localpref(const char*, void*, set_plugin_parameter_addon);
+int zplugin_distance(const char*, void*, set_plugin_parameter_addon);
+int zplugin_exportroutes(const char*, void*, set_plugin_parameter_addon);
+int zplugin_sockpath(const char*, void*, set_plugin_parameter_addon);
+int zplugin_port(const char*, void*, set_plugin_parameter_addon);
+int zplugin_version(const char*, void*, set_plugin_parameter_addon);
 
 /*
  * Local Variables:
