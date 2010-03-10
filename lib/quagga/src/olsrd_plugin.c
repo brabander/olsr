@@ -17,17 +17,16 @@
  * Description        : functions to setup plugin
  * ------------------------------------------------------------------------- */
 
-
-#include <stdio.h>
-#include <string.h>
-
 #include "olsrd_plugin.h"
 #include "plugin_util.h"
 #include "olsr.h"
 #include "scheduler.h"
 #include "defs.h"
-#include "quagga.h"
 #include "net_olsr.h"
+
+#include "quagga.h"
+#include "plugin.h"
+#include "parse.h"
 
 #define PLUGIN_NAME    "OLSRD quagga plugin"
 #define PLUGIN_VERSION "0.2.2"
@@ -45,7 +44,6 @@ static set_plugin_parameter set_localpref;
 static set_plugin_parameter set_sockpath;
 static set_plugin_parameter set_port;
 static set_plugin_parameter set_version;
-
 
 int
 olsrd_plugin_interface_version(void)

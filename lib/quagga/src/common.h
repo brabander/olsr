@@ -13,25 +13,29 @@
  */
 
 /* -------------------------------------------------------------------------
- * File               : quagga.h
- * Description        : header file for quagga.c
+ * File               : common.h
+ * Description        : common header file
  * ------------------------------------------------------------------------- */
 
-#include "routing_table.h"
+#define OPTION_EXPORT 1
 
-/* Zebra socket */
-#ifndef ZEBRA_SOCKPATH
-#define ZEBRA_SOCKPATH "/var/run/quagga/zserv.api"
-#endif
+/* Zebra route types */
+#define ZEBRA_ROUTE_OLSR		11
+#define ZEBRA_ROUTE_MAX			13
 
-/* Quagga plugin flags */
+struct zebra {
+  char status;                         // internal status
+  char options;                        // internal options
+  int sock;                            // Socket to zebra...
+  char redistribute[ZEBRA_ROUTE_MAX];
+  char distance;
+  char flags;
+  char *sockpath;
+  unsigned int port;
+  char version;
+};
 
-void init_zebra(void);
-void zebra_cleanup(void);
-int zebra_add_route(const struct rt_entry *);
-int zebra_del_route(const struct rt_entry *);
-void zebra_enable_redistribute(void);
-void zebra_disable_redistribute(void);
+extern struct zebra zebra;
 
 /*
  * Local Variables:

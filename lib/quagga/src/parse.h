@@ -13,25 +13,11 @@
  */
 
 /* -------------------------------------------------------------------------
- * File               : quagga.h
- * Description        : header file for quagga.c
+ * File               : parse.h
+ * Description        : header file for parse.c
  * ------------------------------------------------------------------------- */
 
-#include "routing_table.h"
-
-/* Zebra socket */
-#ifndef ZEBRA_SOCKPATH
-#define ZEBRA_SOCKPATH "/var/run/quagga/zserv.api"
-#endif
-
-/* Quagga plugin flags */
-
-void init_zebra(void);
-void zebra_cleanup(void);
-int zebra_add_route(const struct rt_entry *);
-int zebra_del_route(const struct rt_entry *);
-void zebra_enable_redistribute(void);
-void zebra_disable_redistribute(void);
+void zebra_parse(void*);
 
 /*
  * Local Variables:
