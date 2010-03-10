@@ -169,7 +169,7 @@ zebra_send_command(unsigned char *options)
     return 0;
 
   pnt = options;
-  memcpy(&len, pnt, 2);
+  memcpy(&len, pnt, sizeof len);
 
   len = ntohs(len);
 
@@ -250,7 +250,7 @@ zebra_route_packet(uint16_t cmd, struct zebra_route *r)
     t += sizeof metric;
   }
   size = htons(t - cmdopt);
-  memcpy(cmdopt, &size, 2);
+  memcpy(cmdopt, &size, sizeof size);
 
   return cmdopt;
 }
@@ -437,7 +437,7 @@ static struct zebra_route
 // Quagga v0.98.6 BUG workaround: metric is always sent by zebra
 // even without ZAPI_MESSAGE_METRIC message.
 //  if (r.message & ZAPI_MESSAGE_METRIC) {
-    memcpy(&r->metric, pnt, sizeof (uint32_t));
+    memcpy(&r->metric, pnt, sizeof r->metric);
     r->metric = ntohl(r->metric);
     pnt += sizeof r->metric;
 //  }
@@ -468,7 +468,7 @@ static unsigned char
       *pnt++ = (unsigned char) cmd;
   *pnt++ = type;
   size = htons(pnt - data);
-  memcpy(data, &size, 2);
+  memcpy(data, &size, sizeof size);
 
   return data;
 }
