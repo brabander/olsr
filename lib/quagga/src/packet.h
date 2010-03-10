@@ -47,7 +47,7 @@
 /* Zebra flags */
 #define ZEBRA_FLAG_SELECTED		0x10
 
-struct zebra_route {
+struct zroute {
   unsigned char type;
   unsigned char flags;
   unsigned char message;
@@ -61,8 +61,8 @@ struct zebra_route {
   uint8_t distance;
 };
 
-unsigned char *zebra_route_packet(uint16_t, struct zebra_route *);
-unsigned char *zebra_redistribute_packet(uint16_t, unsigned char);
+unsigned char *zpacket_route(uint16_t, struct zroute *);
+unsigned char *zpacket_redistribute(uint16_t, unsigned char);
 
 /*
  * Local Variables:

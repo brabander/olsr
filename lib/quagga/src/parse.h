@@ -17,7 +17,7 @@
  * Description        : header file for parse.c
  * ------------------------------------------------------------------------- */
 
-void zebra_parse(void*);
+void zparse(void*);
 
 /*
  * Local Variables:

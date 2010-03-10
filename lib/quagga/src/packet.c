@@ -24,7 +24,7 @@
 #include "packet.h"
 
 unsigned char
-*zebra_redistribute_packet (uint16_t cmd, unsigned char type)
+*zpacket_redistribute (uint16_t cmd, unsigned char type)
 {
   unsigned char *data, *pnt;
   uint16_t size;
@@ -48,7 +48,7 @@ unsigned char
 }
 
 unsigned char
-*zebra_route_packet(uint16_t cmd, struct zebra_route *r)
+*zpacket_route(uint16_t cmd, struct zroute *r)
 {
 
   int count;

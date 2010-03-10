@@ -17,13 +17,13 @@
  * Description        : header file for plugin.c
  * ------------------------------------------------------------------------- */
 
-int zebra_redistribute(unsigned char);
-void zebra_olsr_localpref(void);
-void zebra_olsr_distance(unsigned char);
-void zebra_export_routes(unsigned char);
-void zebra_sockpath(char *);
-void zebra_port(unsigned int);
-void zebra_version(char);
+int zplugin_redistribute(unsigned char);
+void zplugin_localpref(void);
+void zplugin_distance(unsigned char);
+void zplugin_exportroutes(unsigned char);
+void zplugin_sockpath(char *);
+void zplugin_port(unsigned int);
+void zplugin_version(char);
 
 /*
  * Local Variables:

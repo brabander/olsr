@@ -31,7 +31,7 @@
 #include "quagga.h"
 #include "client.h"
 
-static void zebra_connect(void);
+static void zclient_connect(void);
 static void *my_realloc(void *, size_t, const char *);
 
 static void *
@@ -47,17 +47,17 @@ my_realloc(void *buf, size_t s, const char *c)
 }
 
 void
-zebra_reconnect(void)
+zclient_reconnect(void)
 {
   struct rt_entry *tmp;
 
-  zebra_connect();
+  zclient_connect();
   if (!(zebra.status & STATUS_CONNECTED))
     return;                     // try again next time
 
   if (zebra.options & OPTION_EXPORT) {
     OLSR_FOR_ALL_RT_ENTRIES(tmp) {
-      zebra_add_route(tmp);
+      zebra_addroute(tmp);
     }
     OLSR_FOR_ALL_RT_ENTRIES_END(tmp);
   }
@@ -66,7 +66,7 @@ zebra_reconnect(void)
 }
 
 static void
-zebra_connect(void)
+zclient_connect(void)
 {
 
   int ret;
@@ -102,7 +102,7 @@ zebra_connect(void)
 }
 
 int
-zebra_send_command(unsigned char *options)
+zclient_write(unsigned char *options)
 {
 
   unsigned char *pnt;
@@ -140,7 +140,7 @@ zebra_send_command(unsigned char *options)
 }
 
 unsigned char *
-try_read(ssize_t * size)
+zclient_read(ssize_t * size)
 {
   unsigned char *buf;
   ssize_t bytes, bufsize;

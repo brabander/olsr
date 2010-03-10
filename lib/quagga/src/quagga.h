@@ -26,10 +26,10 @@
 
 /* Quagga plugin flags */
 
-void init_zebra(void);
-void zebra_cleanup(void);
-int zebra_add_route(const struct rt_entry *);
-int zebra_del_route(const struct rt_entry *);
+void zebra_init(void);
+void zebra_fini(void);
+int zebra_addroute(const struct rt_entry *);
+int zebra_delroute(const struct rt_entry *);
 void zebra_enable_redistribute(void);
 void zebra_disable_redistribute(void);
 

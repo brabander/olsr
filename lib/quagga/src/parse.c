@@ -25,23 +25,23 @@
 #include "client.h"
 #include "parse.h"
 
-static struct zebra_route *zebra_parse_route(unsigned char *);
-static void free_ipv4_route(struct zebra_route *);
+static struct zroute *zparse_route(unsigned char *);
+static void free_zroute(struct zroute *);
 
 void
-zebra_parse(void *foo __attribute__ ((unused)))
+zparse(void *foo __attribute__ ((unused)))
 {
   unsigned char *data, *f;
   uint16_t command;
   uint16_t length;
   ssize_t len;
-  struct zebra_route *route;
+  struct zroute *route;
 
   if (!(zebra.status & STATUS_CONNECTED)) {
-    zebra_reconnect();
+    zclient_reconnect();
     return;
   }
-  data = try_read(&len);
+  data = zclient_read(&len);
   if (data) {
     f = data;
     do {
@@ -59,15 +59,15 @@ zebra_parse(void *foo __attribute__ ((unused)))
       if (olsr_cnf->ip_version == AF_INET) {
         switch (command) {
           case ZEBRA_IPV4_ROUTE_ADD:
-            route = zebra_parse_route(f);
+            route = zparse_route(f);
             ip_prefix_list_add(&olsr_cnf->hna_entries, &route->prefix, route->prefixlen);
-            free_ipv4_route(route);
+            free_zroute(route);
             free(route);
             break;
           case ZEBRA_IPV4_ROUTE_DELETE:
-            route = zebra_parse_route(f);
+            route = zparse_route(f);
             ip_prefix_list_remove(&olsr_cnf->hna_entries, &route->prefix, route->prefixlen);
-            free_ipv4_route(route);
+            free_zroute(route);
             free(route);
             break;
           default:
@@ -76,15 +76,15 @@ zebra_parse(void *foo __attribute__ ((unused)))
       } else {
         switch (command) {
           case ZEBRA_IPV6_ROUTE_ADD:
-            route = zebra_parse_route(f);
+            route = zparse_route(f);
             ip_prefix_list_add(&olsr_cnf->hna_entries, &route->prefix, route->prefixlen);
-            free_ipv4_route(route);
+            free_zroute(route);
             free(route);
             break;
           case ZEBRA_IPV6_ROUTE_DELETE:
-            route = zebra_parse_route(f);
+            route = zparse_route(f);
             ip_prefix_list_remove(&olsr_cnf->hna_entries, &route->prefix, route->prefixlen);
-            free_ipv4_route(route);
+            free_zroute(route);
             free(route);
             break;
           default:
@@ -99,10 +99,10 @@ zebra_parse(void *foo __attribute__ ((unused)))
   }
 }
 
-static struct zebra_route
-*zebra_parse_route(unsigned char *opt)
+static struct zroute
+*zparse_route(unsigned char *opt)
 {
-  struct zebra_route *r;
+  struct zroute *r;
   int c;
   size_t size;
   uint16_t length;
@@ -177,7 +177,7 @@ static struct zebra_route
 }
 
 static void
-free_ipv4_route(struct zebra_route *r)
+free_zroute(struct zroute *r)
 {
 
   if(r->ifindex_num)

@@ -40,7 +40,7 @@ static void
 }
 
 int
-zebra_redistribute(unsigned char type)
+zplugin_redistribute(unsigned char type)
 {
 
   if (type > ZEBRA_ROUTE_MAX - 1)
@@ -52,7 +52,7 @@ zebra_redistribute(unsigned char type)
 }
 
 void
-zebra_export_routes(unsigned char t)
+zplugin_exportroutes(unsigned char t)
 {
   if (t)
     zebra.options |= OPTION_EXPORT;
@@ -61,19 +61,19 @@ zebra_export_routes(unsigned char t)
 }
 
 void
-zebra_olsr_distance(unsigned char dist)
+zplugin_distance(unsigned char dist)
 {
   zebra.distance = dist;
 }
 
 void
-zebra_olsr_localpref(void)
+zplugin_localpref(void)
 {
   zebra.flags &= ZEBRA_FLAG_SELECTED;
 }
 
 void
-zebra_sockpath(char *sockpath)
+zplugin_sockpath(char *sockpath)
 {
   size_t len;
 
@@ -84,7 +84,7 @@ zebra_sockpath(char *sockpath)
 }
 
 void
-zebra_port(unsigned int port)
+zplugin_port(unsigned int port)
 {
 
   zebra.port = port;
@@ -92,7 +92,7 @@ zebra_port(unsigned int port)
 }
 
 void
-zebra_version(char version)
+zplugin_version(char version)
 {
 
   zebra.version = version;

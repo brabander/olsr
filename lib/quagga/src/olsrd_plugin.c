@@ -71,15 +71,15 @@ olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *
 static int
 set_redistribute(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused)))
 {
-  const char *zebra_route_types[] = { "system", "kernel", "connect",
+  const char *zroute_types[] = { "system", "kernel", "connect",
     "static", "rip", "ripng", "ospf",
     "ospf6", "isis", "bgp", "hsls"
   };
   unsigned int i;
 
-  for (i = 0; i < ARRAYSIZE(zebra_route_types); i++) {
-    if (!strcmp(value, zebra_route_types[i]))
-      if (zebra_redistribute (i)) return 1;
+  for (i = 0; i < ARRAYSIZE(zroute_types); i++) {
+    if (!strcmp(value, zroute_types[i]))
+      if (zplugin_redistribute (i)) return 1;
   }
 
   return 0;
@@ -89,19 +89,19 @@ static int
 set_exportroutes(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused)))
 {
   if (!strcmp(value, "only")) {
-    olsr_addroute_function = zebra_add_route;
-    olsr_delroute_function = zebra_del_route;
-    olsr_addroute6_function = zebra_add_route;
-    olsr_delroute6_function = zebra_del_route;
-    zebra_export_routes(1);
+    olsr_addroute_function = zebra_addroute;
+    olsr_delroute_function = zebra_delroute;
+    olsr_addroute6_function = zebra_addroute;
+    olsr_delroute6_function = zebra_delroute;
+    zplugin_exportroutes(1);
   } else if (!strcmp(value, "additional")) {
-    olsr_addroute_function = zebra_add_route;
-    olsr_delroute_function = zebra_del_route;
-    olsr_addroute6_function = zebra_add_route;
-    olsr_delroute6_function = zebra_del_route;
-    zebra_export_routes(1);
+    olsr_addroute_function = zebra_addroute;
+    olsr_delroute_function = zebra_delroute;
+    olsr_addroute6_function = zebra_addroute;
+    olsr_delroute6_function = zebra_delroute;
+    zplugin_exportroutes(1);
   } else
-    zebra_export_routes(0);
+    zplugin_exportroutes(0);
   return 0;
 }
 
@@ -114,7 +114,7 @@ set_distance(const char *value, void *data __attribute__ ((unused)), set_plugin_
     return 1;
   if (distance < 0 || distance > 255)
     return 1;
-  zebra_olsr_distance(distance);
+  zplugin_distance(distance);
   return 0;
 }
 
@@ -126,7 +126,7 @@ set_localpref(const char *value, void *data __attribute__ ((unused)), set_plugin
   if (set_plugin_boolean(value, &b, addon))
     return 1;
   if (b)
-    zebra_olsr_localpref();
+    zplugin_localpref();
   return 0;
 }
 
@@ -137,7 +137,7 @@ set_sockpath(const char *value, void *data __attribute__ ((unused)), set_plugin_
 
   if (set_plugin_string(value, &sockpath, addon))
     return 1;
-  zebra_sockpath(sockpath);
+  zplugin_sockpath(sockpath);
   return 0;
 }
 
@@ -148,7 +148,7 @@ set_port(const char *value, void *data __attribute__ ((unused)), set_plugin_para
 
   if (set_plugin_port(value, &port, addon))
     return 1;
-  zebra_port(port);
+  zplugin_port(port);
 
   return 0;
 }
@@ -162,7 +162,7 @@ set_version(const char *value, void *data __attribute__ ((unused)), set_plugin_p
     return 1;
   if (version < 0 || version > 1)
     return 1;
-  zebra_version(version);
+  zplugin_version(version);
 
   return 0;
 }
@@ -171,7 +171,7 @@ int
 olsrd_plugin_init(void)
 {
 
-  olsr_start_timer(1 * MSEC_PER_SEC, 0, OLSR_TIMER_PERIODIC, &zebra_parse, NULL, 0);
+  olsr_start_timer(1 * MSEC_PER_SEC, 0, OLSR_TIMER_PERIODIC, &zparse, NULL, 0);
 
   return 0;
 }
@@ -179,13 +179,13 @@ olsrd_plugin_init(void)
 static void
 my_init(void)
 {
-  init_zebra();
+  zebra_init();
 }
 
 static void
 my_fini(void)
 {
-  zebra_cleanup();
+  zebra_fini();
 }
 
 /*

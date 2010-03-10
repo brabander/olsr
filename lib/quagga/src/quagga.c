@@ -29,7 +29,7 @@
 struct zebra zebra;
 
 void
-init_zebra(void)
+zebra_init(void)
 {
 
   memset(&zebra, 0, sizeof zebra);
@@ -39,13 +39,13 @@ init_zebra(void)
 }
 
 void
-zebra_cleanup(void)
+zebra_fini(void)
 {
   struct rt_entry *tmp;
 
   if (zebra.options & OPTION_EXPORT) {
     OLSR_FOR_ALL_RT_ENTRIES(tmp) {
-      zebra_del_route(tmp);
+      zebra_delroute(tmp);
     }
     OLSR_FOR_ALL_RT_ENTRIES_END(tmp);
   }
@@ -60,7 +60,7 @@ zebra_enable_redistribute(void)
 
   for (type = 0; type < ZEBRA_ROUTE_MAX; type++)
     if (zebra.redistribute[type]) {
-      if (zebra_send_command(zebra_redistribute_packet(ZEBRA_REDISTRIBUTE_ADD, type)) < 0)
+      if (zclient_write(zpacket_redistribute(ZEBRA_REDISTRIBUTE_ADD, type)) < 0)
         olsr_exit("(QUAGGA) could not send redistribute add command", EXIT_FAILURE);
     }
 
@@ -73,17 +73,17 @@ zebra_disable_redistribute(void)
 
   for (type = 0; type < ZEBRA_ROUTE_MAX; type++)
     if (zebra.redistribute[type]) {
-      if (zebra_send_command(zebra_redistribute_packet(ZEBRA_REDISTRIBUTE_DELETE, type)) < 0)
+      if (zclient_write(zpacket_redistribute(ZEBRA_REDISTRIBUTE_DELETE, type)) < 0)
         olsr_exit("(QUAGGA) could not send redistribute delete command", EXIT_FAILURE);
     }
 
 }
 
 int
-zebra_add_route(const struct rt_entry *r)
+zebra_addroute(const struct rt_entry *r)
 {
 
-  struct zebra_route route;
+  struct zroute route;
   int retval;
 
   route.distance = 0;
@@ -126,16 +126,16 @@ zebra_add_route(const struct rt_entry *r)
     route.distance = zebra.distance;
   }
 
-  retval = zebra_send_command(zebra_route_packet(olsr_cnf->ip_version == AF_INET ? ZEBRA_IPV4_ROUTE_ADD : ZEBRA_IPV6_ROUTE_ADD, &route));
+  retval = zclient_write(zpacket_route(olsr_cnf->ip_version == AF_INET ? ZEBRA_IPV4_ROUTE_ADD : ZEBRA_IPV6_ROUTE_ADD, &route));
 
   return retval;
 }
 
 int
-zebra_del_route(const struct rt_entry *r)
+zebra_delroute(const struct rt_entry *r)
 {
 
-  struct zebra_route route;
+  struct zroute route;
   int retval;
   route.distance = 0;
   route.type = ZEBRA_ROUTE_OLSR;
@@ -177,7 +177,7 @@ zebra_del_route(const struct rt_entry *r)
     route.distance = zebra.distance;
   }
 
-  retval = zebra_send_command(zebra_route_packet(olsr_cnf->ip_version == AF_INET ? ZEBRA_IPV4_ROUTE_DELETE : ZEBRA_IPV6_ROUTE_DELETE, &route));
+  retval = zclient_write(zpacket_route(olsr_cnf->ip_version == AF_INET ? ZEBRA_IPV4_ROUTE_DELETE : ZEBRA_IPV6_ROUTE_DELETE, &route));
 
   return retval;
 }

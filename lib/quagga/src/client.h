@@ -22,9 +22,9 @@
 /* Buffer size */
 #define BUFSIZE 1024
 
-int zebra_send_command(unsigned char *);
-void zebra_reconnect(void);
-unsigned char *try_read(ssize_t *);
+int zclient_write(unsigned char *);
+void zclient_reconnect(void);
+unsigned char *zclient_read(ssize_t *);
 
 /*
  * Local Variables:
