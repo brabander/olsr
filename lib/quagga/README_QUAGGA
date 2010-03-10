@@ -65,6 +65,7 @@ LoadPlugin "olsrd_quagga.so.0.2.2"
 	PlParam "Distance" "125" 
 	PlParam "LocalPref" "false"
 	PlParam "SockPath" "/var/run/zserv.api"
+	PlParam "Version" "1"
 }
 
 
