@@ -203,7 +203,7 @@ static void generate_iptunnel_name(union olsr_ip_addr *target, char *name) {
  * @param transportV4 true if IPv4 traffic is used, false for IPv6 traffic
  * @return NULL if an error happened, pointer to olsr_iptunnel_entry otherwise
  */
-struct olsr_iptunnel_entry *olsr_os_add_ipip_tunnel(union olsr_ip_addr *target, bool transportV4) {
+struct olsr_iptunnel_entry *olsr_os_add_ipip_tunnel(union olsr_ip_addr *target, bool transportV4 __attribute__ ((unused))) {
   struct olsr_iptunnel_entry *t;
 
   assert(olsr_cnf->ip_version == AF_INET6 || transportV4);

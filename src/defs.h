@@ -119,7 +119,8 @@ extern FILE *debug_handle;
  * CPU will throw BUS_ERROR if alignment does not fit. For this,
  * we add an additional cast to (void *) to prevent the warning.
  */
-#define ARM_NOWARN_ALIGN void *
+#define ARM_NOWARN_ALIGN(x) ((void *)(x))
+#define CONST_ARM_NOWARN_ALIGN(x) ((const void *)(x))
 
 /*
  * A somewhat safe version of strncpy and strncat. Note, that

@@ -853,9 +853,7 @@ build_config_body(struct autobuf *abuf)
              olsr_ip_to_string(&mainaddrbuf, &olsr_cnf->main_addr));
   abuf_appendf(abuf, "<td>IP version: %d</td>\n", olsr_cnf->ip_version == AF_INET ? 4 : 6);
   abuf_appendf(abuf, "<td>Debug level: %d</td>\n", olsr_cnf->debug_level);
-  abuf_appendf(abuf, "<td>FIB Metrics: %s</td>\n",
-             FIBM_FLAT == olsr_cnf->fib_metric ? CFG_FIBM_FLAT : FIBM_CORRECT ==
-             olsr_cnf->fib_metric ? CFG_FIBM_CORRECT : CFG_FIBM_APPROX);
+  abuf_appendf(abuf, "<td>FIB Metrics: %s</td>\n", FIB_METRIC_TXT[olsr_cnf->fib_metric]);
 
   abuf_puts(abuf, "</tr>\n<tr>\n");
 
@@ -1141,21 +1139,7 @@ build_cfgfile_body(struct autobuf *abuf)
   abuf_puts(abuf,
              "\n\n" "<strong>This is a automatically generated configuration\n"
              "file based on the current olsrd configuration of this node.<br/>\n" "<hr/>\n" "<pre>\n");
-
-  {
-    /* Hack to make netdirect stuff work with
-       olsrd_write_cnf_buf
-     */
-    char tmpBuf[10000];
-    int size;
-    size = olsrd_write_cnf_buf(olsr_cnf, tmpBuf, 10000);
-    if (size < 0) {
-      abuf_puts(abuf, "ERROR GENERATING CONFIGFILE!\n");
-    }
-    else {
-      abuf_puts(abuf, tmpBuf);
-    }
-  }
+  olsrd_write_cnf_autobuf(abuf, olsr_cnf);
 
   abuf_puts(abuf, "</pre>\n<hr/>\n");
 

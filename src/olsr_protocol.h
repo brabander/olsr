@@ -47,13 +47,12 @@
 #ifndef _PROTOCOLS_OLSR_H
 #define	_PROTOCOLS_OLSR_H
 
+struct olsr;
+
 #include "olsr_types.h"
 #include "olsr_cfg.h"
 
 #include <string.h>
-
-/* Default IPv6 multicast addresses (linklocal manet routers, see RFC 5498) */
-#define OLSR_IPV6_MCAST "FF02::6D"
 
 #define OLSR_HEADERSIZE (sizeof(uint16_t) + sizeof(uint16_t))
 

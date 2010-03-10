@@ -77,13 +77,13 @@
 # RtPolicy yes
 
 # Activates (in IPv6 mode) the automatic use of NIIT
-# (see README_NIIT_SMARTGW)
+# (see README-Olsr-Extensions)
 # (default is "yes")
 
 # UseNiit yes
 
 # Activates the smartgateway ipip tunnel feature.
-# See README_NIIT_SMARTGW for a description of smartgateways.
+# See README-Olsr-Extensions for a description of smartgateways.
 # (default is "yes")
 
 # SmartGateway yes
@@ -148,7 +148,7 @@ Hna6
 ################################
 
 # Link quality algorithm (only for lq level 2)
-# (see README_LQ_ALGORITHMS)
+# (see README-Olsr-Extensions)
 # - "etx_float", a floating point  ETX with exponential aging
 # - "etx_fpm", same as ext_float, but with integer arithmetic
 # - "etx_ff" (ETX freifunk), an etx variant which use all OLSR

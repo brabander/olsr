@@ -121,7 +121,7 @@
 # RtTableTunnel 113
 
 # Specifies the policy rule priorities for the three routing tables and
-# a special rule for smartgateway routing (see README_NIIT_SMARTGW)
+# a special rule for smartgateway routing (see README-Olsr-Extensions)
 # Priorities can only be set if three different routing tables are set.
 # 0 means "set no policy rule", if set the values must obey to condition
 # RtTablePriority < RtTableDefaultOlsrPriority
@@ -134,13 +134,13 @@
 # RtTableDefaultPriority 32796
 
 # Activates (in IPv6 mode) the automatic use of NIIT
-# (see README_NIIT_SMARTGW)
+# (see README-Olsr-Extensions)
 # (default is "yes")
 
 # UseNiit yes
 
 # Activates the smartgateway ipip tunnel feature.
-# See README_NIIT_SMARTGW for a description of smartgateways.
+# See README-Olsr-Extensions for a description of smartgateways.
 # (default is "yes")
 
 # SmartGateway yes
@@ -273,7 +273,7 @@ Hna6
 # LinkQualityLevel 2
 
 # Link quality algorithm (only for lq level 2)
-# (see README_LQ_ALGORITHMS)
+# (see README-Olsr-Extensions)
 # - "etx_float", a floating point  ETX with exponential aging
 # - "etx_fpm", same as ext_float, but with integer arithmetic
 # - "etx_ff" (ETX freifunk), an etx variant which use all OLSR
@@ -326,15 +326,11 @@ IpcConnect
      # MaxConnections  0
 
      # By default only 127.0.0.1 is allowed
-     # to connect. Here allowed hosts can
+     # to connect. Here allowed hosts and networks can
      # be added
 
      # Host            127.0.0.1
      # Host            10.0.0.5
-
-     # Specify entire net-ranges that are 
-     # allowed to connect
-
      # Net             192.168.1.0 255.255.255.0     
 }
 
@@ -476,7 +472,7 @@ Interface "<OLSRd-Interface1>" "<OLSRd-Interface2>"
     # Ip4Broadcast      0.0.0.0
 
     # IPv6 multicast address
-    # (default is FF02::6D, the "manet-router linklocal multicast)
+    # (default is FF02::6D, the manet-router linklocal multicast)
 
     # IPv6Multicast	FF02::6D
 
