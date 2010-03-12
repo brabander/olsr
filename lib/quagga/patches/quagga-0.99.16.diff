@@ -1,6 +1,6 @@
-diff -Naur quagga-0.99.15/bgpd/bgp_vty.c quagga-0.99.15.patched/bgpd/bgp_vty.c
---- quagga-0.99.15/bgpd/bgp_vty.c	2009-08-19 19:02:34.000000000 +0300
-+++ quagga-0.99.15.patched/bgpd/bgp_vty.c	2010-03-10 02:04:57.000000000 +0200
+diff -Naur quagga-0.99.16/bgpd/bgp_vty.c quagga-0.99.16.patched/bgpd/bgp_vty.c
+--- quagga-0.99.16/bgpd/bgp_vty.c	2009-12-14 15:41:13.000000000 +0200
++++ quagga-0.99.16.patched/bgpd/bgp_vty.c	2010-03-12 18:12:28.000000000 +0200
 @@ -8228,8 +8228,14 @@
  	return ZEBRA_ROUTE_STATIC;
        else if (strncmp (str, "r", 1) == 0)
@@ -406,9 +406,9 @@ diff -Naur quagga-0.99.15/bgpd/bgp_vty.c quagga-0.99.15.patched/bgpd/bgp_vty.c
         "Metric for redistributed routes\n"
         "Default metric\n"
         "Route map reference\n"
-diff -Naur quagga-0.99.15/lib/log.c quagga-0.99.15.patched/lib/log.c
---- quagga-0.99.15/lib/log.c	2009-07-28 19:35:45.000000000 +0300
-+++ quagga-0.99.15.patched/lib/log.c	2010-03-10 02:04:57.000000000 +0200
+diff -Naur quagga-0.99.16/lib/log.c quagga-0.99.16.patched/lib/log.c
+--- quagga-0.99.16/lib/log.c	2009-12-09 14:37:12.000000000 +0200
++++ quagga-0.99.16.patched/lib/log.c	2010-03-12 18:12:28.000000000 +0200
 @@ -835,6 +835,8 @@
    DESC_ENTRY	(ZEBRA_ROUTE_ISIS,	"isis",		'I' ),
    DESC_ENTRY	(ZEBRA_ROUTE_BGP,	"bgp",		'B' ),
@@ -418,9 +418,9 @@ diff -Naur quagga-0.99.15/lib/log.c quagga-0.99.15.patched/lib/log.c
  };
  #undef DESC_ENTRY
  
-diff -Naur quagga-0.99.15/lib/route_types.txt quagga-0.99.15.patched/lib/route_types.txt
---- quagga-0.99.15/lib/route_types.txt	2009-05-08 18:46:43.000000000 +0300
-+++ quagga-0.99.15.patched/lib/route_types.txt	2010-03-10 02:04:57.000000000 +0200
+diff -Naur quagga-0.99.16/lib/route_types.txt quagga-0.99.16.patched/lib/route_types.txt
+--- quagga-0.99.16/lib/route_types.txt	2009-12-09 14:37:12.000000000 +0200
++++ quagga-0.99.16.patched/lib/route_types.txt	2010-03-12 18:12:28.000000000 +0200
 @@ -51,13 +51,9 @@
  ZEBRA_ROUTE_OSPF6,      ospf6,     ospf6d, 'O', 0, 1, "OSPF"
  ZEBRA_ROUTE_ISIS,       isis,      isisd,  'I', 1, 1, "IS-IS"
@@ -445,9 +445,9 @@ diff -Naur quagga-0.99.15/lib/route_types.txt quagga-0.99.15.patched/lib/route_t
 -ZEBRA_ROUTE_OLSR,   "Optimised Link State Routing (OLSR)"
 +ZEBRA_ROUTE_OLSR,   "Optimized Link State Routing (OLSR)"
 +ZEBRA_ROUTE_BATMAN, "Better Approach to Mobile Ad-Hoc Networking (BATMAN)"
-diff -Naur quagga-0.99.15/lib/zebra.h quagga-0.99.15.patched/lib/zebra.h
---- quagga-0.99.15/lib/zebra.h	2009-08-28 20:52:19.000000000 +0300
-+++ quagga-0.99.15.patched/lib/zebra.h	2010-03-10 02:04:57.000000000 +0200
+diff -Naur quagga-0.99.16/lib/zebra.h quagga-0.99.16.patched/lib/zebra.h
+--- quagga-0.99.16/lib/zebra.h	2009-12-09 14:37:12.000000000 +0200
++++ quagga-0.99.16.patched/lib/zebra.h	2010-03-12 18:12:28.000000000 +0200
 @@ -441,7 +441,9 @@
  #define ZEBRA_ROUTE_ISIS                 8
  #define ZEBRA_ROUTE_BGP                  9
@@ -459,9 +459,9 @@ diff -Naur quagga-0.99.15/lib/zebra.h quagga-0.99.15.patched/lib/zebra.h
  
  /* Note: whenever a new route-type or zserv-command is added the
   * corresponding {command,route}_types[] table in lib/log.c MUST be
-diff -Naur quagga-0.99.15/ospf6d/ospf6_asbr.c quagga-0.99.15.patched/ospf6d/ospf6_asbr.c
---- quagga-0.99.15/ospf6d/ospf6_asbr.c	2009-07-28 19:35:45.000000000 +0300
-+++ quagga-0.99.15.patched/ospf6d/ospf6_asbr.c	2010-03-10 02:04:57.000000000 +0200
+diff -Naur quagga-0.99.16/ospf6d/ospf6_asbr.c quagga-0.99.16.patched/ospf6d/ospf6_asbr.c
+--- quagga-0.99.16/ospf6d/ospf6_asbr.c	2009-12-09 14:37:12.000000000 +0200
++++ quagga-0.99.16.patched/ospf6d/ospf6_asbr.c	2010-03-12 18:12:28.000000000 +0200
 @@ -616,13 +616,16 @@
  
  DEFUN (ospf6_redistribute,
@@ -556,9 +556,9 @@ diff -Naur quagga-0.99.15/ospf6d/ospf6_asbr.c quagga-0.99.15.patched/ospf6d/ospf
  
    ospf6_asbr_redistribute_unset (type);
    ospf6_asbr_routemap_unset (type);
-diff -Naur quagga-0.99.15/ospfd/ospf_vty.c quagga-0.99.15.patched/ospfd/ospf_vty.c
---- quagga-0.99.15/ospfd/ospf_vty.c	2009-08-28 14:31:51.000000000 +0300
-+++ quagga-0.99.15.patched/ospfd/ospf_vty.c	2010-03-10 02:04:57.000000000 +0200
+diff -Naur quagga-0.99.16/ospfd/ospf_vty.c quagga-0.99.16.patched/ospfd/ospf_vty.c
+--- quagga-0.99.16/ospfd/ospf_vty.c	2009-12-09 14:37:12.000000000 +0200
++++ quagga-0.99.16.patched/ospfd/ospf_vty.c	2010-03-12 18:12:28.000000000 +0200
 @@ -107,8 +107,14 @@
      *source = ZEBRA_ROUTE_STATIC;
    else if (strncmp (str, "r", 1) == 0)
@@ -575,9 +575,9 @@ diff -Naur quagga-0.99.15/ospfd/ospf_vty.c quagga-0.99.15.patched/ospfd/ospf_vty
    else
      return 0;
  
-diff -Naur quagga-0.99.15/ripd/rip_zebra.c quagga-0.99.15.patched/ripd/rip_zebra.c
---- quagga-0.99.15/ripd/rip_zebra.c	2009-08-28 20:52:19.000000000 +0300
-+++ quagga-0.99.15.patched/ripd/rip_zebra.c	2010-03-10 02:04:57.000000000 +0200
+diff -Naur quagga-0.99.16/ripd/rip_zebra.c quagga-0.99.16.patched/ripd/rip_zebra.c
+--- quagga-0.99.16/ripd/rip_zebra.c	2009-12-10 18:14:39.000000000 +0200
++++ quagga-0.99.16.patched/ripd/rip_zebra.c	2010-03-12 18:12:28.000000000 +0200
 @@ -204,8 +204,11 @@
    {ZEBRA_ROUTE_KERNEL,  1, "kernel"},
    {ZEBRA_ROUTE_CONNECT, 1, "connected"},
@@ -592,9 +592,9 @@ diff -Naur quagga-0.99.15/ripd/rip_zebra.c quagga-0.99.15.patched/ripd/rip_zebra
    {0, 0, NULL}
  };
  
-diff -Naur quagga-0.99.15/ripngd/ripng_zebra.c quagga-0.99.15.patched/ripngd/ripng_zebra.c
---- quagga-0.99.15/ripngd/ripng_zebra.c	2009-07-28 19:35:45.000000000 +0300
-+++ quagga-0.99.15.patched/ripngd/ripng_zebra.c	2010-03-10 02:04:57.000000000 +0200
+diff -Naur quagga-0.99.16/ripngd/ripng_zebra.c quagga-0.99.16.patched/ripngd/ripng_zebra.c
+--- quagga-0.99.16/ripngd/ripng_zebra.c	2009-12-09 14:37:12.000000000 +0200
++++ quagga-0.99.16.patched/ripngd/ripng_zebra.c	2010-03-12 18:12:28.000000000 +0200
 @@ -214,8 +214,11 @@
    {ZEBRA_ROUTE_KERNEL,  1, "kernel"},
    {ZEBRA_ROUTE_CONNECT, 1, "connected"},
@@ -609,9 +609,9 @@ diff -Naur quagga-0.99.15/ripngd/ripng_zebra.c quagga-0.99.15.patched/ripngd/rip
    {0, 0, NULL}
  };
  
-diff -Naur quagga-0.99.15/zebra/redistribute.c quagga-0.99.15.patched/zebra/redistribute.c
---- quagga-0.99.15/zebra/redistribute.c	2009-07-28 19:35:45.000000000 +0300
-+++ quagga-0.99.15.patched/zebra/redistribute.c	2010-03-10 02:04:57.000000000 +0200
+diff -Naur quagga-0.99.16/zebra/redistribute.c quagga-0.99.16.patched/zebra/redistribute.c
+--- quagga-0.99.16/zebra/redistribute.c	2009-12-09 14:37:12.000000000 +0200
++++ quagga-0.99.16.patched/zebra/redistribute.c	2010-03-12 18:12:28.000000000 +0200
 @@ -255,6 +255,9 @@
      case ZEBRA_ROUTE_OSPF:
      case ZEBRA_ROUTE_OSPF6:
@@ -632,9 +632,9 @@ diff -Naur quagga-0.99.15/zebra/redistribute.c quagga-0.99.15.patched/zebra/redi
        client->redist[type] = 0;
        break;
      default:
-diff -Naur quagga-0.99.15/zebra/zebra_rib.c quagga-0.99.15.patched/zebra/zebra_rib.c
---- quagga-0.99.15/zebra/zebra_rib.c	2009-08-28 20:52:19.000000000 +0300
-+++ quagga-0.99.15.patched/zebra/zebra_rib.c	2010-03-10 02:04:57.000000000 +0200
+diff -Naur quagga-0.99.16/zebra/zebra_rib.c quagga-0.99.16.patched/zebra/zebra_rib.c
+--- quagga-0.99.16/zebra/zebra_rib.c	2009-12-21 12:40:24.000000000 +0200
++++ quagga-0.99.16.patched/zebra/zebra_rib.c	2010-03-12 18:12:28.000000000 +0200
 @@ -66,7 +66,10 @@
    {ZEBRA_ROUTE_OSPF,    110},
    {ZEBRA_ROUTE_OSPF6,   110},
@@ -647,7 +647,7 @@ diff -Naur quagga-0.99.15/zebra/zebra_rib.c quagga-0.99.15.patched/zebra/zebra_r
  };
  
  /* Vector for routing table.  */
-@@ -1252,6 +1255,8 @@
+@@ -1229,6 +1232,8 @@
    [ZEBRA_ROUTE_ISIS]    = 2,
    [ZEBRA_ROUTE_BGP]     = 3,
    [ZEBRA_ROUTE_HSLS]    = 4,
@@ -656,9 +656,9 @@ diff -Naur quagga-0.99.15/zebra/zebra_rib.c quagga-0.99.15.patched/zebra/zebra_r
  };
  
  /* Look into the RN and queue it into one or more priority queues,
-diff -Naur quagga-0.99.15/zebra/zebra_snmp.c quagga-0.99.15.patched/zebra/zebra_snmp.c
---- quagga-0.99.15/zebra/zebra_snmp.c	2009-07-28 19:35:45.000000000 +0300
-+++ quagga-0.99.15.patched/zebra/zebra_snmp.c	2010-03-10 02:04:57.000000000 +0200
+diff -Naur quagga-0.99.16/zebra/zebra_snmp.c quagga-0.99.16.patched/zebra/zebra_snmp.c
+--- quagga-0.99.16/zebra/zebra_snmp.c	2009-12-09 14:37:12.000000000 +0200
++++ quagga-0.99.16.patched/zebra/zebra_snmp.c	2010-03-12 18:12:28.000000000 +0200
 @@ -251,6 +251,12 @@
        return 1; /* shouldn't happen */
      case ZEBRA_ROUTE_BGP:
@@ -672,9 +672,9 @@ diff -Naur quagga-0.99.15/zebra/zebra_snmp.c quagga-0.99.15.patched/zebra/zebra_
      default:
        return 1; /* other */
      }
-diff -Naur quagga-0.99.15/zebra/zebra_vty.c quagga-0.99.15.patched/zebra/zebra_vty.c
---- quagga-0.99.15/zebra/zebra_vty.c	2009-08-28 20:52:19.000000000 +0300
-+++ quagga-0.99.15.patched/zebra/zebra_vty.c	2010-03-10 02:04:57.000000000 +0200
+diff -Naur quagga-0.99.16/zebra/zebra_vty.c quagga-0.99.16.patched/zebra/zebra_vty.c
+--- quagga-0.99.16/zebra/zebra_vty.c	2009-12-09 14:37:12.000000000 +0200
++++ quagga-0.99.16.patched/zebra/zebra_vty.c	2010-03-12 18:12:28.000000000 +0200
 @@ -557,7 +557,10 @@
        if (rib->type == ZEBRA_ROUTE_RIP
  	  || rib->type == ZEBRA_ROUTE_OSPF
