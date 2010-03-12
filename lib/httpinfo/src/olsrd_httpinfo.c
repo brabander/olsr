@@ -737,8 +737,8 @@ build_ipaddr_link(struct autobuf *abuf, const bool want_link, const union olsr_i
                                          olsr_cnf->ip_version) :
 #endif
     NULL;
-  /* Print the link only if there is no prefix_len */
-  const int print_link = want_link && (prefix_len == -1 || prefix_len == olsr_cnf->maxplen);
+  /* Print the link only if there is no prefix_len and ip_version is AF_INET */
+  const int print_link = want_link && (prefix_len == -1 || prefix_len == olsr_cnf->maxplen) && (olsr_cnf->ip_version == AF_INET);
   olsr_ip_to_string(&ipaddrstr, ipaddr);
 
   abuf_puts(abuf, "<td>");
