@@ -1295,11 +1295,23 @@ bsrc_ip_routes: TOK_SRC_IP_ROUTES TOK_BOOLEAN
 }
 ;
 
-amain_ip: TOK_MAIN_IP TOK_STRING
+amain_ip: TOK_MAIN_IP TOK_IPV4_ADDR
 {
   PARSER_DEBUG_PRINTF("Fixed Main IP: %s\n", $2->string);
   
-  if (inet_pton(olsr_cnf->ip_version, $2->string, &olsr_cnf->main_addr) != 1) {
+  if (olsr_cnf->ip_version != AF_INET
+      || inet_pton(olsr_cnf->ip_version, $2->string, &olsr_cnf->main_addr) != 1) {
+    fprintf(stderr, "Bad main IP: %s\n", $2->string);
+    YYABORT;
+  }
+  free($2);
+}
+        |       TOK_MAIN_IP TOK_IPV6_ADDR
+{
+  PARSER_DEBUG_PRINTF("Fixed Main IP: %s\n", $2->string);
+  
+  if (olsr_cnf->ip_version != AF_INET6
+      || inet_pton(olsr_cnf->ip_version, $2->string, &olsr_cnf->main_addr) != 1) {
     fprintf(stderr, "Bad main IP: %s\n", $2->string);
     YYABORT;
   }
