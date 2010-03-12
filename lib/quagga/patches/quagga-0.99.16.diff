@@ -674,7 +674,7 @@ diff -Naur quagga-0.99.16/zebra/zebra_snmp.c quagga-0.99.16.patched/zebra/zebra_
      }
 diff -Naur quagga-0.99.16/zebra/zebra_vty.c quagga-0.99.16.patched/zebra/zebra_vty.c
 --- quagga-0.99.16/zebra/zebra_vty.c	2009-12-09 14:37:12.000000000 +0200
-+++ quagga-0.99.16.patched/zebra/zebra_vty.c	2010-03-12 18:12:28.000000000 +0200
++++ quagga-0.99.16.patched/zebra/zebra_vty.c	2010-03-12 19:00:32.000000000 +0200
 @@ -557,7 +557,10 @@
        if (rib->type == ZEBRA_ROUTE_RIP
  	  || rib->type == ZEBRA_ROUTE_OSPF
@@ -710,6 +710,15 @@ diff -Naur quagga-0.99.16/zebra/zebra_vty.c quagga-0.99.16.patched/zebra/zebra_v
  
  DEFUN (show_ip_route,
         show_ip_route_cmd,
+@@ -829,7 +835,7 @@
+ 	if (first)
+ 	  {
+ 	    vty_out (vty, SHOW_ROUTE_V4_HEADER, VTY_NEWLINE, VTY_NEWLINE,
+-		     VTY_NEWLINE);
++		     VTY_NEWLINE, VTY_NEWLINE);
+ 	    first = 0;
+ 	  }
+ 	vty_show_ip_route (vty, rn, rib);
 @@ -922,7 +928,7 @@
  
  DEFUN (show_ip_route_protocol,
