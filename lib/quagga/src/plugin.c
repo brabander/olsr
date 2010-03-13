@@ -49,8 +49,8 @@ int
 zplugin_redistribute(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused)))
 {
   const char *zroute_types[] = { "system", "kernel", "connect",
-    "static", "rip", "ripng", "ospf",
-    "ospf6", "isis", "bgp", "hsls"
+    "static", "rip", "ripng", "ospf", "ospf6", "isis", "bgp",
+    "hsls", "olsr", "batman"
   };
   unsigned int i;
 
