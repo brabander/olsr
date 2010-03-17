@@ -806,40 +806,6 @@ int olsr_if_set_state(const char *dev, bool up) {
   return 0;
 }
 
-
-int olsr_if_setip(const char *dev, union olsr_ip_addr *ip, int ip_version) {
-  struct sockaddr_in s4;
-  struct sockaddr_in6 s6;
-  struct ifreq ifr;
-
-  /* first activate interface */
-  if (olsr_if_set_state(dev, true)) {
-    return 1;
-  }
-
-  memset(&ifr, 0, sizeof(ifr));
-  strscpy(ifr.ifr_name, dev, IFNAMSIZ);
-
-  if (ip_version == AF_INET) {
-    s4.sin_family = AF_INET;
-    s4.sin_addr = ip->v4;
-    memcpy(&ifr.ifr_addr, &s4, sizeof(s4));
-  }
-  else {
-    s6.sin6_family = AF_INET6;
-    s6.sin6_addr = ip->v6;
-    memcpy(&ifr.ifr_addr, &s6, sizeof(s6));
-  }
-
-  if (ioctl(olsr_cnf->ioctl_s, SIOCSIFADDR, &ifr) < 0) {
-    struct ipaddr_str buf;
-    OLSR_PRINTF(1, "ioctl SIOCSIFADDR (set addr %s) on device %s error: %s (%d)\n",
-        inet_ntop(ip_version, &ifr.ifr_addr, buf.buf, sizeof(buf)), dev, strerror(errno), errno);
-    return 1;
-  }
-  return 0;
-}
-
 /*
  * Local Variables:
  * c-basic-offset: 2
