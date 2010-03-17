@@ -178,17 +178,30 @@ olsr_ip_prefix_to_string(const struct olsr_ip_prefix *prefix)
 int
 olsr_string_to_prefix(int ipversion, struct olsr_ip_prefix *dst, const char *string) {
   static char buf[MAX(INET6_ADDRSTRLEN + 1 + 3, INET_ADDRSTRLEN + 1 + INET_ADDRSTRLEN)];
-  char *prefix;
+  char *ptr;
 
   strscpy(buf, string, sizeof(buf));
   dst->prefix_len = ipversion == AF_INET ? 32 : 128;
 
-  prefix = strchr(buf, '/');
-  if (prefix) {
-    *prefix++ = 0;
-    dst->prefix_len = atoi(prefix);
+  ptr = strchr(buf, '/');
+  if (!ptr) {
+    ptr = strchr(buf, ' ');
   }
 
+  if (ptr) {
+    *ptr++ = 0;
+    if (olsr_cnf->ip_version == AF_INET && strchr(ptr, '.')) {
+      uint8_t subnetbuf[4];
+      if (inet_pton(AF_INET, ptr, subnetbuf)) {
+        return 1;
+      }
+
+      dst->prefix_len = netmask_to_prefix(subnetbuf, sizeof(subnetbuf));
+    }
+    else {
+      dst->prefix_len = atoi(ptr);
+    }
+  }
   return inet_pton(ipversion, buf, &dst->prefix);
 }
 

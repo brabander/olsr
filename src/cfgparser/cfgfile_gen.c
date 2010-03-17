@@ -65,7 +65,9 @@ int olsrd_write_cnf(struct olsrd_config *cnf, const char *fname) {
   printf("Writing config to file \"%s\".... ", fname);
   abuf_init(&abuf, 1024);
   olsrd_write_cnf_autobuf(&abuf, cnf);
-  fwrite(abuf.buf, abuf.len, 1, fd);
+  if (fwrite(abuf.buf, abuf.len, 1, fd) < (size_t)abuf.len) {
+    fprintf(stderr, "Error, could not write the complete config file.\n");
+  }
   abuf_free(&abuf);
   fclose(fd);
 

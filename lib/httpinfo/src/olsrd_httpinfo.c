@@ -1153,7 +1153,7 @@ check_allowed_ip(const struct allowed_net *const my_allowed_nets, const union ol
 {
   const struct allowed_net *alln;
   for (alln = my_allowed_nets; alln != NULL; alln = alln->next) {
-    if ((addr->v4.s_addr & alln->mask.v4.s_addr) == (alln->net.v4.s_addr & alln->mask.v4.s_addr)) {
+    if (ip_in_net(addr, &alln->prefix)) {
       return 1;
     }
   }

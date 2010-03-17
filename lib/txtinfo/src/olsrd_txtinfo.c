@@ -163,9 +163,7 @@ olsr_plugin_exit(void)
 static int
 plugin_ipc_init(void)
 {
-  struct sockaddr_storage sst;
-  struct sockaddr_in *sock_in;
-  struct sockaddr_in6 *sin6;
+  union olsr_sockaddr sst;
   uint32_t yes = 1;
   socklen_t addrlen;
 
@@ -193,27 +191,25 @@ plugin_ipc_init(void)
     /* complete the socket structure */
     memset(&sst, 0, sizeof(sst));
     if (olsr_cnf->ip_version == AF_INET) {
-      sock_in = (struct sockaddr_in *)&sst;
-      sock_in->sin_family = AF_INET;
+      sst.in4.sin_family = AF_INET;
       addrlen = sizeof(struct sockaddr_in);
 #ifdef SIN6_LEN
-      sock_in->sin_len = addrlen;
+      sst.in4.sin_len = addrlen;
 #endif
-      sock_in->sin_addr.s_addr = txtinfo_listen_ip.v4.s_addr;
-      sock_in->sin_port = htons(ipc_port);
+      sst.in4.sin_addr.s_addr = txtinfo_listen_ip.v4.s_addr;
+      sst.in4.sin_port = htons(ipc_port);
     } else {
-      sin6 = (struct sockaddr_in6 *)&sst;
-      sin6->sin6_family = AF_INET6;
+      sst.in6.sin6_family = AF_INET6;
       addrlen = sizeof(struct sockaddr_in6);
 #ifdef SIN6_LEN
-      sin6->sin6_len = addrlen;
+      sst.in6.sin6_len = addrlen;
 #endif
-      sin6->sin6_addr = txtinfo_listen_ip.v6;
-      sin6->sin6_port = htons(ipc_port);
+      sst.in6.sin6_addr = txtinfo_listen_ip.v6;
+      sst.in6.sin6_port = htons(ipc_port);
     }
 
     /* bind the socket to the port number */
-    if (bind(ipc_socket, (struct sockaddr *)&sst, addrlen) == -1) {
+    if (bind(ipc_socket, &sst.in, addrlen) == -1) {
 #ifndef NODEBUG
       olsr_printf(1, "(TXTINFO) bind()=%s\n", strerror(errno));
 #endif
@@ -241,18 +237,17 @@ plugin_ipc_init(void)
 static void
 ipc_action(int fd, void *data __attribute__ ((unused)), unsigned int flags __attribute__ ((unused)))
 {
-  struct sockaddr_storage pin;
-  struct sockaddr_in *sin4;
-  struct sockaddr_in6 *sin6;
+  union olsr_sockaddr pin;
+
   char addr[INET6_ADDRSTRLEN];
   fd_set rfds;
   struct timeval tv;
   int send_what = 0;
   int ipc_connection;
 
-  socklen_t addrlen = sizeof(struct sockaddr_storage);
+  socklen_t addrlen = sizeof(pin);
 
-  if ((ipc_connection = accept(fd, (struct sockaddr *)&pin, &addrlen)) == -1) {
+  if ((ipc_connection = accept(fd, &pin.in, &addrlen)) == -1) {
 #ifndef NODEBUG
     olsr_printf(1, "(TXTINFO) accept()=%s\n", strerror(errno));
 #endif
@@ -261,10 +256,9 @@ ipc_action(int fd, void *data __attribute__ ((unused)), unsigned int flags __att
 
   tv.tv_sec = tv.tv_usec = 0;
   if (olsr_cnf->ip_version == AF_INET) {
-    sin4 = (struct sockaddr_in *)&pin;
-    if (inet_ntop(olsr_cnf->ip_version, &sin4->sin_addr, addr, INET6_ADDRSTRLEN) == NULL)
+    if (inet_ntop(olsr_cnf->ip_version, &pin.in4.sin_addr, addr, INET6_ADDRSTRLEN) == NULL)
       addr[0] = '\0';
-    if (!ip4equal(&sin4->sin_addr, &txtinfo_accept_ip.v4) && txtinfo_accept_ip.v4.s_addr != INADDR_ANY) {
+    if (!ip4equal(&pin.in4.sin_addr, &txtinfo_accept_ip.v4) && txtinfo_accept_ip.v4.s_addr != INADDR_ANY) {
 #ifdef TXTINFO_ALLOW_LOCALHOST
       if (sin4->sin_addr.s_addr!=INADDR_LOOPBACK) {
 #endif
@@ -276,11 +270,10 @@ ipc_action(int fd, void *data __attribute__ ((unused)), unsigned int flags __att
 #endif
     }
   } else {
-    sin6 = (struct sockaddr_in6 *)&pin;
-    if (inet_ntop(olsr_cnf->ip_version, &sin6->sin6_addr, addr, INET6_ADDRSTRLEN) == NULL)
+    if (inet_ntop(olsr_cnf->ip_version, &pin.in6.sin6_addr, addr, INET6_ADDRSTRLEN) == NULL)
       addr[0] = '\0';
     /* Use in6addr_any (::) in olsr.conf to allow anybody. */
-    if (!ip6equal(&in6addr_any, &txtinfo_accept_ip.v6) && !ip6equal(&sin6->sin6_addr, &txtinfo_accept_ip.v6)) {
+    if (!ip6equal(&in6addr_any, &txtinfo_accept_ip.v6) && !ip6equal(&pin.in6.sin6_addr, &txtinfo_accept_ip.v6)) {
       olsr_printf(1, "(TXTINFO) From host(%s) not allowed!\n", addr);
       close(ipc_connection);
       return;
