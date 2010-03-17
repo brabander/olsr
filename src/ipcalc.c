@@ -192,8 +192,8 @@ olsr_string_to_prefix(int ipversion, struct olsr_ip_prefix *dst, const char *str
     *ptr++ = 0;
     if (olsr_cnf->ip_version == AF_INET && strchr(ptr, '.')) {
       uint8_t subnetbuf[4];
-      if (inet_pton(AF_INET, ptr, subnetbuf)) {
-        return 1;
+      if (inet_pton(AF_INET, ptr, subnetbuf) != 1) {
+        return -1;
       }
 
       dst->prefix_len = netmask_to_prefix(subnetbuf, sizeof(subnetbuf));
@@ -202,7 +202,7 @@ olsr_string_to_prefix(int ipversion, struct olsr_ip_prefix *dst, const char *str
       dst->prefix_len = atoi(ptr);
     }
   }
-  return inet_pton(ipversion, buf, &dst->prefix);
+  return inet_pton(ipversion, buf, &dst->prefix) == 1 ? 0 : -1;
 }
 
 /* see if the ipaddr is in the net. That is equivalent to the fact that the net part

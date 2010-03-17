@@ -1160,36 +1160,6 @@ check_allowed_ip(const struct allowed_net *const my_allowed_nets, const union ol
   return 0;
 }
 
-#if 0
-
-/*
- * In a bigger mesh, there are probs with the fixed
- * bufsize. Because the Content-Length header is
- * optional, the sprintf() is changed to a more
- * scalable solution here.
- */
-
-int
-netsprintf(char *str, const char *format, ...)
-{
-  va_list arg;
-  int rv;
-  va_start(arg, format);
-  rv = vsprintf(str, format, arg);
-  va_end(arg);
-  if (0 != netsprintf_direct) {
-    if (0 == netsprintf_error) {
-      if (0 > send(client_sockets[curr_clients], str, rv, 0)) {
-        olsr_printf(1, "(HTTPINFO) Failed sending data to client!\n");
-        netsprintf_error = 1;
-      }
-    }
-    return 0;
-  }
-  return rv;
-}
-#endif
-
 /*
  * Local Variables:
  * c-basic-offset: 2
