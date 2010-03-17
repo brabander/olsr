@@ -74,6 +74,25 @@ serialize_gw_speed(uint32_t speed) {
 }
 
 /**
+ * Callback for tunnel interface monitoring which will set the route into the tunnel
+ * when the interface comes up again.
+ * @param if_index
+ * @param ifh
+ * @param flag
+ */
+static void smartgw_tunnel_monitor (int if_index,
+    struct interface *ifh __attribute__ ((unused)), enum olsr_ifchg_flag flag) {
+  if (current_ipv4_gw != NULL && if_index == v4gw_tunnel->if_index && flag == IFCHG_IF_ADD) {
+    /* v4 tunnel up again, set route */
+    olsr_os_inetgw_tunnel_route(v4gw_tunnel->if_index, true, true);
+  }
+  if (current_ipv6_gw != NULL && if_index == v6gw_tunnel->if_index && flag == IFCHG_IF_ADD) {
+    /* v6 status changed, set route */
+    olsr_os_inetgw_tunnel_route(v6gw_tunnel->if_index, false, true);
+  }
+}
+
+/**
  * Initialize gateway system
  */
 int
@@ -93,6 +112,8 @@ olsr_init_gateways(void) {
   if (olsr_os_init_iptunnel()) {
     return 1;
   }
+
+  olsr_add_ifchange_handler(smartgw_tunnel_monitor);
 
   /*
    * initialize default gateway handler,
@@ -136,8 +157,7 @@ void olsr_cleanup_gateways(void) {
     olsr_os_del_ipip_tunnel(v6gw_tunnel);
   }
 
-  // TODO: add olsr_remove_ifchange_handler() for both tunnels
-
+  olsr_remove_ifchange_handler(smartgw_tunnel_monitor);
   olsr_os_cleanup_iptunnel();
 }
 
@@ -245,8 +265,6 @@ olsr_set_inet_gateway(union olsr_ip_addr *originator, bool ipv4, bool ipv6, bool
     if ((v4gw_tunnel = olsr_os_add_ipip_tunnel(&current_ipv4_gw->originator, true)) != NULL) {
       olsr_os_inetgw_tunnel_route(v4gw_tunnel->if_index, true, true);
       v4gw_choosen_external = external;
-
-      // TODO: add olsr_add_ifchange_handler() for new ipv4 tunnel
     }
     else {
       // TODO: what to do now ? Choose another one ? Fire up a timer ?
@@ -254,8 +272,6 @@ olsr_set_inet_gateway(union olsr_ip_addr *originator, bool ipv4, bool ipv6, bool
     }
     if (oldV4 != NULL) {
       olsr_os_del_ipip_tunnel(tunnelV4);
-
-      // TODO: add olsr_remove_ifchange_handler() for old ipv4 tunnel
     }
   }
   /* handle IPv6 */
@@ -263,8 +279,6 @@ olsr_set_inet_gateway(union olsr_ip_addr *originator, bool ipv4, bool ipv6, bool
     if ((v6gw_tunnel = olsr_os_add_ipip_tunnel(&current_ipv6_gw->originator, false)) != NULL) {
       olsr_os_inetgw_tunnel_route(v6gw_tunnel->if_index, false, true);
       v6gw_choosen_external = external;
-
-      // TODO: add olsr_add_ifchange_handler() for new ipv6 tunnel
     }
     else {
       // TODO: what to do now ? Choose another one ? Fire up a timer ?
@@ -272,8 +286,6 @@ olsr_set_inet_gateway(union olsr_ip_addr *originator, bool ipv4, bool ipv6, bool
     }
     if (oldV6 != NULL) {
       olsr_os_del_ipip_tunnel(tunnelV6);
-
-      // TODO: add olsr_remove_ifchange_handler() for old ipv6 tunnel
     }
   }
   return (ipv4 && current_ipv4_gw == NULL) || (ipv6 && current_ipv6_gw == NULL);
@@ -435,7 +447,6 @@ olsr_delete_gateway_entry(union olsr_ip_addr *originator, uint8_t prefixlen) {
         olsr_os_inetgw_tunnel_route(v4gw_tunnel->if_index, true, false);
         olsr_os_del_ipip_tunnel(v4gw_tunnel);
 
-        // TODO: add olsr_remove_ifchange_handler() for ipv4 tunnel
         current_ipv4_gw = NULL;
         v4gw_tunnel = NULL;
       }
@@ -443,7 +454,6 @@ olsr_delete_gateway_entry(union olsr_ip_addr *originator, uint8_t prefixlen) {
         olsr_os_inetgw_tunnel_route(v6gw_tunnel->if_index, false, false);
         olsr_os_del_ipip_tunnel(v6gw_tunnel);
 
-        // TODO: add olsr_remove_ifchange_handler() for ipv6 tunnel
         current_ipv6_gw = NULL;
         v6gw_tunnel = NULL;
       }
