@@ -224,13 +224,15 @@ ip_in_net(const union olsr_ip_addr *ipaddr, const struct olsr_ip_prefix *net)
 }
 
 bool is_prefix_inetgw(const struct olsr_ip_prefix *prefix) {
-  if (ip_prefix_is_v4_inetgw(prefix)) {
+  if (olsr_cnf->ip_version == AF_INET && ip_prefix_is_v4_inetgw(prefix)) {
     return true;
   }
-  if (ip_prefix_is_v6_inetgw(prefix)) {
-    return true;
+  if (olsr_cnf->ip_version == AF_INET6) {
+    if (ip_prefix_is_v6_inetgw(prefix) || ip_prefix_is_mappedv4_inetgw(prefix)) {
+      return true;
+    }
   }
-  return ip_prefix_is_mappedv4_inetgw(prefix);
+  return false;
 }
 
 /*

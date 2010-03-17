@@ -100,7 +100,9 @@ struct lq_handler lq_etx_ffeth_handler = {
   &default_lq_print_cost_ffeth,
 
   sizeof(struct default_lq_ffeth_hello),
-  sizeof(struct default_lq_ffeth)
+  sizeof(struct default_lq_ffeth),
+  4,
+  4
 };
 
 static void

@@ -200,19 +200,19 @@ ip_prefix_is_mappedv4(const struct olsr_ip_prefix *prefix) {
 
 static INLINE bool
 ip_prefix_is_mappedv4_inetgw(const struct olsr_ip_prefix *prefix) {
-  return olsr_cnf->ip_version == AF_INET6 && prefix->prefix_len == ipv6_mappedv4_route.prefix_len
+  return prefix->prefix_len == ipv6_mappedv4_route.prefix_len
       && memcmp(prefix, &ipv6_mappedv4_route, ipv6_mappedv4_route.prefix_len / 8) == 0;
 }
 
 static INLINE bool
 ip_prefix_is_v4_inetgw(const struct olsr_ip_prefix *prefix) {
-  return olsr_cnf->ip_version == AF_INET && prefix->prefix_len == ipv4_internet_route.prefix_len
+  return prefix->prefix_len == ipv4_internet_route.prefix_len
       && prefix->prefix.v4.s_addr == ipv4_internet_route.prefix.v4.s_addr;
 }
 
 static INLINE bool
 ip_prefix_is_v6_inetgw(const struct olsr_ip_prefix *prefix) {
-  return olsr_cnf->ip_version == AF_INET6 && prefix->prefix_len == ipv6_internet_route.prefix_len
+  return prefix->prefix_len == ipv6_internet_route.prefix_len
       && memcmp(prefix, &ipv6_internet_route, ipv6_internet_route.prefix_len/8) == 0;
 }
 

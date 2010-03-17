@@ -430,8 +430,9 @@ static int olsr_new_netlink_route(int family, int rttable, int if_index, int met
 }
 
 void olsr_os_niit_6to4_route(const struct olsr_ip_prefix *dst_v6, bool set) {
-  /* TODO: in welche Table kommen die NIIT-Routen ? ne eigene ? */
-  if (olsr_new_netlink_route(AF_INET6, olsr_cnf->rt_table, olsr_cnf->niit6to4_if_index,
+  if (olsr_new_netlink_route(AF_INET6,
+      ip_prefix_is_mappedv4_inetgw(dst_v6) ? olsr_cnf->rt_table_default : olsr_cnf->rt_table,
+      olsr_cnf->niit6to4_if_index,
       RT_METRIC_DEFAULT, olsr_cnf->rt_proto, NULL, NULL, dst_v6, set, false)) {
     olsr_syslog(OLSR_LOG_ERR, ". error while %s static niit route to %s",
         set ? "setting" : "removing", olsr_ip_prefix_to_string(dst_v6));
@@ -439,8 +440,9 @@ void olsr_os_niit_6to4_route(const struct olsr_ip_prefix *dst_v6, bool set) {
 }
 
 void olsr_os_niit_4to6_route(const struct olsr_ip_prefix *dst_v4, bool set) {
-  /* TODO: in welche Table kommen die NIIT-Routen ? ne eigene ? */
-  if (olsr_new_netlink_route(AF_INET, olsr_cnf->rt_table, olsr_cnf->niit4to6_if_index,
+  if (olsr_new_netlink_route(AF_INET,
+      ip_prefix_is_v4_inetgw(dst_v4) ? olsr_cnf->rt_table_default : olsr_cnf->rt_table,
+      olsr_cnf->niit4to6_if_index,
       RT_METRIC_DEFAULT, olsr_cnf->rt_proto, NULL, NULL, dst_v4, set, false)) {
     olsr_syslog(OLSR_LOG_ERR, ". error while %s niit route to %s",
         set ? "setting" : "removing", olsr_ip_prefix_to_string(dst_v4));

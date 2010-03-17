@@ -368,7 +368,7 @@ serialize_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
         is_first = true;
         for (neigh = lq_hello->neigh; neigh != NULL; neigh = neigh->next) {
           if (0 == i && 0 == j)
-            expected_size += olsr_cnf->ipsize + 4;
+            expected_size += olsr_cnf->ipsize + olsr_sizeof_hello_lqdata();
           if (neigh->neigh_type == i && neigh->link_type == LINK_ORDER[j]) {
             if (is_first) {
               expected_size += sizeof(struct lq_hello_info_header);
@@ -403,7 +403,7 @@ serialize_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
         // we need space for an IP address plus link quality
         // information
 
-        req = olsr_cnf->ipsize + 4;
+        req = olsr_cnf->ipsize + olsr_sizeof_hello_lqdata();
 
         // no, we also need space for an info header, as this is the
         // first neighbor with the current neighor type and link type
@@ -554,8 +554,7 @@ serialize_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
    */
   if (0 < net_output_pending(outif)) {
     for (neigh = lq_tc->neigh; neigh != NULL; neigh = neigh->next) {
-      // TODO sizeof_tc_lq function required
-      expected_size += olsr_cnf->ipsize + 4;
+      expected_size += olsr_cnf->ipsize + olsr_sizeof_tc_lqdata();
     }
   }
 
@@ -570,9 +569,7 @@ serialize_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
     // information
 
     // force signed comparison
-
-    // TODO sizeof_tc_lq function required
-    if ((int)(size + olsr_cnf->ipsize + 4) > rem) {
+    if ((int)(size + olsr_cnf->ipsize + olsr_sizeof_tc_lqdata()) > rem) {
       head->lower_border = left_border_flag;
       head->upper_border = calculate_border_flag(last_ip, &neigh->address);
       left_border_flag = head->upper_border;
