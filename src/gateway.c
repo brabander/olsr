@@ -78,7 +78,6 @@ serialize_gw_speed(uint32_t speed) {
  */
 int
 olsr_init_gateways(void) {
-  uint8_t *ip;
   gw_mem_cookie = olsr_alloc_cookie("Gateway cookie", OLSR_COOKIE_TYPE_MEMORY);
   olsr_cookie_set_memory_size(gw_mem_cookie, sizeof(struct gateway_entry));
 
@@ -89,6 +88,21 @@ olsr_init_gateways(void) {
   v4gw_tunnel = NULL;
   v6gw_tunnel = NULL;
 
+  refresh_smartgw_netmask();
+
+  if (olsr_os_init_iptunnel()) {
+    return 1;
+  }
+  /*
+   * initialize default gateway handler,
+   * can be overwritten with olsr_set_inetgw_handler
+   */
+  olsr_gw_default_init();
+  return 0;
+}
+
+void refresh_smartgw_netmask(void) {
+  uint8_t *ip;
   memset(&smart_gateway_netmask, 0, sizeof(smart_gateway_netmask));
 
   if (olsr_cnf->smart_gw_active) {
@@ -108,15 +122,6 @@ olsr_init_gateways(void) {
       memcpy(&ip[GW_HNA_V6PREFIX], &olsr_cnf->smart_gw_prefix.prefix, 8);
     }
   }
-  if (olsr_os_init_iptunnel()) {
-    return 1;
-  }
-  /*
-   * initialize default gateway handler,
-   * can be overwritten with olsr_set_inetgw_handler
-   */
-  olsr_gw_default_init();
-  return 0;
 }
 
 /**
