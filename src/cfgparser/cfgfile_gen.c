@@ -409,7 +409,7 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
   abuf_puts(out,
     "\n"
     "# Specifies the policy rule priorities for the three routing tables and\n"
-    "# a special rule for smartgateway routing (see README_NIIT_SMARTGW)\n"
+    "# a special rule for smartgateway routing (see README-Olsr-Extensions)\n"
     "# Priorities can only be set if three different routing tables are set.\n"
     "# 0 means \"set no policy rule\", if set the values must obey to condition\n"
     "# RtTablePriority < RtTableDefaultOlsrPriority\n"
@@ -431,7 +431,7 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
   abuf_puts(out,
     "\n"
     "# Activates (in IPv6 mode) the automatic use of NIIT\n"
-    "# (see README_NIIT_SMARTGW)\n"
+    "# (see README-Olsr-Extensions)\n"
     "# (default is \"yes\")\n"
     "\n");
   abuf_appendf(out, "%sUseNiit %s\n",
@@ -440,7 +440,7 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
   abuf_puts(out,
     "\n"
     "# Activates the smartgateway ipip tunnel feature.\n"
-    "# See README_NIIT_SMARTGW for a description of smartgateways.\n"
+    "# See README-Olsr-Extensions for a description of smartgateways.\n"
     "# (default is \"yes\")\n"
     "\n");
   abuf_appendf(out, "%sSmartGateway %s\n",
@@ -613,7 +613,7 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
   abuf_puts(out,
     "\n"
     "# Link quality algorithm (only for lq level 2)\n"
-    "# (see README_LQ_ALGORITHMS)\n"
+    "# (see README-Olsr-Extensions)\n"
     "# - \"etx_float\", a floating point  ETX with exponential aging\n"
     "# - \"etx_fpm\", same as ext_float, but with integer arithmetic\n"
     "# - \"etx_ff\" (ETX freifunk), an etx variant which use all OLSR\n"
