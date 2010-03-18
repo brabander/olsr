@@ -255,7 +255,7 @@ int CheckAndMarkRecentPacket(u_int32_t crc32)
   } /* for */
 
   /* No duplicate entry found: create one */
-  newEntry = olsr_malloc(sizeof(struct TDupEntry), "BMF: TDupEntry");
+  newEntry = olsr_malloc(sizeof(struct TDupEntry), "OLSRD P2PD: TDupEntry");
   if (newEntry != NULL)
   {
     newEntry->crc32 = crc32;

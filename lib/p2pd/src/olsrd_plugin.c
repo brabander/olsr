@@ -111,6 +111,7 @@ static const struct olsrd_plugin_parameters plugin_parameters[] = {
   {.name = "NonOlsrIf",.set_plugin_parameter = &AddNonOlsrIf,.data = NULL},
   {.name = "P2pdTtl", .set_plugin_parameter = &SetP2pdTtl, .data = NULL },
   {.name = "UdpDestPort",.set_plugin_parameter = &AddUdpDestPort,.data = NULL},
+  {.name = "UseHashFilter",.set_plugin_parameter = &SetP2pdUseHashFilter,.data = NULL},
 };
 
 /* -------------------------------------------------------------------------

@@ -44,6 +44,9 @@
 
 #define REMOVE_LOG_DEBUG
 
+// Either #define or #undef the following line to include extra debugging
+#undef INCLUDE_DEBUG_OUTPUT
+
 #include "olsrd_plugin.h"             /* union set_plugin_parameter_addon */
 #include "duplicate_set.h"
 //#include "socket_parser.h"
@@ -94,6 +97,8 @@ void CloseP2pd(void);
 int SetP2pdTtl(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused)));
 int AddUdpDestPort(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused)));
 bool InUdpDestPortList(int ip_version, union olsr_ip_addr *addr, uint16_t port);
+int SetP2pdTtl(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused)));
+int SetP2pdUseHashFilter(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused)));
 bool p2pd_message_seen(struct node **head, struct node **tail, union olsr_message *m);
 void p2pd_store_message(struct node **head, struct node **tail, union olsr_message *m);
 bool p2pd_is_duplicate_message(union olsr_message *msg);
