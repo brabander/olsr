@@ -102,21 +102,21 @@ struct ping_list {
 static struct ping_list *add_to_ping_list(const char *, struct ping_list *);
 
 struct hna_list {
-  union olsr_ip_addr hna_addr;
-  uint8_t hna_prefixlen;
-  bool hna_added;
-  bool checked;
-  bool active;
-  struct hna_list *next;
+  union olsr_ip_addr   hna_addr;
+  uint8_t              hna_prefixlen;
+  bool                 hna_added;
+  bool                 checked;
+  bool                 active;
+  struct hna_list *    next;
 };
 
 static struct hna_list *add_to_hna_list(struct hna_list *, union olsr_ip_addr *hna_addr, uint8_t hna_prefixlen);
 
 struct hna_group {
-  struct hna_list *		hna_list;
-  struct ping_list *	ping_hosts;
-  bool								probe_ok;
-  struct hna_group *	next;
+  struct hna_list *    hna_list;
+  struct ping_list *   ping_hosts;
+  bool                 probe_ok;
+  struct hna_group *   next;
 };
 
 bool hna_ping_check	= false;
@@ -158,8 +158,8 @@ set_plugin_ping(const char *value, void *data __attribute__ ((unused)), set_plug
   } else {
     if (hna_groups->hna_list != NULL) {
       hna_groups = add_to_hna_group(hna_groups);
-		}
-	}
+    }
+  }
 
   hna_groups->ping_hosts = add_to_ping_list(value, hna_groups->ping_hosts);
   hna_ping_check = true;
@@ -192,13 +192,13 @@ set_plugin_hna(const char *value, void *data __attribute__ ((unused)), set_plugi
     return 1;
   }
 
-	if (hna_groups == NULL)
-	{
+  if (hna_groups == NULL)
+  {
     hna_groups = add_to_hna_group(hna_groups);
     if (hna_groups == NULL) {
       return 1;
-		}
-	}
+    }
+  }
 	
   hna_groups->hna_list = add_to_hna_list(hna_groups->hna_list, &temp_addr, olsr_netmask_to_prefix(&temp_mask));
   if (hna_groups->hna_list == NULL) {
@@ -208,11 +208,11 @@ set_plugin_hna(const char *value, void *data __attribute__ ((unused)), set_plugi
 }
 
 static const struct olsrd_plugin_parameters plugin_parameters[] = {
-  {.name = "interval",			.set_plugin_parameter = &set_plugin_int,	.data = &ping_check_interval	},
-  {.name = "pinginterval",	.set_plugin_parameter = &set_plugin_int,	.data = &ping_check_interval	},
-  {.name = "checkinterval",	.set_plugin_parameter = &set_plugin_int,	.data = &hna_check_interval		},
-  {.name = "ping",					.set_plugin_parameter = &set_plugin_ping,	.data = NULL									},
-  {.name = "hna",						.set_plugin_parameter = &set_plugin_hna,	.data = NULL									},
+  {.name = "interval",      .set_plugin_parameter = &set_plugin_int,  .data = &ping_check_interval  },
+  {.name = "pinginterval",  .set_plugin_parameter = &set_plugin_int,  .data = &ping_check_interval  },
+  {.name = "checkinterval", .set_plugin_parameter = &set_plugin_int,  .data = &hna_check_interval   },
+  {.name = "ping",          .set_plugin_parameter = &set_plugin_ping, .data = NULL                  },
+  {.name = "hna",           .set_plugin_parameter = &set_plugin_hna,  .data = NULL                  },
 };
 
 void
@@ -239,10 +239,10 @@ olsrd_plugin_init(void)
     hna_groups = add_to_hna_group(hna_groups);
     if (hna_groups == NULL)
       return 1;
-	}
+  }
 	
-	// Add a default gateway if the top entry was just a ping address
-	if (hna_groups->hna_list == NULL) {
+  // Add a default gateway if the top entry was just a ping address
+  if (hna_groups->hna_list == NULL) {
     union olsr_ip_addr temp_addr;
     union olsr_ip_addr temp_mask;
     
@@ -252,7 +252,7 @@ olsrd_plugin_init(void)
     if (hna_groups->hna_list == NULL) {
       return 1;
     }
-	}
+  }
 	
   // Prepare all routing information
   update_routing();
@@ -263,27 +263,27 @@ olsrd_plugin_init(void)
     struct hna_group *grp;
     for (grp = hna_groups; grp; grp = grp->next) {
       grp->probe_ok = true;
-		}
-	}
+    }
+  }
 
-	// Print the current configuration
-	{
-	  struct hna_group *grp;
-	  int i = 0;
-	  for (grp = hna_groups; grp; grp = grp->next, ++i) {
-	    struct hna_list *lst;
-	    struct ping_list *png;
+  // Print the current configuration
+  {
+    struct hna_group *grp;
+    int i = 0;
+    for (grp = hna_groups; grp; grp = grp->next, ++i) {
+      struct hna_list *lst;
+      struct ping_list *png;
 	    
-	    olsr_printf(1, "Group %d:\n", i);
-	    for (lst = grp->hna_list; lst; lst = lst->next) {
-	      char addr[INET_ADDRSTRLEN];
-	      olsr_printf(1, "  HNA %s\n", get_ip_str(lst->hna_addr.v4.s_addr, addr, INET_ADDRSTRLEN));
-			}
-			for (png = grp->ping_hosts; png; png = png->next) {
-			  olsr_printf(1, "  PING %s\n", png->ping_address);
-			}
-		}
-	}
+      olsr_printf(1, "Group %d:\n", i);
+      for (lst = grp->hna_list; lst; lst = lst->next) {
+        char addr[INET_ADDRSTRLEN];
+        olsr_printf(1, "  HNA %s\n", get_ip_str(lst->hna_addr.v4.s_addr, addr, INET_ADDRSTRLEN));
+      }
+      for (png = grp->ping_hosts; png; png = png->next) {
+        olsr_printf(1, "  PING %s\n", png->ping_address);
+      }
+    }
+  }
 
   /* Register the GW check */
   olsr_start_timer(hna_check_interval, 0, OLSR_TIMER_PERIODIC, &olsr_event_doing_hna, NULL, 0);
@@ -309,15 +309,15 @@ olsr_event_doing_hna(void *foo __attribute__ ((unused)))
           olsr_printf(1, "Adding OLSR local HNA entry\n");
           ip_prefix_list_add(&olsr_cnf->hna_entries, &li->hna_addr, li->hna_prefixlen);
           li->hna_added = true;
-				}
-			} else {
-			  if (!grp->probe_ok || !li->active) {
+        }
+      } else {
+        if (!grp->probe_ok || !li->active) {
           while (ip_prefix_list_remove(&olsr_cnf->hna_entries, &li->hna_addr, li->hna_prefixlen)) {
             olsr_printf(1, "Removing OLSR local HNA entry\n");
           }
           li->hna_added = false;
-				}
-			}
+        }
+      }
     }
   }
 }
@@ -347,7 +347,7 @@ looped_checks(void *foo __attribute__ ((unused)))
         /* check for gw in table entry and if Ping IPs are given also do pings */
         grp->probe_ok = check_gw(&li->hna_addr, li->hna_prefixlen, grp->ping_hosts);
         if (grp->probe_ok)
-        	 break;	// Valid host found so we can bail out of the inner loop here
+          break;	// Valid host found so we can bail out of the inner loop here
       }
     }
 
@@ -376,11 +376,11 @@ find_hna(uint32_t src_addr, uint32_t src_mask)
   for (grp = hna_groups; grp; grp = grp->next) {
     for (li = grp->hna_list; li; li = li->next) {
       olsr_prefix_to_netmask(&mask, li->hna_prefixlen);
-  		if (li->hna_addr.v4.s_addr == src_addr && mask.v4.s_addr == src_mask) {
-		    return li;
-			}
-		}
-	}
+      if (li->hna_addr.v4.s_addr == src_addr && mask.v4.s_addr == src_mask) {
+        return li;
+      }
+    }
+  }
   return NULL;
 }
 
@@ -434,12 +434,12 @@ update_routing(void)
   }
 
   // Phase 1: reset the 'checked' flag, during the check of the routing table we 
-	// will (re)discover whether the HNA is valid or not.
+  // will (re)discover whether the HNA is valid or not.
   for (grp = hna_groups; grp; grp = grp->next) {
     for (li = grp->hna_list; li; li = li->next) {
       li->checked = false;
-		}
-	}
+    }
+  }
 
   /*
      olsr_printf(1, "Genmask         Destination     Gateway         "
@@ -450,15 +450,15 @@ update_routing(void)
     char s_addr[INET_ADDRSTRLEN], s_mask[INET_ADDRSTRLEN];
     
     int num = sscanf(buf, 
-		                 "%15s %128X %128X %X %d %d %d %128X \n",
+                     "%15s %128X %128X %X %d %d %d %128X \n",
                      iface, 
-										 &dest_addr, 
-										 &gate_addr,
+                     &dest_addr,
+                     &gate_addr,
                      &iflags, 
-										 &refcnt, 
-										 &use, 
-										 &metric, 
-										 &netmask);
+                     &refcnt,
+                     &use,
+                     &metric,
+                     &netmask);
     if (num < 8)
       continue;
 
@@ -471,21 +471,21 @@ update_routing(void)
     }
     
     if ((iflags & RTF_UP) && (metric == 0)) {
-          hna->checked = true;
+      hna->checked = true;
     }
   }
   fclose(fp);
   
   // Phase 2: now copy the 'checked' flag to the 'active' flag.
   // The total check is a 2-phase process so the ping check loop won't be 
-	// disturbed too badly.
+  // disturbed too badly.
   for (grp = hna_groups; grp; grp = grp->next) {
     for (li = grp->hna_list; li; li = li->next) {
       li->active = li->checked;
-		}
-	}
+    }
+  }
 	
-	return 0;
+  return 0;
 }
 
 /* -------------------------------------------------------------------------
@@ -617,10 +617,10 @@ add_to_hna_group(struct hna_group *list_root)
     fprintf(stderr, "DYN GW: Out of memory!\n");
     olsr_syslog(OLSR_LOG_ERR, "DYN GW: Out of memory!\n");
     exit(0);
-	}
+  }
 	
-	new->next =  list_root;
-	return new;
+  new->next =  list_root;
+  return new;
 }
 
 
