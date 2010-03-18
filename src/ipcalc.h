@@ -159,16 +159,6 @@ sockaddr4_to_string(struct ipaddr_str *const buf, const struct sockaddr *const a
   return ip4_to_string(buf, addr4->sin_addr);
 }
 
-/* we need to handle one value specifically since shifting
- * 32 bits of a 32 bit integer is the same as shifting 0 bits.
- * The result is in host-byte-order.
- */
-static INLINE uint32_t
-prefix_to_netmask4(uint8_t prefixlen)
-{
-  return prefixlen == 0 ? 0 : (~0U << (32 - prefixlen));
-}
-
 static INLINE bool
 is_prefix_niit_ipv6(const struct olsr_ip_prefix *p) {
   return olsr_cnf->ip_version == AF_INET6 && IN6_IS_ADDR_V4MAPPED(&p->prefix.v6)
