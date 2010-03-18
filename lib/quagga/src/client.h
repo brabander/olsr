@@ -13,24 +13,18 @@
  */
 
 /* -------------------------------------------------------------------------
- * File               : quagga.h
- * Description        : header file for quagga.c
+ * File               : client.h
+ * Description        : header file for client.c
  * ------------------------------------------------------------------------- */
 
-#include "routing_table.h"
+#define STATUS_CONNECTED 1
 
-/* Zebra socket */
-#ifndef ZEBRA_SOCKPATH
-#define ZEBRA_SOCKPATH "/var/run/quagga/zserv.api"
-#endif
+/* Buffer size */
+#define BUFSIZE 1024
 
-/* Quagga plugin flags */
-
-void zebra_init(void);
-void zebra_fini(void);
-int zebra_addroute(const struct rt_entry *);
-int zebra_delroute(const struct rt_entry *);
-void zebra_redistribute(uint16_t cmd);
+void zclient_reconnect(void);
+int zclient_write(unsigned char *);
+unsigned char *zclient_read(ssize_t *);
 
 /*
  * Local Variables:

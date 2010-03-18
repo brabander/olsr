@@ -31,4 +31,5 @@ gui/win32/Main/Release/
 gui/win32/Shim/Debug/
 gui/win32/Shim/Release/
 !lib/quagga/patches/quagga-0.98.6.diff
+!lib/quagga/patches/quagga-0.99.16.diff
 

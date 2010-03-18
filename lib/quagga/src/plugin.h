@@ -13,24 +13,17 @@
  */
 
 /* -------------------------------------------------------------------------
- * File               : quagga.h
- * Description        : header file for quagga.c
+ * File               : plugin.h
+ * Description        : header file for plugin.c
  * ------------------------------------------------------------------------- */
 
-#include "routing_table.h"
-
-/* Zebra socket */
-#ifndef ZEBRA_SOCKPATH
-#define ZEBRA_SOCKPATH "/var/run/quagga/zserv.api"
-#endif
-
-/* Quagga plugin flags */
-
-void zebra_init(void);
-void zebra_fini(void);
-int zebra_addroute(const struct rt_entry *);
-int zebra_delroute(const struct rt_entry *);
-void zebra_redistribute(uint16_t cmd);
+int zplugin_redistribute(const char*, void*, set_plugin_parameter_addon);
+int zplugin_exportroutes(const char*, void*, set_plugin_parameter_addon);
+int zplugin_distance(const char*, void*, set_plugin_parameter_addon);
+int zplugin_localpref(const char*, void*, set_plugin_parameter_addon);
+int zplugin_sockpath(const char*, void*, set_plugin_parameter_addon);
+int zplugin_port(const char*, void*, set_plugin_parameter_addon);
+int zplugin_version(const char*, void*, set_plugin_parameter_addon);
 
 /*
  * Local Variables:

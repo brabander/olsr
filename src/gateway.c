@@ -74,11 +74,29 @@ serialize_gw_speed(uint32_t speed) {
 }
 
 /**
+ * Callback for tunnel interface monitoring which will set the route into the tunnel
+ * when the interface comes up again.
+ * @param if_index
+ * @param ifh
+ * @param flag
+ */
+static void smartgw_tunnel_monitor (int if_index,
+    struct interface *ifh __attribute__ ((unused)), enum olsr_ifchg_flag flag) {
+  if (current_ipv4_gw != NULL && if_index == v4gw_tunnel->if_index && flag == IFCHG_IF_ADD) {
+    /* v4 tunnel up again, set route */
+    olsr_os_inetgw_tunnel_route(v4gw_tunnel->if_index, true, true);
+  }
+  if (current_ipv6_gw != NULL && if_index == v6gw_tunnel->if_index && flag == IFCHG_IF_ADD) {
+    /* v6 status changed, set route */
+    olsr_os_inetgw_tunnel_route(v6gw_tunnel->if_index, false, true);
+  }
+}
+
+/**
  * Initialize gateway system
  */
 int
 olsr_init_gateways(void) {
-  uint8_t *ip;
   gw_mem_cookie = olsr_alloc_cookie("Gateway cookie", OLSR_COOKIE_TYPE_MEMORY);
   olsr_cookie_set_memory_size(gw_mem_cookie, sizeof(struct gateway_entry));
 
@@ -89,6 +107,24 @@ olsr_init_gateways(void) {
   v4gw_tunnel = NULL;
   v6gw_tunnel = NULL;
 
+  refresh_smartgw_netmask();
+
+  if (olsr_os_init_iptunnel()) {
+    return 1;
+  }
+
+  olsr_add_ifchange_handler(smartgw_tunnel_monitor);
+
+  /*
+   * initialize default gateway handler,
+   * can be overwritten with olsr_set_inetgw_handler
+   */
+  olsr_gw_default_init();
+  return 0;
+}
+
+void refresh_smartgw_netmask(void) {
+  uint8_t *ip;
   memset(&smart_gateway_netmask, 0, sizeof(smart_gateway_netmask));
 
   if (olsr_cnf->smart_gw_active) {
@@ -108,15 +144,6 @@ olsr_init_gateways(void) {
       memcpy(&ip[GW_HNA_V6PREFIX], &olsr_cnf->smart_gw_prefix.prefix, 8);
     }
   }
-  if (olsr_os_init_iptunnel()) {
-    return 1;
-  }
-  /*
-   * initialize default gateway handler,
-   * can be overwritten with olsr_set_inetgw_handler
-   */
-  olsr_gw_default_init();
-  return 0;
 }
 
 /**
@@ -129,6 +156,8 @@ void olsr_cleanup_gateways(void) {
   if (current_ipv6_gw) {
     olsr_os_del_ipip_tunnel(v6gw_tunnel);
   }
+
+  olsr_remove_ifchange_handler(smartgw_tunnel_monitor);
   olsr_os_cleanup_iptunnel();
 }
 
@@ -412,16 +441,19 @@ olsr_delete_gateway_entry(union olsr_ip_addr *originator, uint8_t prefixlen) {
 
       /* handle gateway loss */
       gw_handler->handle_delete_gw(gw);
+
       /* cleanup gateway if necessary */
       if (current_ipv4_gw == gw) {
         olsr_os_inetgw_tunnel_route(v4gw_tunnel->if_index, true, false);
         olsr_os_del_ipip_tunnel(v4gw_tunnel);
+
         current_ipv4_gw = NULL;
         v4gw_tunnel = NULL;
       }
       if (current_ipv6_gw == gw) {
         olsr_os_inetgw_tunnel_route(v6gw_tunnel->if_index, false, false);
         olsr_os_del_ipip_tunnel(v6gw_tunnel);
+
         current_ipv6_gw = NULL;
         v6gw_tunnel = NULL;
       }

@@ -88,6 +88,8 @@ struct lq_handler {
 
   size_t hello_lq_size;
   size_t tc_lq_size;
+  size_t hello_lqdata_size;
+  size_t tc_lqdata_size;
 };
 
 struct lq_handler_node {
@@ -111,7 +113,6 @@ int avl_strcasecmp(const void *str1, const void *str2);
 void init_lq_handler_tree(void);
 
 void register_lq_handler(struct lq_handler *handler, const char *name);
-void activate_lq_handler(const char *name);
 
 olsr_linkcost olsr_calc_tc_cost(const struct tc_edge_entry *);
 
@@ -137,6 +138,9 @@ struct hello_neighbor *olsr_malloc_hello_neighbor(const char *id);
 struct tc_mpr_addr *olsr_malloc_tc_mpr_addr(const char *id);
 struct lq_hello_neighbor *olsr_malloc_lq_hello_neighbor(const char *id);
 struct link_entry *olsr_malloc_link_entry(const char *id);
+
+size_t olsr_sizeof_hello_lqdata(void);
+size_t olsr_sizeof_tc_lqdata(void);
 
 void olsr_relevant_linkcost_change(void);
 

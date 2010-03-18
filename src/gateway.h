@@ -67,6 +67,7 @@ extern struct avl_tree gateway_tree;
 
 int olsr_init_gateways(void);
 void olsr_cleanup_gateways(void);
+void refresh_smartgw_netmask(void);
 void olsr_trigger_inetgw_startup(void);
 int olsr_trigger_inetgw_selection(bool ipv4, bool ipv6);
 void olsr_trigger_gatewayloss_check(void);

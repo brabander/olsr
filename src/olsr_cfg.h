@@ -45,7 +45,9 @@
 #include "olsr_types.h"
 #include "common/autobuf.h"
 
-/*set to 1 to collect all startup sleep into one sleep (just as long as the longest sleep) useful if many errors on many interfaces*/
+/* set to 1 to collect all startup sleep into one sleep
+ * (just as long as the longest sleep)
+ * useful if many errors on many interfaces */
 #define OLSR_COLLECT_STARTUP_SLEEP 1
 
 #define TESTLIB_PATH 0
@@ -64,7 +66,7 @@
 #define DEF_USE_HYST         false
 #define DEF_FIB_METRIC       FIBM_FLAT
 #define DEF_LQ_LEVEL         2
-#define DEF_LQ_ALGORITHM     "etxff"
+#define DEF_LQ_ALGORITHM     "etx_ff"
 #define DEF_LQ_FISH          1
 #define DEF_LQ_NAT_THRESH    1.0
 #define DEF_LQ_AGING         0.05

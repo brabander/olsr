@@ -55,6 +55,8 @@
 
 #include "oparse.h"
  
+#define ECHO if(fwrite( yytext, yyleng, 1, yyout )) {}
+
 /* Prototypes */
 int yyget_lineno(void);
 FILE * yyget_in(void);

@@ -1182,6 +1182,7 @@ static int CreateLocalEtherTunTap(void)
 {
   static const char deviceName[] = "/dev/net/tun";
   struct ifreq ifreq;
+  union olsr_sockaddr sock;
   int etfd;
   int ioctlSkfd;
   int ioctlres;
@@ -1249,17 +1250,23 @@ static int CreateLocalEtherTunTap(void)
     EtherTunTapIp = ETHERTUNTAPDEFAULTIP;
   }
 
-  ((struct sockaddr_in*)&ifreq.ifr_addr)->sin_addr.s_addr = htonl(EtherTunTapIp);
+  memset(&sock, 0, sizeof(sock));
+  sock.in4.sin_family = AF_INET;
+
+  sock.in4.sin_addr.s_addr = htonl(EtherTunTapIp);
+  ifreq.ifr_addr = sock.in;
   ioctlres = ioctl(ioctlSkfd, SIOCSIFADDR, &ifreq);
   if (ioctlres >= 0)
   {
     /* Set net mask */
-    ((struct sockaddr_in*)&ifreq.ifr_netmask)->sin_addr.s_addr = htonl(EtherTunTapIpMask);
+    sock.in4.sin_addr.s_addr = htonl(EtherTunTapIpMask);
+    ifreq.ifr_netmask = sock.in;
     ioctlres = ioctl(ioctlSkfd, SIOCSIFNETMASK, &ifreq);
     if (ioctlres >= 0)
     {
       /* Set broadcast IP */
-      ((struct sockaddr_in*)&ifreq.ifr_broadaddr)->sin_addr.s_addr = htonl(EtherTunTapIpBroadcast);
+      sock.in4.sin_addr.s_addr = htonl(EtherTunTapIpBroadcast);
+      ifreq.ifr_broadaddr = sock.in;
       ioctlres = ioctl(ioctlSkfd, SIOCSIFBRDADDR, &ifreq);
       if (ioctlres >= 0)
       {
@@ -1869,6 +1876,8 @@ void CheckAndUpdateLocalBroadcast(unsigned char* ipPacket, union olsr_ip_addr* b
 void AddMulticastRoute(void)
 {
   struct rtentry kernel_route;
+  union olsr_sockaddr sock;
+
   int ioctlSkfd = socket(PF_INET, SOCK_DGRAM, 0);
   if (ioctlSkfd < 0)
   {
@@ -1878,13 +1887,17 @@ void AddMulticastRoute(void)
 
   memset(&kernel_route, 0, sizeof(struct rtentry));
 
-  ((struct sockaddr_in*)&kernel_route.rt_dst)->sin_family = AF_INET;
-  ((struct sockaddr_in*)&kernel_route.rt_gateway)->sin_family = AF_INET;
-  ((struct sockaddr_in*)&kernel_route.rt_genmask)->sin_family = AF_INET;
+  kernel_route.rt_gateway.sa_family = AF_INET;
 
   /* 224.0.0.0/4 */
-  ((struct sockaddr_in *)&kernel_route.rt_dst)->sin_addr.s_addr = htonl(0xE0000000);
-  ((struct sockaddr_in *)&kernel_route.rt_genmask)->sin_addr.s_addr = htonl(0xF0000000);
+  memset(&sock, 0, sizeof(sock));
+  sock.in4.sin_family = AF_INET;
+
+  sock.in4.sin_addr.s_addr = htonl(0xE0000000);
+  kernel_route.rt_dst = sock.in;
+
+  sock.in4.sin_addr.s_addr = htonl(0xF0000000);
+  kernel_route.rt_genmask = sock.in;
 
   kernel_route.rt_metric = 0;
   kernel_route.rt_flags = RTF_UP;
@@ -1914,6 +1927,8 @@ void DeleteMulticastRoute(void)
   if (EtherTunTapIp != ETHERTUNTAPDEFAULTIP)
   {
     struct rtentry kernel_route;
+    union olsr_sockaddr sock;
+
     int ioctlSkfd = socket(PF_INET, SOCK_DGRAM, 0);
     if (ioctlSkfd < 0)
     {
@@ -1923,13 +1938,17 @@ void DeleteMulticastRoute(void)
 
     memset(&kernel_route, 0, sizeof(struct rtentry));
 
-    ((struct sockaddr_in*)&kernel_route.rt_dst)->sin_family = AF_INET;
-    ((struct sockaddr_in*)&kernel_route.rt_gateway)->sin_family = AF_INET;
-    ((struct sockaddr_in*)&kernel_route.rt_genmask)->sin_family = AF_INET;
+    kernel_route.rt_gateway.sa_family = AF_INET;
 
     /* 224.0.0.0/4 */
-    ((struct sockaddr_in *)&kernel_route.rt_dst)->sin_addr.s_addr = htonl(0xE0000000);
-    ((struct sockaddr_in *)&kernel_route.rt_genmask)->sin_addr.s_addr = htonl(0xF0000000);
+    memset(&sock, 0, sizeof(sock));
+    sock.in4.sin_family = AF_INET;
+
+    sock.in4.sin_addr.s_addr = htonl(0xE0000000);
+    kernel_route.rt_dst = sock.in;
+
+    sock.in4.sin_addr.s_addr = htonl(0xF0000000);
+    kernel_route.rt_genmask = sock.in;
 
     kernel_route.rt_metric = 0;
     kernel_route.rt_flags = RTF_UP;

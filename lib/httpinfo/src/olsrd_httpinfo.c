@@ -737,8 +737,8 @@ build_ipaddr_link(struct autobuf *abuf, const bool want_link, const union olsr_i
                                          olsr_cnf->ip_version) :
 #endif
     NULL;
-  /* Print the link only if there is no prefix_len */
-  const int print_link = want_link && (prefix_len == -1 || prefix_len == olsr_cnf->maxplen);
+  /* Print the link only if there is no prefix_len and ip_version is AF_INET */
+  const int print_link = want_link && (prefix_len == -1 || prefix_len == olsr_cnf->maxplen) && (olsr_cnf->ip_version == AF_INET);
   olsr_ip_to_string(&ipaddrstr, ipaddr);
 
   abuf_puts(abuf, "<td>");
@@ -1153,42 +1153,12 @@ check_allowed_ip(const struct allowed_net *const my_allowed_nets, const union ol
 {
   const struct allowed_net *alln;
   for (alln = my_allowed_nets; alln != NULL; alln = alln->next) {
-    if ((addr->v4.s_addr & alln->mask.v4.s_addr) == (alln->net.v4.s_addr & alln->mask.v4.s_addr)) {
+    if (ip_in_net(addr, &alln->prefix)) {
       return 1;
     }
   }
   return 0;
 }
-
-#if 0
-
-/*
- * In a bigger mesh, there are probs with the fixed
- * bufsize. Because the Content-Length header is
- * optional, the sprintf() is changed to a more
- * scalable solution here.
- */
-
-int
-netsprintf(char *str, const char *format, ...)
-{
-  va_list arg;
-  int rv;
-  va_start(arg, format);
-  rv = vsprintf(str, format, arg);
-  va_end(arg);
-  if (0 != netsprintf_direct) {
-    if (0 == netsprintf_error) {
-      if (0 > send(client_sockets[curr_clients], str, rv, 0)) {
-        olsr_printf(1, "(HTTPINFO) Failed sending data to client!\n");
-        netsprintf_error = 1;
-      }
-    }
-    return 0;
-  }
-  return rv;
-}
-#endif
 
 /*
  * Local Variables:

@@ -30,11 +30,6 @@ bool olsr_if_isup(const char * dev __attribute__ ((unused))) {
   return false;
 }
 
-int olsr_if_set_state(const char *dev __attribute__ ((unused)),
-    bool up __attribute__ ((unused))) {
-  return -1;
-}
-
 int olsr_if_setip(const char *dev __attribute__ ((unused)),
     union olsr_ip_addr *ip __attribute__ ((unused)),
     int ipversion __attribute__ ((unused))) {

@@ -35,12 +35,6 @@ int olsr_if_set_state(const char *dev __attribute__ ((unused)),
   return -1;
 }
 
-int olsr_if_setip(const char *dev __attribute__ ((unused)),
-    union olsr_ip_addr *ip __attribute__ ((unused)),
-    int ipversion __attribute__ ((unused))) {
-  return -1;
-}
-
 void olsr_os_niit_4to6_route(const struct olsr_ip_prefix *dst_v4 __attribute__ ((unused)),
     bool set __attribute__ ((unused))) {
 }

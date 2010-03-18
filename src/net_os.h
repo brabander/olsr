@@ -85,8 +85,6 @@ int join_mcast(struct interface *, int);
 
 bool olsr_if_isup(const char * dev);
 int olsr_if_set_state(const char *dev, bool up);
-int olsr_if_setip(const char *dev, union olsr_ip_addr *ip, int ipversion);
-
 #endif
 
 /*

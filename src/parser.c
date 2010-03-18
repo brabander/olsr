@@ -457,10 +457,10 @@ olsr_input(int fd, void *data __attribute__ ((unused)), unsigned int flags __att
     }
     if (olsr_cnf->ip_version == AF_INET) {
       /* IPv4 sender address */
-      from_addr.v4 = ((struct sockaddr_in *)&from)->sin_addr;
+      memcpy(&from_addr.v4, &((struct sockaddr_in *)&from)->sin_addr, sizeof(from_addr.v4));
     } else {
       /* IPv6 sender address */
-      from_addr.v6 = ((struct sockaddr_in6 *)&from)->sin6_addr;
+      memcpy(&from_addr.v6, &((struct sockaddr_in6 *)&from)->sin6_addr, sizeof(from_addr.v6));
     }
 
 #ifdef DEBUG

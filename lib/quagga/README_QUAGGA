@@ -11,16 +11,16 @@ It allows olsrd to redistribute from various quagga-protocols
 as well as to export olsr-routes to quagga so that they can be
 redistributed by the quagga-routing-daemons.
 
-You also need a source distribution of quagga-0.98.5 or quagga-0.98.6
-(that is the current stable). The quagga source tree needs to be
-patched with quagga-0.98.6.diff, compiled and installed via
+You also need a source distribution of quagga-0.98.6 or quagga-0.99.15.
+The quagga source tree needs to be patched with quagga-0.98.6.diff or
+quagga-0.99.15.diff, respectively, compiled and installed via
 'make install'.
 
 ---------------------------------------------------------------------
 PLUGIN PARAMETERS (PlParam)
 ---------------------------------------------------------------------
 
-PlParam "redistribute" "<protocol>"
+PlParam "Redistribute" "<protocol>"
 	where protocol is one of the following:
 	system, kernel, connect, static, rip, ripng, ospf, ospf6,
 	isis, bgp, hsls
@@ -59,14 +59,15 @@ add in /usr/local/etc/olsrd.conf:
 
 LoadPlugin "olsrd_quagga.so.0.2.2"
 {
-	PlParam "redistribute" "ospf"
-	PlParam "redistribute" "bgp"
+	PlParam "Redistribute" "ospf"
+	PlParam "Redistribute" "bgp"
 	PlParam "ExportRoutes" "only"
 	PlParam "Distance" "125" 
 	PlParam "LocalPref" "false"
 	PlParam "SockPath" "/var/run/zserv.api"
+	PlParam "Version" "1"
 }
 
 
 ---------------------------------------------------------------------
-EOF / 05.03.2010
+EOF / 10.03.2010

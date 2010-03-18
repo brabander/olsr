@@ -75,7 +75,7 @@
  * from /usr/include/linux/netlink.h and adapted for ARM
  */
 #define MY_NLMSG_NEXT(nlh,len)   ((len) -= NLMSG_ALIGN((nlh)->nlmsg_len), \
-          (struct nlmsghdr*)(ARM_NOWARN_ALIGN)(((char*)(nlh)) + NLMSG_ALIGN((nlh)->nlmsg_len)))
+          (struct nlmsghdr*)ARM_NOWARN_ALIGN((((char*)(nlh)) + NLMSG_ALIGN((nlh)->nlmsg_len)))
 
 
 static void rtnetlink_read(int sock, void *, unsigned int);
@@ -162,7 +162,7 @@ static void rtnetlink_read(int sock, void *data __attribute__ ((unused)), unsign
   };
 
   char buffer[4096];
-  struct nlmsghdr *nlh = (struct nlmsghdr *)(ARM_NOWARN_ALIGN) buffer;
+  struct nlmsghdr *nlh = (struct nlmsghdr *)ARM_NOWARN_ALIGN(buffer);
   int ret;
 
   iov.iov_base = (void *) buffer;
@@ -192,7 +192,7 @@ static void rtnetlink_read(int sock, void *data __attribute__ ((unused)), unsign
 static void
 olsr_netlink_addreq(struct nlmsghdr *n, size_t reqSize __attribute__ ((unused)), int type, const void *data, int len)
 {
-  struct rtattr *rta = (struct rtattr *)(ARM_NOWARN_ALIGN)(((char *)n) + NLMSG_ALIGN(n->nlmsg_len));
+  struct rtattr *rta = (struct rtattr *)ARM_NOWARN_ALIGN(((char *)n) + NLMSG_ALIGN(n->nlmsg_len));
   n->nlmsg_len = NLMSG_ALIGN(n->nlmsg_len) + RTA_LENGTH(len);
   //produces strange compile error
   //assert(n->nlmsg_len < reqSize);
@@ -239,7 +239,7 @@ olsr_netlink_send(struct nlmsghdr *nl_hdr)
     return -1;
   }
 
-  h = (struct nlmsghdr *)(ARM_NOWARN_ALIGN)rcvbuf;
+  h = (struct nlmsghdr *)ARM_NOWARN_ALIGN(rcvbuf);
   if (!NLMSG_OK(h, (unsigned int)ret)) {
     olsr_syslog(OLSR_LOG_ERR, "Received netlink message was malformed (ret=%d, %u)", ret, h->nlmsg_len);
     return -1;
@@ -430,8 +430,9 @@ static int olsr_new_netlink_route(int family, int rttable, int if_index, int met
 }
 
 void olsr_os_niit_6to4_route(const struct olsr_ip_prefix *dst_v6, bool set) {
-  /* TODO: in welche Table kommen die NIIT-Routen ? ne eigene ? */
-  if (olsr_new_netlink_route(AF_INET6, olsr_cnf->rt_table, olsr_cnf->niit6to4_if_index,
+  if (olsr_new_netlink_route(AF_INET6,
+      ip_prefix_is_mappedv4_inetgw(dst_v6) ? olsr_cnf->rt_table_default : olsr_cnf->rt_table,
+      olsr_cnf->niit6to4_if_index,
       RT_METRIC_DEFAULT, olsr_cnf->rt_proto, NULL, NULL, dst_v6, set, false)) {
     olsr_syslog(OLSR_LOG_ERR, ". error while %s static niit route to %s",
         set ? "setting" : "removing", olsr_ip_prefix_to_string(dst_v6));
@@ -439,8 +440,9 @@ void olsr_os_niit_6to4_route(const struct olsr_ip_prefix *dst_v6, bool set) {
 }
 
 void olsr_os_niit_4to6_route(const struct olsr_ip_prefix *dst_v4, bool set) {
-  /* TODO: in welche Table kommen die NIIT-Routen ? ne eigene ? */
-  if (olsr_new_netlink_route(AF_INET, olsr_cnf->rt_table, olsr_cnf->niit4to6_if_index,
+  if (olsr_new_netlink_route(AF_INET,
+      ip_prefix_is_v4_inetgw(dst_v4) ? olsr_cnf->rt_table_default : olsr_cnf->rt_table,
+      olsr_cnf->niit4to6_if_index,
       RT_METRIC_DEFAULT, olsr_cnf->rt_proto, NULL, NULL, dst_v4, set, false)) {
     olsr_syslog(OLSR_LOG_ERR, ". error while %s niit route to %s",
         set ? "setting" : "removing", olsr_ip_prefix_to_string(dst_v4));
