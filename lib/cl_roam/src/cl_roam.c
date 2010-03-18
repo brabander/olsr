@@ -620,6 +620,8 @@ void check_leases(client_list * clist, char file[], float def_last_seen) {
 	    user->last_seen=def_last_seen;
 	    user->is_announced=0;
 	    user->ping_thread=0;
+	    user->arping_timer=NULL;
+	    user->arping_timer_cookie=NULL;
 	    //printf("last seen on Add %f\n",user->last_seen);
 	    add_client_to_list(clist, user);
 
@@ -660,6 +662,8 @@ void check_remote_leases(client_list * clist){
 	    user->last_seen=30.0;
 	    user->is_announced=0;
 	    user->ping_thread=0;
+	    user->arping_timer=NULL;
+	    user->arping_timer_cookie=NULL;
 	    //printf("last seen on Add %f\n",user->last_seen);
 
 	    if (!(ip_is_in_guest_list(clist,  user))) {
