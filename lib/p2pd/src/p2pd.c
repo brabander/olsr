@@ -96,8 +96,6 @@ struct UdpDestPort *                 UdpDestPortList = NULL;
 struct node *                        dupFilterHead = NULL;
 struct node *                        dupFilterTail = NULL;
 
-clockid_t clockid = CLOCK_MONOTONIC;
-
 bool is_broadcast(const struct sockaddr_in addr);
 bool is_multicast(const struct sockaddr_in addr);
 char * get_ipv4_str(uint32_t address, char *s, size_t maxlen);
