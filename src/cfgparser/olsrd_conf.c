@@ -398,7 +398,7 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
     cnf->rt_table_defaultolsr_pri = 0;
     cnf->rt_table_tunnel_pri = 0;
   }
-  else {
+  else if (olsr_cnf->smart_gw_active) {
     /* first fill in missing values */
     if (cnf->rt_table_pri == 0) {
       cnf->rt_table_pri = 32766; /* main table */

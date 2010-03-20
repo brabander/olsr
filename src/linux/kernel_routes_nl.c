@@ -431,7 +431,7 @@ static int olsr_new_netlink_route(int family, int rttable, int if_index, int met
 
 void olsr_os_niit_6to4_route(const struct olsr_ip_prefix *dst_v6, bool set) {
   if (olsr_new_netlink_route(AF_INET6,
-      ip_prefix_is_mappedv4_inetgw(dst_v6) ? olsr_cnf->rt_table_default : olsr_cnf->rt_table,
+      ip_prefix_is_mappedv4_inetgw(dst_v6) && olsr_cnf->rt_table_default ? olsr_cnf->rt_table_default : olsr_cnf->rt_table,
       olsr_cnf->niit6to4_if_index,
       RT_METRIC_DEFAULT, olsr_cnf->rt_proto, NULL, NULL, dst_v6, set, false)) {
     olsr_syslog(OLSR_LOG_ERR, ". error while %s static niit route to %s",
@@ -441,7 +441,7 @@ void olsr_os_niit_6to4_route(const struct olsr_ip_prefix *dst_v6, bool set) {
 
 void olsr_os_niit_4to6_route(const struct olsr_ip_prefix *dst_v4, bool set) {
   if (olsr_new_netlink_route(AF_INET,
-      ip_prefix_is_v4_inetgw(dst_v4) ? olsr_cnf->rt_table_default : olsr_cnf->rt_table,
+      ip_prefix_is_v4_inetgw(dst_v4) && olsr_cnf->rt_table_default ? olsr_cnf->rt_table_default : olsr_cnf->rt_table,
       olsr_cnf->niit4to6_if_index,
       RT_METRIC_DEFAULT, olsr_cnf->rt_proto, NULL, NULL, dst_v4, set, false)) {
     olsr_syslog(OLSR_LOG_ERR, ". error while %s niit route to %s",
@@ -484,8 +484,18 @@ static int olsr_os_process_rt_entry(int af_family, const struct rt_entry *rt, bo
   }
 
   /* get table */
-  table = is_prefix_inetgw(&rt->rt_dst)
-      ? olsr_cnf->rt_table_default : olsr_cnf->rt_table;
+  table = olsr_cnf->rt_table;
+  if (is_prefix_inetgw(&rt->rt_dst)) {
+    if (0 == olsr_cnf->rt_table_default) {
+      /*
+       * Users start whining about not having internet with policy
+       * routing activated and no static default route in table 254.
+       * We maintain a fallback defroute in the default=253 table.
+       */
+      if (253 > olsr_cnf->rt_table) table = 253;
+    }
+    else table = olsr_cnf->rt_table_default;
+  }
 
   /* get next hop */
   if (rt->rt_best && set) {
