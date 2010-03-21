@@ -413,6 +413,12 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
       return -1;
     }
   }
+  else {
+    if (0 == cnf->rt_table_default) {
+      cnf->rt_table_default = DEF_RTTABLE;
+      fprintf(stderr, "Choose table %u for rt_table_default\n", cnf->rt_table_default);
+    }
+  }
 
   /* filter rt_proto entry */
   if (cnf->rt_proto == 1) {

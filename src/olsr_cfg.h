@@ -77,7 +77,6 @@
 #define DEF_RTTABLE          254
 #define DEF_RTTABLE_DEFAULT  112
 #define DEF_RTTABLE_TUNNEL   113
-#define DEF_RTTABLE          254
 #define DEF_MIN_TC_VTIME     0.0
 #define DEF_USE_NIIT         true
 #define DEF_SMART_GW         false
