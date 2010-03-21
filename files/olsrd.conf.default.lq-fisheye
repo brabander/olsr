@@ -69,13 +69,6 @@
 
 # RtProto 0
 
-# RtPolicy activates the usage of routing tables and policy rules for OLSRd
-# routing. It's used to keep host and default route in different tables and
-# to handle more complicated routing setups with SmartGateway
-# (Default is "yes")
-
-# RtPolicy yes
-
 # Activates (in IPv6 mode) the automatic use of NIIT
 # (see README-Olsr-Extensions)
 # (default is "yes")

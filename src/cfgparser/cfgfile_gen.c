@@ -383,30 +383,17 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
       cnf->rt_proto);
   abuf_puts(out,
     "\n"
-    "# RtPolicy activates the usage of routing tables and policy rules for OLSRd\n"
-    "# routing. It's used to keep host and default route in different tables and\n"
-    "# to handle more complicated routing setups with SmartGateway\n"
-    "# (Default is \"yes\")\n"
-    "\n");
-  abuf_appendf(out, "%sRtPolicy %s\n",
-      cnf->rt_policy == DEF_RTPOLICY ? "# " : "",
-      cnf->rt_policy ? "yes" : "no");
-  abuf_puts(out,
-    "\n"
     "# Specifies the routing Table olsr uses\n"
     "# RtTable is for host routes, RtTableDefault for the route to the default\n"
     "# internet gateway (2 in case of IPv6+NIIT) and RtTableTunnel is for\n"
     "# routes to the ipip tunnels, valid values are 1 to 254\n"
     "# (default is 254/112/113, the first is the \"main\" table in linux)\n"
     "\n");
-  abuf_appendf(out, "%sRtTable %u\n",
-      cnf->rt_policy ? "# " : "",
+  abuf_appendf(out, "RtTable %u\n",
       cnf->rt_table);
-  abuf_appendf(out, "%sRtTableDefault %u\n",
-      cnf->rt_policy ? "# " : "",
+  abuf_appendf(out, "RtTableDefault %u\n",
       cnf->rt_table_default);
-  abuf_appendf(out, "%sRtTableTunnel %u\n",
-      cnf->rt_policy ? "# " : "",
+  abuf_appendf(out, "RtTableTunnel %u\n",
       cnf->rt_table_tunnel);
   abuf_puts(out,
     "\n"
@@ -418,18 +405,14 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
     "# < RtTableTunnelPriority < RtTableDefaultPriority\n"
     "# (default is 32766/32776/32786/32796)\n"
     "\n");
-  abuf_appendf(out, "%sRtTablePriority %u\n",
-      cnf->rt_policy ? "# " : "",
+  abuf_appendf(out, "RtTablePriority %u\n",
       cnf->rt_table_pri);
-  abuf_appendf(out, "%sRtTableDefaultOlsrPriority %u\n",
-      cnf->rt_policy ? "# " : "",
-      cnf->rt_table_default_pri);
-  abuf_appendf(out, "%sRtTableTunnelPriority %u\n",
-      cnf->rt_policy ? "# " : "",
-      cnf->rt_table_tunnel_pri);
-  abuf_appendf(out, "%sRtTableDefaultPriority %u\n",
-      cnf->rt_policy ? "# " : "",
+  abuf_appendf(out, "RtTableDefaultOlsrPriority %u\n",
       cnf->rt_table_defaultolsr_pri);
+  abuf_appendf(out, "RtTableTunnelPriority %u\n",
+      cnf->rt_table_tunnel_pri);
+  abuf_appendf(out, "RtTableDefaultPriority %u\n",
+      cnf->rt_table_default_pri);
   abuf_puts(out,
     "\n"
     "# Activates (in IPv6 mode) the automatic use of NIIT\n"

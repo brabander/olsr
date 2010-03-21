@@ -264,7 +264,6 @@ stmt:       idebug
           | bnoint
           | atos
           | aolsrport
-          | brtpolicy
           | irtproto
           | irttable
           | irttable_default
@@ -988,13 +987,6 @@ aolsrport: TOK_OLSRPORT TOK_INTEGER
   free($2);
 }
 ;
-
-brtpolicy: TOK_RTPOLICY TOK_BOOLEAN
-{
-  PARSER_DEBUG_PRINTF("RtPolicy: %s\n", $2->boolean ? "true" : "false");
-  olsr_cnf->rt_policy = $2->boolean;
-  free($2);
-}
 
 irtproto: TOK_RTPROTO TOK_INTEGER
 {

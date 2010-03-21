@@ -227,7 +227,6 @@ struct olsrd_config {
   int ip_version;
   bool allow_no_interfaces;
   uint16_t tos;
-  bool rt_policy;
   uint8_t rt_proto;
   uint8_t rt_table, rt_table_default, rt_table_tunnel;
   uint16_t rt_table_pri, rt_table_tunnel_pri;
