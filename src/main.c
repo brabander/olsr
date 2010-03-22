@@ -205,6 +205,10 @@ int main(int argc, char *argv[]) {
   bool loadedConfig = false;
   int i;
 
+#ifdef LINUX_NETLINK_ROUTING
+  struct interface *ifn;
+#endif
+
 #ifdef WIN32
   WSADATA WsaData;
   size_t len;

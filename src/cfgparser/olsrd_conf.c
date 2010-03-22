@@ -212,6 +212,7 @@ olsrd_print_interface_cnf(struct if_config_options *cnf, struct if_config_option
 
 #ifdef linux
 static int olsrd_sanity_check_rtpolicy(struct olsrd_config *cnf) {
+  int prio;
 
   /* calculate rt_policy defaults if necessary */
   if (!cnf->smart_gw_active) {
