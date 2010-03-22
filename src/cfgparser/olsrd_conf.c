@@ -210,10 +210,9 @@ olsrd_print_interface_cnf(struct if_config_options *cnf, struct if_config_option
   printf("\tAutodetect changes       : %s%s\n", cnf->autodetect_chg ? "yes" : "no",DEFAULT_STR(autodetect_chg));
 }
 
-static int olsrd_sanity_check_rtpolicy(struct olsrd_config *cnf) {
-  int prio;
-
 #ifdef linux
+static int olsrd_sanity_check_rtpolicy(struct olsrd_config *cnf) {
+
   /* calculate rt_policy defaults if necessary */
   if (!cnf->smart_gw_active) {
     /* default is "no policy rules" and "everything into the main table" */
@@ -343,9 +342,11 @@ static int olsrd_sanity_check_rtpolicy(struct olsrd_config *cnf) {
   else if (cnf->rt_proto == 0) {
     cnf->rt_proto = RTPROT_BOOT;
   }
-#endif
   return 0;
 }
+
+#endif
+
 
 static 
 int olsrd_sanity_check_interface_cnf(struct if_config_options * io, struct olsrd_config * cnf, char* name) {
@@ -520,11 +521,13 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
     return -1;
   }
 #endif
-#endif
 
+  /* this rtpolicy settings are also currently only used in Linux */
   if (olsrd_sanity_check_rtpolicy(cnf)) {
     return -1;
   }
+
+#endif
 
   if (in == NULL) {
     fprintf(stderr, "No interfaces configured!\n");

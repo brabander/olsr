@@ -204,7 +204,6 @@ int main(int argc, char *argv[]) {
   struct ipaddr_str buf;
   bool loadedConfig = false;
   int i;
-  struct interface *ifn;
 
 #ifdef WIN32
   WSADATA WsaData;

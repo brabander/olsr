@@ -10,6 +10,11 @@
 #include "../kernel_tunnel.h"
 #include "../net_os.h"
 
+/* prototypes: have them here or disable the warnings about missing prototypes! */
+int olsr_if_setip(const char *dev __attribute__ ((unused)), union olsr_ip_addr *ip __attribute__ ((unused)), int ipversion __attribute__ ((unused))); 
+
+
+
 int olsr_os_init_iptunnel(void) {
   return -1;
 }
