@@ -95,6 +95,7 @@ typedef uint16_t olsr_cookie_t;
 
 /* OpenBSD wants this here */
 #include <sys/types.h>
+#include <sys/socket.h>
 
 /* IPv6 address format in6_addr */
 #ifndef _MSC_VER
