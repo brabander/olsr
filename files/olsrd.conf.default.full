@@ -107,24 +107,29 @@
 # RtTable is for host routes, RtTableDefault for the route to the default
 # internet gateway (2 in case of IPv6+NIIT) and RtTableTunnel is for
 # routes to the ipip tunnels, valid values are 1 to 254
-# (default is 254/112/113, the first is the "main" table in linux)
+# There is a special parameter "auto" (choose default below)
+# (with smartgw: default is 254/223/224)
+# (without smartgw: default is 254/254/254, linux main table)
 
-# RtTable 254
-# RtTableDefault 112
-# RtTableTunnel 113
+# RtTable auto
+# RtTableDefault auto
+# RtTableTunnel auto
 
 # Specifies the policy rule priorities for the three routing tables and
 # a special rule for smartgateway routing (see README-Olsr-Extensions)
 # Priorities can only be set if three different routing tables are set.
-# 0 means "set no policy rule", if set the values must obey to condition
+# if set the values must obey to condition
 # RtTablePriority < RtTableDefaultOlsrPriority
-# < RtTableTunnelPriority < RtTableDefaultPriority
-# (default is 32766/32776/32786/32796)
+# < RtTableTunnelPriority < RtTableDefaultPriority.
+# There are two special parameters, "auto" (choose fitting to SmartGW
+# mode) and "none" (do not set policy rule)
+# (with smartgw: default is none/32776/32776/32796)
+# (without smartgw: default is none/none/none/none)
 
-# RtTablePriority 32766
-# RtTableDefaultOlsrPriority 32776
-# RtTableTunnelPriority 32786
-# RtTableDefaultPriority 32796
+# RtTablePriority auto
+# RtTableDefaultOlsrPriority auto
+# RtTableTunnelPriority auto
+# RtTableDefaultPriority auto
 
 # Activates (in IPv6 mode) the automatic use of NIIT
 # (see README-Olsr-Extensions)

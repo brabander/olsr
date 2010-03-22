@@ -218,6 +218,16 @@ IPV6ADDR {IPV6PAT1}|{IPV6PAT2}|{IPV6PAT3}|{IPV6PAT4}|{IPV6PAT5}|{IPV6PAT6}|{IPV6
     return TOK_DEFAULT;
 }
 
+"auto" {
+    yylval = NULL;
+    return TOK_AUTO;
+}
+
+"none" {
+    yylval = NULL;
+    return TOK_NONE;
+}
+
 {DECDIGIT}+ {
     yylval = get_integer_token(yytext);
     return TOK_INTEGER;

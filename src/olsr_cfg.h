@@ -72,11 +72,9 @@
 #define DEF_LQ_AGING         0.05
 #define DEF_CLEAR_SCREEN     true
 #define DEF_OLSRPORT         698
-#define DEF_RTPOLICY         true
 #define DEF_RTPROTO          0 /* 0 means OS-specific default */
-#define DEF_RTTABLE          254
-#define DEF_RTTABLE_DEFAULT  112
-#define DEF_RTTABLE_TUNNEL   113
+#define DEF_RT_NONE          -1
+#define DEF_RT_AUTO          0
 #define DEF_MIN_TC_VTIME     0.0
 #define DEF_USE_NIIT         true
 #define DEF_SMART_GW         false
@@ -228,8 +226,8 @@ struct olsrd_config {
   uint16_t tos;
   uint8_t rt_proto;
   uint8_t rt_table, rt_table_default, rt_table_tunnel;
-  uint16_t rt_table_pri, rt_table_tunnel_pri;
-  uint16_t rt_table_defaultolsr_pri, rt_table_default_pri;
+  int32_t rt_table_pri, rt_table_tunnel_pri;
+  int32_t rt_table_defaultolsr_pri, rt_table_default_pri;
   uint8_t willingness;
   bool willingness_auto;
   int ipc_connections;

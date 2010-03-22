@@ -269,9 +269,6 @@ int olsr_os_policy_rule(int family, int rttable, uint32_t priority, const char *
   struct olsr_rtreq req;
   int err;
 
-  // Nobody needs these rules
-  if (0 == rttable || rttable >= 253 || 0 == priority) return 0;
-
   memset(&req, 0, sizeof(req));
 
   req.n.nlmsg_len = NLMSG_LENGTH(sizeof(struct rtmsg));
@@ -299,7 +296,7 @@ int olsr_os_policy_rule(int family, int rttable, uint32_t priority, const char *
 
   err = olsr_netlink_send(&req.n);
   if (err) {
-    olsr_syslog(OLSR_LOG_ERR,"Error on %s empty policy rule aimed to activate RtTable %u!",
+    olsr_syslog(OLSR_LOG_ERR,"Error on %s policy rule aimed to activate RtTable %u!",
         set ? "inserting" : "deleting", rttable);
   }
 

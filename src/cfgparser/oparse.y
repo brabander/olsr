@@ -184,7 +184,6 @@ static int add_ipv6_addr(YYSTYPE ipaddr_arg, YYSTYPE prefixlen_arg)
 %token TOK_NOINT
 %token TOK_TOS
 %token TOK_OLSRPORT
-%token TOK_RTPOLICY
 %token TOK_RTPROTO
 %token TOK_RTTABLE
 %token TOK_RTTABLE_DEFAULT
@@ -248,6 +247,8 @@ static int add_ipv6_addr(YYSTYPE ipaddr_arg, YYSTYPE prefixlen_arg)
 %token TOK_IPV4_ADDR
 %token TOK_IPV6_ADDR
 %token TOK_DEFAULT
+%token TOK_AUTO
+%token TOK_NONE
 
 %token TOK_COMMENT
 
@@ -1002,12 +1003,24 @@ irttable: TOK_RTTABLE TOK_INTEGER
   olsr_cnf->rt_table = $2->integer;
   free($2);
 }
+       | TOK_RTTABLE TOK_AUTO
+{
+  PARSER_DEBUG_PRINTF("RtTable: auto\n");
+  olsr_cnf->rt_table = DEF_RT_AUTO;
+  free($2);
+}
 ;
 
 irttable_default: TOK_RTTABLE_DEFAULT TOK_INTEGER
 {
   PARSER_DEBUG_PRINTF("RtTableDefault: %d\n", $2->integer);
   olsr_cnf->rt_table_default = $2->integer;
+  free($2);
+}
+       | TOK_RTTABLE_DEFAULT TOK_AUTO
+{
+  PARSER_DEBUG_PRINTF("RtTableDefault: auto\n");
+  olsr_cnf->rt_table_default = DEF_RT_AUTO;
   free($2);
 }
 ;
@@ -1018,12 +1031,30 @@ irttable_tunnel: TOK_RTTABLE_TUNNEL TOK_INTEGER
   olsr_cnf->rt_table_tunnel = $2->integer;
   free($2);
 }
+       | TOK_RTTABLE_TUNNEL TOK_AUTO
+{
+  PARSER_DEBUG_PRINTF("RtTableTunnel: auto\n");
+  olsr_cnf->rt_table_tunnel = DEF_RT_AUTO;
+  free($2);
+}
 ;
 
 irttable_priority: TOK_RTTABLE_PRIORITY TOK_INTEGER
 {
   PARSER_DEBUG_PRINTF("RtTablePriority: %d\n", $2->integer);
   olsr_cnf->rt_table_pri = $2->integer;
+  free($2);
+}
+        | TOK_RTTABLE_PRIORITY TOK_AUTO
+{
+  PARSER_DEBUG_PRINTF("RtTablePriority: auto\n");
+  olsr_cnf->rt_table_pri = DEF_RT_AUTO;
+  free($2);
+}
+        | TOK_RTTABLE_PRIORITY TOK_NONE
+{
+  PARSER_DEBUG_PRINTF("RtTablePriority: none\n");
+  olsr_cnf->rt_table_pri = DEF_RT_NONE;
   free($2);
 }
 ;
@@ -1034,6 +1065,18 @@ irttable_default_priority: TOK_RTTABLE_DEFAULT_PRIORITY TOK_INTEGER
   olsr_cnf->rt_table_default_pri = $2->integer;
   free($2);
 }
+        | TOK_RTTABLE_DEFAULT_PRIORITY TOK_AUTO
+{
+  PARSER_DEBUG_PRINTF("RtTableDefaultPriority: auto\n");
+  olsr_cnf->rt_table_default_pri = DEF_RT_AUTO;
+  free($2);
+}
+        | TOK_RTTABLE_DEFAULT_PRIORITY TOK_NONE
+{
+  PARSER_DEBUG_PRINTF("RtTableDefaultPriority: none\n");
+  olsr_cnf->rt_table_default_pri = DEF_RT_NONE;
+  free($2);
+}
 ;
 
 irttable_tunnel_priority: TOK_RTTABLE_TUNNEL_PRIORITY TOK_INTEGER
@@ -1042,12 +1085,36 @@ irttable_tunnel_priority: TOK_RTTABLE_TUNNEL_PRIORITY TOK_INTEGER
   olsr_cnf->rt_table_tunnel_pri = $2->integer;
   free($2);
 }
+        | TOK_RTTABLE_TUNNEL_PRIORITY TOK_AUTO
+{
+  PARSER_DEBUG_PRINTF("RtTableTunnelPriority: auto\n");
+  olsr_cnf->rt_table_tunnel_pri = DEF_RT_AUTO;
+  free($2);
+}
+        | TOK_RTTABLE_TUNNEL_PRIORITY TOK_NONE
+{
+  PARSER_DEBUG_PRINTF("RtTableTunnelPriority: none\n");
+  olsr_cnf->rt_table_tunnel_pri = DEF_RT_NONE;
+  free($2);
+}
 ;
 
 irttable_defaultolsr_priority: TOK_RTTABLE_DEFAULTOLSR_PRIORITY TOK_INTEGER
 {
   PARSER_DEBUG_PRINTF("RtTableDefaultOlsrPriority: %d\n", $2->integer);
   olsr_cnf->rt_table_defaultolsr_pri = $2->integer;
+  free($2);
+}
+        | TOK_RTTABLE_DEFAULTOLSR_PRIORITY TOK_AUTO
+{
+  PARSER_DEBUG_PRINTF("RtTableDefaultOlsrPriority: auto\n");
+  olsr_cnf->rt_table_defaultolsr_pri = DEF_RT_AUTO;
+  free($2);
+}
+        | TOK_RTTABLE_DEFAULTOLSR_PRIORITY TOK_NONE
+{
+  PARSER_DEBUG_PRINTF("RtTableDefaultOlsrPriority: none\n");
+  olsr_cnf->rt_table_defaultolsr_pri = DEF_RT_NONE;
   free($2);
 }
 ;

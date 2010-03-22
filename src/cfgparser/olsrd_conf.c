@@ -210,6 +210,143 @@ olsrd_print_interface_cnf(struct if_config_options *cnf, struct if_config_option
   printf("\tAutodetect changes       : %s%s\n", cnf->autodetect_chg ? "yes" : "no",DEFAULT_STR(autodetect_chg));
 }
 
+static int olsrd_sanity_check_rtpolicy(struct olsrd_config *cnf) {
+  int prio;
+
+#ifdef linux
+  /* calculate rt_policy defaults if necessary */
+  if (!cnf->smart_gw_active) {
+    /* default is "no policy rules" and "everything into the main table" */
+    if (cnf->rt_table == DEF_RT_AUTO) {
+      cnf->rt_table = 254;
+    }
+    if (cnf->rt_table_default == DEF_RT_AUTO) {
+      cnf->rt_table_default = cnf->rt_table;
+    }
+    if (cnf->rt_table_tunnel != DEF_RT_AUTO) {
+      fprintf(stderr, "Warning, setting a table for tunnels without SmartGW does not make sense.\n");
+    }
+    cnf->rt_table_tunnel = cnf->rt_table_default;
+
+    /* priority rules default is "none" */
+    if (cnf->rt_table_pri == DEF_RT_AUTO) {
+      cnf->rt_table_pri = DEF_RT_NONE;
+    }
+    if (cnf->rt_table_defaultolsr_pri == DEF_RT_AUTO) {
+      cnf->rt_table_defaultolsr_pri = DEF_RT_NONE;
+    }
+    if (cnf->rt_table_tunnel_pri == DEF_RT_AUTO) {
+      cnf->rt_table_tunnel_pri = DEF_RT_NONE;
+    }
+    if (cnf->rt_table_default_pri == DEF_RT_AUTO) {
+      cnf->rt_table_default_pri = DEF_RT_NONE;
+    }
+  }
+  else {
+    /* default is "policy rules" and "everything into separate tables (254, 223, 224)" */
+    if (cnf->rt_table == DEF_RT_AUTO) {
+      cnf->rt_table = 254;
+    }
+    if (cnf->rt_table_default == DEF_RT_AUTO) {
+      cnf->rt_table_default = 223;
+    }
+    if (cnf->rt_table_tunnel == DEF_RT_AUTO) {
+      cnf->rt_table_tunnel = 224;
+    }
+
+    /* default for "rt_table_pri" is none (main table already has a policy rule */
+    prio = 32766;
+    if (cnf->rt_table_pri > 0) {
+      prio = cnf->rt_table_pri;
+    }
+    else if (cnf->rt_table_pri == DEF_RT_AUTO) {
+      /* choose default */
+      olsr_cnf->rt_table_pri = 0;
+      fprintf(stderr, "No policy rule for rt_table_pri\n");
+    }
+
+    /* default for "rt_table_defaultolsr_pri" is +10 */
+    prio += 10;
+    if (cnf->rt_table_defaultolsr_pri > 0) {
+      prio = cnf->rt_table_defaultolsr_pri;
+    }
+    else if (cnf->rt_table_defaultolsr_pri == DEF_RT_AUTO) {
+      olsr_cnf->rt_table_defaultolsr_pri = prio;
+      fprintf(stderr, "Choose priority %u for rt_table_defaultolsr_pri\n", prio);
+    }
+
+    prio += 10;
+    if (cnf->rt_table_tunnel_pri > 0) {
+      prio = cnf->rt_table_tunnel_pri;
+    }
+    else if (cnf->rt_table_tunnel_pri == DEF_RT_AUTO) {
+      olsr_cnf->rt_table_tunnel_pri = prio;
+      fprintf(stderr, "Choose priority %u for rt_table_tunnel_pri\n", prio);
+    }
+
+    prio += 10;
+    if (cnf->rt_table_default_pri == DEF_RT_AUTO) {
+      olsr_cnf->rt_table_default_pri = prio;
+      fprintf(stderr, "Choose priority %u for rt_table_default_pri\n", prio);
+    }
+  }
+
+  /* check rule priorities */
+  if (cnf->rt_table_pri > 0) {
+    if (cnf->rt_table >= 253) {
+      fprintf(stderr, "rttable %d does not need policy rules from OLSRd\n", cnf->rt_table);
+      return -1;
+    }
+  }
+
+  prio = cnf->rt_table_pri;
+  if (cnf->rt_table_defaultolsr_pri > 0) {
+    if (prio >= cnf->rt_table_defaultolsr_pri) {
+      fprintf(stderr, "rttable_defaultolsr priority must be greater than %d\n", prio);
+      return -1;
+    }
+    if (cnf->rt_table_default >= 253) {
+      fprintf(stderr, "rttable %d does not need policy rules from OLSRd\n", cnf->rt_table_default);
+      return -1;
+    }
+    prio = olsr_cnf->rt_table_defaultolsr_pri;
+  }
+
+  if (cnf->rt_table_tunnel_pri > 0 ) {
+    if (prio >= cnf->rt_table_tunnel_pri) {
+      fprintf(stderr, "rttable_tunnel priority must be greater than %d\n", prio);
+      return -1;
+    }
+    if (cnf->rt_table_tunnel >= 253) {
+      fprintf(stderr, "rttable %d does not need policy rules from OLSRd\n", cnf->rt_table_tunnel);
+      return -1;
+    }
+    prio = cnf->rt_table_tunnel_pri;
+  }
+
+  if (cnf->rt_table_default_pri > 0) {
+    if (prio >= cnf->rt_table_default_pri) {
+      fprintf(stderr, "rttable_default priority must be greater than %d\n", prio);
+      return -1;
+    }
+    if (cnf->rt_table_default >= 253) {
+      fprintf(stderr, "rttable %d does not need policy rules from OLSRd\n", cnf->rt_table_default);
+      return -1;
+    }
+  }
+
+  /* filter rt_proto entry */
+  if (cnf->rt_proto == 1) {
+    /* protocol 1 is reserved, so better use 0 */
+    cnf->rt_proto = 0;
+  }
+  else if (cnf->rt_proto == 0) {
+    cnf->rt_proto = RTPROT_BOOT;
+  }
+#endif
+  return 0;
+}
+
 static 
 int olsrd_sanity_check_interface_cnf(struct if_config_options * io, struct olsrd_config * cnf, char* name) {
   struct olsr_lq_mult *mult;
@@ -385,50 +522,9 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
 #endif
 #endif
 
-#ifdef linux
-  if (olsr_cnf->smart_gw_active) {
-    if (0 == cnf->rt_table_default) {
-      cnf->rt_table_default = DEF_RTTABLE_DEFAULT;
-      fprintf(stderr, "Choose table %u for rt_table_default\n", cnf->rt_table_default);
-    }
-    /* check tables */
-    if (cnf->rt_table == cnf->rt_table_default
-        || cnf->rt_table == cnf->rt_table_tunnel
-        || cnf->rt_table_default == cnf->rt_table_tunnel) {
-      fprintf(stderr, "all three rttables must be unique\n");
-      return -1;
-    }
-
-    /* check priorities */
-    if (cnf->rt_table_pri && cnf->rt_table_pri >= cnf->rt_table_defaultolsr_pri) {
-      fprintf(stderr, "rttable priority must be lesser than rttable_defaultolsr priority\n");
-      return -1;
-    }
-    if (cnf->rt_table_defaultolsr_pri && cnf->rt_table_defaultolsr_pri >= cnf->rt_table_tunnel_pri) {
-      fprintf(stderr, "rttable_defaultolsr priority must be lesser than rttable_tunnel priority\n");
-      return -1;
-    }
-    if (cnf->rt_table_tunnel_pri && cnf->rt_table_tunnel_pri >= cnf->rt_table_default_pri) {
-      fprintf(stderr, "rttable_tunnel priority must be lesser than rttable_default priority\n");
-      return -1;
-    }
+  if (olsrd_sanity_check_rtpolicy(cnf)) {
+    return -1;
   }
-  else {
-    if (0 == cnf->rt_table_default) {
-      cnf->rt_table_default = DEF_RTTABLE;
-      fprintf(stderr, "Choose table %u for rt_table_default\n", cnf->rt_table_default);
-    }
-  }
-
-  /* filter rt_proto entry */
-  if (cnf->rt_proto == 1) {
-    /* protocol 1 is reserved, so better use 0 */
-    cnf->rt_proto = 0;
-  }
-  else if (cnf->rt_proto == 0) {
-    cnf->rt_proto = RTPROT_BOOT;
-  }
-#endif
 
   if (in == NULL) {
     fprintf(stderr, "No interfaces configured!\n");
@@ -610,13 +706,14 @@ set_default_cnf(struct olsrd_config *cnf)
   cnf->tos = DEF_TOS;
   cnf->olsrport = DEF_OLSRPORT;
   cnf->rt_proto = DEF_RTPROTO;
-  cnf->rt_table = DEF_RTTABLE;
-  cnf->rt_table_default = 0;
-  cnf->rt_table_tunnel = DEF_RTTABLE_TUNNEL;
-  cnf->rt_table_pri = 0x7FFE; /* 32766, main table prio */
-  cnf->rt_table_defaultolsr_pri = 0x7FFE + 10;
-  cnf->rt_table_tunnel_pri = 0x7FFE + 20;
-  cnf->rt_table_default_pri = 0x7FFE + 30;
+  cnf->rt_table = DEF_RT_AUTO;
+  cnf->rt_table_default = DEF_RT_AUTO;
+  cnf->rt_table_tunnel = DEF_RT_AUTO;
+  cnf->rt_table_pri = DEF_RT_AUTO;
+  cnf->rt_table_default_pri = DEF_RT_AUTO;
+  cnf->rt_table_defaultolsr_pri = DEF_RT_AUTO;
+  cnf->rt_table_tunnel_pri = DEF_RT_AUTO;
+
   cnf->willingness_auto = DEF_WILL_AUTO;
   cnf->willingness = DEF_WILLINGNESS;
   cnf->ipc_connections = DEF_IPC_CONNECTIONS;

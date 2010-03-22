@@ -387,7 +387,9 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
     "# RtTable is for host routes, RtTableDefault for the route to the default\n"
     "# internet gateway (2 in case of IPv6+NIIT) and RtTableTunnel is for\n"
     "# routes to the ipip tunnels, valid values are 1 to 254\n"
-    "# (default is 254/112/113, the first is the \"main\" table in linux)\n"
+    "# There is a special parameter \"auto\" (choose default below)\n"
+    "# (with smartgw: default is 254/223/224)\n"
+    "# (without smartgw: default is 254/254/254, linux main table)\n"
     "\n");
   abuf_appendf(out, "RtTable %u\n",
       cnf->rt_table);
@@ -400,19 +402,22 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
     "# Specifies the policy rule priorities for the three routing tables and\n"
     "# a special rule for smartgateway routing (see README-Olsr-Extensions)\n"
     "# Priorities can only be set if three different routing tables are set.\n"
-    "# 0 means \"set no policy rule\", if set the values must obey to condition\n"
+    "# if set the values must obey to condition\n"
     "# RtTablePriority < RtTableDefaultOlsrPriority\n"
     "# < RtTableTunnelPriority < RtTableDefaultPriority\n"
-    "# (default is 32766/32776/32786/32796)\n"
+    "# There are two special parameters, \"auto\" (choose fitting to SmartGW\n"
+    "# mode) and \"none\" (do not set policy rule)\n"
+    "# (with smartgw: default is none/32776/32786/32796)\n"
+    "# (without smartgw: default is none/none/none/none)\n"
     "\n");
   abuf_appendf(out, "RtTablePriority %u\n",
       cnf->rt_table_pri);
   abuf_appendf(out, "RtTableDefaultOlsrPriority %u\n",
-      cnf->rt_table_defaultolsr_pri);
+      cnf->rt_table_default_pri);
   abuf_appendf(out, "RtTableTunnelPriority %u\n",
       cnf->rt_table_tunnel_pri);
   abuf_appendf(out, "RtTableDefaultPriority %u\n",
-      cnf->rt_table_default_pri);
+      cnf->rt_table_defaultolsr_pri);
   abuf_puts(out,
     "\n"
     "# Activates (in IPv6 mode) the automatic use of NIIT\n"
