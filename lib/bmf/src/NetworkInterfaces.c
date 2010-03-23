@@ -394,11 +394,12 @@ void RestoreSpoofFilter(void)
  * Description: Find the neighbors on a network interface to forward a BMF
  *              packet to
  * Input      : intf - the network interface
- *              source - the source IP address of the BMF packet 
+ *              source - the source IP address of the BMF packet, or NULL if
+ *                unknown or not applicable
  *              forwardedBy - the IP address of the node that forwarded the BMF
- *                packet
+ *                packet, or NULL if unknown or not applicable
  *              forwardedTo - the IP address of the node to which the BMF packet
- *                was directed
+ *                was directed, or NULL if unknown or not applicable
  * Output     : neighbors - list of (up to a number of 'FanOutLimit') neighbors.
  *              bestNeighbor - the best neighbor (in terms of lowest cost or ETX
  *                value)
@@ -433,7 +434,6 @@ void FindNeighbors(
   {
     struct link_entry* walker;
 
-    /* Assumption: olsr_mutex has been grabbed for safe access to OLSR data */
     OLSR_FOR_ALL_LINK_ENTRIES(walker) {
       union olsr_ip_addr* neighborMainIp;
 
@@ -445,7 +445,7 @@ void FindNeighbors(
 
       OLSR_PRINTF(
         8,
-        "%s: ----> Considering forwarding pkt on \"%s\" to %s\n",
+        "%s: ----> considering forwarding pkt on \"%s\" to %s\n",
         PLUGIN_NAME_SHORT,
         intf->ifName,
         olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
@@ -458,7 +458,7 @@ void FindNeighbors(
       {
         OLSR_PRINTF(
           9,
-          "%s: ----> Not forwarding to %s: is source of pkt\n",
+          "%s: ----> not forwarding to %s: is source of pkt\n",
           PLUGIN_NAME_SHORT,
           olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
 
@@ -470,7 +470,7 @@ void FindNeighbors(
       {
         OLSR_PRINTF(
           9,
-          "%s: ----> Not forwarding to %s: is the node that forwarded the pkt\n",
+          "%s: ----> not forwarding to %s: is the node that forwarded the pkt\n",
           PLUGIN_NAME_SHORT,
           olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
 
@@ -482,7 +482,7 @@ void FindNeighbors(
       {
         OLSR_PRINTF(
           9,
-          "%s: ----> Not forwarding to %s: is the node to which the pkt was forwarded\n",
+          "%s: ----> not forwarding to %s: is the node to which the pkt was forwarded\n",
           PLUGIN_NAME_SHORT,
           olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
 
@@ -531,7 +531,6 @@ void FindNeighbors(
       }
     }
 
-    /* Assumption: olsr_mutex has been grabbed for safe access to OLSR data */
     for (walker = get_link_set(); walker != NULL; walker = walker->next) 
     {
       union olsr_ip_addr* neighborMainIp;
@@ -546,7 +545,7 @@ void FindNeighbors(
 
       OLSR_PRINTF(
         9,
-        "%s: ----> Considering forwarding pkt on \"%s\" to %s\n",
+        "%s: ----> considering forwarding pkt on \"%s\" to %s\n",
         PLUGIN_NAME_SHORT,
         intf->ifName,
         olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
@@ -559,7 +558,7 @@ void FindNeighbors(
       {
         OLSR_PRINTF(
           9,
-          "%s: ----> Not forwarding to %s: is source of pkt\n",
+          "%s: ----> not forwarding to %s: is source of pkt\n",
           PLUGIN_NAME_SHORT,
           olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
 
@@ -571,7 +570,7 @@ void FindNeighbors(
       {
         OLSR_PRINTF(
           9,
-          "%s: ----> Not forwarding to %s: is the node that forwarded the pkt\n",
+          "%s: ----> not forwarding to %s: is the node that forwarded the pkt\n",
           PLUGIN_NAME_SHORT,
           olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
 
@@ -583,7 +582,7 @@ void FindNeighbors(
       {
         OLSR_PRINTF(
           9,
-          "%s: ----> Not forwarding to %s: is the node to which the pkt was forwarded\n",
+          "%s: ----> not forwarding to %s: is the node to which the pkt was forwarded\n",
           PLUGIN_NAME_SHORT,
           olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
 
@@ -596,7 +595,7 @@ void FindNeighbors(
       {
         OLSR_PRINTF(
           9,
-          "%s: ----> Not forwarding to %s: link is timing out\n",
+          "%s: ----> not forwarding to %s: link is timing out\n",
           PLUGIN_NAME_SHORT,
           olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
 
@@ -606,15 +605,14 @@ void FindNeighbors(
       /* Compare costs to check if the candidate neighbor is best reached via 'intf' */
       OLSR_PRINTF(
         9,
-        "%s: ----> Forwarding pkt to %s will cost %5.2f\n",
+        "%s: ----> forwarding pkt to %s will cost %5.2f\n",
         PLUGIN_NAME_SHORT,
         olsr_ip_to_string(&buf, &walker->neighbor_iface_addr),
         walker->link_cost);
 
       /* If the candidate neighbor is best reached via another interface, then skip 
        * the candidate neighbor; the candidate neighbor has been / will be selected via that
-       * other interface.
-       * Assumption: olsr_mutex has been grabbed for safe access to OLSR data. */
+       * other interface. */
       bestLinkToNeighbor = get_best_link_to_neighbor(&walker->neighbor_iface_addr);
 
       if (walker != bestLinkToNeighbor)
@@ -623,7 +621,7 @@ void FindNeighbors(
         {
           OLSR_PRINTF(
             9,
-            "%s: ----> Not forwarding to %s: no link found\n",
+            "%s: ----> not forwarding to %s: no link found\n",
             PLUGIN_NAME_SHORT,
             olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
         }
@@ -633,7 +631,7 @@ void FindNeighbors(
 
           OLSR_PRINTF(
             9,
-            "%s: ----> Not forwarding to %s: \"%s\" gives a better link to this neighbor, costing %5.2f\n",
+            "%s: ----> not forwarding to %s: \"%s\" gives a better link to this neighbor, costing %5.2f\n",
             PLUGIN_NAME_SHORT,
             olsr_ip_to_string(&buf, &walker->neighbor_iface_addr),
             bestIntf->int_name,
@@ -660,13 +658,11 @@ void FindNeighbors(
        * neighbor, because the 'forwardedBy' node will forward the packet. */
       if (forwardedBy != NULL)
       {
-        /* Assumption: olsr_mutex has been grabbed for safe access to OLSR data */
         tcLastHop = olsr_lookup_tc_entry(MainAddressOf(forwardedBy));
         if (tcLastHop != NULL)
         {
           struct tc_edge_entry* tc_edge;
 
-          /* Assumption: olsr_mutex has been grabbed for safe access to OLSR data */
           tc_edge = olsr_lookup_tc_edge(tcLastHop, MainAddressOf(&walker->neighbor_iface_addr));
           
           /* We are not interested in dead-end or dying edges. */
@@ -680,7 +676,7 @@ void FindNeighbors(
 #endif
               OLSR_PRINTF(
                 9,
-                "%s: ----> Not forwarding to %s: I am not an MPR between %s and %s, direct link costs %5.2f\n",
+                "%s: ----> not forwarding to %s: I am not an MPR between %s and %s, direct link costs %5.2f\n",
                 PLUGIN_NAME_SHORT,
                 neighbor_iface_buf.buf,
                 olsr_ip_to_string(&forw_buf, forwardedBy),
@@ -728,7 +724,6 @@ void FindNeighbors(
       }
     }
 
-    /* Assumption: olsr_mutex has been grabbed for safe access to OLSR data */
     OLSR_FOR_ALL_LINK_ENTRIES(walker) {
       union olsr_ip_addr* neighborMainIp;
       struct link_entry* bestLinkToNeighbor;
@@ -743,7 +738,7 @@ void FindNeighbors(
 
       OLSR_PRINTF(
         9,
-        "%s: ----> Considering forwarding pkt on \"%s\" to %s\n",
+        "%s: ----> considering forwarding pkt on \"%s\" to %s\n",
         PLUGIN_NAME_SHORT,
         intf->ifName,
         olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
@@ -756,7 +751,7 @@ void FindNeighbors(
       {
         OLSR_PRINTF(
           9,
-          "%s: ----> Not forwarding to %s: is source of pkt\n",
+          "%s: ----> not forwarding to %s: is source of pkt\n",
           PLUGIN_NAME_SHORT,
           olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
 
@@ -768,7 +763,7 @@ void FindNeighbors(
       {
         OLSR_PRINTF(
           9,
-          "%s: ----> Not forwarding to %s: is the node that forwarded the pkt\n",
+          "%s: ----> not forwarding to %s: is the node that forwarded the pkt\n",
           PLUGIN_NAME_SHORT,
           olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
 
@@ -780,7 +775,7 @@ void FindNeighbors(
       {
         OLSR_PRINTF(
           9,
-          "%s: ----> Not forwarding to %s: is the node to which the pkt was forwarded\n",
+          "%s: ----> not forwarding to %s: is the node to which the pkt was forwarded\n",
           PLUGIN_NAME_SHORT,
           olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
 
@@ -796,7 +791,7 @@ void FindNeighbors(
       {
         OLSR_PRINTF(
           9,
-          "%s: ----> Not forwarding to %s: link is timing out\n",
+          "%s: ----> not forwarding to %s: link is timing out\n",
           PLUGIN_NAME_SHORT,
           olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
 
@@ -806,15 +801,14 @@ void FindNeighbors(
       /* Compare costs to check if the candidate neighbor is best reached via 'intf' */
       OLSR_PRINTF(
         9,
-        "%s: ----> Forwarding pkt to %s will cost ETX %5.2f\n",
+        "%s: ----> forwarding pkt to %s will cost ETX %5.2f\n",
         PLUGIN_NAME_SHORT,
         olsr_ip_to_string(&buf, &walker->neighbor_iface_addr),
         currEtx);
 
       /* If the candidate neighbor is best reached via another interface, then skip 
        * the candidate neighbor; the candidate neighbor has been / will be selected via that
-       * other interface.
-       * Assumption: olsr_mutex has been grabbed for safe access to OLSR data. */
+       * other interface. */
       bestLinkToNeighbor = get_best_link_to_neighbor(&walker->neighbor_iface_addr);
 
       if (walker != bestLinkToNeighbor)
@@ -823,7 +817,7 @@ void FindNeighbors(
         {
           OLSR_PRINTF(
             9,
-            "%s: ----> Not forwarding to %s: no link found\n",
+            "%s: ----> not forwarding to %s: no link found\n",
             PLUGIN_NAME_SHORT,
             olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
         }
@@ -835,7 +829,7 @@ void FindNeighbors(
 #endif
           OLSR_PRINTF(
             9,
-            "%s: ----> Not forwarding to %s: \"%s\" gives a better link to this neighbor, costing %s\n",
+            "%s: ----> not forwarding to %s: \"%s\" gives a better link to this neighbor, costing %s\n",
             PLUGIN_NAME_SHORT,
             olsr_ip_to_string(&buf, &walker->neighbor_iface_addr),
             bestIntf->int_name,
@@ -866,13 +860,11 @@ void FindNeighbors(
        * neighbor, because the 'forwardedBy' node will forward the packet. */
       if (forwardedBy != NULL)
       {
-        /* Assumption: olsr_mutex has been grabbed for safe access to OLSR data */
         tcLastHop = olsr_lookup_tc_entry(MainAddressOf(forwardedBy));
         if (tcLastHop != NULL)
         {
           struct tc_edge_entry* tc_edge;
 
-          /* Assumption: olsr_mutex has been grabbed for safe access to OLSR data */
           tc_edge = olsr_lookup_tc_edge(tcLastHop, MainAddressOf(&walker->neighbor_iface_addr));
 
           /* We are not interested in dead-end edges. */
@@ -888,7 +880,7 @@ void FindNeighbors(
 #endif
               OLSR_PRINTF(
                 9,
-                "%s: ----> Not forwarding to %s: I am not an MPR between %s and %s, direct link costs %s\n",
+                "%s: ----> not forwarding to %s: I am not an MPR between %s and %s, direct link costs %s\n",
                 PLUGIN_NAME_SHORT,
                 neighbor_iface_buf.buf,
                 olsr_ip_to_string(&forw_buf, forwardedBy),
@@ -928,7 +920,7 @@ void FindNeighbors(
   {
     OLSR_PRINTF(
       9,
-      "%s: ----> No suitable neighbor found to forward to on \"%s\"\n",
+      "%s: ----> no suitable neighbor found to forward to on \"%s\"\n",
       PLUGIN_NAME_SHORT,
       intf->ifName);
   }
@@ -1182,7 +1174,6 @@ static int CreateLocalEtherTunTap(void)
 {
   static const char deviceName[] = "/dev/net/tun";
   struct ifreq ifreq;
-  union olsr_sockaddr sock;
   int etfd;
   int ioctlSkfd;
   int ioctlres;
@@ -1250,23 +1241,17 @@ static int CreateLocalEtherTunTap(void)
     EtherTunTapIp = ETHERTUNTAPDEFAULTIP;
   }
 
-  memset(&sock, 0, sizeof(sock));
-  sock.in4.sin_family = AF_INET;
-
-  sock.in4.sin_addr.s_addr = htonl(EtherTunTapIp);
-  ifreq.ifr_addr = sock.in;
+  ((struct sockaddr_in*)&ifreq.ifr_addr)->sin_addr.s_addr = htonl(EtherTunTapIp);
   ioctlres = ioctl(ioctlSkfd, SIOCSIFADDR, &ifreq);
   if (ioctlres >= 0)
   {
     /* Set net mask */
-    sock.in4.sin_addr.s_addr = htonl(EtherTunTapIpMask);
-    ifreq.ifr_netmask = sock.in;
+    ((struct sockaddr_in*)&ifreq.ifr_netmask)->sin_addr.s_addr = htonl(EtherTunTapIpMask);
     ioctlres = ioctl(ioctlSkfd, SIOCSIFNETMASK, &ifreq);
     if (ioctlres >= 0)
     {
       /* Set broadcast IP */
-      sock.in4.sin_addr.s_addr = htonl(EtherTunTapIpBroadcast);
-      ifreq.ifr_broadaddr = sock.in;
+      ((struct sockaddr_in*)&ifreq.ifr_broadaddr)->sin_addr.s_addr = htonl(EtherTunTapIpBroadcast);
       ioctlres = ioctl(ioctlSkfd, SIOCSIFBRDADDR, &ifreq);
       if (ioctlres >= 0)
       {
@@ -1431,6 +1416,16 @@ static int CreateInterface(
     return 0;
   }
 
+  /* add listeners to sockets */
+  if (capturingSkfd != -1) {
+    add_olsr_socket(capturingSkfd, NULL, BMF_handle_captureFd, newIf, SP_IMM_READ);
+  }
+  if (encapsulatingSkfd != -1) {
+    add_olsr_socket(encapsulatingSkfd, NULL, BMF_handle_encapsulatingFd, newIf, SP_IMM_READ);
+  }
+  if (listeningSkfd != -1) {
+    add_olsr_socket(listeningSkfd, NULL, BMF_handle_listeningFd, newIf, SP_IMM_READ);
+  }
   /* Copy data into TBmfInterface object */
   newIf->capturingSkfd = capturingSkfd;
   newIf->encapsulatingSkfd = encapsulatingSkfd;
@@ -1615,6 +1610,7 @@ int CreateBmfNetworkInterfaces(struct interface* skipThisIntf)
   EtherTunTapFd = CreateLocalEtherTunTap();
   if (EtherTunTapFd >= 0)
   {
+    add_olsr_socket(EtherTunTapFd, NULL, BMF_handle_tuntapFd, NULL, SP_IMM_READ);
     nOpenedSockets++;
   }
 
@@ -1665,11 +1661,19 @@ void CloseBmfNetworkInterfaces(void)
     if (bmfIf->capturingSkfd >= 0)
     {
       close(bmfIf->capturingSkfd);
+      remove_olsr_socket(bmfIf->capturingSkfd, NULL, BMF_handle_captureFd);
       nClosed++;
     }
     if (bmfIf->encapsulatingSkfd >= 0) 
     {
       close(bmfIf->encapsulatingSkfd);
+      remove_olsr_socket(bmfIf->encapsulatingSkfd, NULL, BMF_handle_encapsulatingFd);
+      nClosed++;
+    }
+    if (bmfIf->listeningSkfd >= 0)
+    {
+      close(bmfIf->listeningSkfd);
+      remove_olsr_socket(bmfIf->listeningSkfd, NULL, BMF_handle_listeningFd);
       nClosed++;
     }
 
@@ -1710,6 +1714,7 @@ void CloseBmfNetworkInterfaces(void)
   if (EtherTunTapFd >= 0)
   {
     close(EtherTunTapFd);
+    remove_olsr_socket(EtherTunTapFd, NULL, BMF_handle_tuntapFd);
     nClosed++;
 
     OLSR_PRINTF(7, "%s: closed \"%s\"\n", PLUGIN_NAME_SHORT, EtherTunTapIfName);
@@ -1726,14 +1731,14 @@ void CloseBmfNetworkInterfaces(void)
 
   OLSR_PRINTF(
     7,
-    "%s: Total all OLSR interfaces    : RX pkts %d (%d dups); TX pkts %d\n",
+    "%s: total all OLSR interfaces    : RX pkts %d (%d dups); TX pkts %d\n",
     PLUGIN_NAME_SHORT,
     totalOlsrBmfPacketsRx,
     totalOlsrBmfPacketsRxDup,
     totalOlsrBmfPacketsTx);
   OLSR_PRINTF(
     7,
-    "%s: Total all non-OLSR interfaces: RX pkts %d (%d dups); TX pkts %d\n",
+    "%s: total all non-OLSR interfaces: RX pkts %d (%d dups); TX pkts %d\n",
     PLUGIN_NAME_SHORT,
     totalNonOlsrBmfPacketsRx,
     totalNonOlsrBmfPacketsRxDup,
@@ -1876,8 +1881,6 @@ void CheckAndUpdateLocalBroadcast(unsigned char* ipPacket, union olsr_ip_addr* b
 void AddMulticastRoute(void)
 {
   struct rtentry kernel_route;
-  union olsr_sockaddr sock;
-
   int ioctlSkfd = socket(PF_INET, SOCK_DGRAM, 0);
   if (ioctlSkfd < 0)
   {
@@ -1887,17 +1890,13 @@ void AddMulticastRoute(void)
 
   memset(&kernel_route, 0, sizeof(struct rtentry));
 
-  kernel_route.rt_gateway.sa_family = AF_INET;
+  ((struct sockaddr_in*)&kernel_route.rt_dst)->sin_family = AF_INET;
+  ((struct sockaddr_in*)&kernel_route.rt_gateway)->sin_family = AF_INET;
+  ((struct sockaddr_in*)&kernel_route.rt_genmask)->sin_family = AF_INET;
 
   /* 224.0.0.0/4 */
-  memset(&sock, 0, sizeof(sock));
-  sock.in4.sin_family = AF_INET;
-
-  sock.in4.sin_addr.s_addr = htonl(0xE0000000);
-  kernel_route.rt_dst = sock.in;
-
-  sock.in4.sin_addr.s_addr = htonl(0xF0000000);
-  kernel_route.rt_genmask = sock.in;
+  ((struct sockaddr_in *)&kernel_route.rt_dst)->sin_addr.s_addr = htonl(0xE0000000);
+  ((struct sockaddr_in *)&kernel_route.rt_genmask)->sin_addr.s_addr = htonl(0xF0000000);
 
   kernel_route.rt_metric = 0;
   kernel_route.rt_flags = RTF_UP;
@@ -1927,8 +1926,6 @@ void DeleteMulticastRoute(void)
   if (EtherTunTapIp != ETHERTUNTAPDEFAULTIP)
   {
     struct rtentry kernel_route;
-    union olsr_sockaddr sock;
-
     int ioctlSkfd = socket(PF_INET, SOCK_DGRAM, 0);
     if (ioctlSkfd < 0)
     {
@@ -1938,17 +1935,13 @@ void DeleteMulticastRoute(void)
 
     memset(&kernel_route, 0, sizeof(struct rtentry));
 
-    kernel_route.rt_gateway.sa_family = AF_INET;
+    ((struct sockaddr_in*)&kernel_route.rt_dst)->sin_family = AF_INET;
+    ((struct sockaddr_in*)&kernel_route.rt_gateway)->sin_family = AF_INET;
+    ((struct sockaddr_in*)&kernel_route.rt_genmask)->sin_family = AF_INET;
 
     /* 224.0.0.0/4 */
-    memset(&sock, 0, sizeof(sock));
-    sock.in4.sin_family = AF_INET;
-
-    sock.in4.sin_addr.s_addr = htonl(0xE0000000);
-    kernel_route.rt_dst = sock.in;
-
-    sock.in4.sin_addr.s_addr = htonl(0xF0000000);
-    kernel_route.rt_genmask = sock.in;
+    ((struct sockaddr_in *)&kernel_route.rt_dst)->sin_addr.s_addr = htonl(0xE0000000);
+    ((struct sockaddr_in *)&kernel_route.rt_genmask)->sin_addr.s_addr = htonl(0xF0000000);
 
     kernel_route.rt_metric = 0;
     kernel_route.rt_flags = RTF_UP;

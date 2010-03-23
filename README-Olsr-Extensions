@@ -1,6 +1,6 @@
-=======================================================
-      OLSRd (version 0.5.7.0) protocol extensions
-=======================================================
+=====================================================
+      OLSRd (version 0.6.0) protocol extensions
+=====================================================
 
 1.) Credits
 2.) Link quality algorithms
@@ -42,7 +42,7 @@ Concept:
 OLSRd (since version 0.5.6) use a dimensionless integer value for a
 representation of the 'cost' of each link. This is often called Link quality
 (LQ for short). There are multiple LQ-Plugins, each of them calculating a cost
-for the links of the router. At the moment (version 0.5.7.0) all lq_plugins are
+for the links of the router. At the moment (version 0.6.0) all lq_plugins are
 using an ETX-metric (expected transmission count) but others would be possible
 and imaginable, such as MIC [0], WCETT [1], etc.
 
@@ -80,7 +80,7 @@ link quality algorithm in the config file. Some embedded OLSRd versions
 are only compiled with one plugin (mostly etx_ff), so don't use the
 configuration option with these agents.
 
-There are four different link quality algorithms in OLSRd 0.5.7.0, two
+There are four different link quality algorithms in OLSRd 0.6.0, two
 current Funkfeuer/Freifunk ETX implementations and two legacy implementations.
 
 LinkQuality-Algorithm "etx_ff":
@@ -189,7 +189,7 @@ for most larger Funkfeuer/Freifunk meshs.
 (see https://dev.dd19.de/cgi-bin/gitweb.cgi?p=niit.git;a=summary)
 
 NIIT is a special linux kernel device that allows easy transmission of IPv4
-unicast traffic through an IPv6 network. Since version 0.5.7.0 OLSRd has
+unicast traffic through an IPv6 network. Since version 0.6.0 OLSRd has
 integrated support for NIIT in the routing daemon. So setting up IPv4 traffic
 over IPv6 OLSR meshs is very easy. Instead of creating routes and tunnels by
 hand all the administrator of a router needs to do is to, is to set up his own
@@ -219,7 +219,7 @@ More information on NIIT can be found at: http://wiki.freifunk.net/Niit
 The smartgateway mechanism was written by Markus Kittenberg and
 Henning Rogge to allow an OLSR user to directly choose their default
 internet gateway instead of relying on the hop by hop decisions on
-the way to the gateway. OLSRd 0.5.7.0 can create an IPIP tunnel
+the way to the gateway. OLSRd 0.6.0 can create an IPIP tunnel
 to the gateways OLSRd address to sidestep the same nasty effects
 described in the Nat-Threshold section.
 

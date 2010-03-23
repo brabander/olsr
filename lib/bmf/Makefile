@@ -34,12 +34,12 @@
 
 OLSRD_PLUGIN =	true
 PLUGIN_NAME =	olsrd_bmf
-PLUGIN_VER =	1.6.2
+PLUGIN_VER =	1.7.0
 
 TOPDIR = ../..
 include $(TOPDIR)/Makefile.inc
 
-LIBS +=	$(OS_LIB_PTHREAD)
+#LIBS +=	$(OS_LIB_PTHREAD)
 
 ifneq ($(OS),linux)
 

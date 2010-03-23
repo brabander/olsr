@@ -49,7 +49,7 @@
 #include <stdlib.h> /* free() */
 
 /* OLSRD includes */
-#include "olsr.h" /* olsr_printf */
+#include "olsr.h" /* olsr_malloc */
 #include "scheduler.h" /* GET_TIMESTAMP, TIMED_OUT */
 
 /* Plugin includes */
