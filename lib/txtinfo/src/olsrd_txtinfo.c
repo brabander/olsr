@@ -260,7 +260,7 @@ ipc_action(int fd, void *data __attribute__ ((unused)), unsigned int flags __att
       addr[0] = '\0';
     if (!ip4equal(&pin.in4.sin_addr, &txtinfo_accept_ip.v4) && txtinfo_accept_ip.v4.s_addr != INADDR_ANY) {
 #ifdef TXTINFO_ALLOW_LOCALHOST
-      if (sin4->sin_addr.s_addr!=INADDR_LOOPBACK) {
+      if (pin.in4.sin_addr.s_addr != INADDR_LOOPBACK) {
 #endif
         olsr_printf(1, "(TXTINFO) From host(%s) not allowed!\n", addr);
         close(ipc_connection);
@@ -477,9 +477,9 @@ ipc_print_hna(struct autobuf *abuf)
 #ifdef ACTIVATE_VTIME_TXTINFO
       uint32_t vt = tmp_net->hna_net_timer != NULL ? (tmp_net->hna_net_timer->timer_clock - now_times) : 0;
       int diff = (int)(vt);
-      abuf_appendf(abuf, "%s/%d\t%s\t\%d.%03d\n", olsr_ip_to_string(&buf, &tmp_net->A_network_addr), tmp_net->prefixlen,
-                   olsr_ip_to_string(&mainaddrbuf, &tmp_hna->A_gateway_addr),
-                   diff/1000, abs(diff%1000));
+      abuf_appendf(abuf, "%s/%d\t%s\t\%d.%03d\n", olsr_ip_to_string(&buf, &tmp_net->hna_prefix.prefix),
+          tmp_net->hna_prefix.prefix_len, olsr_ip_to_string(&mainaddrbuf, &tmp_hna->A_gateway_addr),
+          diff/1000, abs(diff%1000));
 #else
       abuf_appendf(abuf, "%s/%d\t%s\n", olsr_ip_to_string(&buf, &tmp_net->hna_prefix.prefix),
           tmp_net->hna_prefix.prefix_len, olsr_ip_to_string(&mainaddrbuf, &tmp_hna->A_gateway_addr));
