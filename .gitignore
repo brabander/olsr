@@ -46,3 +46,4 @@ files/olsr_switch_8.html
 files/olsrd_metrics_3.html
 files/olsrd-history.5
 contrib/txtinfoshell/txtinfo-sh
+!lib/quagga/patches/quagga-0.98.6.diff
