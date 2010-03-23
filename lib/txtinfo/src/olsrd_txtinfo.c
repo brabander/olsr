@@ -314,7 +314,7 @@ parse_user_template(const char *template) {
   static char buffer[1024];
   char *dst = buffer;
 
-  while (*template && dst < &buffer[1023]) {
+  while (*template && (size_t)(dst - buffer) < sizeof(buffer)-1) {
     if (*template == '\\') {
       template++;
       switch (*template) {
