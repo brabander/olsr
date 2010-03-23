@@ -96,7 +96,7 @@ test_handler(struct comport_connection *con, struct http_request *request) {
 
 static void init_test(void) {
   static char content[] = "<html><body>Yes, you got it !</body></html>";
-  static char acl[] = "d2lraTpwZWRpYQ=="; /* base 64 .. this is "wikipedia" */
+  static char acl[] = "d2lraTpwZWRpYQ=="; /* base 64 .. this is "wiki:pedia" */
   static char *aclPtr[] = { acl };
   struct olsr_html_site *site;
 
