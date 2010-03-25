@@ -303,7 +303,7 @@ dotdraw_write_data(void *foo __attribute__ ((unused))) {
     if (result > 0)
       abuf_pull(&outbuffer, result);
 
-    if (result <= 0) {
+    if (result < 0) {
       /* close this socket and cleanup*/
       close(outbuffer_socket);
       abuf_free(&outbuffer);
