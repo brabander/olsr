@@ -290,8 +290,7 @@ static void
 default_lq_initialize_ffeth(void)
 {
   if (olsr_cnf->lq_nat_thresh < 1.0) {
-    fprintf(stderr, "Error, etx_ffeth does not work together with nat_treshold < 1.0\n");
-    olsr_exit("", 1);
+    fprintf(stderr, "Warning, nat_treshold < 1.0 is more likely to produce loops with etx_ffeth\n");
   }
   olsr_packetparser_add_function(&default_lq_parser_ffeth);
   olsr_start_timer(1000, 0, OLSR_TIMER_PERIODIC, &default_lq_ffeth_timer, NULL, 0);

@@ -44,7 +44,7 @@ representation of the 'cost' of each link. This is often called Link quality
 (LQ for short). There are multiple LQ-Plugins, each of them calculating a cost
 for the links of the router. At the moment (version 0.6.0) all lq_plugins are
 using an ETX-metric (expected transmission count) but others would be possible
-and imaginable, such as MIC [0], WCETT [1], etc.
+and imaginable, such as MIC [0], etc.
 
 
 Each link is described by a LQ (link quality) and a NLQ (neighbor link quality)
@@ -168,7 +168,7 @@ meshs with hundreds of routers. Reducing the rate of TCs can reduce
 this overhead, but delay route changes and correction of errors
 in the routing tables.
 
-The Fisheye (sometimes called Hazy Sighted Link State Routing [2])
+The Fisheye (sometimes called Hazy Sighted Link State Routing [1])
 mechanism implements a strategy to reach a compromise between
 these two problems. When activated only every 8th TC is send
 to all mesh nodes. Most TCs are given a reduced TTL (time to live)
@@ -300,7 +300,7 @@ Fisheye can lead to  persistent routing loops.
 Please note that even with NatThreshold enabled, some users will still experience
 gateway switching. However, most users will not.
 
-Smart Gateways can replace NatThreshold alltogether because they allow sending
+Smart Gateways can replace NatThreshold all together because they allow sending
 traffic directly to a gateway circumventing the problems described above which
 stem from a hop-by-hop routing approach 
 
@@ -308,16 +308,10 @@ stem from a hop-by-hop routing approach
 
      7.) References
 ************************
- [0] MIC Metric: "Designing Routing Metrics for Mesh Networks", 
+[0] MIC Metric: "Designing Routing Metrics for Mesh Networks", 
 	Yaling Yang, Jun Wang, Robin Kravets
 	http://www.cs.ucdavis.edu/~prasant/WIMESH/p6.pdf
 
-  [1] WCETT Metric: Weighted Cumulative Expected Transmission Time,
-	"Routing in Multi-Radio, Multi-Hop Wireless Mesh Networks"
-	Authors: Richard Draves, Jitendra Padhye, Brian Zill
-	Published: MobiCom 2004
-	http://research.microsoft.com/apps/pubs/default.aspx?id=73099
-	
-  [2] "Making link-state routing scale for ad hoc networks",
+[1] "Making link-state routing scale for ad hoc networks",
 	Cesar A. Santivanez, Ram Ramanathan, Ioannis Stavrakakis
 	http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.16.5940
