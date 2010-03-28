@@ -217,12 +217,6 @@ chk_if_changed(struct olsr_if_config *iface)
                  "\tOld: %s\n\tNew: %s\n",
                  ifr.ifr_name, ip6_to_string(&buf, &ifp->int6_addr.sin6_addr), ip6_to_string(&buf, &tmp_saddr6.sin6_addr));
 
-      /* Check main addr */
-      if (!olsr_cnf->fixed_origaddr && ip6cmp(&olsr_cnf->router_id.v6, &tmp_saddr6.sin6_addr) != 0) {
-        /* Update main addr */
-        olsr_cnf->router_id.v6 = tmp_saddr6.sin6_addr;
-      }
-
       /* Update address */
       ifp->int6_addr.sin6_addr = tmp_saddr6.sin6_addr;
       ifp->ip_addr.v6 = tmp_saddr6.sin6_addr;
@@ -249,11 +243,6 @@ chk_if_changed(struct olsr_if_config *iface)
                  ifr.ifr_name, ip4_to_string(&buf, ifp->int_addr.sin_addr), ip4_to_string(&buf, tmp_saddr4->sin_addr));
 
       ifp->int_addr = *(struct sockaddr_in *)(ARM_NOWARN_ALIGN)&ifr.ifr_addr;
-      if (!olsr_cnf->fixed_origaddr && ip4cmp(&olsr_cnf->router_id.v4, &ifp->ip_addr.v4) == 0) {
-        OLSR_INFO(LOG_INTERFACE, "New main address: %s\n", ip4_to_string(&buf, tmp_saddr4->sin_addr));
-        olsr_cnf->router_id.v4 = tmp_saddr4->sin_addr;
-      }
-
       ifp->ip_addr.v4 = tmp_saddr4->sin_addr;
 
       if_changes = 1;
@@ -581,9 +570,9 @@ chk_if_up(struct olsr_if_config *iface)
   ifp->olsr_seqnum = random() & 0xFFFF;
 
   /*
-   * Set main address if this is the only interface
+   * Set main address if it's not set
    */
-  if (!olsr_cnf->fixed_origaddr && olsr_ipcmp(&all_zero, &olsr_cnf->router_id) == 0) {
+  if (olsr_ipcmp(&all_zero, &olsr_cnf->router_id) == 0) {
     olsr_cnf->router_id = ifp->ip_addr;
     OLSR_INFO(LOG_INTERFACE, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->router_id));
   }

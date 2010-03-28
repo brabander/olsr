@@ -562,12 +562,6 @@ chk_if_changed(struct olsr_if_config *IntConf)
     AddrIn->sin_port = 0;
     AddrIn->sin_addr = NewVal.v4;
 
-    if (!olsr_cnf->fixed_origaddr && olsr_cnf->router_id.v4.s_addr == OldVal.v4.s_addr) {
-      OLSR_INFO(LOG_NETWORKING, "\tMain address change.\n");
-
-      olsr_cnf->router_id.v4 = NewVal.v4;
-    }
-
     Res = 1;
   }
 
@@ -724,7 +718,7 @@ chk_if_up(struct olsr_if_config *IntConf)
 
   memset(&NullAddr, 0, olsr_cnf->ipsize);
 
-  if (!olsr_cnf->fixed_origaddr && olsr_ipcmp(&NullAddr, &olsr_cnf->router_id) == 0) {
+  if (olsr_ipcmp(&NullAddr, &olsr_cnf->router_id) == 0) {
     olsr_cnf->router_id = New->ip_addr;
     OLSR_INFO(LOG_NETWORKING, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->router_id));
   }
