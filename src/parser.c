@@ -336,6 +336,18 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
       seqno = ntohs(m->v6.seqno);
     }
 
+    if (msgsize == 0) {
+      struct ipaddr_str buf;
+      union olsr_ip_addr *msgorig = (union olsr_ip_addr *) &m->v4.originator;
+      OLSR_PRINTF(1, "Error, OLSR message from %s (type %d) is zero lengthed"
+          ", ignoring all further content of the packet\n",
+          olsr_ip_to_string(&buf, msgorig), m->v4.olsr_msgtype);
+      olsr_syslog(OLSR_LOG_ERR, "Error, OLSR message from %s (type %d) is zero"
+          "lengthed, ignoring all further content of the packet\n",
+          olsr_ip_to_string(&buf, msgorig), m->v4.olsr_msgtype);
+      break;
+    }
+
     if ((msgsize % 4) != 0) {
       struct ipaddr_str buf;
       union olsr_ip_addr *msgorig = (union olsr_ip_addr *) &m->v4.originator;
