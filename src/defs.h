@@ -69,8 +69,6 @@ extern const char build_host[];
 #define UDP_IPV4_HDRSIZE        28
 #define UDP_IPV6_HDRSIZE        62
 
-#define MIN_PACKET_SIZE(ver)	((int)(sizeof(uint8_t) * (((ver) == AF_INET) ? 4 : 7)))
-
 /* Debug helper macro */
 #ifdef DEBUG
 #define olsr_debug(lvl, format, args...) do {                           \

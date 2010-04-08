@@ -401,14 +401,6 @@ olsr_input_hna(union olsr_message *m, struct interface *in_if __attribute__ ((un
   /* olsr_msgsize */
   pkt_get_u16(&curr, &olsr_msgsize);
 
-  if (olsr_msgsize < 8 + olsr_cnf->ipsize) {
-#ifndef WIN32
-    OLSR_PRINTF(1, "HNA message size %d too small (at least %zu)!\n", olsr_msgsize,
-                8 + olsr_cnf->ipsize);
-#endif
-    return false;
-  }
-
   hnasize = olsr_msgsize - 8 - olsr_cnf->ipsize;
   curr_end = (const uint8_t *)m + olsr_msgsize;
 
