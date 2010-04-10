@@ -50,10 +50,32 @@
 
 #define PROCENTRY_ROUTE "/proc/net/route"
 
+
+#define CLIENT_ROAM_MESSAGE   134
+#define MAX_MESSAGE           134
+
+
+
+/*
+ * Client Roam Plugin message
+ */
+
+enum cl_roam_status_types {
+  CL_ROAM_PINGABLE,            /* 0 */
+  CL_ROAM_NOT_PINGABLE,            /* 1 */
+};
+
+
+
+
+
+
+
 int check_gw(union olsr_ip_addr *net, union olsr_ip_addr *mask);
 
 /* Event function to register with the scheduler */
-void olsr_event(void *foo);
+void olsr_event1(void *foo);
+void olsr_event2(void *foo);
 
 #endif
 

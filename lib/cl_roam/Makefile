@@ -43,6 +43,11 @@ PLUGIN_VER =	0.1
 TOPDIR = ../..
 include $(TOPDIR)/Makefile.inc
 
+LIBS +=		$(OS_LIB_PTHREAD)
+
+# Must be specified along with -lpthread on linux
+CPPFLAGS += $(OS_CFLAG_PTHREAD)
+
 default_target: $(PLUGIN_FULLNAME)
 
 $(PLUGIN_FULLNAME): $(OBJS) version-script.txt

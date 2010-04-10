@@ -47,7 +47,7 @@
 #include "process_routes.h"
 #include "olsr_logging.h"
 
-static struct timer_entry *spf_backoff_timer = NULL;
+struct timer_entry *spf_backoff_timer = NULL;
 
 /*
  * avl_comp_etx

@@ -1,17 +1,14 @@
-DYNAMIC INTERNET GATEWAY PLAIN PLUGIN FOR olsr.org olsrd
-by Andreas Tonnesen(andreto@olsr.org)
-additions by Sven-Ola Tuecke
+How to use the plugin
 
-This plugin is without Ping/libthread. It is the plain dyn_gw!
+You need two wifi-interfaces, called ath0 and ath1. ath1 is used for your normal meshing-setup. ath0 is your interface for the Accesspoint. Make sure every Node has the same IP and mac-adress on this interface.
 
-HOW TO USE
+Make sure, dnsmasq dhcp-leasefile is located at /var/dhcp.leases and is accessible via http://IPADRESS/dhcp.leases. dnsmasq needs to give leases on ath0.
 
-Add an entry like this to your olsrd configuration file:
+Do not add ath0 as an interface in olsrd.conf, but add a line like this:
 
-LoadPlugin "olsrd_dyn_gw_plain.so.0.4"
-{
-}
+   LoadPlugin "/root/olsrd_cl_roam.so.0.1"
+   {
+   }
 
-ABOUT
 
-Plugin is IPv4 only.
+Make sure routing between ath0 and ath1 is possible (without nat!) and routing between ath0 and eth0 is natted. 
