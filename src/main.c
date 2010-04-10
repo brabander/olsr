@@ -396,6 +396,9 @@ main(int argc, char *argv[])
     sigaction(SIGTERM, &act, NULL);
     act.sa_handler = SIG_IGN;
     sigaction(SIGPIPE, &act, NULL);
+    // Ignoring SIGUSR1 and SIGUSR1 by default to be able to use them in plugins
+    sigaction(SIGUSR1, &act, NULL);
+    sigaction(SIGUSR2, &act, NULL);
   }
 #endif
 
