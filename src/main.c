@@ -581,6 +581,9 @@ int main(int argc, char *argv[]) {
   //  signal(SIGSEGV, olsr_shutdown);
   signal(SIGTERM, olsr_shutdown);
   signal(SIGPIPE, SIG_IGN);
+  // Ignoring SIGUSR1 and SIGUSR1 by default to be able to use them in plugins
+  signal(SIGUSR1, SIG_IGN);
+  signal(SIGUSR2, SIG_IGN);
 #endif
 
   link_changes = false;
