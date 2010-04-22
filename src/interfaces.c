@@ -372,7 +372,7 @@ olsr_remove_interface(struct olsr_if * iface)
   struct interface *ifp, *tmp_ifp;
   ifp = iface->interf;
 
-  OLSR_PRINTF(1, "Removing interface %s\n", iface->name);
+  OLSR_PRINTF(1, "Removing interface %s (%d)\n", iface->name, ifp->if_index);
   olsr_syslog(OLSR_LOG_INFO, "Removing interface %s\n", iface->name);
 
   olsr_delete_link_entry_by_ip(&ifp->ip_addr);
@@ -427,13 +427,11 @@ olsr_remove_interface(struct olsr_if * iface)
   iface->interf = NULL;
 
   /* Close olsr socket */
-  close(ifp->olsr_socket);
   remove_olsr_socket(ifp->olsr_socket, &olsr_input, NULL);
+  close(ifp->olsr_socket);
 
-  if (ifp->send_socket != ifp->olsr_socket) {
-    close(ifp->send_socket);
-    remove_olsr_socket(ifp->send_socket, &olsr_input, NULL);
-  }
+  remove_olsr_socket(ifp->send_socket, &olsr_input, NULL);
+  close(ifp->send_socket);
 
   /* Free memory */
   free(ifp->int_name);

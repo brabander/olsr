@@ -775,9 +775,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__ ((unused)))
 
   /* Register socket */
   add_olsr_socket(ifp->olsr_socket, &olsr_input, NULL, NULL, SP_PR_READ);
-  if (ifp->olsr_socket != ifp->send_socket) {
-    add_olsr_socket(ifp->send_socket, &olsr_input, NULL, NULL, SP_PR_READ);
-  }
+  add_olsr_socket(ifp->send_socket, &olsr_input, NULL, NULL, SP_PR_READ);
 
 #ifdef linux
   /* Set TOS */
