@@ -64,3 +64,8 @@ int olsr_os_localhost_if(union olsr_ip_addr *ip __attribute__ ((unused)),
     bool create __attribute__ ((unused))) {
   return -1;
 }
+
+int olsr_os_ifip(int ifindex __attribute__ ((unused)),
+    union olsr_ip_addr *ip __attribute__ ((unused)), bool create __attribute__ ((unused))) {
+  return -1;
+}

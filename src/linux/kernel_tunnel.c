@@ -40,6 +40,7 @@
  */
 
 #include "kernel_tunnel.h"
+#include "kernel_routes.h"
 #include "log.h"
 #include "olsr_types.h"
 #include "net_os.h"
@@ -84,7 +85,11 @@ int olsr_os_init_iptunnel(void) {
   if (store_iptunnel_state) {
     return 0;
   }
-  return olsr_if_set_state(dev, true);
+  if (olsr_if_set_state(dev, true)) {
+    return -1;
+  }
+
+  return olsr_os_ifip(if_nametoindex(dev), &olsr_cnf->main_addr, true);
 }
 
 void olsr_os_cleanup_iptunnel(void) {
@@ -245,6 +250,9 @@ fprintf(stderr, "Cannot create tunnel %s to %s\n", name, olsr_ip_to_string(&buf,
       }
       return NULL;
     }
+
+    /* set originator IP for tunnel */
+    olsr_os_ifip(if_idx, &olsr_cnf->main_addr, true);
 
     t = olsr_cookie_malloc(tunnel_cookie);
     memcpy(&t->target, target, sizeof(*target));

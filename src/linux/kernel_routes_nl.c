@@ -303,11 +303,10 @@ int olsr_os_policy_rule(int family, int rttable, uint32_t priority, const char *
   return err;
 }
 
-int
-olsr_os_localhost_if(union olsr_ip_addr *ip, bool create)
+static int
+olsr_add_ip(int ifindex, union olsr_ip_addr *ip, const char *l, bool create)
 {
   struct olsr_ipadd_req req;
-  static char l[] = "lo:olsr";
 
   memset(&req, 0, sizeof(req));
 
@@ -321,14 +320,27 @@ olsr_os_localhost_if(union olsr_ip_addr *ip, bool create)
   }
   req.ifa.ifa_family = olsr_cnf->ip_version;
 
-  olsr_netlink_addreq(&req.n, sizeof(req), IFA_LABEL, l, strlen(l) + 1);
   olsr_netlink_addreq(&req.n, sizeof(req), IFA_LOCAL, ip, olsr_cnf->ipsize);
+  if (l) {
+    olsr_netlink_addreq(&req.n, sizeof(req), IFA_LABEL, l, strlen(l) + 1);
+  }
 
   req.ifa.ifa_prefixlen = olsr_cnf->ipsize * 8;
 
-  req.ifa.ifa_index = if_nametoindex("lo");
+  req.ifa.ifa_index = ifindex;
 
   return olsr_netlink_send(&req.n);
+}
+
+int
+olsr_os_localhost_if(union olsr_ip_addr *ip, bool create)
+{
+  static char l[] = "lo:olsr";
+  return olsr_add_ip(if_nametoindex("lo"), ip, l, create);
+}
+
+int olsr_os_ifip(int ifindex, union olsr_ip_addr *ip, bool create) {
+  return olsr_add_ip(ifindex, ip, NULL, create);
 }
 
 static int olsr_new_netlink_route(int family, int rttable, int if_index, int metric, int protocol,
