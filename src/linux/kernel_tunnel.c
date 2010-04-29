@@ -127,6 +127,7 @@ static int os_ip4_tunnel(const char *name, in_addr_t *target)
   memset(&p, 0, sizeof(p));
   p.iph.version = 4;
   p.iph.ihl = 5;
+  p.iph.ttl = 64;
   p.iph.protocol = IPPROTO_IPIP;
   if (target) {
     p.iph.daddr = *target;
@@ -235,7 +236,7 @@ struct olsr_iptunnel_entry *olsr_os_add_ipip_tunnel(union olsr_ip_addr *target, 
 
     if (if_idx == 0) {
       // cannot create tunnel
-fprintf(stderr, "Cannot create tunnel %s to %s\n", name, olsr_ip_to_string(&buf, target));
+      olsr_syslog(OLSR_LOG_ERR, "Cannot create tunnel %s\n", name);
       return NULL;
     }
 
