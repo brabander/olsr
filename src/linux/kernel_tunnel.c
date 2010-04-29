@@ -67,8 +67,8 @@
 #include <sys/types.h>
 #include <net/if.h>
 
-static const char DEV_IPV4_TUNNEL[IFNAMSIZ] = "tunl0";
-static const char DEV_IPV6_TUNNEL[IFNAMSIZ] = "ip6tnl0";
+static const char DEV_IPV4_TUNNEL[IFNAMSIZ] = TUNNEL_ENDPOINT_IF;
+static const char DEV_IPV6_TUNNEL[IFNAMSIZ] = TUNNEL_ENDPOINT_IF6;
 
 static bool store_iptunnel_state;
 static struct olsr_cookie_info *tunnel_cookie;
