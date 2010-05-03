@@ -53,6 +53,8 @@ extern const struct olsr_ip_prefix ipv4_internet_route;
 extern const struct olsr_ip_prefix ipv6_mappedv4_route;
 extern const struct olsr_ip_prefix ipv6_internet_route;
 
+extern const union olsr_ip_addr olsr_ip_zero;
+
 extern const union olsr_ip_addr ipv6_def_multicast;
 
 struct ipaddr_str {
