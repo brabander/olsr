@@ -993,6 +993,9 @@ static void update_has_gateway_fields(void) {
     olsr_cnf->has_ipv4_gateway |= ip_prefix_is_v4_inetgw(&h->net) || ip_prefix_is_mappedv4_inetgw(&h->net);
     olsr_cnf->has_ipv6_gateway |= ip_prefix_is_v6_inetgw(&h->net);
   }
+
+  /* force routing table upgrade */
+  olsr_calculate_routing_table(true);
 }
 
 void
