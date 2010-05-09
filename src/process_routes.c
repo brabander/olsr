@@ -284,7 +284,7 @@ olsr_del_kernel_routes(struct list_node *head_node)
   struct rt_entry *rt;
 
   while (!list_is_empty(head_node)) {
-    if (0 == (rt = changelist2rt(head_node->prev))) continue;
+    rt = changelist2rt(head_node->prev);
 #ifdef LINUX_NETLINK_ROUTING
     if (rt->rt_nexthop.iif_index >= 0)
 #endif /*LINUX_NETLINK_ROUTING*/

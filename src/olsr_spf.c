@@ -470,11 +470,6 @@ olsr_calculate_routing_table(bool force)
 
       rtp = rtp_prefix_tree2rtp(rtp_tree_node);
 
-      if (ip_prefix_list_find(olsr_cnf->hna_entries, &rtp->rtp_dst.prefix, rtp->rtp_dst.prefix_len)) {
-        /* do not add HNAs that collide with local entries to global RIB */
-        continue;
-      }
-
       if (rtp->rtp_rt) {
 
         /*

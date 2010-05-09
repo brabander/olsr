@@ -435,6 +435,8 @@ olsr_input_hna(union olsr_message *m, struct interface *in_if __attribute__ ((un
   while (curr < curr_end) {
     struct olsr_ip_prefix prefix;
     union olsr_ip_addr mask;
+
+    struct ip_prefix_list *entry;
     struct interface *ifs;
     bool stop = false;
 
@@ -467,7 +469,11 @@ olsr_input_hna(union olsr_message *m, struct interface *in_if __attribute__ ((un
       continue;
     }
 #endif
-    olsr_update_hna_entry(&originator, &prefix.prefix, prefix.prefix_len, vtime);
+    entry = ip_prefix_list_find(olsr_cnf->hna_entries, &prefix.prefix, prefix.prefix_len);
+    if (entry == NULL) {
+      /* only update if it's not from us */
+      olsr_update_hna_entry(&originator, &prefix.prefix, prefix.prefix_len, vtime);
+    }
   }
   /* Forward the message */
   return true;
