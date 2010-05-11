@@ -598,7 +598,7 @@ walk_timers(uint32_t * last_run)
         timer->timer_cb(timer->timer_cb_context);
 
         /* Only act on actually running timers */
-        if (timer->timer_flags & OLSR_TIMER_RUNNING) {
+        if (timer->timer_running) {
           /*
            * Don't restart the periodic timer if the callback function has
            * stopped the timer.
@@ -773,7 +773,7 @@ olsr_start_timer(unsigned int rel_time,
   timer->timer_cb = cb_func;
   timer->timer_cb_context = context;
   timer->timer_jitter_pct = jitter_pct;
-  timer->timer_flags = OLSR_TIMER_RUNNING;
+  timer->timer_running = true;
 
   /* The cookie is used for debugging to traceback the originator */
   timer->timer_cookie = ci;
@@ -817,7 +817,7 @@ olsr_stop_timer(struct timer_entry *timer)
    * Carve out of the existing wheel_slot and free.
    */
   list_remove(&timer->timer_list);
-  timer->timer_flags &= ~OLSR_TIMER_RUNNING;
+  timer->timer_running = false;
   olsr_cookie_usage_decr(timer->timer_cookie);
 
   olsr_cookie_free(timer_mem_cookie, timer);

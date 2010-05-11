@@ -71,7 +71,7 @@ struct timer_entry {
   unsigned int timer_period;           /* set for periodical timers (relative time) */
   struct olsr_cookie_info *timer_cookie;       /* used for diag stuff */
   uint8_t timer_jitter_pct;            /* the jitter expressed in percent */
-  uint8_t timer_flags;                 /* misc flags */
+  bool timer_running;                 /* misc flags */
   unsigned int timer_random;           /* cache random() result for performance reasons */
   timer_cb_func timer_cb;              /* callback function */
   void *timer_cb_context;              /* context pointer */
@@ -82,9 +82,6 @@ LISTNODE2STRUCT(list2timer, struct timer_entry, timer_list);
 
 #define OLSR_TIMER_ONESHOT    0 /* One shot timer */
 #define OLSR_TIMER_PERIODIC   1 /* Periodic timer */
-
-/* Timer flags */
-#define OLSR_TIMER_RUNNING  ( 1 << 0)   /* this timer is running */
 
 /* Timers */
 void olsr_init_timers(void);
