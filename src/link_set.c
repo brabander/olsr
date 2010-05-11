@@ -631,7 +631,7 @@ update_link_entry(const union olsr_ip_addr *local,
                    OLSR_LINK_SYM_JITTER, OLSR_TIMER_ONESHOT, &olsr_expire_link_sym_timer, entry, link_sym_timer_cookie);
 
     /* L_time = L_SYM_time + NEIGHB_HOLD_TIME */
-    olsr_set_link_timer(entry, message->comm->vtime + NEIGHB_HOLD_TIME * MSEC_PER_SEC);
+    olsr_set_link_timer(entry, message->comm->vtime + NEIGHB_HOLD_TIME);
     break;
   default:;
   }
