@@ -50,7 +50,7 @@ mkdir /tmp/$NAME
 # clean stuff up first
 cd ..;make uberclean
 # sync the stuff to a working directory
-rsync -a . /tmp/$NAME/ --exclude=.project --exclude=.cproject --exclude=.hg* --exclude=.git* --exclude=*.rej --delete
+rsync -a . /tmp/$NAME/ --exclude=.project --exclude=.cproject --exclude=.settings --exclude=.hg* --exclude=.git* --exclude=*.rej --exclude=*.orig --delete
 cd /tmp/
 echo "### creating /tmp/$NAME.tar.gz"
 tar -czf /tmp/$NAME.tar.gz $NAME
