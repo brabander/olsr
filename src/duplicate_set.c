@@ -120,6 +120,7 @@ static void
 olsr_expire_duplicate_entry(void *context)
 {
   struct dup_entry *entry = context;
+  entry->validity_timer = NULL;
 
   olsr_delete_duplicate_entry(entry);
 }
@@ -174,13 +175,12 @@ olsr_is_duplicate_message(struct olsr_message *m, bool forwarding, enum duplicat
 
     *status = NEW_OLSR_MESSAGE;
     return false;               // okay, we process this package
-  } else {
-
-    /*
-     * Refresh timer.
-     */
-    olsr_change_timer(entry->validity_timer, DUPLICATE_CLEANUP_INTERVAL, DUPLICATE_CLEANUP_JITTER, OLSR_TIMER_ONESHOT);
   }
+
+  /*
+   * Refresh timer.
+   */
+  olsr_change_timer(entry->validity_timer, DUPLICATE_CLEANUP_INTERVAL, DUPLICATE_CLEANUP_JITTER, OLSR_TIMER_ONESHOT);
 
   diff = olsr_seqno_diff(m->seqno, entry->seqnr);
 
