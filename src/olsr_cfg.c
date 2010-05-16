@@ -962,7 +962,6 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
       sprintf(rmsg, "Failed converting IP address %s for originator address\n", argstr);
       return CFG_ERROR;
     }
-    rcfg->fixed_origaddr = true;
     break;
   case CFG_OLSRPORT:           /* port (i) */
     {
@@ -1551,7 +1550,6 @@ olsr_get_default_cfg(void)
   cfg->willingness_auto = DEF_WILL_AUTO;
   cfg->clear_screen = DEF_CLEAR_SCREEN;
   assert(cfg->del_gws == false);
-  assert(cfg->fixed_origaddr == false);
 
   cfg->tos = DEF_TOS;
   assert(cfg->rtproto == 0);

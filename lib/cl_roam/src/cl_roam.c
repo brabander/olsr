@@ -1,0 +1,790 @@
+/*
+ * The olsr.org Optimized Link-State Routing daemon(olsrd)
+ * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * * Redistributions of source code must retain the above copyright
+ *   notice, this list of conditions and the following disclaimer.
+ * * Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in
+ *   the documentation and/or other materials provided with the
+ *   distribution.
+ * * Neither the name of olsr.org, olsrd nor the names of its
+ *   contributors may be used to endorse or promote products derived
+ *   from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Visit http://www.olsr.org for more information.
+ *
+ * If you find this software useful feel free to make a donation
+ * to the project. For more information see the website or contact
+ * the copyright holders.
+ *
+ */
+
+#include "cl_roam.h"
+#include "olsr_types.h"
+#include "ipcalc.h"
+#include "scheduler.h"
+#include "olsr.h"
+#include "olsr_cookie.h"
+#include "olsr_ip_prefix_list.h"
+#include "olsr_logging.h"
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <net/route.h>
+#include <unistd.h>
+#include <parser.h>
+#include <pthread.h>
+#include "neighbor_table.h"
+#include "olsr.h"
+#include "olsr_cfg.h"
+#include "interfaces.h"
+#include "olsr_protocol.h"
+#include "net_olsr.h"
+#include "link_set.h"
+#include "ipcalc.h"
+#include "lq_plugin.h"
+#include "olsr_cfg_gen.h"
+#include "common/string.h"
+#include "olsr_ip_prefix_list.h"
+#include "olsr_logging.h"
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+
+#define PLUGIN_INTERFACE_VERSION 5
+
+static int has_inet_gateway;
+static struct olsr_cookie_info *event_timer_cookie1;
+static struct olsr_cookie_info *event_timer_cookie2;
+static union olsr_ip_addr gw_netmask;
+
+/**
+ * Plugin interface version
+ * Used by main olsrd to check plugin interface version
+ */
+int olsrd_plugin_interface_version(void) {
+  return PLUGIN_INTERFACE_VERSION;
+}
+
+static const struct olsrd_plugin_parameters plugin_parameters[] = { };
+
+struct guest_client {
+  union olsr_ip_addr ip;
+  u_int64_t mac;
+  struct in_addr from_node;
+  char is_announced;
+  float last_seen;
+  pthread_t ping_thread;
+  pthread_t ping_thread_add;
+  struct olsr_cookie_info *arping_timer_cookie;
+  char ping_thread_done;
+  struct timer_entry *arping_timer;
+  int remaing_announcements;
+  //who is in charge of this client
+  union olsr_ip_addr master_ip;
+};
+
+struct client_list {
+  struct guest_client *client;
+  struct client_list *list;
+};
+
+//Declaration of all functions
+static void check_client_list(struct client_list * clist);
+static int ip_is_in_guest_list(struct client_list * list, struct guest_client * host);
+static void check_remote_leases(struct client_list * clist);
+static int check_if_associcated(struct guest_client *client);
+static void check_associations(struct client_list * clist);
+static void add_client_to_list(struct client_list * clist, struct guest_client * host);
+static void check_for_new_clients(struct client_list * clist);
+static void* check_neighbour_host(void* neighbour);
+static void spread_host(struct guest_client * host);
+static void single_hna(union olsr_ip_addr * ip, uint32_t vtime);
+static void olsr_event1(void *foo __attribute__ ((unused)) );
+static struct guest_client * get_client_by_ip(union olsr_ip_addr ip);
+#if 0
+static void *
+relay_spread_host(union olsr_ip_addr host_ip, union olsr_ip_addr master_ip, uint8_t TTL, uint8_t Hopcount);
+#endif
+static void
+    olsr_parser(struct olsr_message *msg, struct interface *in_if __attribute__ ((unused)), union olsr_ip_addr *ipaddr,
+        enum duplicate_status status);
+static void check_leases(struct client_list * clist, const char *file, float def_last_seen);
+static void check_local_leases(struct client_list * clist);
+static struct guest_client * get_client_by_mac(struct client_list * clist, u_int64_t mac);
+static void update_routes_now(void);
+static void check_for_route(struct guest_client * host);
+
+static void olsr_event1(void *foo __attribute__ ((unused)) );
+static void olsr_event2(void *foo  __attribute__ ((unused)));
+
+void update_routes_now(void) {
+  //Recalculate our own routing table RIGHT NOW
+
+  OLSR_INFO(LOG_PLUGINS, "Forcing recalculation of routing-table\n");
+
+  //sets timer to zero
+
+
+  spf_backoff_timer = NULL;
+  ///printf("timer stopped\n");
+  //actual calculation
+  olsr_calculate_routing_table();
+  //printf("updated\n");
+}
+
+struct client_list *list;
+struct interface *ifn;
+
+void ping(struct guest_client *);
+
+void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size) {
+  *params = plugin_parameters;
+  *size = ARRAYSIZE(plugin_parameters);
+}
+
+struct guest_client * get_client_by_ip(union olsr_ip_addr ip) {
+  if (list != NULL && list->client != NULL) {
+
+    if (strcmp(inet_ntoa(list->client->ip.v4), inet_ntoa(ip.v4)) == 0)
+      return list->client;
+    else
+      return get_client_by_ip(ip);
+  } else
+    return NULL;
+}
+
+#if 0
+static void *
+relay_spread_host(union olsr_ip_addr host_ip, union olsr_ip_addr master_ip, uint8_t TTL, uint8_t Hopcount) {
+  struct interface *ifp;
+  uint8_t msg_buffer[MAXMESSAGESIZE - OLSR_HEADERSIZE] __attribute__ ((aligned));
+  uint8_t *curr = msg_buffer;
+  uint8_t *length_field, *last;
+
+  OLSR_INFO(LOG_PACKET_CREATION, "Building Message Relay\n-------------------\n");
+
+  // My message Type 134:
+  pkt_put_u8(&curr, 134);
+  // validity
+  pkt_put_reltime(&curr, 20000);
+
+  length_field = curr;
+  pkt_put_u16(&curr, 0); /* put in real messagesize later */
+
+  pkt_put_ipaddress(&curr, &olsr_cnf->router_id);
+
+  // TTL
+  pkt_put_u8(&curr, TTL - 1);
+  pkt_put_u8(&curr, Hopcount + 1);
+  pkt_put_u16(&curr, get_msg_seqno());
+
+  last = msg_buffer + sizeof(msg_buffer) - olsr_cnf->ipsize;
+
+  if (TTL < 1) {
+    OLSR_DEBUG(LOG_PLUGINS, "Not relaying, TTL exceded");
+    return NULL;
+  }
+
+  // Actual message
+  //first IP to announce
+  pkt_put_ipaddress(&curr, &host_ip);
+  // second: announcing IP
+  pkt_put_ipaddress(&curr, &master_ip);
+
+  //Put in Message size
+  pkt_put_u16(&length_field, curr - msg_buffer);
+
+  OLSR_FOR_ALL_INTERFACES(ifp)
+        {
+          if (net_outbuffer_bytes_left(ifp) < curr - msg_buffer) {
+            net_output(ifp);
+            set_buffer_timer(ifp);
+          }
+          // buffer gets pushed NOW
+          net_outbuffer_push(ifp, msg_buffer, curr - msg_buffer);
+          net_output(ifp);
+          set_buffer_timer(ifp);
+        }OLSR_FOR_ALL_INTERFACES_END(ifp)
+
+  OLSR_INFO(LOG_PLUGINS, "Relayed some foo!");
+
+  return NULL;
+}
+#endif
+
+void olsr_parser(struct olsr_message *msg, struct interface *in_if __attribute__ ((unused)), union olsr_ip_addr *ipaddr,
+    enum duplicate_status status __attribute__ ((unused))) {
+  const uint8_t *curr;
+  union olsr_ip_addr ip, master_ip;
+  struct guest_client * guest;
+
+  // my MessageType
+  if (msg->type != 134) {
+    printf("recieved something else\n");
+    return;
+  }
+  OLSR_DEBUG(LOG_PLUGINS, "Recieved roaming-messagetype from %s\n", inet_ntoa(ipaddr->v4));
+  curr = msg->payload;
+  pkt_get_ipaddress(&curr, &ip);
+  pkt_get_ipaddress(&curr, &master_ip);
+
+  guest = get_client_by_ip(ip);
+
+  // Forward it --start--
+  /*
+   if (status == DUPLICATE_OLSR_MESSAGE) {
+   OLSR_INFO(LOG_PLUGINS, "Not relaying, duplicate");
+   }
+   else {
+   relay_spread_host(ip, master_ip, msg->ttl, msg->hopcnt);
+   }
+   */
+
+  // Forwarding --end--
+
+  if (guest != NULL) {
+    if ((guest->is_announced) != 0) {
+      char route_command[50];
+      OLSR_INFO(LOG_PLUGINS, "Having to revoke announcement for %s\n", inet_ntoa(guest->ip.v4));
+      guest->is_announced = 0;
+      guest->last_seen = 90.0;
+      guest->remaing_announcements = 0;
+
+      ip_prefix_list_remove(&olsr_cnf->hna_entries, &(guest->ip), olsr_netmask_to_prefix(&gw_netmask),
+          olsr_cnf->ip_version);
+      snprintf(route_command, sizeof(route_command), "route del %s dev ath0 metric 0", inet_ntoa(guest->ip.v4));
+      system(route_command);
+      single_hna(&ip, 0);
+    }
+  }
+
+  if (guest != NULL) {
+    OLSR_DEBUG(LOG_PLUGINS, "Old master: %s\n", inet_ntoa(guest->master_ip.v4));
+    OLSR_DEBUG(LOG_PLUGINS, "New master: %s\n", inet_ntoa(master_ip.v4));
+    if (memcmp(&(guest->master_ip.v4), &(master_ip.v4), sizeof(union olsr_ip_addr)) != 0) {
+      guest->master_ip = master_ip;
+      OLSR_INFO(LOG_PLUGINS, "Updating Routes because %s changed\n", inet_ntoa(guest->ip.v4));
+      update_routes_now();
+    } else {
+      struct ipaddr_str buf1, buf2;
+      OLSR_DEBUG(LOG_PLUGINS, "Not updating, because %s stayed at %s\n",
+          olsr_ip_to_string(&buf1, &guest->ip), olsr_ip_to_string(&buf2, &master_ip));
+    }
+  } else {
+    OLSR_INFO(LOG_PLUGINS, "Updating Routes for unknown client\n");
+    update_routes_now();
+  }
+
+}
+
+/**
+ * Initialize plugin
+ * Called after all parameters are passed
+ */
+int olsrd_plugin_init(void) {
+  list = (struct client_list*) olsr_malloc(sizeof(struct client_list), "client_list");
+
+  OLSR_INFO(LOG_PLUGINS, "OLSRD automated Client Roaming Plugin\n");
+
+  gw_netmask.v4.s_addr = inet_addr("255.255.255.255");
+
+  has_inet_gateway = 0;
+
+  /* create the cookie */
+  event_timer_cookie1 = olsr_alloc_cookie("cl roam: Event1", OLSR_COOKIE_TYPE_TIMER);
+  event_timer_cookie2 = olsr_alloc_cookie("cl roam: Event2", OLSR_COOKIE_TYPE_TIMER);
+
+  /* Register the GW check */
+  olsr_start_timer(1 * MSEC_PER_SEC, 0, OLSR_TIMER_PERIODIC, &olsr_event1, NULL, event_timer_cookie1);
+  olsr_start_timer(20 * MSEC_PER_SEC, 0, OLSR_TIMER_PERIODIC, &olsr_event2, NULL, event_timer_cookie2);
+
+  /* register functions with olsrd */
+  // somehow my cool new message.....
+  olsr_parser_add_function(&olsr_parser, 134);
+
+  return 1;
+}
+
+static void* ping_thread(void* guest) {
+  char ping_command[50];
+  int result;
+  struct guest_client * target = (struct guest_client *) guest;
+  target->ping_thread_done = 0;
+
+  snprintf(ping_command, sizeof(ping_command), "arping -I ath0 -w 1 -c 1 -q %s", inet_ntoa(target->ip.v4));
+  //printf("%s\n",ping_command);
+  result = system(ping_command);
+  target->ping_thread_done = 1;
+  //printf("ping thread finished\n");
+  return (void*) result;
+}
+
+static  __attribute__ ((noreturn)) void* ping_thread_infinite(void * target_void) {
+  char ping_command[50];
+  struct guest_client * target = (struct guest_client*) target_void;
+  while (1) {
+    snprintf(ping_command, sizeof(ping_command), "arping -I ath0 -q -c 10 %s", inet_ntoa(target->ip.v4));
+    system(ping_command);
+    pthread_testcancel();
+  }
+}
+
+static void ping_infinite(struct guest_client * target) {
+  int rc;
+  pthread_t thread;
+  if (target->ping_thread == 0) {
+    rc = pthread_create(&thread, NULL, ping_thread_infinite, (void *) target);
+    if (rc) {
+      printf("ERROR; return code from pthread_create() is %d\n", rc);
+      exit(-1);
+    }
+    target->ping_thread = thread;
+    OLSR_INFO(LOG_PLUGINS, "Set up ping-thread for %s\n", inet_ntoa(target->ip.v4));
+  } else
+    OLSR_INFO(LOG_PLUGINS, "Ping-thread for %s already exists!\n", inet_ntoa(target->ip.v4));
+}
+
+static void check_ping_result(void *foo) {
+  struct guest_client * host = (struct guest_client *) foo;
+
+  if (!host->ping_thread_done) {
+    OLSR_DEBUG(LOG_PLUGINS, "Ping-thread for %s not finished\n", inet_ntoa(host->ip.v4));
+
+  } else {
+    int ping_res;
+
+    olsr_stop_timer(host->arping_timer);
+    pthread_join(host->ping_thread_add, (void*) &ping_res);
+    host->arping_timer = NULL;
+    host->ping_thread_done = 0;
+    if (ping_res == 0) {
+      char route_command[50];
+      OLSR_INFO(LOG_PLUGINS, "Adding Route for %s\n", inet_ntoa(host->ip.v4));
+
+      ip_prefix_list_add(&olsr_cnf->hna_entries, &(host->ip), olsr_netmask_to_prefix(&gw_netmask));
+      host->is_announced = 1;
+      host->remaing_announcements = 15;
+
+      snprintf(route_command, sizeof(route_command), "route add %s dev ath0 metric 0", inet_ntoa(host->ip.v4));
+      system(route_command);
+      host->master_ip = olsr_cnf->router_id;
+
+      spread_host(host);
+      //This really big time will be overwritten by the next normal hna-announcement
+      single_hna(&host->ip, -1);
+
+      //Append to buffer, will be send at some time. In case it didn't arrive at the old master
+      spread_host(host);
+    } else {
+      host->last_seen += 0.5;
+      check_for_route(host);
+    }
+  }
+}
+
+static void check_for_route(struct guest_client * host) {
+  //printf("%f, %i, %x\n",host->last_seen , host->is_announced  ,host->ping_thread_add );
+  if (host->last_seen < 10.0 && !host->is_announced && host->arping_timer == NULL) {
+    int rc;
+
+    //printf("maybe add something\n");
+    if (host->arping_timer_cookie == NULL)
+      host->arping_timer_cookie = olsr_alloc_cookie("cl roam: Maybe add something", OLSR_COOKIE_TYPE_TIMER);
+    //printf("timer started\n");
+    host->arping_timer = olsr_start_timer(250, 5, OLSR_TIMER_PERIODIC, &check_ping_result, host,
+        host->arping_timer_cookie);
+    rc = pthread_create(&(host->ping_thread_add), NULL, ping_thread, (void *) host);
+  } else if ((host->last_seen > 60.0) && host->is_announced) {
+    char route_command[50];
+
+    OLSR_INFO(LOG_PLUGINS, "Removing Route for %s\n", inet_ntoa(host->ip.v4));
+    ip_prefix_list_remove(&olsr_cnf->hna_entries, &host->ip, olsr_netmask_to_prefix(&gw_netmask), olsr_cnf->ip_version);
+    snprintf(route_command, sizeof(route_command), "route del %s dev ath0 metric 0", inet_ntoa(host->ip.v4));
+    system(route_command);
+    host->is_announced = 0;
+  } else if (host->is_announced && host->remaing_announcements > 0) {
+    host->remaing_announcements--;
+    spread_host(host);
+    single_hna(&host->ip, -1);
+  }
+}
+
+static void check_client_list(struct client_list * clist) {
+  if (clist != NULL && clist->client != NULL) {
+    //ping(clist->client);
+    if (clist->client->is_announced == 1 || clist->client->ping_thread != 0) {
+      if (!check_if_associcated(clist->client)) {
+        if (clist->client->is_announced == 1) {
+          clist->client->last_seen += 5;
+        }
+        if (clist->client->ping_thread != 0) {
+          //printf("attempting to kill ping-thread\n");
+          pthread_detach(clist->client->ping_thread);
+          //pthread_kill(clist->client->ping_thread, 1);
+          //pthread_cancel(clist->client->ping_thread);
+          pthread_cancel(clist->client->ping_thread);
+          //printf("killed ping-thread\n");
+          OLSR_INFO(LOG_PLUGINS, "Killed ping-thread for %s\n", inet_ntoa(clist->client->ip.v4));
+          // clist->client->ping_thread=NULL; (not a pointer !)
+        }
+      }
+    }
+    check_for_route(clist->client);
+    check_client_list(clist->list);
+  }
+}
+
+struct guest_client * get_client_by_mac(struct client_list * clist, u_int64_t mac) {
+  if (clist != NULL && clist->client != NULL) {
+    if (clist->client->mac == mac)
+      return clist->client;
+    else
+      return get_client_by_mac(clist->list, mac);
+  } else
+    return NULL;
+}
+
+int ip_is_in_guest_list(struct client_list *l, struct guest_client * host) {
+  if (l == NULL)
+    return 0;
+  if (l->client == NULL)
+    return 0;
+  else if (inet_lnaof(l->client->ip.v4) == inet_lnaof(host->ip.v4))
+    return 1;
+  else
+    return ip_is_in_guest_list(l->list, host);
+}
+
+void check_local_leases(struct client_list * clist) {
+  check_leases(clist, "/var/dhcp.leases", 1.0);
+}
+
+void check_leases(struct client_list * clist, const char *file, float def_last_seen) {
+  char s1[50];
+  char s3[50];
+  long long int one, two, three, four, five, six;
+
+  FILE * fp = fopen(file, "r");
+  if (fp == NULL) {
+    printf("failed to open %s\n", file);
+  }
+
+  while (1) {
+    int parse = fscanf(fp, "%s %llx:%llx:%llx:%llx:%llx:%llx %s %*s %*s\n", s1, &one, &two, &three, &four, &five, &six,
+        s3);
+    if (parse == EOF)
+      break;
+    if (parse == 8) {
+      struct guest_client* user;
+      //printf ("String 3 = %s\n", s3);
+      user = (struct guest_client*) malloc(sizeof(struct guest_client));
+      inet_aton(s3, &(user->ip.v4));
+      user->mac = six | five << 8 | four << 16 | three << 24 | two << 32 | one << 40;
+      user->last_seen = def_last_seen;
+      user->is_announced = 0;
+      user->ping_thread = 0;
+      user->arping_timer = NULL;
+      user->arping_timer_cookie = NULL;
+      //printf("last seen on Add %f\n",user->last_seen);
+      add_client_to_list(clist, user);
+    }
+  }
+  fclose(fp);
+}
+
+static void check_remote_leases(struct client_list * clist) {
+  FILE *my_leases;
+  FILE *fp;
+  char s1[50];
+  char s3[50];
+  long long int one, two, three, four, five, six;
+
+  fp = fopen("/tmp/otherclient", "r");
+  if (fp == NULL) {
+    printf("failed to open %s\n", "/tmp/otherclient");
+  }
+  my_leases = fopen("/var/dhcp.leases", "a");
+  if (my_leases == NULL) {
+    printf("failed to open %s\n", "/var/dhcp.leases");
+  }
+
+  while (1) {
+    int parse = fscanf(fp, "%s %llx:%llx:%llx:%llx:%llx:%llx %s %*s %*s\n", s1, &one, &two, &three, &four, &five, &six,
+        s3);
+    if (parse == EOF)
+      break;
+    if (parse == 8) {
+      struct guest_client* user;
+      //printf ("String 3 = %s\n", s3);
+      user = (struct guest_client*) malloc(sizeof(struct guest_client));
+      inet_aton(s3, &(user->ip.v4));
+      user->mac = six | five << 8 | four << 16 | three << 24 | two << 32 | one << 40;
+      user->last_seen = 30.0;
+      user->is_announced = 0;
+      user->ping_thread = 0;
+      user->arping_timer = NULL;
+      user->arping_timer_cookie = NULL;
+      //printf("last seen on Add %f\n",user->last_seen);
+
+      if (!(ip_is_in_guest_list(clist, user))) {
+        fprintf(my_leases, "%s %llx:%llx:%llx:%llx:%llx:%llx %s * *\n", s1, one, two, three, four, five, six, s3);
+      }
+      add_client_to_list(clist, user);
+    }
+  }
+  fclose(fp);
+  fclose(my_leases);
+}
+
+static int check_if_associcated(struct guest_client *client) {
+  char s2[50];
+  float last_rx;
+  int parse;
+  uint64_t mac;
+  long long int one, two, three, four, five, six;
+
+  FILE * fp = fopen("/proc/net/madwifi/ath0/associated_sta", "r");
+  if (fp == NULL) {
+    printf("failed to open %s\n", "/proc/net/madwifi/ath0/associated_sta");
+    return EXIT_FAILURE;
+  }
+  //FILE * fp = fopen("/home/raphael/tmp/leases", "r");
+
+  while (1) {
+    parse = fscanf(fp, "macaddr: <%llx:%llx:%llx:%llx:%llx:%llx>\n", &one, &two, &three, &four, &five, &six);
+    if (parse == EOF || parse != 6)
+      break;
+    mac = six | five << 8 | four << 16 | three << 24 | two << 32 | one << 40;
+    //printf ("am at %llx\n", mac);
+    if (mac == client->mac) {
+      //printf("found it!\n");
+      fclose(fp);
+      return 1;
+    }
+    parse = fscanf(fp, " rssi %s\n", s2);
+    if (parse == EOF)
+      break;
+    parse = fscanf(fp, " last_rx %f\n", &last_rx);
+    if (parse == EOF)
+      break;
+  }
+
+  fclose(fp);
+
+  return 0;
+}
+
+static void check_associations(struct client_list * clist) {
+  char s2[50];
+  float last_rx;
+  int parse;
+
+  long long int one, two, three, four, five, six;
+  FILE * fp = fopen("/proc/net/madwifi/ath0/associated_sta", "r");
+  if (fp == NULL) {
+    printf("failed to open %s\n", "/proc/net/madwifi/ath0/associated_sta");
+  }
+  //FILE * fp = fopen("/home/raphael/tmp/leases", "r");
+
+  while (1) {
+    uint64_t mac;
+    struct guest_client* node;
+    parse = fscanf(fp, "macaddr: <%llx:%llx:%llx:%llx:%llx:%llx>\n", &one, &two, &three, &four, &five, &six);
+    if (parse == EOF || parse != 6)
+      break;
+    mac = six | five << 8 | four << 16 | three << 24 | two << 32 | one << 40;
+    //printf ("macaddr: %llx\n", mac);
+    parse = fscanf(fp, " rssi %s\n", s2);
+    if (parse == EOF)
+      break;
+    //printf ("rssi = %s\n", s2);
+    parse = fscanf(fp, " last_rx %f\n", &last_rx);
+    if (parse == EOF)
+      break;
+    //printf ("last_rx = %f\n", last_rx);
+    node = get_client_by_mac(clist, mac);
+    if (node != NULL) {
+      //printf("Sichtung!\n");
+      node->last_seen = last_rx;
+      if (node->ping_thread == 0) {
+        ping_infinite(node);
+      }
+    }
+  }
+  fclose(fp);
+}
+
+void add_client_to_list(struct client_list * clist, struct guest_client * host) {
+  if (ip_is_in_guest_list(clist, host)) {
+    free(host);
+  } else {
+    if (clist->client != NULL) {
+      struct client_list * this_one;
+      this_one = (struct client_list *) olsr_malloc(sizeof(struct client_list), "clist");
+      this_one->client = host;
+      this_one->list = clist->list;
+      clist->list = this_one;
+      OLSR_INFO(LOG_PLUGINS, "Keeping track of %s\n", inet_ntoa(host->ip.v4));
+    } else {
+      clist->client = host;
+      OLSR_INFO(LOG_PLUGINS, "Keeping track of %s\n", inet_ntoa(host->ip.v4));
+    }
+    ping_infinite(host);
+    host->arping_timer = NULL;
+    check_for_route(host);
+
+  }
+}
+
+static void check_for_new_clients(struct client_list * clist) {
+  check_local_leases(clist);
+  check_associations(clist);
+}
+
+static void* check_neighbour_host(void* neighbour) {
+  struct nbr_entry *nbr = (struct nbr_entry*) neighbour;
+  union olsr_ip_addr foobar = nbr->nbr_addr;
+
+  char wget_command[70];
+
+  snprintf(wget_command, sizeof(wget_command), "wget -T 2 -q -O /tmp/otherclient http://%s/dhcp.leases", inet_ntoa(
+      foobar.v4));
+  if (system(wget_command) == 0) {
+
+    check_remote_leases(list);
+  }
+  return NULL;
+}
+
+static void spread_host(struct guest_client * host) {
+  struct interface *ifp;
+  uint8_t msg_buffer[MAXMESSAGESIZE - OLSR_HEADERSIZE] __attribute__ ((aligned));
+  uint8_t *curr = msg_buffer;
+  uint8_t *length_field, *last;
+
+  OLSR_INFO(LOG_PACKET_CREATION, "Building HNA\n-------------------\n");
+
+  // My message Type 134:
+  pkt_put_u8(&curr, 134);
+  // hna-validity
+  pkt_put_reltime(&curr, 20000);
+
+  length_field = curr;
+  pkt_put_u16(&curr, 0); /* put in real messagesize later */
+
+  pkt_put_ipaddress(&curr, &olsr_cnf->router_id);
+
+  // TTL
+  pkt_put_u8(&curr, 3);
+  pkt_put_u8(&curr, 0);
+  pkt_put_u16(&curr, get_msg_seqno());
+
+  last = msg_buffer + sizeof(msg_buffer) - olsr_cnf->ipsize;
+
+  // Actual message
+  //first IP to announce
+  pkt_put_ipaddress(&curr, &(host->ip));
+  // second: announcing IP
+  pkt_put_ipaddress(&curr, &olsr_cnf->router_id);
+
+  //Put in Message size
+  pkt_put_u16(&length_field, curr - msg_buffer);
+
+  OLSR_FOR_ALL_INTERFACES(ifp)
+        {
+          if (net_outbuffer_bytes_left(ifp) < curr - msg_buffer) {
+            net_output(ifp);
+            set_buffer_timer(ifp);
+          }
+          // buffer gets pushed out in single_hna, or at flush-time
+          net_outbuffer_push(ifp, msg_buffer, curr - msg_buffer);
+        }OLSR_FOR_ALL_INTERFACES_END(ifp)
+
+}
+
+// sends packet immedeately!
+void single_hna(union olsr_ip_addr * ip, uint32_t vtime) {
+
+  union olsr_ip_addr subnet;
+  struct interface *ifp;
+  uint8_t msg_buffer[MAXMESSAGESIZE - OLSR_HEADERSIZE] __attribute__ ((aligned));
+  uint8_t *curr = msg_buffer;
+  uint8_t *length_field, *last;
+
+  //printf("single hna %x with time %i\n",*ip, time);
+  OLSR_INFO(LOG_PACKET_CREATION, "Building HNA\n-------------------\n");
+
+  // My message Type 134:
+  pkt_put_u8(&curr, HNA_MESSAGE);
+  // hna-validity
+  pkt_put_reltime(&curr, vtime);
+
+  length_field = curr;
+  pkt_put_u16(&curr, 0); /* put in real messagesize later */
+
+  pkt_put_ipaddress(&curr, &olsr_cnf->router_id);
+
+  // TTL
+  pkt_put_u8(&curr, 2);
+  pkt_put_u8(&curr, 0);
+  pkt_put_u16(&curr, get_msg_seqno());
+
+  last = msg_buffer + sizeof(msg_buffer) - olsr_cnf->ipsize;
+
+  inet_aton("255.255.255.255", &subnet.v4);
+  pkt_put_ipaddress(&curr, ip);
+  pkt_put_ipaddress(&curr, &subnet);
+
+  pkt_put_u16(&length_field, curr - msg_buffer);
+
+  OLSR_FOR_ALL_INTERFACES(ifp)
+        {
+          net_output(ifp);
+          net_outbuffer_push(ifp, msg_buffer, curr - msg_buffer);
+          net_output(ifp);
+          set_buffer_timer(ifp);
+        }OLSR_FOR_ALL_INTERFACES_END(ifp)
+}
+
+static void olsr_event1(void *foo __attribute__ ((unused)) ) {
+  check_for_new_clients(list);
+  check_client_list(list);
+}
+
+static void olsr_event2(void *foo  __attribute__ ((unused))) {
+  struct nbr_entry *nbr;
+
+  OLSR_FOR_ALL_NBR_ENTRIES(nbr)
+        {
+          int rc;
+          pthread_t thread;
+          rc = pthread_create(&thread, NULL, check_neighbour_host, (void *) nbr);
+          if (rc) {
+            printf("ERROR; return code from pthread_create() is %d\n", rc);
+            exit(-1);
+          }
+
+        }OLSR_FOR_ALL_NBR_ENTRIES_END();
+}
+

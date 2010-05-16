@@ -123,7 +123,8 @@ ifndef CFLAGS
     ALL_WARNINGS +=	-finline-functions-called-once
     ALL_WARNINGS +=	-funit-at-a-time
     ALL_WARNINGS +=	-fearly-inlining
-
+    ALL_WARNINGS += -fno-strict-aliasing
+    
     ifeq ($(DEBUG),0)
       ALL_WARNINGS +=	-fomit-frame-pointer
     endif

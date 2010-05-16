@@ -269,6 +269,11 @@ parse_packet(uint8_t *binary, int size, struct interface *in_if, union olsr_ip_a
           olsr_ip_to_string(&buf, from_addr), size, msg.type, msg.size);
       break;
     }
+    else if (msg.size == 0) {
+      OLSR_WARN(LOG_PACKET_PARSING, "Received a zero lengthed message from %s (typde %d), ignoring all further content of the packet!",
+          olsr_ip_to_string(&buf, from_addr), msg.type);
+      return;
+    }
 
     /*RFC 3626 section 3.4:
      *  2    If the time to live of the message is less than or equal to

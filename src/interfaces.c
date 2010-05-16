@@ -234,7 +234,6 @@ void
 remove_interface(struct interface **pinterf)
 {
   struct interface *ifp = *pinterf;
-  struct ipaddr_str buf;
 
   if (!ifp) {
     return;
@@ -254,21 +253,6 @@ remove_interface(struct interface **pinterf)
 
   /* Remove output buffer */
   net_remove_buffer(ifp);
-
-  /* Check main addr */
-  if (!olsr_cnf->fixed_origaddr && olsr_ipcmp(&olsr_cnf->router_id, &ifp->ip_addr) == 0) {
-    if (list_is_empty(&interface_head)) {
-      /* No more interfaces */
-      memset(&olsr_cnf->router_id, 0, olsr_cnf->ipsize);
-      OLSR_INFO(LOG_INTERFACE, "Removed last interface. Cleared main address.\n");
-    } else {
-
-      /* Grab the first interface in the list. */
-      olsr_cnf->router_id = list2interface(interface_head.next)->ip_addr;
-      olsr_ip_to_string(&buf, &olsr_cnf->router_id);
-      OLSR_INFO(LOG_INTERFACE, "New main address: %s\n", buf.buf);
-    }
-  }
 
   /*
    * Deregister functions for periodic message generation

@@ -38,46 +38,46 @@
  * the copyright holders.
  *
  */
-#ifndef OLSR_COMPORT_TXT_H_
-#define OLSR_COMPORT_TXT_H_
 
-#include "common/autobuf.h"
-#include "common/avl.h"
-#include "olsr_ip_acl.h"
+#ifndef _OLSRD_PLUGIN_TEST
+#define _OLSRD_PLUGIN_TEST
 
-#include "olsr_comport.h"
+#include "plugin.h"
+#include "olsr.h"
 
-enum olsr_txtcommand_result {
-  CONTINUE,
-  CONTINOUS,
-  QUIT,
-  ABUF_ERROR,
-  UNKNOWN,
+#define INET_NET       0
+#define INET_PREFIX    0
+
+#define PROCENTRY_ROUTE "/proc/net/route"
+
+
+#define CLIENT_ROAM_MESSAGE   134
+#define MAX_MESSAGE           134
+
+
+
+/*
+ * Client Roam Plugin message
+ */
+
+enum cl_roam_status_types {
+  CL_ROAM_PINGABLE,            /* 0 */
+  CL_ROAM_NOT_PINGABLE,            /* 1 */
 };
 
-typedef enum olsr_txtcommand_result (*olsr_txthandler)
-    (struct comport_connection *con, const char *command, const char *parameter);
 
-struct olsr_txtcommand {
-  struct avl_node node;
-  struct ip_acl *acl;
 
-  olsr_txthandler handler;
-};
 
-AVLNODE2STRUCT(txt_tree2cmd, olsr_txtcommand, node);
 
-void olsr_com_init_txt(void);
-void olsr_com_destroy_txt(void);
 
-struct olsr_txtcommand *EXPORT(olsr_com_add_normal_txtcommand) (
-    const char *command, olsr_txthandler handler);
-struct olsr_txtcommand *EXPORT(olsr_com_add_help_txtcommand) (
-    const char *command, olsr_txthandler handler);
-void EXPORT(olsr_com_remove_normal_txtcommand) (struct olsr_txtcommand *cmd);
-void EXPORT(olsr_com_remove_help_txtcommand) (struct olsr_txtcommand *cmd);
-void olsr_com_parse_txt(struct comport_connection *con, unsigned int flags);
-enum olsr_txtcommand_result olsr_com_handle_txtcommand(struct comport_connection *con,
-    char *command, char *parameter);
 
-#endif /* OLSR_COMPORT_TXT_H_ */
+int check_gw(union olsr_ip_addr *net, union olsr_ip_addr *mask);
+
+#endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

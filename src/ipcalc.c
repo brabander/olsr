@@ -130,7 +130,7 @@ netmask_to_prefix(const uint8_t * adr, int len)
     default:
       // removed because of cfg-checker
       // OLSR_WARN(LOG_??, "Got bogus netmask %s\n", ip_to_string(len == 4 ? AF_INET : AF_INET6, &buf, (const union olsr_ip_addr *)adr));
-      prefix = UCHAR_MAX;
+      prefix = len*8;
       break;
     }
   }

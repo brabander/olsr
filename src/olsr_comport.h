@@ -94,6 +94,7 @@ struct comport_connection {
   int fd;
   enum connection_state state;
   enum http_header_type send_as;
+  const char *http_contenttype;
   struct timer_entry *timeout;
   bool is_http, show_echo;
   struct autobuf in;
