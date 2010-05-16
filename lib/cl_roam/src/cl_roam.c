@@ -328,7 +328,7 @@ int olsrd_plugin_init(void) {
 
 static void* ping_thread(void* guest) {
   char ping_command[50];
-  int result;
+  ssize_t result;
   struct guest_client * target = (struct guest_client *) guest;
   target->ping_thread_done = 0;
 
@@ -372,7 +372,8 @@ static void check_ping_result(void *foo) {
     OLSR_DEBUG(LOG_PLUGINS, "Ping-thread for %s not finished\n", inet_ntoa(host->ip.v4));
 
   } else {
-    int ping_res;
+    /* should be same size as (void*) */
+    ssize_t ping_res;
 
     olsr_stop_timer(host->arping_timer);
     pthread_join(host->ping_thread_add, (void*) &ping_res);
