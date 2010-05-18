@@ -511,13 +511,18 @@ getsocket6(int bufspace, struct interface *ifp)
   memset(&sin, 0, sizeof(sin));
   sin.sin6_family = AF_INET6;
   sin.sin6_port = htons(olsr_cnf->olsrport);
+  sin.sin6_scope_id = ifp->if_index;
 
   if(bufspace <= 0) {
     memcpy(&sin.sin6_addr, &ifp->int6_addr.sin6_addr, sizeof(struct in6_addr));
   }
 
   if (bind(sock, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
-    perror("bind");
+    struct ipaddr_str buf;
+    OLSR_PRINTF(1, "Error, cannot bind address %s to %s-socket: %s (%d)\n",
+        inet_ntop(sin.sin6_family, &sin.sin6_addr, buf.buf, sizeof(buf)),
+        bufspace <= 0 ? "transmit" : "receive",
+        strerror(errno), errno);
     syslog(LOG_ERR, "bind: %m");
     close(sock);
     return (-1);
