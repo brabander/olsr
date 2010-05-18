@@ -183,7 +183,7 @@ static void rtnetlink_read(int sock, void *data __attribute__ ((unused)), unsign
       return;
     }
 
-    fprintf(stderr, "Netlink message: %x\n", nlh->nlmsg_type);
+    OLSR_PRINTF(3, "Netlink message received: type %x\n", nlh->nlmsg_type);
     if ((nlh->nlmsg_type == RTM_NEWLINK) || ( nlh->nlmsg_type == RTM_DELLINK)) {
       /* handle ifup/ifdown */
       netlink_process_link(nlh);
