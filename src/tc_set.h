@@ -62,6 +62,7 @@ struct tc_edge_entry {
   union olsr_ip_addr T_dest_addr;      /* edge_node key */
   struct tc_edge_entry *edge_inv;      /* shortcut, used during SPF calculation */
   struct tc_entry *tc;                 /* backpointer to owning tc entry */
+  struct link_entry *link;             /* back pointer for link edges */
   olsr_linkcost cost;                  /* metric for tc received by this tc */
   olsr_linkcost common_cost;           /* common metric of both edges used for SPF calculation */
   unsigned int is_virtual:1;           /* 1 if this is a virtual edge created by the neighbors TC ? */

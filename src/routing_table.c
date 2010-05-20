@@ -460,6 +460,15 @@ olsr_delete_rt_path(struct rt_path *rtp)
   /* remove from the originator tree */
   if (rtp->rtp_rt) {
     avl_delete(&rtp->rtp_rt->rt_path_tree, &rtp->rtp_tree_node);
+    /* clean up rt_best */
+    if (rtp->rtp_rt->rt_best == rtp) {
+      if (rtp->rtp_rt->rt_path_tree.count) {
+        olsr_rt_best(rtp->rtp_rt);
+      }
+      else {
+        rtp->rtp_rt->rt_best = NULL;
+      }
+    }
     rtp->rtp_rt = NULL;
   }
 

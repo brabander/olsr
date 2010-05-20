@@ -457,6 +457,10 @@ txtinfo_routes(struct comport_connection *con,
 
   /* Walk the route table */
   OLSR_FOR_ALL_RT_ENTRIES(rt) {
+    if (!rt->rt_best) {
+      /* ignore entries without paths, they will be erased soon */
+      continue;
+    }
     olsr_ip_prefix_to_string(&buf_destprefix, &rt->rt_dst);
     olsr_ip_to_string(&buf_neighip, &rt->rt_best->rtp_nexthop.gateway);
     snprintf(buf_hopcount, sizeof(buf_hopcount), "%d", rt->rt_best->rtp_metric.hops);

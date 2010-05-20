@@ -278,6 +278,8 @@ olsr_delete_link_entry(struct link_entry *link)
    * Delete the corresponding tc-edge for that link.
    */
   if (link->link_tc_edge) {
+    /* remove backpointer in tc edge */
+    link->link_tc_edge->link = NULL;
     olsr_delete_tc_edge_entry(link->link_tc_edge);
     link->link_tc_edge = NULL;
 
@@ -524,6 +526,9 @@ add_link_entry(const union olsr_ip_addr *local,
   if (link->link_tc_edge == NULL) {
     link->link_tc_edge = olsr_add_tc_edge_entry(tc_myself, remote_main, 0);
   }
+
+  /* set backpointer */
+  link->link_tc_edge->link = link;
 
   /*
    * Add the rt_path for the link-end. This is an optimization

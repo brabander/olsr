@@ -595,7 +595,9 @@ walk_timers(uint32_t * last_run)
                    timer, timer->timer_cb_context, (unsigned int)*last_run, olsr_wallclock_string());
 
         /* This timer is expired, call into the provided callback function */
+        timer->timer_in_callback = true;
         timer->timer_cb(timer->timer_cb_context);
+        timer->timer_in_callback = false;
 
         /* Only act on actually running timers */
         if (timer->timer_running) {
@@ -611,6 +613,10 @@ walk_timers(uint32_t * last_run)
             /* Singleshot timers are stopped */
             olsr_stop_timer(timer);
           }
+        }
+        else {
+          /* free memory */
+          olsr_cookie_free(timer_mem_cookie, timer);
         }
 
         timers_fired++;
@@ -820,7 +826,9 @@ olsr_stop_timer(struct timer_entry *timer)
   timer->timer_running = false;
   olsr_cookie_usage_decr(timer->timer_cookie);
 
-  olsr_cookie_free(timer_mem_cookie, timer);
+  if (!timer->timer_in_callback) {
+    olsr_cookie_free(timer_mem_cookie, timer);
+  }
 }
 
 /**

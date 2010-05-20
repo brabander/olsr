@@ -168,6 +168,16 @@ olsr_change_myself_tc(void)
       return;
     }
 
+    /* flush local edges */
+    OLSR_FOR_ALL_LINK_ENTRIES(entry) {
+      if (entry->link_tc_edge) {
+        /* clean up local edges if necessary */
+        entry->link_tc_edge->link = NULL;
+        olsr_delete_tc_edge_entry(entry->link_tc_edge);
+        entry->link_tc_edge = NULL;
+      }
+    } OLSR_FOR_ALL_LINK_ENTRIES_END(link)
+
     /*
      * Flush our own tc_entry.
      */
@@ -188,16 +198,18 @@ olsr_change_myself_tc(void)
   tc_myself = olsr_add_tc_entry(&olsr_cnf->router_id);
   olsr_lock_tc_entry(tc_myself);
 
-  OLSR_FOR_ALL_LINK_ENTRIES(entry) {
-
-    /**
-     * check if a main ip change destroyed our TC entries
-     */
-    if (main_ip_change || entry->link_tc_edge == NULL) {
-      struct nbr_entry *ne = entry->neighbor;
-      entry->link_tc_edge = olsr_add_tc_edge_entry(tc_myself, &ne->nbr_addr, 0);
-    }
-  } OLSR_FOR_ALL_LINK_ENTRIES_END(link);
+  if (main_ip_change) {
+    OLSR_FOR_ALL_LINK_ENTRIES(entry) {
+      /**
+       * check if a main ip change destroyed our TC entries
+       */
+      if (entry->link_tc_edge == NULL) {
+        struct nbr_entry *ne = entry->neighbor;
+        entry->link_tc_edge = olsr_add_tc_edge_entry(tc_myself, &ne->nbr_addr, 0);
+        entry->link_tc_edge->link = entry;
+      }
+    } OLSR_FOR_ALL_LINK_ENTRIES_END(link);
+  }
   changes_topology = true;
 }
 
@@ -468,6 +480,11 @@ olsr_delete_tc_edge_entry(struct tc_edge_entry *tc_edge)
 #if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
 #endif
+
+  if (tc_edge->link) {
+    /* don't remove tc_edge for link entry */
+    return;
+  }
 
   tc_edge->is_virtual = 1;
 

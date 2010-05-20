@@ -71,7 +71,8 @@ struct timer_entry {
   unsigned int timer_period;           /* set for periodical timers (relative time) */
   struct olsr_cookie_info *timer_cookie;       /* used for diag stuff */
   uint8_t timer_jitter_pct;            /* the jitter expressed in percent */
-  bool timer_running;                 /* misc flags */
+  bool timer_running;                  /* misc flags */
+  bool timer_in_callback;              /* true if callback is active */
   unsigned int timer_random;           /* cache random() result for performance reasons */
   timer_cb_func timer_cb;              /* callback function */
   void *timer_cb_context;              /* context pointer */
