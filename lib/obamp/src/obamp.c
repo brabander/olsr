@@ -305,6 +305,7 @@ activate_tree_link(struct OBAMP_tree_link_ack *ack)
       if (tmp->neighbor_ip_addr.v4.s_addr == ack->router_id.v4.s_addr) {
 
         tmp->isTree = 1;
+        myState->TreeHeartBeat = TREE_HEARTBEAT;
         OLSR_DEBUG(LOG_PLUGINS, "Tree link to %s activated", ip4_to_string(&buf, tmp->neighbor_ip_addr.v4));
         return;
 
@@ -349,7 +350,13 @@ tree_link_req(struct in_addr *addr)
 
   struct OBAMP_tree_link_req req;
   struct sockaddr_in si_other;
+  #if !defined(REMOVE_LOG_DEBUG)
+  struct ipaddr_str buf;
+  #endif
+ 
 
+  OLSR_DEBUG(LOG_PLUGINS, "Sending tree request to: %s", ip4_to_string(&buf, *addr));
+ 
   memset(&req, 0, sizeof(req));
   req.MessageID = OBAMP_TREE_REQ;
   //TODO: refresh IP address
@@ -921,7 +928,6 @@ manage_tree_create(char *packet)
         {
           OLSR_DEBUG(LOG_PLUGINS, "Receiving a tree message from a link that is not parent");
 	  if (DoIHaveATreeLink() == 0 ) {
-          OLSR_DEBUG(LOG_PLUGINS, "Receiving a tree message from a link that is not parent");
           OLSR_DEBUG(LOG_PLUGINS,"Calling Reset Tree Links"); 
 	  reset_tree_links();
           myState->ParentId.v4 = msg->router_id.v4;
@@ -945,9 +951,11 @@ manage_tree_create(char *packet)
             tmp = list_entry(pos, struct ObampNode, list);
 
             if (tmp->isMesh == 1 && memcmp(&tmp->neighbor_ip_addr.v4, &msg->router_id.v4, sizeof(struct in_addr)) != 0) {       //Is neighbor and not the originator of this tree create
+		if (DoIHaveATreeLink() == 1 ) { //I forward only if I have a link tree to the core ready
               tree_create_forward_to(&tmp->neighbor_ip_addr.v4, msg);
               OLSR_DEBUG(LOG_PLUGINS, "FORWARDING TREE CREATE ORIGINATOR %s TO node %s ", ip4_to_string(&buf2, msg->router_id.v4),
                          ip4_to_string(&buf, tmp->neighbor_ip_addr.v4));
+		}
 
             }
           }
