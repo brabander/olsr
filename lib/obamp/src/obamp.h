@@ -67,11 +67,11 @@
 #define PLUGIN_DESCR 		"OBAMP"
 
 #define OBAMP_JITTER         	25      /* percent */
-#define OBAMP_ALIVE_EIVAL    	5
+#define OBAMP_ALIVE_EIVAL    	3
 #define OBAMP_MESH_CREATE_IVAL	5       //Seconds
-#define OBAMP_TREE_CREATE_IVAL	10      //seconds
-#define TREE_HEARTBEAT    	25      //seconds
-#define OBAMP_OUTER_TREE_CREATE_IVAL    30      //seconds
+#define OBAMP_TREE_CREATE_IVAL	8      //seconds
+#define TREE_HEARTBEAT    	20      //seconds
+#define OBAMP_OUTER_TREE_CREATE_IVAL    60      //seconds
 #define _MESH_LOCK_		10      //seconds
 
 #define _Texpire_		15      //time in seconds before expire a neighbor
@@ -177,6 +177,7 @@ struct ObampNodeState {
 
    */
   int TreeHeartBeat;
+  int TreeRequestDelay;
 };
 
 // OBAMP message types

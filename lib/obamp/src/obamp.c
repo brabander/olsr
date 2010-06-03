@@ -347,7 +347,7 @@ obamp_hello(struct in_addr *addr)
 static void
 tree_link_req(struct in_addr *addr)
 {
-
+  if (myState->TreeRequestDelay == 0) { 
   struct OBAMP_tree_link_req req;
   struct sockaddr_in si_other;
   #if !defined(REMOVE_LOG_DEBUG)
@@ -370,7 +370,10 @@ tree_link_req(struct in_addr *addr)
   si_other.sin_family = AF_INET;
   si_other.sin_port = htons(OBAMP_SIGNALLING_PORT);
   si_other.sin_addr = *addr;
+  myState->TreeRequestDelay=5;
   sendto(sdudp, &req, sizeof(struct OBAMP_tree_link_req), 0, (struct sockaddr *)&si_other, sizeof(si_other));
+}
+else OLSR_DEBUG(LOG_PLUGINS,"Do not send Tree Link Request because there is another one running");
 }
 
 static void
@@ -1412,6 +1415,9 @@ purge_nodes(void *x)
   if (myState->TreeHeartBeat > 0)
     myState->TreeHeartBeat--;
 
+  if (myState->TreeRequestDelay > 0)
+    myState->TreeRequestDelay--;
+
   if (myState->TreeHeartBeat == 0 && myState->iamcore == 0){ 
     OLSR_DEBUG(LOG_PLUGINS,"Calling Reset Tree Links"); 
     reset_tree_links();
@@ -1649,6 +1655,7 @@ InitOBAMP(void)
   myState = olsr_malloc(sizeof(struct ObampNodeState), "OBAMPNodeState");
   myState->iamcore = 1;
   myState->TreeHeartBeat = 0;
+  myState->TreeRequestDelay = 0;
   memcpy(&myState->myipaddr.v4, &olsr_cnf->router_id, olsr_cnf->ipsize);
   myState->CoreAddress = myState->myipaddr;
 
