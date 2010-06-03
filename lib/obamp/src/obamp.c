@@ -911,7 +911,6 @@ manage_tree_create(char *packet)
       if ( ((msg->SequenceNumber > myState->TreeCreateSequenceNumber) && ((msg->SequenceNumber - myState->TreeCreateSequenceNumber ) <= 127)) || ((myState->TreeCreateSequenceNumber > msg->SequenceNumber) && ((myState->TreeCreateSequenceNumber - msg->SequenceNumber) > 127 ))    /*myState->TreeCreateSequenceNumber < msg->SequenceNumber*/) {    //If tree create is not a duplicate
         OLSR_DEBUG(LOG_PLUGINS, "myState->TreeCreateSequenceNumber < msg->SequenceNumber --- %d < %d",myState->TreeCreateSequenceNumber,msg->SequenceNumber);
 	myState->TreeCreateSequenceNumber = msg->SequenceNumber;
-        myState->TreeHeartBeat = TREE_HEARTBEAT;
 
 	//A bug was fixed here a battlemeshv3
         //myState->OldParentId.v4 = myState->ParentId.v4;
@@ -934,6 +933,9 @@ manage_tree_create(char *packet)
 	  
 	  }
         }
+	else { //Receiving a TreeCreate from my parent so I can refresh hearthbeat
+        myState->TreeHeartBeat = TREE_HEARTBEAT;
+	}
         
 	//FORWARD the tree message on the mesh
 	if (list_empty(&ListOfObampNodes) == 0) {       //if the list is NOT empty
