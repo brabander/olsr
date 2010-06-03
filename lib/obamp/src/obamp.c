@@ -810,15 +810,18 @@ forward_obamp_data(char *buffer)
 
 #if !defined(REMOVE_LOG_DEBUG)
   struct ipaddr_str buf;
+  struct ipaddr_str buf2;
 #endif
   struct ObampNode *tmp;               //temp pointers used when parsing the list
   struct list_head *pos;
   struct OBAMP_data_message4 *data_msg;
-
   struct sockaddr_in si_other;
+  struct in_addr temporary;
 
 
   data_msg = (struct OBAMP_data_message4 *)buffer;
+  temporary.s_addr  = data_msg->last_hop;
+  data_msg->last_hop = myState->myipaddr.v4.s_addr;
 
   if (list_empty(&ListOfObampNodes) == 0) {     //if the list is NOT empty
 
@@ -826,10 +829,9 @@ forward_obamp_data(char *buffer)
     list_for_each(pos, &ListOfObampNodes) {
       tmp = list_entry(pos, struct ObampNode, list);
 
-      if (tmp->isTree == 1 && memcmp(&tmp->neighbor_ip_addr.v4, &data_msg->last_hop, sizeof(struct in_addr)) != 0) {
-
+      if (tmp->isTree == 1 && memcmp(&tmp->neighbor_ip_addr.v4, &temporary.s_addr, 4) != 0) {
+        OLSR_DEBUG(LOG_PLUGINS, "FORWARDING OBAMP DATA TO node %s because come from %s", ip4_to_string(&buf, tmp->neighbor_ip_addr.v4), ip4_to_string(&buf2,temporary));
         //FORWARD DATA
-        data_msg->last_hop = myState->myipaddr.v4.s_addr;
 
 
         memset((char *)&si_other, 0, sizeof(si_other));
@@ -839,7 +841,6 @@ forward_obamp_data(char *buffer)
         //sendto(sdudp, data_msg, sizeof(struct OBAMP_data_message), 0, (struct sockaddr *)&si_other, sizeof(si_other));
 	sendto(sdudp, data_msg, 17+data_msg->datalen, 0, (struct sockaddr *)&si_other, sizeof(si_other));
 
-        OLSR_DEBUG(LOG_PLUGINS, "FORWARDING OBAMP DATA TO node %s ", ip4_to_string(&buf, tmp->neighbor_ip_addr.v4));
 
       }
     }
