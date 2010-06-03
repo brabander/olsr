@@ -565,6 +565,7 @@ reset_tree_links(void)
   struct ObampNode *tmp;
   struct list_head *pos;
 
+  OLSR_DEBUG(LOG_PLUGINS,"Reset Tree Links Now");
   if (list_empty(&ListOfObampNodes) == 0) {     //if the list is NOT empty
 
     list_for_each(pos, &ListOfObampNodes) {
@@ -621,7 +622,8 @@ CoreElection(void)
         myState->CoreAddress = myState->myipaddr;
         myState->iamcore = 1;
         myState->TreeCreateSequenceNumber = 0;
-        reset_tree_links();
+        OLSR_DEBUG(LOG_PLUGINS,"Calling Reset Tree Links"); 
+	reset_tree_links();
         OLSR_DEBUG(LOG_PLUGINS, "I'm the core");
       }
     } else {
@@ -630,7 +632,8 @@ CoreElection(void)
       } else {                  //core changed
         myState->iamcore = 0;
         myState->CoreAddress.v4.s_addr = smallestIP;
-        reset_tree_links();
+        OLSR_DEBUG(LOG_PLUGINS,"Calling Reset Tree Links"); 
+	reset_tree_links();
         OLSR_DEBUG(LOG_PLUGINS, "CoreElection: current Core is - %s", ip4_to_string(&buf, tmp->neighbor_ip_addr.v4));
       }
     }
@@ -642,6 +645,7 @@ CoreElection(void)
     myState->CoreAddress = myState->myipaddr;
     myState->iamcore = 1;
     myState->TreeCreateSequenceNumber = 0;
+    OLSR_DEBUG(LOG_PLUGINS,"Calling Reset Tree Links"); 
     reset_tree_links();
 
 
@@ -877,7 +881,6 @@ static void
 manage_tree_create(char *packet)
 {
 
-
   struct OBAMP_tree_create *msg;
 
 #if !defined(REMOVE_LOG_DEBUG)
@@ -887,7 +890,7 @@ manage_tree_create(char *packet)
 
   struct ObampNode *tmp;               //temp pointers used when parsing the list
   struct list_head *pos;
-
+  OLSR_DEBUG(LOG_PLUGINS,"manage_tree_create");
   msg = (struct OBAMP_tree_create *)packet;
 
   if (msg->MessageID != OBAMP_TREECREATE) {
@@ -903,23 +906,37 @@ manage_tree_create(char *packet)
     if (myState->iamcore == 1) {        //I'm core and receiving tree create over a loop
       return;
     } else {
-      if (myState->TreeCreateSequenceNumber < msg->SequenceNumber) {    //If tree create is not a duplicate
-        myState->TreeCreateSequenceNumber = msg->SequenceNumber;
+
+
+      if ( ((msg->SequenceNumber > myState->TreeCreateSequenceNumber) && ((msg->SequenceNumber - myState->TreeCreateSequenceNumber ) <= 127)) || ((myState->TreeCreateSequenceNumber > msg->SequenceNumber) && ((myState->TreeCreateSequenceNumber - msg->SequenceNumber) > 127 ))    /*myState->TreeCreateSequenceNumber < msg->SequenceNumber*/) {    //If tree create is not a duplicate
+        OLSR_DEBUG(LOG_PLUGINS, "myState->TreeCreateSequenceNumber < msg->SequenceNumber --- %d < %d",myState->TreeCreateSequenceNumber,msg->SequenceNumber);
+	myState->TreeCreateSequenceNumber = msg->SequenceNumber;
         myState->TreeHeartBeat = TREE_HEARTBEAT;
 
+	//A bug was fixed here a battlemeshv3
+        //myState->OldParentId.v4 = myState->ParentId.v4;
+        //myState->ParentId.v4 = msg->router_id.v4;
 
-        myState->OldParentId.v4 = myState->ParentId.v4;
-        myState->ParentId.v4 = msg->router_id.v4;
-
-        if (memcmp(&myState->OldParentId.v4, &myState->ParentId.v4, sizeof(struct in_addr)) != 0)       //If it changed
+        //if (memcmp(&myState->OldParentId.v4, &myState->ParentId.v4, sizeof(struct in_addr)) != 0)       //If it changed
+        if (memcmp(&msg->router_id.v4, &myState->ParentId.v4, sizeof(struct in_addr)) != 0)       //If it changed
         {
-          OLSR_DEBUG(LOG_PLUGINS, "Parent changed requesting tree link");
-          reset_tree_links();
+          OLSR_DEBUG(LOG_PLUGINS, "Receiving a tree message from a link that is not parent");
+	  if (DoIHaveATreeLink() == 0 ) {
+          OLSR_DEBUG(LOG_PLUGINS, "Receiving a tree message from a link that is not parent");
+          OLSR_DEBUG(LOG_PLUGINS,"Calling Reset Tree Links"); 
+	  reset_tree_links();
           myState->ParentId.v4 = msg->router_id.v4;
           myState->OldParentId.v4 = myState->ParentId.v4;
           tree_link_req(&msg->router_id.v4);
+	  }
+	  else {
+	  //I have a tree link already, evaluate new parent ??
+	  
+	  }
         }
-        if (list_empty(&ListOfObampNodes) == 0) {       //if the list is NOT empty
+        
+	//FORWARD the tree message on the mesh
+	if (list_empty(&ListOfObampNodes) == 0) {       //if the list is NOT empty
 
           //Scroll the list
           list_for_each(pos, &ListOfObampNodes) {
@@ -936,6 +953,8 @@ manage_tree_create(char *packet)
           OLSR_DEBUG(LOG_PLUGINS, "Very strange, list cannot be empty here !");
         }
       } else {
+	
+        OLSR_DEBUG(LOG_PLUGINS, "myState->TreeCreateSequenceNumber < msg->SequenceNumber --- %d < %d",myState->TreeCreateSequenceNumber,msg->SequenceNumber);
         OLSR_DEBUG(LOG_PLUGINS, "DISCARDING DUP TREE CREATE");
       }
     }
@@ -1382,10 +1401,10 @@ purge_nodes(void *x)
   if (myState->TreeHeartBeat > 0)
     myState->TreeHeartBeat--;
 
-  if (myState->TreeHeartBeat == 0 && myState->iamcore == 0)
+  if (myState->TreeHeartBeat == 0 && myState->iamcore == 0){ 
+    OLSR_DEBUG(LOG_PLUGINS,"Calling Reset Tree Links"); 
     reset_tree_links();
-
-
+    }
 
 //OLSR_DEBUG(LOG_PLUGINS,"OBAMP: Timer Expired Purging Nodes");
 
