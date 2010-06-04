@@ -588,6 +588,8 @@ reset_tree_links(void)
 
   memset(&myState->ParentId.v4, 0, sizeof(myState->ParentId.v4));
   memset(&myState->OldParentId.v4, 1, sizeof(myState->OldParentId.v4));
+  myState->TreeCreateSequenceNumber=0;
+
 
 };
 
