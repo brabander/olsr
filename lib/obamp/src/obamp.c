@@ -919,7 +919,7 @@ manage_tree_create(char *packet)
     } else {
 
 
-      if ( ((msg->SequenceNumber > myState->TreeCreateSequenceNumber) && ((msg->SequenceNumber - myState->TreeCreateSequenceNumber ) <= 127)) || ((myState->TreeCreateSequenceNumber > msg->SequenceNumber) && ((myState->TreeCreateSequenceNumber - msg->SequenceNumber) > 127 ))    /*myState->TreeCreateSequenceNumber < msg->SequenceNumber*/) {    //If tree create is not a duplicate
+      if ( (((msg->SequenceNumber > myState->TreeCreateSequenceNumber) && ((msg->SequenceNumber - myState->TreeCreateSequenceNumber ) <= 127)) || ((myState->TreeCreateSequenceNumber > msg->SequenceNumber) && ((myState->TreeCreateSequenceNumber - msg->SequenceNumber) > 127 ))    /*myState->TreeCreateSequenceNumber < msg->SequenceNumber*/) || myState->TreeCreateSequenceNumber == 0 ) {    //If tree create is not a duplicate
         OLSR_DEBUG(LOG_PLUGINS, "myState->TreeCreateSequenceNumber < msg->SequenceNumber --- %d < %d",myState->TreeCreateSequenceNumber,msg->SequenceNumber);
 	myState->TreeCreateSequenceNumber = msg->SequenceNumber;
 
