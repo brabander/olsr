@@ -765,6 +765,43 @@ decap_data(char *buffer)
 
 }
 
+
+
+static int
+CheckDataFromTreeLink(char *buffer)
+{
+
+  struct ObampNode *tmp;               //temp pointers used when parsing the list
+  struct list_head *pos;
+  struct OBAMP_data_message4 *data_msg;
+
+  data_msg = (struct OBAMP_data_message4 *)buffer;
+
+  if (list_empty(&ListOfObampNodes) == 0) {     //if the list is NOT empty
+
+    //Scroll the list
+    list_for_each(pos, &ListOfObampNodes) {
+      tmp = list_entry(pos, struct ObampNode, list);
+      //Scroll the list until we find the entry relative to the last hop of the packet we are processing
+      if (memcmp(&tmp->neighbor_ip_addr.v4, &data_msg->last_hop, sizeof(struct in_addr)) == 0) {
+
+        if (tmp->isTree == 1) {  //OK we receive data from a neighbor that we have a tree link with
+          return 1;
+        }
+
+	else{
+          OLSR_DEBUG(LOG_PLUGINS, "DISCARDING DATA PACKET SENT BY NOT TREE NEIGHBOR");
+          return 0;
+	}
+      }
+    }
+  }
+
+  return 0;
+
+}
+
+
 static int
 CheckDupData(char *buffer)
 {
@@ -1012,7 +1049,7 @@ ObampSignalling(int skfd, void *data __attribute__ ((unused)), unsigned int flag
     case OBAMP_DATA:
       OLSR_DEBUG(LOG_PLUGINS, "OBAMP Received OBAMP_DATA from host %s, port %d\n", text_buffer, ntohs(addr.sin_port));
 
-      if (CheckDupData(buffer)) {
+      if (CheckDupData(buffer) && CheckDataFromTreeLink(buffer) ) {
         forward_obamp_data(buffer);
         decap_data(buffer);
       }
