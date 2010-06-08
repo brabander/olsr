@@ -66,8 +66,10 @@ olsr_print_syslog(int level, const char *format, ...)
 
   switch (level) {
   case (SEVERITY_DEBUG):
+/* LOG_DEBUG does not seem to work
     linux_level = LOG_DEBUG;
     break;
+*/
   case (SEVERITY_INFO):
     linux_level = LOG_INFO;
     break;
