@@ -68,13 +68,13 @@
 
 #define OBAMP_JITTER         	25      /* percent */
 #define OBAMP_ALIVE_EIVAL    	3
-#define OBAMP_MESH_CREATE_IVAL	5       //Seconds
-#define OBAMP_TREE_CREATE_IVAL	8      //seconds
-#define TREE_HEARTBEAT    	20      //seconds
-#define OBAMP_OUTER_TREE_CREATE_IVAL    60      //seconds
-#define _MESH_LOCK_		10      //seconds
+#define OBAMP_MESH_CREATE_IVAL	1       //Seconds
+#define OBAMP_TREE_CREATE_IVAL	2      //seconds
+#define TREE_HEARTBEAT    	5      //seconds
+#define OBAMP_OUTER_TREE_CREATE_IVAL    6      //seconds
+#define _MESH_LOCK_		3      //seconds
 
-#define _Texpire_		15      //time in seconds before expire a neighbor
+#define _Texpire_		7     //time in seconds before expire a neighbor
 #define _Texpire_timer_		1       //time in seconds to parse the list decrement and purge
 
 
