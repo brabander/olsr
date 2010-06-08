@@ -624,7 +624,7 @@ isetipv6src: TOK_IPV6SRC TOK_IPV6_ADDR
 
   PARSER_DEBUG_PRINTF("\tIPv6 src prefix: %s\n", $2->string);
 
-  if (olsr_string_to_prefix(AF_INET6, &pr6, $2->string) <= 0) {
+  if (olsr_string_to_prefix(AF_INET6, &pr6, $2->string)) {
     fprintf(stderr, "isetipv6src: Failed converting IP prefix %s\n", $2->string);
     YYABORT;
   }
