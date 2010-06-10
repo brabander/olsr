@@ -984,7 +984,6 @@ manage_tree_create(char *packet)
         }
 	else { //Receiving a TreeCreate from my parent so I can refresh hearthbeat
         myState->TreeHeartBeat = TREE_HEARTBEAT;
-	}
         
 	//FORWARD the tree message on the mesh
 	if (list_empty(&ListOfObampNodes) == 0) {       //if the list is NOT empty
@@ -1005,7 +1004,9 @@ manage_tree_create(char *packet)
         } else {
           OLSR_DEBUG(LOG_PLUGINS, "Very strange, list cannot be empty here !");
         }
-      } else {
+       }
+      } //END IF TREE CREATE IS NOT A DUPLICATE 
+      else {
 	
         OLSR_DEBUG(LOG_PLUGINS, "myState->TreeCreateSequenceNumber < msg->SequenceNumber --- %d < %d",myState->TreeCreateSequenceNumber,msg->SequenceNumber);
         OLSR_DEBUG(LOG_PLUGINS, "DISCARDING DUP TREE CREATE");
