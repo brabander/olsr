@@ -1850,7 +1850,7 @@ InitOBAMP(void)
 
 //start timer for tree create procedure
   unsolicited_tree_destroy_timer =
-    olsr_start_timer(6 * MSEC_PER_SEC, OBAMP_JITTER, OLSR_TIMER_PERIODIC, &unsolicited_tree_destroy, NULL,
+    olsr_start_timer(30 * MSEC_PER_SEC, OBAMP_JITTER, OLSR_TIMER_PERIODIC, &unsolicited_tree_destroy, NULL,
                      unsolicited_tree_destroy_timer_cookie);
 
 //Create udp server socket for OBAMP signalling and register it to the scheduler
