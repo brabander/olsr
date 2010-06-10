@@ -121,6 +121,7 @@ void purge_nodes(void *para);
 void mesh_create(void *para);
 void tree_create(void *para);
 void outer_tree_create(void *para);
+void unsolicited_tree_destroy(void *para);
 
 int addObampNode4(struct in_addr *ipv4, u_int8_t status);
 

@@ -576,6 +576,28 @@ DoIHaveATreeLink(void)
   return 0;
 }
 
+
+void
+unsolicited_tree_destroy(void *x)
+{
+
+  //struct ipaddr_str buf;
+  struct ObampNode *tmp;
+  struct list_head *pos;
+
+  if (list_empty(&ListOfObampNodes) == 0) {     //if the list is NOT empty
+
+    list_for_each(pos, &ListOfObampNodes) {
+
+      tmp = list_entry(pos, struct ObampNode, list);
+      if (tmp->isTree == 0)
+        send_destroy_tree_link(&tmp->neighbor_ip_addr.v4);
+
+    }
+  }
+  x = NULL;
+}
+
 static int
 DoIHaveAMeshLink(void)
 {
@@ -1754,6 +1776,7 @@ InitOBAMP(void)
   struct timer_entry *mesh_create_timer;
   struct timer_entry *tree_create_timer;
   struct timer_entry *outer_tree_create_timer;
+  struct timer_entry *unsolicited_tree_destroy_timer;
 
 
 
@@ -1762,6 +1785,7 @@ InitOBAMP(void)
   struct olsr_cookie_info *mesh_create_timer_cookie = NULL;
   struct olsr_cookie_info *tree_create_timer_cookie = NULL;
   struct olsr_cookie_info *outer_tree_create_timer_cookie = NULL;
+  struct olsr_cookie_info *unsolicited_tree_destroy_timer_cookie = NULL;
 
   if (olsr_cnf->ip_version == AF_INET6) {
     OLSR_ERROR(LOG_PLUGINS, "OBAMP does not support IPv6 at the moment.");
@@ -1793,6 +1817,7 @@ InitOBAMP(void)
   mesh_create_timer_cookie = olsr_alloc_cookie("mesh create Generation", OLSR_COOKIE_TYPE_TIMER);
   tree_create_timer_cookie = olsr_alloc_cookie("tree create Generation", OLSR_COOKIE_TYPE_TIMER);
   outer_tree_create_timer_cookie = olsr_alloc_cookie("outer tree create Generation", OLSR_COOKIE_TYPE_TIMER);
+  unsolicited_tree_destroy_timer_cookie = olsr_alloc_cookie("tree destroy Generation", OLSR_COOKIE_TYPE_TIMER);
 
 
 //Tells OLSR to launch olsr_parser when the packets for this plugin arrive
@@ -1823,6 +1848,10 @@ InitOBAMP(void)
     olsr_start_timer(OBAMP_OUTER_TREE_CREATE_IVAL * MSEC_PER_SEC, OBAMP_JITTER, OLSR_TIMER_PERIODIC, &outer_tree_create, NULL,
                      tree_create_timer_cookie);
 
+//start timer for tree create procedure
+  unsolicited_tree_destroy_timer =
+    olsr_start_timer(6 * MSEC_PER_SEC, OBAMP_JITTER, OLSR_TIMER_PERIODIC, &unsolicited_tree_destroy, NULL,
+                     unsolicited_tree_destroy_timer_cookie);
 
 //Create udp server socket for OBAMP signalling and register it to the scheduler
   OLSR_DEBUG(LOG_PLUGINS, "Launch Udp Servers");
