@@ -86,6 +86,7 @@
 #define OBAMP_ALIVE 		3
 #define OBAMP_TREE_REQ 		4
 #define OBAMP_TREE_ACK 		5
+#define OBAMP_TREE_DESTROY 	6
 
 #define OBAMP_SIGNALLING_PORT 	6226
 
@@ -198,6 +199,17 @@ struct OBAMP_data_message4 {
 struct OBAMP_data_message6 {
 
 //TODO
+
+};
+
+
+
+struct OBAMP_tree_destroy {
+
+  u_int8_t MessageID;
+  union olsr_ip_addr router_id;
+  u_int8_t SequenceNumber; //Unused
+  union olsr_ip_addr CoreAddress;
 
 };
 

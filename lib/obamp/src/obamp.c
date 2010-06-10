@@ -315,6 +315,8 @@ activate_tree_link(struct OBAMP_tree_link_ack *ack)
 
 }
 
+
+
 /*
 When we select a other OBAMP node as a overlay neighbor, we start to send HELLOs to him
 to inform we are using the unicast path from us to him  as a overlay mesh link
@@ -342,6 +344,34 @@ obamp_hello(struct in_addr *addr)
   si_other.sin_addr = *addr;
   sendto(sdudp, &hello, sizeof(struct OBAMP_hello), 0, (struct sockaddr *)&si_other, sizeof(si_other));
 }
+
+
+//Destroy a Tree Link
+static void
+send_destroy_tree_link(struct in_addr *addr)
+{
+  struct OBAMP_tree_destroy msg;
+  struct sockaddr_in si_other;
+  #if !defined(REMOVE_LOG_DEBUG)
+  struct ipaddr_str buf;
+  #endif
+ 
+
+  OLSR_DEBUG(LOG_PLUGINS, "Sending tree destroy to: %s", ip4_to_string(&buf, *addr));
+ 
+  memset(&msg, 0, sizeof(msg));
+  msg.MessageID = OBAMP_TREE_DESTROY;
+  //TODO: refresh IP address
+  msg.router_id = myState->myipaddr;
+  msg.CoreAddress = myState->CoreAddress;
+
+  memset((char *)&si_other, 0, sizeof(si_other));
+  si_other.sin_family = AF_INET;
+  si_other.sin_port = htons(OBAMP_SIGNALLING_PORT);
+  si_other.sin_addr = *addr;
+  sendto(sdudp, &msg, sizeof(struct OBAMP_tree_destroy), 0, (struct sockaddr *)&si_other, sizeof(si_other));
+}
+
 
 //Request a Tree Link
 static void
@@ -594,6 +624,41 @@ reset_tree_links(void)
 };
 
 
+//I received a request to deactivate a tree link
+static void
+deactivate_tree_link(struct OBAMP_tree_destroy *destroy_msg)
+{
+#if !defined(REMOVE_LOG_DEBUG)
+  struct ipaddr_str buf;
+#endif
+  struct ObampNode *tmp;
+  struct list_head *pos;
+
+  if (memcmp(&myState->CoreAddress.v4, &destroy_msg->CoreAddress.v4, sizeof(struct in_addr)) != 0) {
+    OLSR_DEBUG(LOG_PLUGINS, "Discarding message with no coherent core address");
+    return;
+  }
+
+    list_for_each(pos, &ListOfObampNodes) {
+
+      tmp = list_entry(pos, struct ObampNode, list);
+      if (tmp->neighbor_ip_addr.v4.s_addr == destroy_msg->router_id.v4.s_addr) {
+
+        tmp->isTree = 0;
+        OLSR_DEBUG(LOG_PLUGINS, "Tree link to %s deactivated", ip4_to_string(&buf, tmp->neighbor_ip_addr.v4));
+        
+	if (memcmp(&tmp->neighbor_ip_addr.v4, &myState->ParentId.v4, sizeof(struct in_addr)) == 0) {
+		OLSR_DEBUG(LOG_PLUGINS,"RESET TREE LINKS: I lost tree link with my PARENT");
+		reset_tree_links();
+	}
+
+        return;
+
+      }
+    }
+
+}
+
 //Core Election. The Core is the one with the smallest IP Address
 static void
 CoreElection(void)
@@ -791,6 +856,7 @@ CheckDataFromTreeLink(char *buffer)
 
 	else{
           OLSR_DEBUG(LOG_PLUGINS, "DISCARDING DATA PACKET SENT BY NOT TREE NEIGHBOR");
+	  send_destroy_tree_link(&tmp->neighbor_ip_addr.v4);
           return 0;
 	}
       }
@@ -1081,6 +1147,11 @@ ObampSignalling(int skfd, void *data __attribute__ ((unused)), unsigned int flag
       break;
 
 
+    case OBAMP_TREE_DESTROY:
+      //do here
+      OLSR_DEBUG(LOG_PLUGINS, "OBAMP Received OBAMP_TREE_DESTROY from host %s, port %d\n", text_buffer, ntohs(addr.sin_port));
+      deactivate_tree_link((struct OBAMP_tree_destroy *)buffer);
+      break;
     }
 
 
@@ -1422,6 +1493,7 @@ mesh_create(void *x)
         if (tmp->isMesh == 0 && tmp->isTree == 1) {
 
           tmp->isTree = 0;
+	  send_destroy_tree_link(&tmp->neighbor_ip_addr.v4);
 	
         if (memcmp(&tmp->neighbor_ip_addr.v4, &myState->ParentId.v4, sizeof(struct in_addr)) == 0) {
 		OLSR_DEBUG(LOG_PLUGINS,"RESET TREE LINKS: I lost tree link with my PARENT");
