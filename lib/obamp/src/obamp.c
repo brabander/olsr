@@ -400,7 +400,7 @@ tree_link_req(struct in_addr *addr)
   si_other.sin_family = AF_INET;
   si_other.sin_port = htons(OBAMP_SIGNALLING_PORT);
   si_other.sin_addr = *addr;
-  myState->TreeRequestDelay=5;
+  myState->TreeRequestDelay=_TREE_REQUEST_DELAY_;
   sendto(sdudp, &req, sizeof(struct OBAMP_tree_link_req), 0, (struct sockaddr *)&si_other, sizeof(si_other));
 }
 else OLSR_DEBUG(LOG_PLUGINS,"Do not send Tree Link Request because there is another one running");

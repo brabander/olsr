@@ -77,6 +77,7 @@
 #define _Texpire_		7     //time in seconds before expire a neighbor
 #define _Texpire_timer_		1       //time in seconds to parse the list decrement and purge
 
+#define _TREE_REQUEST_DELAY_	5
 
 /*OBAMP Protocol MESSAGE IDs */
 
