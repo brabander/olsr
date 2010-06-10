@@ -1421,6 +1421,11 @@ mesh_create(void *x)
         if (tmp->isMesh == 0 && tmp->isTree == 1) {
 
           tmp->isTree = 0;
+	
+        if (memcmp(&tmp->neighbor_ip_addr.v4, &myState->ParentId.v4, sizeof(struct in_addr)) == 0) {
+		OLSR_DEBUG(LOG_PLUGINS,"RESET TREE LINKS: I lost tree link with my PARENT");
+		reset_tree_links();
+	}       
 
         }
       }
