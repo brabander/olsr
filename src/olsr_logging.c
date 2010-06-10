@@ -242,10 +242,10 @@ olsr_log(enum log_severity severity, enum log_source source, bool no_header, con
   if (!no_header) {
     p1 = snprintf(logbuffer, LOGBUFFER_SIZE, "%d:%02d:%02d.%03ld ",
                   now.tm_hour, now.tm_min, now.tm_sec, (long)(timeval.tv_usec / 1000));
-  }
-  p2 = snprintf(&logbuffer[p1], LOGBUFFER_SIZE - p1, "%s(%s) %s %d: ",
-      LOG_SEVERITY_NAMES[severity], LOG_SOURCE_NAMES[source], file, line);
 
+    p2 = snprintf(&logbuffer[p1], LOGBUFFER_SIZE - p1, "%s(%s) %s %d: ",
+        LOG_SEVERITY_NAMES[severity], LOG_SOURCE_NAMES[source], file, line);
+  }
   p3 = vsnprintf(&logbuffer[p1+p2], LOGBUFFER_SIZE - p1 - p2, format, ap);
 
   assert(p1 + p2 +p3 < LOGBUFFER_SIZE);
