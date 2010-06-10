@@ -1407,15 +1407,6 @@ tree_create(void *x)
     }
 
   }
-  else { //Refresh tree link with parent if existing
-  	
-	struct in_addr zeros;
-	memset(&zeros,0,sizeof(struct in_addr));
-	 
-        if (memcmp(&zeros, &myState->ParentId.v4, sizeof(struct in_addr)) != 0) {
-		tree_link_req(&myState->ParentId.v4);
-	}
-  }
 
   x = NULL;
 }
