@@ -57,6 +57,10 @@ clear_console(void)
 
   if (len < 0) {
     FILE *pip = popen("clear", "r");
+    if (pip == NULL) {
+      OLSR_WARN(LOG_MAIN, "Warning, cannot access 'clear' command.\n");
+      return;
+    }
     for (len = 0; len < (int)sizeof(clear_buff); len++) {
       int c = fgetc(pip);
       if (c == EOF) {
