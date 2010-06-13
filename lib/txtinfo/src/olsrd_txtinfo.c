@@ -488,7 +488,7 @@ txtinfo_topology(struct comport_connection *con,
 
   template = param != NULL ? parse_user_template(param) : tmpl_topology;
   if (param == NULL) {
-    if (abuf_appendf(&con->out, "Table: Topology\nDest. IP\tLast hop IP\tVirtual\t%s\t(common)\n",
+    if (abuf_appendf(&con->out, "Table: Topology\nDest. IP\tLast hop IP\tVirtual\t%s\n",
         olsr_get_linklabel(0)) < 0) {
       return ABUF_ERROR;
     }
