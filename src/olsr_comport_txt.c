@@ -45,6 +45,7 @@
 #include "olsr_cookie.h"
 #include "olsr_ip_acl.h"
 #include "olsr.h"
+#include "ipcalc.h"
 #include "scheduler.h"
 #include "olsr_comport.h"
 #include "olsr_comport_txt.h"
@@ -185,13 +186,18 @@ olsr_com_handle_txtcommand(struct comport_connection *con, char *cmd, char *para
   ptr = (struct olsr_txtcommand *) avl_find(&txt_normal_tree, cmd);
 
   OLSR_DEBUG(LOG_COMPORT, "Looking for command '%s': %s\n",
-    cmd, ptr ? "unknown" : "available");
+    cmd, ptr == NULL ? "unknown" : "available");
   if (ptr == NULL) {
     return UNKNOWN;
   }
 
   if (ptr->acl) {
     if (!ip_acl_acceptable(ptr->acl, &con->addr, olsr_cnf->ip_version)) {
+#if !defined REMOVE_LOG_DEBUG
+      struct ipaddr_str buf;
+#endif
+      OLSR_DEBUG(LOG_COMPORT, "ACL for command '%s' does not allow access from %s\n",
+        cmd, olsr_ip_to_string(&buf, &con->addr));
       return UNKNOWN;
     }
   }

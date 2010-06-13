@@ -333,6 +333,9 @@ static void olsr_com_parse_connection(int fd, void *data, unsigned int flags) {
           olsr_ip_to_string(&buf, &con->addr), strerror(errno));
       con->state = CLEANUP;
     }
+    else {
+      con->state = SEND_AND_QUIT;
+    }
   }
 
   switch (con->state) {
