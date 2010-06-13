@@ -102,15 +102,17 @@ olsr_spf_add_cand_tree(struct avl_tree *tree, struct tc_entry *tc)
 static void
 olsr_spf_del_cand_tree(struct avl_tree *tree, struct tc_entry *tc)
 {
-
+  if (tc->cand_tree_node.key) {
 #if !defined REMOVE_LOG_DEBUG
-  struct ipaddr_str buf;
-  char lqbuffer[LQTEXT_MAXLENGTH];
+    struct ipaddr_str buf;
+    char lqbuffer[LQTEXT_MAXLENGTH];
 #endif
-  OLSR_DEBUG(LOG_ROUTING, "SPF: delete candidate %s, cost %s\n",
-             olsr_ip_to_string(&buf, &tc->addr), olsr_get_linkcost_text(tc->path_cost, false, lqbuffer, sizeof(lqbuffer)));
+    OLSR_DEBUG(LOG_ROUTING, "SPF: delete candidate %s, cost %s\n",
+        olsr_ip_to_string(&buf, &tc->addr), olsr_get_linkcost_text(tc->path_cost, false, lqbuffer, sizeof(lqbuffer)));
 
-  avl_delete(tree, &tc->cand_tree_node);
+    avl_delete(tree, &tc->cand_tree_node);
+    tc->cand_tree_node.key = NULL;
+  }
 }
 
 /*
@@ -157,7 +159,7 @@ olsr_spf_extract_best(struct avl_tree *tree)
 static void
 olsr_spf_relax(struct avl_tree *cand_tree, struct tc_entry *tc)
 {
-  struct avl_node *edge_node;
+  struct tc_edge_entry *tc_edge;
   olsr_linkcost new_cost;
 
 #if !defined REMOVE_LOG_DEBUG
@@ -171,10 +173,8 @@ olsr_spf_relax(struct avl_tree *cand_tree, struct tc_entry *tc)
   /*
    * loop through all edges of this vertex.
    */
-  for (edge_node = avl_walk_first(&tc->edge_tree); edge_node; edge_node = avl_walk_next(edge_node)) {
-
+  OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
     struct tc_entry *new_tc;
-    struct tc_edge_entry *tc_edge = edge_tree2tc_edge(edge_node);
 
     assert (tc_edge->edge_inv);
 
@@ -182,12 +182,11 @@ olsr_spf_relax(struct avl_tree *cand_tree, struct tc_entry *tc)
      * total quality of the path through this vertex
      * to the destination of this edge
      */
-    // TODO: asymmetric links ? Max(c1,c2) is not really good.
-    if (tc_edge->cost > tc_edge->edge_inv->cost) {
-      new_cost = tc->path_cost + tc_edge->cost;
+    if (tc_edge->virtual) {
+      new_cost = tc->path_cost + tc_edge->edge_inv->cost;
     }
     else {
-      new_cost = tc->path_cost + tc_edge->edge_inv->cost;
+      new_cost = tc->path_cost + tc_edge->cost;
     }
 
     OLSR_DEBUG(LOG_ROUTING, "SPF:   exploring edge %s, cost %s\n",
@@ -207,6 +206,11 @@ olsr_spf_relax(struct avl_tree *cand_tree, struct tc_entry *tc)
         olsr_spf_del_cand_tree(cand_tree, new_tc);
       }
 
+      /* remove from result list if necessary */
+      if (new_tc->path_list_node.next != NULL && new_tc->path_list_node.prev != NULL) {
+        list_remove(&new_tc->path_list_node);
+      }
+
       /* re-insert on candidate tree with the better metric */
       new_tc->path_cost = new_cost;
       olsr_spf_add_cand_tree(cand_tree, new_tc);
@@ -222,7 +226,7 @@ olsr_spf_relax(struct avl_tree *cand_tree, struct tc_entry *tc)
                  olsr_get_linkcost_text(new_cost, true, lqbuffer, sizeof(lqbuffer)),
                  tc->next_hop ? olsr_ip_to_string(&nbuf, &tc->next_hop->neighbor_iface_addr) : "<none>", new_tc->hops);
     }
-  }
+  } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END()
 }
 
 /*
@@ -307,6 +311,8 @@ olsr_calculate_routing_table(void)
     tc->next_hop = NULL;
     tc->path_cost = ROUTE_COST_BROKEN;
     tc->hops = 0;
+    tc->cand_tree_node.key = NULL;
+    list_node_init(&tc->path_list_node);
   }
   OLSR_FOR_ALL_TC_ENTRIES_END(tc);
 

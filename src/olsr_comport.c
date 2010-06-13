@@ -333,6 +333,9 @@ static void olsr_com_parse_connection(int fd, void *data, unsigned int flags) {
           olsr_ip_to_string(&buf, &con->addr), strerror(errno));
       con->state = CLEANUP;
     }
+    else {
+      con->state = SEND_AND_QUIT;
+    }
   }
 
   switch (con->state) {
@@ -378,7 +381,7 @@ static void olsr_com_parse_connection(int fd, void *data, unsigned int flags) {
     }
   }
   if (con->out.len == 0) {
-    OLSR_DEBUG(LOG_COMPORT, "  deactivating output in scheduler\n");
+    OLSR_DEBUG(LOG_COMPORT, "  deactivating output in scheduler %d\n", con->state);
     disable_olsr_socket(fd, &olsr_com_parse_connection, NULL, SP_PR_WRITE);
     if (con->state == SEND_AND_QUIT) {
       con->state = CLEANUP;
