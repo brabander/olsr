@@ -185,7 +185,7 @@ olsr_com_handle_txtcommand(struct comport_connection *con, char *cmd, char *para
   ptr = (struct olsr_txtcommand *) avl_find(&txt_normal_tree, cmd);
 
   OLSR_DEBUG(LOG_COMPORT, "Looking for command '%s': %s\n",
-    cmd, ptr == NULL ? "unknown" : "available");
+    cmd, ptr ? "unknown" : "available");
   if (ptr == NULL) {
     return UNKNOWN;
   }
