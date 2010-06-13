@@ -135,7 +135,7 @@ size_t EXPORT(olsr_get_linklabel_maxlength) (int);
 size_t EXPORT(olsr_get_linklabel_count) (void);
 enum lq_linkdata_quality EXPORT(olsr_get_linkdata_quality) (struct link_entry *, int);
 
-void olsr_neighbor_cost_may_changed(struct nbr_entry *);
+void EXPORT(olsr_neighbor_cost_may_changed)(struct nbr_entry *);
 
 struct tc_edge_entry *olsr_malloc_tc_edge_entry(void);
 struct lq_hello_neighbor *olsr_malloc_lq_hello_neighbor(void);
