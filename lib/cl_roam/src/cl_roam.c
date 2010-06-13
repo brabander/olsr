@@ -266,6 +266,8 @@ void olsr_parser(struct olsr_message *msg, struct interface *in_if __attribute__
   if (guest != NULL) {
     if ((guest->is_announced) != 0) {
       char route_command[50];
+      int ret;
+
       OLSR_INFO(LOG_PLUGINS, "Having to revoke announcement for %s\n", inet_ntoa(guest->ip.v4));
       guest->is_announced = 0;
       guest->last_seen = 90.0;
@@ -274,7 +276,9 @@ void olsr_parser(struct olsr_message *msg, struct interface *in_if __attribute__
       ip_prefix_list_remove(&olsr_cnf->hna_entries, &(guest->ip), olsr_netmask_to_prefix(&gw_netmask),
           olsr_cnf->ip_version);
       snprintf(route_command, sizeof(route_command), "route del %s dev ath0 metric 0", inet_ntoa(guest->ip.v4));
-      system(route_command);
+      if ((ret = system(route_command))) {
+        OLSR_WARN(LOG_PLUGINS, "cl_roam: Warning, system '%s' returned %d\n", route_command, ret);
+      }
       single_hna(&ip, 0);
     }
   }
@@ -344,8 +348,11 @@ static  __attribute__ ((noreturn)) void* ping_thread_infinite(void * target_void
   char ping_command[50];
   struct guest_client * target = (struct guest_client*) target_void;
   while (1) {
+    int ret;
     snprintf(ping_command, sizeof(ping_command), "arping -I ath0 -q -c 10 %s", inet_ntoa(target->ip.v4));
-    system(ping_command);
+    if ((ret = system(ping_command))) {
+      OLSR_WARN(LOG_PLUGINS, "cl_roam: Warning, system '%s' returned %d\n", ping_command, ret);
+    }
     pthread_testcancel();
   }
 }
@@ -381,6 +388,7 @@ static void check_ping_result(void *foo) {
     host->ping_thread_done = 0;
     if (ping_res == 0) {
       char route_command[50];
+      int ret;
       OLSR_INFO(LOG_PLUGINS, "Adding Route for %s\n", inet_ntoa(host->ip.v4));
 
       ip_prefix_list_add(&olsr_cnf->hna_entries, &(host->ip), olsr_netmask_to_prefix(&gw_netmask));
@@ -388,7 +396,10 @@ static void check_ping_result(void *foo) {
       host->remaing_announcements = 15;
 
       snprintf(route_command, sizeof(route_command), "route add %s dev ath0 metric 0", inet_ntoa(host->ip.v4));
-      system(route_command);
+      if ((ret = system(route_command))) {
+        OLSR_WARN(LOG_PLUGINS, "cl_roam: Warning, system '%s' returned %d\n", route_command, ret);
+      }
+
       host->master_ip = olsr_cnf->router_id;
 
       spread_host(host);
@@ -418,11 +429,13 @@ static void check_for_route(struct guest_client * host) {
     rc = pthread_create(&(host->ping_thread_add), NULL, ping_thread, (void *) host);
   } else if ((host->last_seen > 60.0) && host->is_announced) {
     char route_command[50];
-
+    int ret;
     OLSR_INFO(LOG_PLUGINS, "Removing Route for %s\n", inet_ntoa(host->ip.v4));
     ip_prefix_list_remove(&olsr_cnf->hna_entries, &host->ip, olsr_netmask_to_prefix(&gw_netmask), olsr_cnf->ip_version);
     snprintf(route_command, sizeof(route_command), "route del %s dev ath0 metric 0", inet_ntoa(host->ip.v4));
-    system(route_command);
+    if ((ret = system(route_command))) {
+      OLSR_WARN(LOG_PLUGINS, "cl_roam: Warning, system '%s' returned %d\n", route_command, ret);
+    }
     host->is_announced = 0;
   } else if (host->is_announced && host->remaing_announcements > 0) {
     host->remaing_announcements--;
