@@ -402,7 +402,7 @@ FindNeighbors(struct TBestNeighbors *neighbors,
 
   if (forwardedBy != NULL) {
     /* Retrieve the cost of the link from 'forwardedBy' to myself */
-    struct link_entry *bestLinkFromForwarder = get_best_link_to_neighbor(forwardedBy);
+    struct link_entry *bestLinkFromForwarder = get_best_link_to_neighbor_ip(forwardedBy);
     if (bestLinkFromForwarder != NULL) {
       previousLinkEtx = bestLinkFromForwarder->linkcost;
     }
@@ -473,7 +473,7 @@ FindNeighbors(struct TBestNeighbors *neighbors,
      * the candidate neighbor; the candidate neighbor has been / will be selected via that
      * other interface.
      */
-    bestLinkToNeighbor = get_best_link_to_neighbor(&walker->neighbor_iface_addr);
+    bestLinkToNeighbor = get_best_link_to_neighbor_ip(&walker->neighbor_iface_addr);
 
     if (walker != bestLinkToNeighbor) {
       if (bestLinkToNeighbor == NULL) {

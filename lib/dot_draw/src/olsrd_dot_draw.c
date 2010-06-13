@@ -152,7 +152,7 @@ ipc_print_neigh_link(int ipc_connection, const struct nbr_entry *neighbor)
   if (neighbor->is_sym == 0) {  /* non SYM */
     style = "dashed";
   } else {
-    const struct link_entry *lnk = get_best_link_to_neighbor(&neighbor->nbr_addr);
+    const struct link_entry *lnk = get_best_link_to_neighbor_ip(&neighbor->nbr_addr);
     if (lnk) {
       etx = lnk->linkcost;
     }

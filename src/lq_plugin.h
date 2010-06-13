@@ -44,6 +44,7 @@
 
 #include "tc_set.h"
 #include "link_set.h"
+#include "neighbor_table.h"
 #include "olsr_spf.h"
 #include "lq_packet.h"
 #include "common/avl.h"
@@ -81,9 +82,7 @@ struct lq_handler {
   olsr_linkcost(*calc_lq_hello_neighbor_cost) (struct lq_hello_neighbor *);
   olsr_linkcost(*calc_tc_edge_entry_cost) (struct tc_edge_entry *);
 
-  bool(*is_relevant_costchange) (olsr_linkcost c1, olsr_linkcost c2);
-
-  olsr_linkcost(*packet_loss_handler) (struct link_entry *, bool);
+  void (*hello_handler) (struct link_entry *, bool);
 
   void (*memorize_foreign_hello) (struct link_entry *, struct lq_hello_neighbor *);
   void (*copy_link_entry_lq_into_tc_edge_entry) (struct tc_edge_entry *, struct link_entry *);
@@ -120,14 +119,13 @@ void init_lq_handler(void);
 void deinit_lq_handler(void);
 
 olsr_linkcost olsr_calc_tc_cost(struct tc_edge_entry *);
-bool olsr_is_relevant_costchange(olsr_linkcost c1, olsr_linkcost c2);
 
 void olsr_serialize_hello_lq_pair(uint8_t **, struct link_entry *);
 void olsr_deserialize_hello_lq_pair(const uint8_t **, struct lq_hello_neighbor *);
 void olsr_serialize_tc_lq(uint8_t **curr, struct link_entry *lnk);
 void olsr_deserialize_tc_lq_pair(const uint8_t **, struct tc_edge_entry *);
 
-void olsr_update_packet_loss_worker(struct link_entry *, bool);
+void olsr_lq_hello_handler(struct link_entry *, bool);
 void olsr_memorize_foreign_hello_lq(struct link_entry *, struct lq_hello_neighbor *);
 
 const char *EXPORT(olsr_get_linkcost_text) (olsr_linkcost, bool, char *, size_t);
@@ -137,7 +135,7 @@ size_t EXPORT(olsr_get_linklabel_maxlength) (int);
 size_t EXPORT(olsr_get_linklabel_count) (void);
 enum lq_linkdata_quality EXPORT(olsr_get_linkdata_quality) (struct link_entry *, int);
 
-void olsr_copylq_link_entry_2_tc_edge_entry(struct tc_edge_entry *, struct link_entry *);
+void olsr_neighbor_cost_may_changed(struct nbr_entry *);
 
 struct tc_edge_entry *olsr_malloc_tc_edge_entry(void);
 struct lq_hello_neighbor *olsr_malloc_lq_hello_neighbor(void);

@@ -620,6 +620,8 @@ avl_delete_worker(struct avl_tree *tree, struct avl_node *node)
   parent->right = min;
 }
 
+#include "valgrind/valgrind.h"
+
 void
 avl_delete(struct avl_tree *tree, struct avl_node *node)
 {
@@ -629,6 +631,9 @@ avl_delete(struct avl_tree *tree, struct avl_node *node)
   struct avl_node *right;
 
   /* sanity check */
+  if (tree->count == 0) {
+    VALGRIND_PRINTF_BACKTRACE("Error, trying to remove element from empty tree\n");
+  }
   assert(tree->count > 0);
 
   if (node->leader != 0) {

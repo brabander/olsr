@@ -135,8 +135,6 @@ static const char KEY_WILLINGNESS[] = "will";
 static const char KEY_2HOP[] = "2hop";
 static const char KEY_LINKCOST[] = "linkcost";
 static const char KEY_RAWLINKCOST[] = "rawlinkcost";
-static const char KEY_COMMONCOST[] = "commoncost";
-static const char KEY_RAWCOMMONCOST[] = "rawcommoncost";
 static const char KEY_HOPCOUNT[] = "hopcount";
 static const char KEY_INTERFACE[] = "interface";
 static const char KEY_VTIME[] = "vtime";
@@ -146,8 +144,8 @@ struct ipprefix_str buf_destprefix;
 static char buf_sym[6], buf_mrp[4], buf_mprs[4], buf_virtual[4];
 static char buf_willingness[7];
 static char buf_2hop[6];
-static char buf_rawlinkcost[11], buf_rawcommoncost[11];
-static char buf_linkcost[LQTEXT_MAXLENGTH], buf_commoncost[LQTEXT_MAXLENGTH];
+static char buf_rawlinkcost[11];
+static char buf_linkcost[LQTEXT_MAXLENGTH];
 static char buf_hopcount[4];
 static char buf_interface[IF_NAMESIZE];
 struct millitxt_buf buf_vtime;
@@ -186,14 +184,14 @@ static char *values_routes[] = {
   buf_interface, buf_rawlinkcost, buf_linkcost
 };
 
-static const char *tmpl_topology = "%neighip%\t%localip%\t%isvirtual%\t%linkcost%\t%commoncost%\n";
+static const char *tmpl_topology = "%neighip%\t%localip%\t%isvirtual%\t%linkcost%\n";
 static const char *keys_topology[] = {
   KEY_LOCALIP, KEY_NEIGHIP, KEY_VIRTUAL, KEY_VTIME,
-  KEY_RAWLINKCOST, KEY_LINKCOST, KEY_RAWCOMMONCOST, KEY_COMMONCOST
+  KEY_RAWLINKCOST, KEY_LINKCOST
 };
 static char *values_topology[] = {
   buf_localip.buf, buf_neighip.buf, buf_virtual, buf_vtime.buf,
-  buf_rawlinkcost, buf_linkcost, buf_rawcommoncost, buf_commoncost
+  buf_rawlinkcost, buf_linkcost
 };
 
 static const char *tmpl_hna = "%destprefix%\t%localip%\t%vtime%\n";
@@ -514,8 +512,8 @@ txtinfo_topology(struct comport_connection *con,
 
     OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
       olsr_ip_to_string(&buf_neighip, &tc_edge->T_dest_addr);
-      strscpy(buf_virtual, tc_edge->is_virtual ? OLSR_YES : OLSR_NO, sizeof(buf_virtual));
-      if (tc_edge->is_virtual) {
+      strscpy(buf_virtual, tc_edge->virtual ? OLSR_YES : OLSR_NO, sizeof(buf_virtual));
+      if (tc_edge->virtual) {
         buf_linkcost[0] = 0;
         buf_rawlinkcost[0] = '0';
         buf_rawlinkcost[1] = 0;
@@ -524,9 +522,6 @@ txtinfo_topology(struct comport_connection *con,
         snprintf(buf_rawlinkcost, sizeof(buf_rawlinkcost), "%ud", tc_edge->cost);
         olsr_get_linkcost_text(tc_edge->cost, false, buf_linkcost, sizeof(buf_linkcost));
       }
-
-      snprintf(buf_rawcommoncost, sizeof(buf_rawcommoncost), "%ud", tc_edge->common_cost);
-      olsr_get_linkcost_text(tc_edge->common_cost, false, buf_commoncost, sizeof(buf_commoncost));
 
       if (abuf_templatef(&con->out, template, values_topology, tmpl_indices, indexLength) < 0) {
           return ABUF_ERROR;

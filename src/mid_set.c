@@ -96,7 +96,6 @@ olsr_expire_mid_entries(void *context)
 
   OLSR_DEBUG(LOG_MID, "MID aliases for %s timed out\n", olsr_ip_to_string(&buf, &mid->mid_alias_addr));
 
-  olsr_unlock_tc_entry(mid->mid_tc);
   olsr_delete_mid_entry(mid);
 }
 
@@ -115,7 +114,6 @@ olsr_set_mid_timer(struct mid_entry *mid, uint32_t rel_timer)
   else {
     mid->mid_timer = olsr_start_timer(rel_timer, OLSR_MID_JITTER, OLSR_TIMER_ONESHOT,
         &olsr_expire_mid_entries, mid, mid_validity_timer_cookie);
-    olsr_lock_tc_entry(mid->mid_tc);
   }
 }
 
@@ -253,7 +251,6 @@ olsr_insert_mid_entry(const union olsr_ip_addr *main_addr,
   alias = olsr_cookie_malloc(mid_address_mem_cookie);
   alias->mid_alias_addr = *alias_addr;
   alias->mid_tc = tc;
-  olsr_lock_tc_entry(tc);
 
   /*
    * Insert into the per-tc mid subtree.
@@ -381,7 +378,7 @@ olsr_delete_mid_entry(struct mid_entry *alias)
 
   /* kill timer */
   olsr_stop_timer(alias->mid_timer);
-  olsr_unlock_tc_entry(tc);
+  alias->mid_timer = NULL;
 
   /*
    * Delete the rt_path for the alias.
@@ -397,8 +394,6 @@ olsr_delete_mid_entry(struct mid_entry *alias)
    * Remove from the global tree.
    */
   avl_delete(&mid_tree, &alias->mid_node);
-
-  olsr_unlock_tc_entry(tc);
 
   olsr_cookie_free(mid_address_mem_cookie, alias);
 }

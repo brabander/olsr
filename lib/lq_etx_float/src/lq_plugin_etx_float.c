@@ -63,9 +63,7 @@ static olsr_linkcost lq_etxfloat_calc_link_entry_cost(struct link_entry *);
 static olsr_linkcost lq_etxfloat_calc_lq_hello_neighbor_cost(struct lq_hello_neighbor *);
 static olsr_linkcost lq_etxfloat_calc_tc_edge_entry_cost(struct tc_edge_entry *);
 
-static bool lq_etxfloat_is_relevant_costchange(olsr_linkcost c1, olsr_linkcost c2);
-
-static olsr_linkcost lq_etxfloat_packet_loss_handler(struct link_entry *, bool);
+static void lq_etxfloat_hello_handler(struct link_entry *, bool);
 
 static void lq_etxfloat_memorize_foreign_hello(struct link_entry *, struct lq_hello_neighbor *);
 static void lq_etxfloat_copy_link_entry_lq_into_tc_edge_entry(struct tc_edge_entry *target, struct link_entry *source);
@@ -96,9 +94,7 @@ struct lq_handler lq_etxfloat_handler = {
   &lq_etxfloat_calc_lq_hello_neighbor_cost,
   &lq_etxfloat_calc_tc_edge_entry_cost,
 
-  &lq_etxfloat_is_relevant_costchange,
-
-  &lq_etxfloat_packet_loss_handler,
+  &lq_etxfloat_hello_handler,
 
   &lq_etxfloat_memorize_foreign_hello,
   &lq_etxfloat_copy_link_entry_lq_into_tc_edge_entry,
@@ -202,17 +198,8 @@ lq_etxfloat_calc_tc_edge_entry_cost(struct tc_edge_entry *edge)
   return lq_etxfloat_calc_linkcost(&lq_edge->lq);
 }
 
-static bool
-lq_etxfloat_is_relevant_costchange(olsr_linkcost c1, olsr_linkcost c2)
-{
-  if (c1 > c2) {
-    return c2 - c1 > LQ_PLUGIN_RELEVANT_COSTCHANGE;
-  }
-  return c1 - c2 > LQ_PLUGIN_RELEVANT_COSTCHANGE;
-}
-
-static olsr_linkcost
-lq_etxfloat_packet_loss_handler(struct link_entry *link, bool loss)
+static void
+lq_etxfloat_hello_handler(struct link_entry *link, bool loss)
 {
   struct lq_etxfloat_link_entry *lq_link = (struct lq_etxfloat_link_entry *)link;
 
@@ -228,7 +215,8 @@ lq_etxfloat_packet_loss_handler(struct link_entry *link, bool loss)
   if (!loss) {
     lq_link->lq.valueLq += (alpha * link->loss_link_multiplier / 65536);
   }
-  return lq_etxfloat_calc_linkcost(&lq_link->lq);
+  link->linkcost = lq_etxfloat_calc_linkcost(&lq_link->lq);
+  olsr_neighbor_cost_may_changed(link->neighbor);
 }
 
 static void

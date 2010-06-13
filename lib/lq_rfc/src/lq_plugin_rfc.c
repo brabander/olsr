@@ -65,9 +65,7 @@ static olsr_linkcost lq_rfc_calc_link_entry_cost(struct link_entry *);
 static olsr_linkcost lq_rfc_calc_lq_hello_neighbor_cost(struct lq_hello_neighbor *);
 static olsr_linkcost lq_rfc_calc_tc_edge_entry_cost(struct tc_edge_entry *);
 
-static bool lq_rfc_is_relevant_costchange(olsr_linkcost c1, olsr_linkcost c2);
-
-static olsr_linkcost lq_rfc_packet_loss_handler(struct link_entry *, bool);
+static void lq_rfc_packet_loss_handler(struct link_entry *, bool);
 
 static void lq_rfc_memorize_foreign_hello(struct link_entry *, struct lq_hello_neighbor *);
 static void lq_rfc_copy_link_entry_lq_into_tc_edge_entry(struct tc_edge_entry *target, struct link_entry *source);
@@ -94,8 +92,6 @@ struct lq_handler lq_rfc_handler = {
   &lq_rfc_calc_link_entry_cost,
   &lq_rfc_calc_lq_hello_neighbor_cost,
   &lq_rfc_calc_tc_edge_entry_cost,
-
-  &lq_rfc_is_relevant_costchange,
 
   &lq_rfc_packet_loss_handler,
 
@@ -182,19 +178,16 @@ lq_rfc_calc_tc_edge_entry_cost(struct tc_edge_entry __attribute__ ((unused)) * e
   return 1;
 }
 
-static bool
-lq_rfc_is_relevant_costchange(olsr_linkcost c1, olsr_linkcost c2)
-{
-  return c1 != c2;
-}
-
-static olsr_linkcost
+static void
 lq_rfc_packet_loss_handler(struct link_entry *link, bool loss)
 {
   struct lq_rfc_link_entry *link_entry = (struct lq_rfc_link_entry *)link;
 
-  if (!use_hysteresis)
-    return 1;
+  if (!use_hysteresis) {
+    link->linkcost = loss ? LINK_COST_BROKEN : 1;
+    olsr_neighbor_cost_may_changed(link->neighbor);
+    return;
+  }
 
   link_entry->hysteresis *= (1 - scaling);
   if (!loss) {
@@ -207,7 +200,8 @@ lq_rfc_packet_loss_handler(struct link_entry *link, bool loss)
     link_entry->active = true;
   }
 
-  return link_entry->active ? 1 : LINK_COST_BROKEN;
+  link->linkcost = link_entry->active ? 1 : LINK_COST_BROKEN;
+  olsr_neighbor_cost_may_changed(link->neighbor);
 }
 
 static void

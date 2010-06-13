@@ -39,6 +39,8 @@
  *
  */
 
+#include <assert.h>
+
 #include "olsr_spf.h"
 #include "tc_set.h"
 #include "neighbor_table.h"
@@ -141,9 +143,7 @@ olsr_spf_add_path_list(struct list_node *head, int *path_count, struct tc_entry 
 static struct tc_entry *
 olsr_spf_extract_best(struct avl_tree *tree)
 {
-  struct avl_node *node = avl_walk_first(tree);
-
-  return (node ? cand_tree2tc(node) : NULL);
+  return (tree->count > 0 ? cand_tree2tc(avl_walk_first(tree)) : NULL);
 }
 
 
@@ -176,22 +176,19 @@ olsr_spf_relax(struct avl_tree *cand_tree, struct tc_entry *tc)
     struct tc_entry *new_tc;
     struct tc_edge_entry *tc_edge = edge_tree2tc_edge(edge_node);
 
-    /*
-     * We are not interested in dead-end edges.
-     */
-    if (!tc_edge->edge_inv) {
-      OLSR_DEBUG(LOG_ROUTING, "SPF:   ignoring edge %s\n", olsr_ip_to_string(&buf, &tc_edge->T_dest_addr));
-      if (!tc_edge->edge_inv) {
-        OLSR_DEBUG(LOG_ROUTING, "SPF:     no inverse edge\n");
-      }
-      continue;
-    }
+    assert (tc_edge->edge_inv);
 
     /*
      * total quality of the path through this vertex
      * to the destination of this edge
      */
-    new_cost = tc->path_cost + tc_edge->common_cost;
+    // TODO: asymmetric links ? Max(c1,c2) is not really good.
+    if (tc_edge->cost > tc_edge->edge_inv->cost) {
+      new_cost = tc->path_cost + tc_edge->cost;
+    }
+    else {
+      new_cost = tc->path_cost + tc_edge->edge_inv->cost;
+    }
 
     OLSR_DEBUG(LOG_ROUTING, "SPF:   exploring edge %s, cost %s\n",
                olsr_ip_to_string(&buf, &tc_edge->T_dest_addr),
@@ -248,7 +245,6 @@ olsr_spf_run_full(struct avl_tree *cand_tree, struct list_node *path_list, int *
   *path_count = 0;
 
   while ((tc = olsr_spf_extract_best(cand_tree))) {
-
     olsr_spf_relax(cand_tree, tc);
 
     /*
@@ -339,18 +335,17 @@ olsr_calculate_routing_table(void)
   /*
    * Set the next-hops of our neighbor link.
    */
-  OLSR_FOR_ALL_LINK_ENTRIES(link) {
-
-    neigh = link->neighbor;
-    tc_edge = link->link_tc_edge;
+  OLSR_FOR_ALL_NBR_ENTRIES(neigh) {
+    tc_edge = neigh->tc_edge;
 
     if (neigh->is_sym) {
-      if (tc_edge->edge_inv) {
-        tc_edge->edge_inv->tc->next_hop = link;
-      }
+      /* edges are always symmetric */
+      assert(tc_edge->edge_inv);
+
+      tc_edge->edge_inv->tc->next_hop = get_best_link_to_neighbor(neigh);
     }
   }
-  OLSR_FOR_ALL_LINK_ENTRIES_END(link);
+  OLSR_FOR_ALL_NBR_ENTRIES_END()
 
 #ifdef SPF_PROFILING
   gettimeofday(&t2, NULL);

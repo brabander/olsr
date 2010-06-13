@@ -373,7 +373,6 @@ olsr_alloc_rt_path(struct tc_entry *tc, struct olsr_ip_prefix *prefix, uint8_t o
 
   /* insert to the tc prefix tree */
   avl_insert(&tc->prefix_tree, &rtp->rtp_prefix_tree_node, false);
-  olsr_lock_tc_entry(tc);
 
   /* backlink to the owning tc entry */
   rtp->rtp_tc = tc;
@@ -475,7 +474,6 @@ olsr_delete_rt_path(struct rt_path *rtp)
   /* remove from the tc prefix tree */
   if (rtp->rtp_tc) {
     avl_delete(&rtp->rtp_tc->prefix_tree, &rtp->rtp_prefix_tree_node);
-    olsr_unlock_tc_entry(rtp->rtp_tc);
     rtp->rtp_tc = NULL;
   }
 

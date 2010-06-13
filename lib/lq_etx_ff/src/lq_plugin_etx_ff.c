@@ -51,6 +51,7 @@
 #include "scheduler.h"
 #include "olsr_logging.h"
 #include "common/string.h"
+#include "neighbor_table.h"
 
 #define PLUGIN_DESCR "Freifunk ETX metric based on the original design of Elektra and Thomas Lopatic"
 #define PLUGIN_AUTHOR "Henning Rogge"
@@ -70,14 +71,13 @@ static olsr_linkcost lq_etxff_calc_link_entry_cost(struct link_entry *);
 static olsr_linkcost lq_etxff_calc_lq_hello_neighbor_cost(struct lq_hello_neighbor *);
 static olsr_linkcost lq_etxff_calc_tc_edge_entry_cost(struct tc_edge_entry *);
 
-static bool lq_etxff_is_relevant_costchange(olsr_linkcost c1, olsr_linkcost c2);
-
-static olsr_linkcost lq_etxff_packet_loss_handler(struct link_entry *, bool);
+static void lq_etxff_hello_handler(struct link_entry *, bool);
 
 static void lq_etxff_memorize_foreign_hello(struct link_entry *, struct lq_hello_neighbor *);
 static void lq_etxff_copy_link_entry_lq_into_tc_edge_entry(struct tc_edge_entry *target, struct link_entry *source);
 
 static void lq_etxff_clear_link_entry(struct link_entry *);
+static void lq_etxff_clear_tc_edge_entry(struct tc_edge_entry *);
 
 static void lq_etxff_serialize_hello_lq(uint8_t **curr, struct link_entry *link);
 static void lq_etxff_serialize_tc_lq(uint8_t **curr, struct link_entry *link);
@@ -114,16 +114,14 @@ struct lq_handler lq_etxff_handler = {
   &lq_etxff_calc_lq_hello_neighbor_cost,
   &lq_etxff_calc_tc_edge_entry_cost,
 
-  &lq_etxff_is_relevant_costchange,
-
-  &lq_etxff_packet_loss_handler,
+  &lq_etxff_hello_handler,
 
   &lq_etxff_memorize_foreign_hello,
   &lq_etxff_copy_link_entry_lq_into_tc_edge_entry,
 
   &lq_etxff_clear_link_entry,
   NULL,
-  NULL,
+  &lq_etxff_clear_tc_edge_entry,
 
   &lq_etxff_serialize_hello_lq,
   &lq_etxff_serialize_tc_lq,
@@ -198,6 +196,8 @@ static void
 lq_etxff_timer(void __attribute__ ((unused)) * context)
 {
   struct link_entry *link;
+  struct nbr_entry *nbr;
+
   OLSR_FOR_ALL_LINK_ENTRIES(link) {
     struct lq_etxff_link_entry *lq_link;
     uint32_t ratio;
@@ -252,8 +252,15 @@ lq_etxff_timer(void __attribute__ ((unused)) * context)
     lq_link->lost[lq_link->activePtr] = 0;
     lq_link->received[lq_link->activePtr] = 0;
     lq_link->missed_seconds++;
+
+    /* update linkcost */
+    link->linkcost = lq_etxff_calc_link_entry_cost(link);
   }
   OLSR_FOR_ALL_LINK_ENTRIES_END(link);
+
+  OLSR_FOR_ALL_NBR_ENTRIES(nbr) {
+    olsr_neighbor_cost_may_changed(nbr);
+  } OLSR_FOR_ALL_NBR_ENTRIES_END()
 }
 
 static struct timer_entry *lq_etxff_timer_struct = NULL;
@@ -316,19 +323,9 @@ lq_etxff_calc_tc_edge_entry_cost(struct tc_edge_entry *edge)
   return lq_etxff_calc_linkcost(&lq_edge->lq);
 }
 
-static bool
-lq_etxff_is_relevant_costchange(olsr_linkcost c1, olsr_linkcost c2)
+static void
+lq_etxff_hello_handler(struct link_entry *link __attribute__ ((unused)), bool loss __attribute__ ((unused)))
 {
-  if (c1 > c2) {
-    return c2 - c1 > LQ_PLUGIN_RELEVANT_COSTCHANGE_FF;
-  }
-  return c1 - c2 > LQ_PLUGIN_RELEVANT_COSTCHANGE_FF;
-}
-
-static olsr_linkcost
-lq_etxff_packet_loss_handler(struct link_entry *link, bool loss __attribute__ ((unused)))
-{
-  return lq_etxff_calc_link_entry_cost(link);
 }
 
 static void
@@ -364,6 +361,13 @@ lq_etxff_clear_link_entry(struct link_entry *link)
   for (i = 0; i < LQ_FF_WINDOW; i++) {
     lq_link->lost[i] = 3;
   }
+}
+
+static void
+lq_etxff_clear_tc_edge_entry(struct tc_edge_entry *edge) {
+  struct lq_etxff_tc_edge *lq_edge = (struct lq_etxff_tc_edge *)edge;
+
+  memset (&lq_edge->lq, 0, sizeof(lq_edge->lq));
 }
 
 static void

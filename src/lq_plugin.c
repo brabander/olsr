@@ -49,6 +49,7 @@
 #include "common/avl.h"
 #include "common/string.h"
 #include "olsr_logging.h"
+#include "neighbor_table.h"
 
 #include "assert.h"
 
@@ -105,22 +106,6 @@ olsr_linkcost
 olsr_calc_tc_cost(struct tc_edge_entry *tc_edge)
 {
   return active_lq_handler->calc_tc_edge_entry_cost(tc_edge);
-}
-
-/*
- * olsr_is_relevant_costchange
- *
- * decides if the difference between two costs is relevant
- * (for changing the route for example)
- *
- * @param first linkcost value
- * @param second linkcost value
- * @return boolean
- */
-bool
-olsr_is_relevant_costchange(olsr_linkcost c1, olsr_linkcost c2)
-{
-  return active_lq_handler->is_relevant_costchange(c1, c2);
 }
 
 /*
@@ -184,7 +169,7 @@ olsr_deserialize_tc_lq_pair(const uint8_t ** curr, struct tc_edge_entry *edge)
 }
 
 /*
- * olsr_update_packet_loss_worker
+ * olsr_lq_hello_handler
  *
  * this function is called every times a hello package for a certain link_entry
  * is lost (timeout) or received. This way the lq-plugin can update the links link
@@ -194,24 +179,49 @@ olsr_deserialize_tc_lq_pair(const uint8_t ** curr, struct tc_edge_entry *edge)
  * @param true if hello package was lost
  */
 void
-olsr_update_packet_loss_worker(struct link_entry *entry, bool lost)
+olsr_lq_hello_handler(struct link_entry *entry, bool lost)
 {
-  olsr_linkcost lq;
-  lq = active_lq_handler->packet_loss_handler(entry, lost);
+  active_lq_handler->hello_handler(entry, lost);
+}
 
-  if (olsr_is_relevant_costchange(lq, entry->linkcost)) {
-    entry->linkcost = lq;
+static void
+internal_clear_tc_edge_lq(struct tc_edge_entry *edge) {
+
+  if (active_lq_handler->clear_tc_edge_entry)  {
+    active_lq_handler->clear_tc_edge_entry(edge);
+  }
+  else {
+    uint8_t *ptr = (uint8_t *) edge;
+
+    memset (ptr + sizeof(*edge), 0, active_lq_handler->size_tc_edge - sizeof(*edge));
+  }
+}
+
+void
+olsr_neighbor_cost_may_changed(struct nbr_entry *nbr) {
+  struct link_entry *link;
+  struct tc_edge_entry *edge;
+  olsr_linkcost cost = LINK_COST_BROKEN;
+
+  link = get_best_link_to_neighbor(nbr);
+  edge = nbr->tc_edge;
+
+  if (link) {
+    cost = link->linkcost;
+    active_lq_handler->copy_link_entry_lq_into_tc_edge_entry(edge, link);
+  }
+  else {
+    internal_clear_tc_edge_lq(edge);
+  }
+
+  if (edge->cost != cost) {
+    edge->cost = cost;
 
     if (olsr_cnf->lq_dlimit > 0) {
       changes_neighborhood = true;
       changes_topology = true;
+      signal_link_changes(true);
     }
-
-    else
-      OLSR_DEBUG(LOG_LQ_PLUGINS, "Skipping Dijkstra (1)\n");
-
-    /* XXX - we should check whether we actually announce this neighbour */
-    signal_link_changes(true);
   }
 }
 
@@ -362,21 +372,6 @@ enum lq_linkdata_quality olsr_get_linkdata_quality (struct link_entry *link, int
     }
   }
   return LQ_QUALITY_BAD;
-}
-
-/*
- * olsr_copylq_link_entry_2_tc_edge_entry
- *
- * this function copies the link quality information from a link_entry to a
- * tc_edge_entry.
- *
- * @param pointer to tc_edge_entry
- * @param pointer to link_entry
- */
-void
-olsr_copylq_link_entry_2_tc_edge_entry(struct tc_edge_entry *target, struct link_entry *source)
-{
-  active_lq_handler->copy_link_entry_lq_into_tc_edge_entry(target, source);
 }
 
 /*
