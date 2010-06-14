@@ -397,22 +397,20 @@ olsr_add_tc_edge_entry(struct tc_entry *tc, const union olsr_ip_addr *addr, uint
   }
 
   /* don't create an inverse edge for a tc pointing to us ! */
-  if (tc_neighbor != tc_myself) {
-    tc_edge_inv = olsr_lookup_tc_edge(tc_neighbor, &tc->addr);
-    if (tc_edge_inv == NULL) {
-      OLSR_DEBUG(LOG_TC, "TC:   creating inverse edge for %s\n", olsr_ip_to_string(&buf, &tc->addr));
-      tc_edge_inv = olsr_add_tc_edge_entry(tc_neighbor, &tc->addr, 0);
+  tc_edge_inv = olsr_lookup_tc_edge(tc_neighbor, &tc->addr);
+  if (tc_edge_inv == NULL) {
+    OLSR_DEBUG(LOG_TC, "TC:   creating inverse edge for %s\n", olsr_ip_to_string(&buf, &tc->addr));
+    tc_edge_inv = olsr_add_tc_edge_entry(tc_neighbor, &tc->addr, 0);
 
-      /* mark edge as virtual */
-      tc_edge_inv->virtual = true;
-    }
-
-    /*
-     * Connect the edges mutually.
-     */
-    tc_edge_inv->edge_inv = tc_edge;
-    tc_edge->edge_inv = tc_edge_inv;
+    /* mark edge as virtual */
+    tc_edge_inv->virtual = true;
   }
+
+  /*
+   * Connect the edges mutually.
+   */
+  tc_edge_inv->edge_inv = tc_edge;
+  tc_edge->edge_inv = tc_edge_inv;
 
   /* this is a real edge */
   tc_edge->virtual = false;
@@ -455,11 +453,6 @@ olsr_delete_tc_edge_entry(struct tc_edge_entry *tc_edge)
   struct tc_edge_entry *tc_edge_inv;
   bool was_real = false;
 
-  if (tc_edge->neighbor) {
-    /* don't remove tc_edge for link entry */
-    return;
-  }
-
   assert(tc_edge->edge_inv);
 
   /* cache tc_entry pointer */
@@ -469,11 +462,9 @@ olsr_delete_tc_edge_entry(struct tc_edge_entry *tc_edge)
   tc_edge_inv = tc_edge->edge_inv;
   tc_inv = tc_edge_inv->tc;
 
-  if (tc_edge_inv->virtual == false) {
+  if (!tc_edge_inv->virtual || tc_edge_inv->neighbor != NULL) {
     /* mark this edge as virtual and correct tc_entry realedge_count */
-    if (!tc_edge->virtual) {
-      tc_edge->virtual = true;
-    }
+    tc_edge->virtual = true;
     OLSR_DEBUG(LOG_TC, "TC: mark edge entry %s as virtual\n", olsr_tc_edge_to_string(tc_edge));
     return;
   }
