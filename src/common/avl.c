@@ -620,6 +620,8 @@ avl_delete_worker(struct avl_tree *tree, struct avl_node *node)
   parent->right = min;
 }
 
+#include "valgrind/valgrind.h"
+
 void
 avl_delete(struct avl_tree *tree, struct avl_node *node)
 {

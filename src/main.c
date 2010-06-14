@@ -62,6 +62,7 @@
 #include "duplicate_set.h"
 #include "kernel_routes.h"
 #include "olsr_comport.h"
+#include "neighbor_table.h"
 
 #if defined linux
 #include <linux/types.h>
@@ -418,13 +419,17 @@ main(int argc, char *argv[])
   olsr_plugins_enable(PLUGIN_TYPE_DEFAULT, true);
 
   /* Starting scheduler */
-
   app_state = STATE_RUNNING;
   olsr_scheduler();
 
   olsr_stop_timer(tc_gen_timer);
+  tc_gen_timer = NULL;
+
   olsr_stop_timer(mid_gen_timer);
+  mid_gen_timer = NULL;
+
   olsr_stop_timer(hna_gen_timer);
+  hna_gen_timer = NULL;
 
   exitcode = olsr_cnf->exit_value;
   switch (app_state) {
@@ -524,12 +529,13 @@ olsr_shutdown(void)
 
   olsr_delete_all_kernel_routes();
 
-  olsr_delete_all_tc_entries();
-
   /* Flush MID database */
   OLSR_FOR_ALL_MID_ENTRIES(mid) {
     olsr_delete_mid_entry(mid);
   } OLSR_FOR_ALL_MID_ENTRIES_END();
+
+  /* Flush TC database */
+  olsr_delete_all_tc_entries();
 
   OLSR_INFO(LOG_MAIN, "Closing sockets...\n");
 

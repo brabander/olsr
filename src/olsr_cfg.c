@@ -432,13 +432,16 @@ parse_cfg_interface(char *argstr, struct olsr_config *rcfg, char *rmsg)
   struct ipaddr_str buf;
 #endif
   if (NULL != (tok = parse_tok(argstr, &nxt))) {
+    char **tok_next, **p;
     if ('{' != *nxt) {
       sprintf(rmsg, "No {}\n");
       parse_tok_free(tok);
       return CFG_ERROR;
-    } else {
-      char **tok_next = parse_tok(nxt + 1, NULL);
-      char **p = tok;
+    }
+
+    tok_next = parse_tok(nxt + 1, NULL);
+    if (tok_next) {
+      p = tok;
       while (p[0]) {
         char **p_next = tok_next;
         struct olsr_if_config *new_if = queue_if(p[0], rcfg);

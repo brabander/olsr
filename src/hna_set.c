@@ -102,7 +102,6 @@ olsr_add_hna_net(struct tc_entry *tc, const struct olsr_ip_prefix *prefix)
 
   /* Set backpointer */
   new_net->hna_tc = tc;
-  olsr_lock_tc_entry(tc);
 
   /*
    * Insert into the per-tc hna subtree.
@@ -140,7 +139,6 @@ olsr_delete_hna_net(struct hna_net *hna_net)
   /*
    * Unlock and free.
    */
-  olsr_unlock_tc_entry(tc);
   olsr_cookie_free(hna_net_mem_cookie, hna_net);
 }
 

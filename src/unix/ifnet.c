@@ -575,6 +575,9 @@ chk_if_up(struct olsr_if_config *iface)
   if (olsr_ipcmp(&all_zero, &olsr_cnf->router_id) == 0) {
     olsr_cnf->router_id = ifp->ip_addr;
     OLSR_INFO(LOG_INTERFACE, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->router_id));
+
+    /* initialize representation of this node in tc_set */
+    olsr_change_myself_tc();
   }
 
   /*

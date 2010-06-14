@@ -49,6 +49,7 @@
 #include "net_olsr.h"
 #include "olsr_logging.h"
 
+#include <assert.h>
 #include <stdlib.h>
 
 /* Root of the one hop and two hop neighbor trees */
@@ -63,6 +64,7 @@ struct olsr_cookie_info *nbr_connector_mem_cookie = NULL;
 struct olsr_cookie_info *nbr_connector_timer_cookie = NULL;
 
 static void olsr_expire_nbr_con(void *);
+static void internal_delete_nbr_con(struct nbr_con *connector);
 
 /*
  * Init neighbor tables.
@@ -123,6 +125,16 @@ olsr_add_nbr_entry(const union olsr_ip_addr *addr)
   nbr->is_mpr = false;
   nbr->was_mpr = false;
 
+  /* add tc_edge if necessary */
+  assert(tc_myself);
+  nbr->tc_edge = olsr_lookup_tc_edge(tc_myself, addr);
+  if (nbr->tc_edge == NULL) {
+    nbr->tc_edge = olsr_add_tc_edge_entry(tc_myself, addr, 0);
+  }
+
+  /* and connect it to this neighbor */
+  nbr->tc_edge->neighbor = nbr;
+
   /* Add to the global neighbor tree */
   nbr->nbr_node.key = &nbr->nbr_addr;
   avl_insert(&nbr_tree, &nbr->nbr_node, false);
@@ -140,7 +152,6 @@ void
 olsr_delete_nbr_entry(struct nbr_entry *nbr)
 {
   struct nbr_con *connector;
-  struct nbr2_entry *nbr2;
 
 #if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
@@ -152,13 +163,17 @@ olsr_delete_nbr_entry(struct nbr_entry *nbr)
    * Remove all references pointing to this neighbor.
    */
   OLSR_FOR_ALL_NBR_CON_ENTRIES(nbr, connector) {
-    nbr2 = connector->nbr2;
-
     olsr_delete_nbr_con(connector);
-    if (nbr2->con_tree.count == 0) {
-      olsr_delete_nbr2_entry(nbr2);
-    }
   } OLSR_FOR_ALL_NBR_CON_ENTRIES_END()
+
+  /* remove corresponding tc_edge if not already removed by olsr_delete_all_tc_entries() */
+  if (nbr->tc_edge) {
+    /* first clear the connection to this neighbor */
+    nbr->tc_edge->neighbor = NULL;
+
+    /* now try to kill the edge */
+    olsr_delete_tc_edge_entry(nbr->tc_edge);
+  }
 
   /* Remove from global neighbor tree */
   avl_delete(&nbr_tree, &nbr->nbr_node);
@@ -166,6 +181,7 @@ olsr_delete_nbr_entry(struct nbr_entry *nbr)
   olsr_cookie_free(nbr_mem_cookie, nbr);
 
   changes_neighborhood = true;
+  changes_topology = true;
 }
 
 /**
@@ -200,15 +216,19 @@ olsr_lookup_nbr_entry(const union olsr_ip_addr *addr, bool lookupalias)
   return NULL;
 }
 
-int olsr_update_nbr_status(struct nbr_entry *entry, bool sym) {
+void olsr_update_nbr_status(struct nbr_entry *entry) {
 #if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
 #endif
+  struct link_entry *link;
+
+  /* look for best symmetric link */
+  link = get_best_link_to_neighbor(entry);
+
   /*
    * Update neighbor entry
    */
-
-  if (sym) {
+  if (link && lookup_link_status(link) == SYM_LINK) {
     /* N_status is set to SYM */
     if (!entry->is_sym) {
       struct nbr2_entry *two_hop_neighbor;
@@ -220,25 +240,25 @@ int olsr_update_nbr_status(struct nbr_entry *entry, bool sym) {
 
       changes_neighborhood = true;
       changes_topology = true;
-      if (olsr_cnf->tc_redundancy > 1)
+      if (olsr_cnf->tc_redundancy > 1 || entry->is_mpr) {
         signal_link_changes(true);
+      }
     }
     entry->is_sym = true;
     OLSR_DEBUG(LOG_NEIGHTABLE, "Neighbor %s is now symmetric\n", olsr_ip_to_string(&buf, &entry->nbr_addr));
   } else {
     if (entry->is_sym) {
       changes_neighborhood = true;
-      changes_topology = true;
-      if (olsr_cnf->tc_redundancy > 1)
+      if (olsr_cnf->tc_redundancy > 1 || entry->is_mpr) {
         signal_link_changes(true);
+        changes_topology = true;
+      }
     }
     /* else N_status is set to NOT_SYM */
     entry->is_sym = false;
 
     OLSR_DEBUG(LOG_NEIGHTABLE, "Neighbor %s is now non-symmetric\n", olsr_ip_to_string(&buf, &entry->nbr_addr));
   }
-
-  return entry->is_sym;
 }
 
 /**
@@ -297,7 +317,7 @@ olsr_delete_nbr2_entry(struct nbr2_entry *nbr2) {
    * Remove all references pointing to this two hop neighbor.
    */
   OLSR_FOR_ALL_NBR2_CON_ENTRIES(nbr2, connector) {
-    olsr_delete_nbr_con(connector);
+    internal_delete_nbr_con(connector);
   } OLSR_FOR_ALL_NBR2_CON_ENTRIES_END();
 
   /* Remove from global neighbor tree */
@@ -374,13 +394,11 @@ olsr_link_nbr_nbr2(struct nbr_entry *nbr, const union olsr_ip_addr *nbr2_addr, u
 }
 
 /**
- * Unlinks an one-hop and a 2-hop neighbor.
- * Does NOT free the two-hop neighbor
- *
- * @param connector the connector between the neighbors
+ * Deletes a nbr-connector without deleting the 2-hop neighbor
+ * @param connector the connector between neighbors
  */
-void
-olsr_delete_nbr_con(struct nbr_con *connector) {
+static void
+internal_delete_nbr_con(struct nbr_con *connector) {
   olsr_stop_timer(connector->nbr2_con_timer);
   connector->nbr2_con_timer = NULL;
 
@@ -388,6 +406,24 @@ olsr_delete_nbr_con(struct nbr_con *connector) {
   avl_delete(&connector->nbr2->con_tree, &connector->nbr2_tree_node);
 
   olsr_cookie_free(nbr_connector_mem_cookie, connector);
+}
+
+/**
+ * Unlinks an one-hop and a 2-hop neighbor.
+ *
+ * @param connector the connector between the neighbors
+ */
+void
+olsr_delete_nbr_con(struct nbr_con *connector) {
+  struct nbr2_entry *nbr2;
+
+  nbr2 = connector->nbr2;
+
+  internal_delete_nbr_con(connector);
+
+  if (nbr2->con_tree.count == 0) {
+    olsr_delete_nbr2_entry(nbr2);
+  }
 }
 
 /**
@@ -467,7 +503,7 @@ olsr_print_neighbor_table(void)
 
   OLSR_FOR_ALL_NBR_ENTRIES(nbr) {
 
-    lnk = get_best_link_to_neighbor(&nbr->nbr_addr);
+    lnk = get_best_link_to_neighbor_ip(&nbr->nbr_addr);
     if (!lnk) {
       continue;
     }

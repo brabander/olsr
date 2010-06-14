@@ -68,8 +68,6 @@ static int ttl_index = -32;
 
 static uint16_t local_ansn_number = 0;
 
-static void olsr_cleanup_tc_entry(struct tc_entry *tc);
-
 /**
  * Add a new tc_entry to the tc tree
  *
@@ -109,7 +107,6 @@ olsr_add_tc_entry(const union olsr_ip_addr *adr)
    * Insert into the global tc tree.
    */
   avl_insert(&tc_tree, &tc->vertex_node, false);
-  olsr_lock_tc_entry(tc);
 
   /*
    * Initialize subtrees for edges, prefixes, HNAs and MIDs.
@@ -156,7 +153,7 @@ olsr_init_tc(void)
 void
 olsr_change_myself_tc(void)
 {
-  struct link_entry *entry;
+  struct nbr_entry *entry;
   bool main_ip_change = false;
 
   if (tc_myself) {
@@ -169,14 +166,14 @@ olsr_change_myself_tc(void)
     }
 
     /* flush local edges */
-    OLSR_FOR_ALL_LINK_ENTRIES(entry) {
-      if (entry->link_tc_edge) {
+    OLSR_FOR_ALL_NBR_ENTRIES(entry) {
+      if (entry->tc_edge) {
         /* clean up local edges if necessary */
-        entry->link_tc_edge->link = NULL;
-        olsr_delete_tc_edge_entry(entry->link_tc_edge);
-        entry->link_tc_edge = NULL;
+        entry->tc_edge->neighbor = NULL;
+        olsr_delete_tc_edge_entry(entry->tc_edge);
+        entry->tc_edge = NULL;
       }
-    } OLSR_FOR_ALL_LINK_ENTRIES_END(link)
+    } OLSR_FOR_ALL_NBR_ENTRIES_END()
 
     /*
      * Flush our own tc_entry.
@@ -186,7 +183,6 @@ olsr_change_myself_tc(void)
     /*
      * Clear the reference.
      */
-    olsr_unlock_tc_entry(tc_myself);
     tc_myself = NULL;
 
     main_ip_change = true;
@@ -196,17 +192,15 @@ olsr_change_myself_tc(void)
    * The old entry for ourselves is gone, generate a new one and trigger SPF.
    */
   tc_myself = olsr_add_tc_entry(&olsr_cnf->router_id);
-  olsr_lock_tc_entry(tc_myself);
 
   if (main_ip_change) {
-    OLSR_FOR_ALL_LINK_ENTRIES(entry) {
-      /**
-       * check if a main ip change destroyed our TC entries
-       */
-      if (entry->link_tc_edge == NULL) {
-        struct nbr_entry *ne = entry->neighbor;
-        entry->link_tc_edge = olsr_add_tc_edge_entry(tc_myself, &ne->nbr_addr, 0);
-        entry->link_tc_edge->link = entry;
+    OLSR_FOR_ALL_NBR_ENTRIES(entry) {
+    /**
+     * check if a main ip change destroyed our TC entries
+     */
+    if (entry->tc_edge == NULL) {
+        entry->tc_edge = olsr_add_tc_edge_entry(tc_myself, &entry->nbr_addr, 0);
+        entry->tc_edge->neighbor = entry;
       }
     } OLSR_FOR_ALL_LINK_ENTRIES_END(link);
   }
@@ -224,40 +218,31 @@ void
 olsr_delete_tc_entry(struct tc_entry *tc)
 {
   struct tc_edge_entry *tc_edge;
+  struct rt_path *rtp;
 
 #if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
 #endif
-  OLSR_DEBUG(LOG_TC, "TC: del entry %s %u %s\n", olsr_ip_to_string(&buf, &tc->addr),
-      tc->edge_tree.count, tc->is_virtual ? "true" : "false");
+  OLSR_DEBUG(LOG_TC, "TC: del entry %s\n", olsr_ip_to_string(&buf, &tc->addr));
 
-  /* we don't want to keep this node */
-  tc->is_virtual = true;
-
-  if (tc->edge_tree.count == 0) {
-    olsr_cleanup_tc_entry(tc);
-    return;
-  }
-  /* The delete all non-virtual edges, the last one will clean up the tc if possible */
+  /* The delete all non-virtual edges */
   OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
-    /* we don't need this edge for the tc, so let's try to remove it */
     olsr_delete_tc_edge_entry(tc_edge);
   } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END();
-}
 
-/**
- * Delete a tc entry after all edges have been cleared.
- *
- * @param entry the TC entry to delete
- */
-static void
-olsr_cleanup_tc_entry(struct tc_entry *tc) {
-  struct rt_path *rtp;
-#if !defined(REMOVE_LOG_DEBUG)
-  struct ipaddr_str buf;
-#endif
-  OLSR_DEBUG(LOG_TC, "TC: del entry %s %u\n", olsr_ip_to_string(&buf, &tc->addr), tc->refcount);
-  assert (tc->edge_tree.count == 0);
+  /* Stop running timers */
+  olsr_stop_timer(tc->validity_timer);
+  tc->validity_timer = NULL;
+
+  olsr_stop_timer(tc->edge_gc_timer);
+  tc->edge_gc_timer = NULL;
+
+  /* still virtual edges left, node has to stay in database */
+  if (tc->edge_tree.count > 0) {
+    tc->virtual = true;
+    tc->ansn = 0;
+    return;
+  }
 
   OLSR_FOR_ALL_PREFIX_ENTRIES(tc, rtp) {
     olsr_delete_rt_path(rtp);
@@ -269,14 +254,8 @@ olsr_cleanup_tc_entry(struct tc_entry *tc) {
   /* Flush all HNA Networks and kill its timers */
   olsr_flush_hna_nets(tc);
 
-  /* Stop running timers */
-  olsr_stop_timer(tc->edge_gc_timer);
-  tc->edge_gc_timer = NULL;
-  olsr_stop_timer(tc->validity_timer);
-  tc->validity_timer = NULL;
-
   avl_delete(&tc_tree, &tc->vertex_node);
-  olsr_unlock_tc_entry(tc);
+  olsr_cookie_free(tc_mem_cookie, tc);
 }
 
 /**
@@ -337,12 +316,13 @@ olsr_expire_tc_entry(void *context)
   struct ipaddr_str buf;
 #endif
   struct tc_entry *tc = context;
-  tc->validity_timer = NULL;
 
-  OLSR_DEBUG(LOG_TC, "TC: expire node entry %s\n",
-             olsr_ip_to_string(&buf, &tc->addr));
+  OLSR_DEBUG(LOG_TC, "TC: expire node entry %s (%zx)\n",
+             olsr_ip_to_string(&buf, &tc->addr), (size_t)context);
 
   olsr_delete_tc_entry(tc);
+
+  tc->validity_timer = NULL;
   changes_topology = true;
 }
 
@@ -358,34 +338,14 @@ olsr_expire_tc_edge_gc(void *context)
   struct ipaddr_str buf;
 #endif
   struct tc_entry *tc = context;
+  tc->edge_gc_timer = NULL;
 
   OLSR_DEBUG(LOG_TC, "TC: expire edge GC for %s\n",
              olsr_ip_to_string(&buf, &tc->addr));
 
-  tc->edge_gc_timer = NULL;
-
   if (delete_outdated_tc_edges(tc)) {
     changes_topology = true;
   }
-}
-
-/*
- * If the edge does not have a minimum acceptable link quality
- * set the etx cost to infinity such that it gets ignored during
- * SPF calculation.
- *
- * @return 1 if the change of the etx value was relevant
- */
-bool
-olsr_calc_tc_edge_entry_etx(struct tc_edge_entry *tc_edge)
-{
-  olsr_linkcost old = tc_edge->cost;
-  tc_edge->cost = olsr_calc_tc_cost(tc_edge);
-  tc_edge->common_cost = tc_edge->cost;
-  if (tc_edge->edge_inv) {
-    tc_edge->edge_inv->common_cost = tc_edge->cost;
-  }
-  return olsr_is_relevant_costchange(old, tc_edge->cost);
 }
 
 /**
@@ -395,7 +355,7 @@ olsr_calc_tc_edge_entry_etx(struct tc_edge_entry *tc_edge)
  * @return a pointer to the created entry
  */
 struct tc_edge_entry *
-olsr_add_tc_edge_entry(struct tc_entry *tc, union olsr_ip_addr *addr, uint16_t ansn)
+olsr_add_tc_edge_entry(struct tc_entry *tc, const union olsr_ip_addr *addr, uint16_t ansn)
 {
   struct tc_entry *tc_neighbor;
   struct tc_edge_entry *tc_edge;
@@ -420,7 +380,6 @@ olsr_add_tc_edge_entry(struct tc_entry *tc, union olsr_ip_addr *addr, uint16_t a
    * parallel links where we add one tc_edge per link_entry.
    */
   avl_insert(&tc->edge_tree, &tc_edge->edge_node, true);
-  olsr_lock_tc_entry(tc);
 
   /*
    * Connect backpointer.
@@ -435,17 +394,17 @@ olsr_add_tc_edge_entry(struct tc_entry *tc, union olsr_ip_addr *addr, uint16_t a
   if (tc_neighbor == NULL) {
     OLSR_DEBUG(LOG_TC, "TC:   creating neighbor tc_entry %s\n", olsr_ip_to_string(&buf, &tc_edge->T_dest_addr));
     tc_neighbor = olsr_add_tc_entry(&tc_edge->T_dest_addr);
-    tc_neighbor->is_virtual = true;
   }
 
   /* don't create an inverse edge for a tc pointing to us ! */
-  if (1 && tc_neighbor != tc_myself) {
+  if (tc_neighbor != tc_myself) {
     tc_edge_inv = olsr_lookup_tc_edge(tc_neighbor, &tc->addr);
-    if (!tc_edge_inv ) {
+    if (tc_edge_inv == NULL) {
       OLSR_DEBUG(LOG_TC, "TC:   creating inverse edge for %s\n", olsr_ip_to_string(&buf, &tc->addr));
       tc_edge_inv = olsr_add_tc_edge_entry(tc_neighbor, &tc->addr, 0);
 
-      tc_edge_inv->is_virtual = 1;
+      /* mark edge as virtual */
+      tc_edge_inv->virtual = true;
     }
 
     /*
@@ -455,14 +414,31 @@ olsr_add_tc_edge_entry(struct tc_entry *tc, union olsr_ip_addr *addr, uint16_t a
     tc_edge->edge_inv = tc_edge_inv;
   }
 
+  /* this is a real edge */
+  tc_edge->virtual = false;
+
   /*
    * Update the etx.
    */
-  olsr_calc_tc_edge_entry_etx(tc_edge);
+  tc_edge->cost = olsr_calc_tc_cost(tc_edge);
 
   OLSR_DEBUG(LOG_TC, "TC: add edge entry %s\n", olsr_tc_edge_to_string(tc_edge));
 
   return tc_edge;
+}
+
+static void
+internal_delete_tc_edge_entry(struct tc_edge_entry *tc_edge) {
+  struct tc_entry *tc = tc_edge->tc;
+#if !defined REMOVE_LOG_DEBUG
+  struct ipaddr_str buf;
+#endif
+  assert (tc_edge->edge_inv == NULL);
+
+  avl_delete(&tc->edge_tree, &tc_edge->edge_node);
+  OLSR_DEBUG(LOG_TC, "TC: %s down to %d edges\n", olsr_ip_to_string(&buf, &tc->addr), tc->edge_tree.count);
+
+  olsr_free_tc_edge_entry(tc_edge);
 }
 
 /**
@@ -475,54 +451,50 @@ olsr_add_tc_edge_entry(struct tc_entry *tc, union olsr_ip_addr *addr, uint16_t a
 void
 olsr_delete_tc_edge_entry(struct tc_edge_entry *tc_edge)
 {
-  struct tc_entry *tc;
+  struct tc_entry *tc, *tc_inv;
   struct tc_edge_entry *tc_edge_inv;
-#if !defined REMOVE_LOG_DEBUG
-  struct ipaddr_str buf;
-#endif
+  bool was_real = false;
 
-  if (tc_edge->link) {
+  if (tc_edge->neighbor) {
     /* don't remove tc_edge for link entry */
     return;
   }
 
-  tc_edge->is_virtual = 1;
+  assert(tc_edge->edge_inv);
 
+  /* cache tc_entry pointer */
+  tc = tc_edge->tc;
+
+  /* get reverse edge */
   tc_edge_inv = tc_edge->edge_inv;
-  if (tc_edge_inv != NULL && tc_edge_inv->is_virtual == 0) {
-    OLSR_DEBUG(LOG_TC, "TC: mark edge entry %s\n", olsr_tc_edge_to_string(tc_edge));
+  tc_inv = tc_edge_inv->tc;
+
+  if (tc_edge_inv->virtual == false) {
+    /* mark this edge as virtual and correct tc_entry realedge_count */
+    if (!tc_edge->virtual) {
+      tc_edge->virtual = true;
+    }
+    OLSR_DEBUG(LOG_TC, "TC: mark edge entry %s as virtual\n", olsr_tc_edge_to_string(tc_edge));
     return;
   }
 
   OLSR_DEBUG(LOG_TC, "TC: del edge entry %s\n", olsr_tc_edge_to_string(tc_edge));
 
-  /*
-   * Clear the backpointer of our inverse edge.
-   */
-  if (tc_edge_inv) {
-    /* split the two edges */
-    tc_edge_inv->edge_inv = NULL;
-    tc_edge->edge_inv = NULL;
+  /* mark topology as changed */
+  changes_topology = true;
 
-    if (tc_edge_inv->is_virtual) {
-      /* remove the other side too because it's a virtual link */
-      olsr_delete_tc_edge_entry(tc_edge_inv);
-    }
+  /* split the two edges */
+  tc_edge_inv->edge_inv = NULL;
+  tc_edge->edge_inv = NULL;
+
+  /* remove both edges */
+  internal_delete_tc_edge_entry(tc_edge);
+  internal_delete_tc_edge_entry(tc_edge_inv);
+
+  if (was_real && tc_inv != tc_myself && tc_inv->virtual) {
+    /* mark tc_entry to be gone in one ms */
+    olsr_set_timer(&tc_inv->validity_timer, 1, 0, false, &olsr_expire_tc_entry, tc, tc_validity_timer_cookie);
   }
-
-  tc = tc_edge->tc;
-
-  /* remove edge from tc FIRST */
-  avl_delete(&tc->edge_tree, &tc_edge->edge_node);
-  OLSR_DEBUG(LOG_TC, "TC: %s down to %d edges\n", olsr_ip_to_string(&buf, &tc->addr), tc->edge_tree.count);
-
-  /* now check if TC is virtual and has no edges left */
-  if (tc->is_virtual && tc->edge_tree.count == 0) {
-    /* cleanup virtual tc node */
-    olsr_cleanup_tc_entry(tc);
-  }
-  olsr_unlock_tc_entry(tc);
-  olsr_free_tc_edge_entry(tc_edge);
 }
 
 /**
@@ -646,17 +618,16 @@ olsr_tc_update_edge(struct tc_entry *tc, uint16_t ansn, const unsigned char **cu
     /*
      * Update the etx.
      */
-    if (olsr_calc_tc_edge_entry_etx(tc_edge)) {
-      if (tc->msg_hops <= olsr_cnf->lq_dlimit) {
-        edge_change = 1;
-      }
-    }
-    if (edge_change) {
+    tc_edge->cost = olsr_calc_tc_cost(tc_edge);
+    if (tc->msg_hops <= olsr_cnf->lq_dlimit) {
+      edge_change = 1;
       OLSR_DEBUG(LOG_TC, "TC:   chg edge entry %s\n", olsr_tc_edge_to_string(tc_edge));
     }
   }
-  tc_edge->is_virtual = 0;
-  tc->is_virtual = false;
+
+  /* set edge and tc as non-virtual */
+  tc_edge->virtual = false;
+  tc->virtual = false;
 
   return edge_change;
 }
@@ -669,7 +640,7 @@ olsr_tc_update_edge(struct tc_entry *tc, uint16_t ansn, const unsigned char **cu
  * @return a pointer to the tc_edge found - or NULL
  */
 struct tc_edge_entry *
-olsr_lookup_tc_edge(struct tc_entry *tc, union olsr_ip_addr *edge_addr)
+olsr_lookup_tc_edge(struct tc_entry *tc, const union olsr_ip_addr *edge_addr)
 {
   struct avl_node *edge_node;
 
@@ -688,24 +659,33 @@ olsr_print_tc_table(void)
   /* The whole function makes no sense without it. */
   struct tc_entry *tc;
   const int ipwidth = olsr_cnf->ip_version == AF_INET ? 15 : 30;
+  static char NONE[] = "-";
 
   OLSR_INFO(LOG_TC, "\n--- %s ------------------------------------------------- TOPOLOGY\n\n", olsr_wallclock_string());
-  OLSR_INFO_NH(LOG_TC, "%-*s %-*s             %8s %8s\n", ipwidth,
-               "Source IP addr", ipwidth, "Dest IP addr", olsr_get_linklabel(0), "(common)");
+  OLSR_INFO_NH(LOG_TC, "%-*s %-*s %-7s      %8s %12s %5s\n", ipwidth,
+               "Source IP addr", ipwidth, "Dest IP addr", "", olsr_get_linklabel(0), "vtime", "ansn");
 
   OLSR_FOR_ALL_TC_ENTRIES(tc) {
     struct tc_edge_entry *tc_edge;
+    struct millitxt_buf tbuf;
+    char *vtime = NONE;
+
+    if (tc->validity_timer) {
+      olsr_milli_to_txt(&tbuf, olsr_getTimeDue(tc->validity_timer->timer_clock));
+      vtime = tbuf.buf;
+    }
+
     OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
       struct ipaddr_str addrbuf, dstaddrbuf;
-      char lqbuffer1[LQTEXT_MAXLENGTH], lqbuffer2[LQTEXT_MAXLENGTH];
+      char lqbuffer1[LQTEXT_MAXLENGTH];
 
-      OLSR_INFO_NH(LOG_TC, "%-*s %-*s %-7s      %8s %8s\n",
+      OLSR_INFO_NH(LOG_TC, "%-*s %-*s %-7s      %8s %12s %5u\n",
                    ipwidth, olsr_ip_to_string(&addrbuf, &tc->addr),
                    ipwidth, olsr_ip_to_string(&dstaddrbuf,
                                               &tc_edge->T_dest_addr),
-                   tc_edge->is_virtual ? "virtual" : "",
+                   tc_edge->virtual ? "virtual" : "",
                    olsr_get_linkcost_text(tc_edge->cost, false, lqbuffer1, sizeof(lqbuffer1)),
-                   olsr_get_linkcost_text(tc_edge->common_cost, false, lqbuffer2, sizeof(lqbuffer2)));
+                   vtime, tc_edge->ansn);
 
     } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END();
   } OLSR_FOR_ALL_TC_ENTRIES_END();
@@ -809,7 +789,8 @@ olsr_input_tc(struct olsr_message * msg,
   tc = olsr_lookup_tc_entry(&msg->originator);
 
   /* TCs can be splitted, so we are looking for ANSNs equal or higher */
-  if (tc && status != RESET_SEQNO_OLSR_MESSAGE && tc->tc_seq != -1 && olsr_seqno_diff(ansn, tc->ansn) < 0) {
+  if (tc && status != RESET_SEQNO_OLSR_MESSAGE && tc->tc_seq != -1
+      && !tc->virtual && olsr_seqno_diff(ansn, tc->ansn) < 0) {
     /* this TC is too old, discard it */
     return;
   }
@@ -827,9 +808,6 @@ olsr_input_tc(struct olsr_message * msg,
   tc->msg_hops = msg->hopcnt;
   tc->tc_seq = msg->seqno;
   tc->ansn = ansn;
-  tc->ignored = 0;
-  tc->err_seq_valid = false;
-  tc->is_virtual = false;
 
   OLSR_DEBUG(LOG_TC, "Processing TC from %s, seq 0x%04x\n", olsr_ip_to_string(&buf, &msg->originator), tc->tc_seq);
 
@@ -896,31 +874,28 @@ getRelevantTcCount(void)
 void
 olsr_delete_all_tc_entries(void) {
   struct tc_entry *tc;
-  struct link_entry *link;
+  struct tc_edge_entry *edge;
 
-  /* then remove all tc entries */
+  /* delete tc_edges */
   OLSR_FOR_ALL_TC_ENTRIES(tc) {
-    tc->is_virtual = 0;
+    OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, edge) {
+      if (edge->neighbor) {
+        /* break connector with neighbor */
+        edge->neighbor->tc_edge = NULL;
+        edge->neighbor = NULL;
+      }
+      edge->edge_inv = NULL;
+      internal_delete_tc_edge_entry(edge);
+    } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END()
   } OLSR_FOR_ALL_TC_ENTRIES_END(tc)
 
+  /* delete tc_entries */
   OLSR_FOR_ALL_TC_ENTRIES(tc) {
-    if (tc != tc_myself) {
-      olsr_delete_tc_entry(tc);
-    }
+    olsr_delete_tc_entry(tc);
   } OLSR_FOR_ALL_TC_ENTRIES_END(tc)
-
-  /* kill all references in link_set */
-  OLSR_FOR_ALL_LINK_ENTRIES(link) {
-    link->link_tc_edge = NULL;
-  } OLSR_FOR_ALL_LINK_ENTRIES_END(link)
-
 
   /* kill tc_myself */
-  if (tc_myself) {
-    olsr_delete_tc_entry(tc_myself);
-    olsr_unlock_tc_entry(tc_myself);
-    tc_myself = NULL;
-  }
+  tc_myself = NULL;
 }
 
 static uint8_t
@@ -1064,7 +1039,7 @@ olsr_output_lq_tc_internal(void *ctx  __attribute__ ((unused)), union olsr_ip_ad
     }
 
     /* Set the entry's link quality */
-    link = get_best_link_to_neighbor(&nbr->nbr_addr);
+    link = get_best_link_to_neighbor_ip(&nbr->nbr_addr);
     if (!link) {
       /* no link ? */
       continue;

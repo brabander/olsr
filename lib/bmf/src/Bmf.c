@@ -311,7 +311,7 @@ BmfPacketCaptured(struct TBmfInterface *intf, unsigned char sllPkttype, unsigned
    * TODO2: get_best_link_to_neighbor() may be very CPU-expensive, a simpler call
    * would do here (something like 'get_any_link_to_neighbor()'). */
   isFromOlsrNeighbor = (isFromOlsrIntf  /* The frame is captured on an OLSR interface... */
-                        && get_best_link_to_neighbor(origIp) != NULL);  /* ...from an OLSR neighbor */
+                        && get_best_link_to_neighbor_ip(origIp) != NULL);  /* ...from an OLSR neighbor */
 
   /* Check with OLSR if I am MPR for that neighbor */
   /* TODO: olsr_lookup_mprs_set() is not thread-safe! */

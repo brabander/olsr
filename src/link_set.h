@@ -84,7 +84,6 @@ struct link_entry {
   /* cost of this link */
   olsr_linkcost linkcost;
 
-  struct tc_edge_entry *link_tc_edge;  /* shortcut to corresponding tc-edge */
   struct list_node link_list;          /* double linked list of all link entries */
 };
 
@@ -116,11 +115,13 @@ extern bool link_changes;
 void olsr_init_link_set(void);
 void olsr_delete_link_entry_by_if(const struct interface *);
 void olsr_expire_link_hello_timer(void *);
-void olsr_update_packet_loss_worker(struct link_entry *, bool);
+void olsr_lq_hello_handler(struct link_entry *, bool);
 void signal_link_changes(bool);        /* XXX ugly */
 
 
-struct link_entry *EXPORT(get_best_link_to_neighbor) (const union olsr_ip_addr *);
+struct link_entry *EXPORT(get_best_link_to_neighbor)(struct nbr_entry *nbr);
+
+struct link_entry *EXPORT(get_best_link_to_neighbor_ip) (const union olsr_ip_addr *);
 
 struct link_entry *EXPORT(lookup_link_entry) (const union olsr_ip_addr *,
                                               const union olsr_ip_addr * remote_main, const struct interface *);

@@ -809,11 +809,12 @@ void
 olsr_stop_timer(struct timer_entry *timer)
 {
   /* It's okay to get a NULL here */
-  if (!timer) {
+  if (timer == NULL) {
     return;
   }
 
   assert(timer->timer_cookie);     /* we want timer cookies everywhere */
+  assert(timer->timer_list.next != NULL && timer->timer_list.prev != NULL);
 
   OLSR_DEBUG(LOG_SCHEDULER, "TIMER: stop %s timer %p, ctx %p\n",
              timer->timer_cookie->ci_name, timer, timer->timer_cb_context);

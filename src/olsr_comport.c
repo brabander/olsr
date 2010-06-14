@@ -333,6 +333,9 @@ static void olsr_com_parse_connection(int fd, void *data, unsigned int flags) {
           olsr_ip_to_string(&buf, &con->addr), strerror(errno));
       con->state = CLEANUP;
     }
+    else {
+      con->state = SEND_AND_QUIT;
+    }
   }
 
   switch (con->state) {
@@ -390,6 +393,7 @@ static void olsr_com_parse_connection(int fd, void *data, unsigned int flags) {
     OLSR_DEBUG(LOG_COMPORT, "  cleanup\n");
     /* clean up connection by calling timeout directly */
     olsr_stop_timer(con->timeout);
+    con->timeout = NULL;
     olsr_com_cleanup_session(con);
   }
   return;

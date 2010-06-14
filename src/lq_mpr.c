@@ -95,7 +95,7 @@ olsr_calculate_lq_mpr(void)
        */
 
       /* determine the link quality of the direct link */
-      lnk = get_best_link_to_neighbor(&neigh->nbr_addr);
+      lnk = get_best_link_to_neighbor_ip(&neigh->nbr_addr);
       if (!lnk) {
         continue;
       }

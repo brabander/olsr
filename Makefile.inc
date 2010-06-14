@@ -18,6 +18,11 @@ REMOVE_LOG_ERROR ?= 0
 # you need a recent enough gcc and the libmudflap installed
 MUDFLAP ?= 0
 
+# enables several security features like exec ASLR,
+# stack protector, fortify source, RELRO and BIND_NOW
+# only for linux at the moment
+HARDENING ?= 1
+
 # enable static linking of plugins (list of plugin directory names) 
 STATIC_PLUGINS ?= lq_etx_ff
 
@@ -77,8 +82,29 @@ ifeq ($(REMOVE_LOG_ERROR),1)
 endif
 
 ##############
+# OS detection
+##############
+ifeq ($(OS),Windows_NT)
+  OS := win32
+endif
+ifeq ($(OS),)
+  OS := $(shell sh $(TOPDIR)/make/guess_os.sh)
+endif
+
+#################
+# OLSRd hardening
+#################
+# -D_FORTIFY_SOURCE=2 need at least -O2
+ifeq ($(HARDENING),1)
+ifeq ($(OPTIMIZE),)
+OPTIMIZE := -O2
+endif
+endif
+
+##############
 # add gcc warnings and optimizations if CFLAGS not set
 ##############
+
 ifndef CFLAGS
   ifndef WARNINGS
     ALL_WARNINGS +=	-Wall
@@ -119,6 +145,8 @@ ifndef CFLAGS
 
     ALL_WARNINGS +=	-Winline
     ALL_WARNINGS +=	-Wdisabled-optimization
+		ALL_WARNINGS +=	-Wformat
+		ALL_WARNINGS +=	-Wformat-security
     ALL_WARNINGS +=	-Werror
     ALL_WARNINGS +=	-finline-functions-called-once
     ALL_WARNINGS +=	-funit-at-a-time
@@ -176,6 +204,10 @@ ifdef OLSRD_PLUGIN
   LDFLAGS +=	-Wl,--version-script=version-script.txt
 else
   # c and ld flags for main
+  ifeq ($(HARDENING),1)
+    CFLAGS +=	-fPIE
+    LDFLAGS +=	-pie
+  endif
   ifeq ($(LD_HAS_DYN), yes)
     LDFLAGS_EXE +=	-Wl,--dynamic-list=$(EXENAME).exports
   else
@@ -207,24 +239,18 @@ HDRS +=		$(wildcard src/common/*.h src/*.h)
 STATIC_PLUGIN_SRCS += $(foreach dir,$(STATIC_PLUGINS),$(wildcard lib/$(dir)/src/*.c))
 STATIC_PLUGIN_OBJS += $(STATIC_PLUGIN_SRCS:%.c=%.o)
 
-# OS detection
-ifeq ($(OS),Windows_NT)
-  OS := win32
+ifdef OLSRD_PLUGIN
+  # this must be run after the OS-specific makefile
+  CPPFLAGS +=  -DPLUGIN_FULLNAME="\"$(PLUGIN_FULLNAME)\""
 endif
-ifeq ($(OS),)
-  OS := $(shell sh $(TOPDIR)/make/guess_os.sh)
-endif
+
+# load os-specific makefiles
 ifeq ($(OS),UNKNOWN)
 all: help
 else
 # include OS specifics
 all: default_target
 include $(TOPDIR)/make/Makefile.$(OS)
-endif
-
-ifdef OLSRD_PLUGIN
-  # this must be run after the OS-specific makefile
-  CPPFLAGS +=  -DPLUGIN_FULLNAME="\"$(PLUGIN_FULLNAME)\""
 endif
 
 # one object for each source file

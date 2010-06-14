@@ -65,9 +65,7 @@ static olsr_linkcost lq_etxfpm_calc_link_entry_cost(struct link_entry *);
 static olsr_linkcost lq_etxfpm_calc_lq_hello_neighbor_cost(struct lq_hello_neighbor *);
 static olsr_linkcost lq_etxfpm_calc_tc_edge_entry_cost(struct tc_edge_entry *);
 
-static bool lq_etxfpm_is_relevant_costchange(olsr_linkcost c1, olsr_linkcost c2);
-
-static olsr_linkcost lq_etxfpm_packet_loss_handler(struct link_entry *, bool);
+static void lq_etxfpm_hello_handler(struct link_entry *, bool);
 
 static void lq_etxfpm_memorize_foreign_hello(struct link_entry *, struct lq_hello_neighbor *);
 static void lq_etxfpm_copy_link_entry_lq_into_tc_edge_entry(struct tc_edge_entry *target, struct link_entry *source);
@@ -98,9 +96,7 @@ struct lq_handler lq_etxfpm_handler = {
   &lq_etxfpm_calc_lq_hello_neighbor_cost,
   &lq_etxfpm_calc_tc_edge_entry_cost,
 
-  &lq_etxfpm_is_relevant_costchange,
-
-  &lq_etxfpm_packet_loss_handler,
+  &lq_etxfpm_hello_handler,
 
   &lq_etxfpm_memorize_foreign_hello,
   &lq_etxfpm_copy_link_entry_lq_into_tc_edge_entry,
@@ -223,17 +219,8 @@ lq_etxfpm_calc_tc_edge_entry_cost(struct tc_edge_entry *edge)
   return lq_etxfpm_calc_linkcost(&lq_edge->lq);
 }
 
-static bool
-lq_etxfpm_is_relevant_costchange(olsr_linkcost c1, olsr_linkcost c2)
-{
-  if (c1 > c2) {
-    return c2 - c1 > LQ_PLUGIN_RELEVANT_COSTCHANGE;
-  }
-  return c1 - c2 > LQ_PLUGIN_RELEVANT_COSTCHANGE;
-}
-
-static olsr_linkcost
-lq_etxfpm_packet_loss_handler(struct link_entry *link, bool loss)
+static void
+lq_etxfpm_hello_handler(struct link_entry *link, bool loss)
 {
   struct lq_etxfpm_link_entry *lq_link = (struct lq_etxfpm_link_entry *)link;
 
@@ -241,7 +228,6 @@ lq_etxfpm_packet_loss_handler(struct link_entry *link, bool loss)
   uint32_t alpha_new = aging_factor_new;
 
   uint32_t value;
-  // fpm link_loss_factor = fpmidiv(itofpm(link->loss_link_multiplier), 65536);
 
   if (lq_link->quickstart < LQ_QUICKSTART_STEPS) {
     alpha_new = aging_quickstart_new;
@@ -261,7 +247,8 @@ lq_etxfpm_packet_loss_handler(struct link_entry *link, bool loss)
   }
   lq_link->lq.valueLq = (value * 255 + LQ_FPM_INTERNAL_MULTIPLIER - 1) / LQ_FPM_INTERNAL_MULTIPLIER;
 
-  return lq_etxfpm_calc_linkcost(&lq_link->lq);
+  link->linkcost = lq_etxfpm_calc_linkcost(&lq_link->lq);
+  olsr_neighbor_cost_may_changed(link->neighbor);
 }
 
 static void

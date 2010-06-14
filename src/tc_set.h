@@ -62,10 +62,9 @@ struct tc_edge_entry {
   union olsr_ip_addr T_dest_addr;      /* edge_node key */
   struct tc_edge_entry *edge_inv;      /* shortcut, used during SPF calculation */
   struct tc_entry *tc;                 /* backpointer to owning tc entry */
-  struct link_entry *link;             /* back pointer for link edges */
+  struct nbr_entry *neighbor;          /* back pointer for edges to neighbor */
   olsr_linkcost cost;                  /* metric for tc received by this tc */
-  olsr_linkcost common_cost;           /* common metric of both edges used for SPF calculation */
-  unsigned int is_virtual:1;           /* 1 if this is a virtual edge created by the neighbors TC ? */
+  bool virtual;                        /* 1 if this is a virtual edge created by the neighbors TC ? */
   uint16_t ansn;                       /* ansn of this edge, used for multipart msgs */
 };
 
@@ -82,18 +81,13 @@ struct tc_entry {
   struct link_entry *next_hop;         /* SPF calculated link to the 1st hop neighbor */
   struct timer_entry *edge_gc_timer;   /* used for edge garbage collection */
   struct timer_entry *validity_timer;  /* tc validity time */
-  uint32_t refcount;                   /* reference counter */
-  bool is_virtual;                     /* true if tc is already timed out */
+  bool virtual;                        /* true if node is virtual */
   int tc_seq;                          /* sequence number of the tc message */
   int mid_seq;                         /* sequence number of the mid message */
   int hna_seq;                         /* sequence number of the hna message */
   uint8_t msg_hops;                    /* hopcount as per the tc message */
   uint8_t hops;                        /* SPF calculated hopcount */
   uint16_t ansn;                       /* ANSN number of the tc message */
-  uint16_t ignored;                    /* how many TC messages ignored in a sequence
-                                          (kindof emergency brake) */
-  uint16_t err_seq;                    /* sequence number of an unplausible TC */
-  bool err_seq_valid;                  /* do we have an error (unplauible seq/ansn) */
 };
 
 /*
@@ -143,31 +137,11 @@ void olsr_input_tc(struct olsr_message *, struct interface *, union olsr_ip_addr
 
 /* tc_entry manipulation */
 struct tc_entry *EXPORT(olsr_lookup_tc_entry) (const union olsr_ip_addr *);
-struct tc_entry *olsr_locate_tc_entry(const union olsr_ip_addr *);
-
-/*
- * Increment the reference counter.
- */
-static INLINE void
-olsr_lock_tc_entry(struct tc_entry *tc)
-{
-  tc->refcount++;
-}
-
-/*
- * Unlock and free a tc_entry once all references are gone.
- */
-static INLINE void
-olsr_unlock_tc_entry(struct tc_entry *tc)
-{
-  if (--tc->refcount == 0) {    /* All references are gone. */
-    olsr_cookie_free(tc_mem_cookie, tc);
-  }
-}
+struct tc_entry *EXPORT(olsr_locate_tc_entry)(const union olsr_ip_addr *);
 
 /* tc_edge_entry manipulation */
-struct tc_edge_entry *EXPORT(olsr_lookup_tc_edge) (struct tc_entry *, union olsr_ip_addr *);
-struct tc_edge_entry *olsr_add_tc_edge_entry(struct tc_entry *, union olsr_ip_addr *, uint16_t);
+struct tc_edge_entry *EXPORT(olsr_lookup_tc_edge) (struct tc_entry *, const union olsr_ip_addr *);
+struct tc_edge_entry *olsr_add_tc_edge_entry(struct tc_entry *, const union olsr_ip_addr *, uint16_t);
 void olsr_delete_tc_entry(struct tc_entry *);
 void olsr_delete_tc_edge_entry(struct tc_edge_entry *);
 bool olsr_calc_tc_edge_entry_etx(struct tc_edge_entry *);

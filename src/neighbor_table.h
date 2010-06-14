@@ -47,6 +47,7 @@
 #include "olsr_time.h"
 #include "olsr_types.h"
 #include "common/avl.h"
+#include "tc_set.h"
 
 #define NB2S_COVERED  0x1     /* node has been covered by a MPR */
 
@@ -64,7 +65,6 @@ struct nbr_con {
 
   olsr_linkcost second_hop_linkcost;
   olsr_linkcost path_linkcost;
-  olsr_linkcost saved_path_linkcost;
 };
 
 
@@ -73,6 +73,7 @@ struct nbr_con {
 struct nbr_entry {
   struct avl_node nbr_node;            /* nbr keyed by ip address */
   union olsr_ip_addr nbr_addr;
+  struct tc_edge_entry *tc_edge;
   unsigned int willingness:3;
   unsigned int is_sym:1;
   unsigned int is_mpr:1;
@@ -139,7 +140,7 @@ struct nbr_entry *olsr_add_nbr_entry(const union olsr_ip_addr *);
 void olsr_delete_nbr_entry(struct nbr_entry *);
 struct nbr_entry *EXPORT(olsr_lookup_nbr_entry) (const union olsr_ip_addr *, bool aliaslookup);
 
-int olsr_update_nbr_status(struct nbr_entry *, bool);
+void olsr_update_nbr_status(struct nbr_entry *);
 
 /* work with 2-hop neighbors */
 struct nbr2_entry *olsr_add_nbr2_entry(const union olsr_ip_addr *);
