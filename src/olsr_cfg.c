@@ -443,7 +443,7 @@ parse_cfg_interface(char *argstr, struct olsr_config *rcfg, char *rmsg)
         char **p_next = tok_next;
         struct olsr_if_config *new_if = queue_if(p[0], rcfg);
         PARSER_DEBUG_PRINTF("Interface %s\n", p[0]);
-        while (new_if && p_next[0]) {
+        while (new_if && p_next && p_next[0]) {
           if (!p_next[1]) {
             sprintf(rmsg, "Odd args in %s\n", nxt);
             parse_tok_free(tok_next);
