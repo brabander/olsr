@@ -74,7 +74,7 @@
 #define OBAMP_OUTER_TREE_CREATE_IVAL    6      //seconds
 #define _MESH_LOCK_		3      //seconds
 
-#define _Texpire_		7     //time in seconds before expire a neighbor
+#define _Texpire_		18    //time in seconds before expire a neighbor
 #define _Texpire_timer_		1       //time in seconds to parse the list decrement and purge
 
 #define _TREE_REQUEST_DELAY_	5
