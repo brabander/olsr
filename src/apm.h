@@ -39,9 +39,8 @@
  *
  */
 
-
-#ifndef _OLSR_APM
-#define _OLSR_APM
+#ifndef _APM_H
+#define _APM_H
 
 /*
  * Interface to OS dependent power management information
@@ -56,7 +55,6 @@ struct olsr_apm_info {
   int battery_time_left;               /* Time left in minutes */
 };
 
-
 int apm_init(void);
 
 void apm_printinfo(struct olsr_apm_info *);
@@ -70,7 +68,7 @@ void apm_printinfo(struct olsr_apm_info *);
 
 int apm_read(struct olsr_apm_info *);
 
-#endif
+#endif /* _APM_H */
 
 /*
  * Local Variables:
