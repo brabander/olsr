@@ -46,7 +46,7 @@ CC = $(CROSS_COMPILE)gcc
 endif
 
 CFLAGS += -I$(NDK_ARCH)/usr/include
-CFLAGS += -Iandroid
+CFLAGS += -I$(TOPDIR)/android
 
 LDFLAGS += -nostartfiles -nodefaultlibs -nostdlib
 LDFLAGS += -Wl,--dynamic-linker -Wl,/system/bin/linker

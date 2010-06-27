@@ -150,8 +150,7 @@ ifeq ($(OS),win32)
 SUBDIRS := dot_draw httpinfo mini pgraph secure txtinfo
 else
 ifeq ($(OS),android)
-# nameservice: no regex
-SUBDIRS := bmf dot_draw dyn_gw_plain httpinfo mini secure tas txtinfo watchdog
+SUBDIRS := bmf dot_draw dyn_gw_plain httpinfo mini secure tas txtinfo watchdog nameservice
 else
 SUBDIRS := dot_draw dyn_gw dyn_gw_plain httpinfo mini nameservice pgraph secure txtinfo watchdog
 endif
