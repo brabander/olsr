@@ -59,6 +59,7 @@ LDFLAGS += -nostartfiles -nodefaultlibs -nostdlib
 LDFLAGS += -Wl,--dynamic-linker -Wl,/system/bin/linker
 LDFLAGS += -L$(NDK_ARCH)/usr/lib
 LDFLAGS += -Wl,-rpath-link -Wl,$(NDK_ARCH)/usr/lib
+LDFLAGS += -llog
 ifndef OLSRD_PLUGIN
 LDFLAGS += $(NDK_ARCH)/usr/lib/crtbegin_dynamic.o
 endif
