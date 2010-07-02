@@ -40,6 +40,7 @@
  */
 
 #include "kernel_tunnel.h"
+#include "kernel_routes.h"
 #include "log.h"
 #include "olsr_types.h"
 #include "net_os.h"
@@ -66,8 +67,8 @@
 #include <sys/types.h>
 #include <net/if.h>
 
-static const char DEV_IPV4_TUNNEL[IFNAMSIZ] = "tunl0";
-static const char DEV_IPV6_TUNNEL[IFNAMSIZ] = "ip6tnl0";
+static const char DEV_IPV4_TUNNEL[IFNAMSIZ] = TUNNEL_ENDPOINT_IF;
+static const char DEV_IPV6_TUNNEL[IFNAMSIZ] = TUNNEL_ENDPOINT_IF6;
 
 static bool store_iptunnel_state;
 static struct olsr_cookie_info *tunnel_cookie;
@@ -84,7 +85,11 @@ int olsr_os_init_iptunnel(void) {
   if (store_iptunnel_state) {
     return 0;
   }
-  return olsr_if_set_state(dev, true);
+  if (olsr_if_set_state(dev, true)) {
+    return -1;
+  }
+
+  return olsr_os_ifip(if_nametoindex(dev), &olsr_cnf->main_addr, true);
 }
 
 void olsr_os_cleanup_iptunnel(void) {
@@ -122,6 +127,7 @@ static int os_ip4_tunnel(const char *name, in_addr_t *target)
   memset(&p, 0, sizeof(p));
   p.iph.version = 4;
   p.iph.ihl = 5;
+  p.iph.ttl = 64;
   p.iph.protocol = IPPROTO_IPIP;
   if (target) {
     p.iph.daddr = *target;
@@ -230,7 +236,7 @@ struct olsr_iptunnel_entry *olsr_os_add_ipip_tunnel(union olsr_ip_addr *target, 
 
     if (if_idx == 0) {
       // cannot create tunnel
-fprintf(stderr, "Cannot create tunnel %s to %s\n", name, olsr_ip_to_string(&buf, target));
+      olsr_syslog(OLSR_LOG_ERR, "Cannot create tunnel %s\n", name);
       return NULL;
     }
 
@@ -245,6 +251,9 @@ fprintf(stderr, "Cannot create tunnel %s to %s\n", name, olsr_ip_to_string(&buf,
       }
       return NULL;
     }
+
+    /* set originator IP for tunnel */
+    olsr_os_ifip(if_idx, &olsr_cnf->main_addr, true);
 
     t = olsr_cookie_malloc(tunnel_cookie);
     memcpy(&t->target, target, sizeof(*target));

@@ -39,7 +39,7 @@
 # Please also write a new version to:
 # gui/win32/Main/Frontend.rc (line 71, around "CAPTION [...]")
 # gui/win32/Inst/installer.nsi (line 57, around "MessageBox MB_YESNO [...]")
-VERS =		pre-0.6.0
+VERS =		pre-0.6.1
 
 TOPDIR = .
 include Makefile.inc
@@ -150,8 +150,7 @@ ifeq ($(OS),win32)
 SUBDIRS := dot_draw httpinfo mini pgraph secure txtinfo
 else
 ifeq ($(OS),android)
-# nameservice: no regex
-SUBDIRS := bmf dot_draw dyn_gw_plain httpinfo mini quagga secure tas txtinfo watchdog
+SUBDIRS := arprefresh bmf dot_draw dyn_gw_plain httpinfo mini nameservice pgraph secure tas txtinfo watchdog
 else
 SUBDIRS := dot_draw dyn_gw dyn_gw_plain httpinfo mini nameservice pgraph secure txtinfo watchdog
 endif

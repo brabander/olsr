@@ -269,6 +269,45 @@ SmartGatewayUplinkNAT <yes/no>
 SmartGatewaySpeed <uplink> <downlink>
 SmartGatewayPrefix <prefix>
 
+On the SmartGW server (the OLSR instance anncouning 'Internet here!' via
+HNA0/0 or similar) the implicit tunl0 interface is used to forward  incoming 
+packets originated by SmartGW clients to the internet route. This may be 
+protected by the sysctl rp_filter setting. Note, that at least with RedHat kernel 
+2.6.18, the net.ipv4.conf.tunl0.rp_filter sysctl file is not present after 
+loading the "ipip" kernel module. Which prevents OLSRD from switching off the 
+filter. As a workaround, add an "ip addr add 0.0.0.0/32 dev tunl0" after 
+the "modprobe ipip" line in your OLSRD startup script. 
+
+While the SmartGW function does a fine job on stand-alone PCs, system builders 
+should keep in mind the following facts when setting up routing, firewalls 
+and gateways:
+
+a) The SmartGW tunnel communicates asymmetrically. An IP packet destinned to 
+an Internet server is sent via the IPIP tunnel but returned via the standard 
+OLSRD host route.
+
+b) On the SmartGW server, you should double check your firewall rules and 
+rp_filter defaults. While it's normally not possible to simply encap e.g. 
+a "telnet 127.0.0.1" into IPIP and sent that to the SmartGW server, your 
+specific configuration may open up other attack vectors for an intruder.
+
+c) Do not forget to un-firewall tunl0->internet and (if required to 
+NAT/MASQUERADE) this communication path.
+
+d) While the SmartGW server does not use special routing, the SmartGW client
+inserts policy routing rules for it's function. By using the default configuration,
+the OLSRD standard default route is maintained in table 223 and the OLSRD SmartGW 
+default route in table 224. Both tables are examined only, if you do not have
+a default route in the main table (visible with "ip route ls"). Use "ip route ls
+table 223" or "ip route ls table 224" for debugging/monitoring. You may also
+activate the txtinfo plugin and "wget -O - http://localhost:2006/gateway".
+
+e) For the stand-alone client (Notebook user running OLSRD in order to browse) 
+the lowered IPIP tunnel MTU is no problem. If you do proxy routing, e.g. for 
+attached LAN clients without OLSRD, you may want MSS-clamping for the tunnel 
+interface created by OLSRD. Because OLSRD uses an arbitrary name for the tunnel
+iface (e.g. tnl_7c41c668) you may want to include a wildcard iptables rule. Example:
+iptables -A FORWARD -o tnl_+ -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
 
     6.) NatThreshold
 ************************

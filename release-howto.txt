@@ -21,15 +21,18 @@ cheat sheet for making a (stable) release tarball.
 
 4. Change VERS in Makefile.inc to your target release.
    in this example the target release is 0.5.6-r5
+   Please also write a new version to:
+   gui/win32/Main/Frontend.rc (line 71, around "CAPTION [...]")
+   gui/win32/Inst/installer.nsi (line 57, around "MessageBox MB_YESNO [...]")
 
    most likely this is carrying some pre-XXX-release tag.
    
    $ grep -E "^VERS" Makefile
-   VERS =          pre-0.5.6-r5
+   VERS =          pre-0.6.1
 
    change it to
 
-   VERS =          0.5.6-r5
+   VERS =          0.6.1
 
 5. commit
 
@@ -44,53 +47,46 @@ cheat sheet for making a (stable) release tarball.
    e476819be5747758e3d6f579e4096bce  /tmp/olsrd-0.5.6-r5.tar.bz2
 
 7. check if everything is in the release tarball (ideally on a a
-   differnt machine) and try to build from the tarball.
+   different machine) and try to build from the tarball.
 
 8. display the used tags:
 
-   $ hg tags
-   tip                             1757:77e1ccb98227
-   OLSRD_0_5_6_R3                  1728:feb3d7883ff0
-   OLSRD_0_5_6_R2                  1688:1573e530a679
-   OLSRD_0_5_6                     1669:d91b47b34ba7
-   OLSRD_0_5_6_RC7                 1644:1516480b552f
-   OLSRD_0_5_6_RC6                 1634:f1b2cdeafd74
-   OLSRD_0_5_6_RC5                 1622:99b89bb6a9a4
-   OLSRD_0_5_6_RC4                 1612:0490bdcb7910
-   OLSRD_0_5_6_RC3                 1591:c6c9571fe4d6
-   OLSRD_0_5_6_RC2                 1587:bd66c98dc4c8
-   OLSRD_0_5_6_RC1                 1526:fd8f4e49a398
-   OLSRD_0_5_5                     1460:233036647bca
-   OLSRD_0_5_5_RC1                 1452:669b81f6918e
-   OLSRD_0_5_4                     1264:60f04fc39707
-   OLSRD_0_5_3                     1158:00991ca84047
-   OLSRD_0_5_2                     1121:283effb1472c
-   OLSRD_0_5_1                     1101:c23aab9db1e1
-   OLSRD_0_5_0                      994:612f5a21a303
-   OLSRD_0_4_10                     893:a39cda38836b
-   OLSRD_0_4_9                      704:43d67c4814ef
-   OLSRD_0_4_8                      404:e9beaf82c0ea
+   $ git tag
+OLSRD_0_4_10
+OLSRD_0_4_8
+OLSRD_0_4_9
+OLSRD_0_5_0
+OLSRD_0_5_1
+OLSRD_0_5_2
+OLSRD_0_5_3
+OLSRD_0_5_4
+...
 
    now tag the tree (please stick to the tagging scheme).
 
-   $ hg tag OLSRD_0_5_6_R5
+   $ git tag -s OLSRD_0_6_0
 
 9. push
 
 10. upload the the .tgz and .bz2 tarballs to the http://www.olsr.org/downaload/0.5/
-   sectaion and add a release articel on the web.
+   section and add a release article on the web.
+   Add a PGP signed textfile with the md5/sha1 sums to the webpage too
 
 11. Change VERS in Makefile.inc to your *next* target release.
-   in this example the next target release is pre-0.5.6-r6
+   in this example the next target release is pre-0.6.2
+   
+   Please also write a new version to:
+   gui/win32/Main/Frontend.rc (line 71, around "CAPTION [...]")
+   gui/win32/Inst/installer.nsi (line 57, around "MessageBox MB_YESNO [...]")
 
    change it from:
    
    $ grep -E "^VERS" Makefile
-   VERS =          0.5.6-r5
+   VERS =          0.6.1
 
    to
 
-   VERS =          pre-0.5.6-r6
+   VERS =          pre-0.6.2
 
    commit & push
 

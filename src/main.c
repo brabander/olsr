@@ -80,7 +80,9 @@ bool olsr_win32_end_flag = false;
 static void olsr_shutdown(int) __attribute__ ((noreturn));
 #endif
 
-#if defined linux || __FreeBSD__ || defined __NetBSD__ || defined __OpenBSD__
+#if defined android
+#define DEFAULT_LOCKFILE_PREFIX "/data/local"
+#elif defined linux || __FreeBSD__ || defined __NetBSD__ || defined __OpenBSD__
 #define DEFAULT_LOCKFILE_PREFIX "/var/run/olsrd"
 #elif defined WIN32
 #define DEFAULT_LOCKFILE_PREFIX "C:\\olsrd"
@@ -523,21 +525,21 @@ int main(int argc, char *argv[]) {
 
 #ifdef LINUX_NETLINK_ROUTING
   /* create policy routing priorities if necessary */
-  if (olsr_cnf->rt_table_pri) {
+  if (DEF_RT_NONE != olsr_cnf->rt_table_pri) {
     olsr_os_policy_rule(olsr_cnf->ip_version,
         olsr_cnf->rt_table, olsr_cnf->rt_table_pri, NULL, true);
   }
-  if (olsr_cnf->rt_table_tunnel_pri) {
+  if (DEF_RT_NONE != olsr_cnf->rt_table_tunnel_pri) {
     olsr_os_policy_rule(olsr_cnf->ip_version,
         olsr_cnf->rt_table_tunnel, olsr_cnf->rt_table_tunnel_pri, NULL, true);
   }
-  if (olsr_cnf->rt_table_default_pri) {
+  if (DEF_RT_NONE != olsr_cnf->rt_table_default_pri) {
     olsr_os_policy_rule(olsr_cnf->ip_version,
         olsr_cnf->rt_table_default, olsr_cnf->rt_table_default_pri, NULL, true);
   }
 
   /* OLSR sockets */
-  if (olsr_cnf->rt_table_defaultolsr_pri) {
+  if (DEF_RT_NONE != olsr_cnf->rt_table_defaultolsr_pri) {
     for (ifn = ifnet; ifn; ifn = ifn->int_next) {
       olsr_os_policy_rule(olsr_cnf->ip_version, olsr_cnf->rt_table_default,
           olsr_cnf->rt_table_defaultolsr_pri, ifn->int_name, true);
@@ -736,7 +738,7 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
     close(ifn->send_socket);
 
 #ifdef LINUX_NETLINK_ROUTING
-    if (olsr_cnf->rt_table_defaultolsr_pri) {
+    if (DEF_RT_NONE != olsr_cnf->rt_table_defaultolsr_pri) {
       olsr_os_policy_rule(olsr_cnf->ip_version, olsr_cnf->rt_table_default,
           olsr_cnf->rt_table_defaultolsr_pri, ifn->int_name, false);
     }
@@ -753,15 +755,15 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
   close(olsr_cnf->ioctl_s);
 
 #ifdef LINUX_NETLINK_ROUTING
-  if (olsr_cnf->rt_table_pri) {
+  if (DEF_RT_NONE != olsr_cnf->rt_table_pri) {
     olsr_os_policy_rule(olsr_cnf->ip_version,
         olsr_cnf->rt_table, olsr_cnf->rt_table_pri, NULL, false);
   }
-  if (olsr_cnf->rt_table_tunnel_pri) {
+  if (DEF_RT_NONE != olsr_cnf->rt_table_tunnel_pri) {
     olsr_os_policy_rule(olsr_cnf->ip_version,
         olsr_cnf->rt_table_tunnel, olsr_cnf->rt_table_tunnel_pri, NULL, false);
   }
-  if (olsr_cnf->rt_table_default_pri) {
+  if (DEF_RT_NONE != olsr_cnf->rt_table_default_pri) {
     olsr_os_policy_rule(olsr_cnf->ip_version,
         olsr_cnf->rt_table_default, olsr_cnf->rt_table_default_pri, NULL, false);
   }

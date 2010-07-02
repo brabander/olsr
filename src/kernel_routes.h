@@ -63,6 +63,7 @@ void olsr_os_inetgw_tunnel_route(uint32_t if_idx, bool ipv4, bool set);
 
 int olsr_os_policy_rule(int family, int rttable, uint32_t priority, const char *if_name, bool set);
 int olsr_os_localhost_if(union olsr_ip_addr *ip, bool create);
+int olsr_os_ifip(int ifindex, union olsr_ip_addr *ip, bool create);
 
 #endif
 

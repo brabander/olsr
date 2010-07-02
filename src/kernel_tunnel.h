@@ -15,10 +15,12 @@
 #define IF_NAMESIZE MAX_INTERFACE_NAME_LEN
 #endif
 
-
 #include "defs.h"
 #include "olsr_types.h"
 #include "common/avl.h"
+
+#define TUNNEL_ENDPOINT_IF "tunl0"
+#define TUNNEL_ENDPOINT_IF6 "ip6tnl0"
 
 struct olsr_iptunnel_entry {
   struct avl_node node;

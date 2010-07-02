@@ -121,12 +121,12 @@ static void netlink_process_link(struct nlmsghdr *h)
   struct ifinfomsg *ifi = (struct ifinfomsg *) NLMSG_DATA(h);
   struct interface *iface;
   struct olsr_if *oif;
+  char namebuffer[IF_NAMESIZE];
 
   iface = if_ifwithindex(ifi->ifi_index);
   oif = NULL;
-  if (iface == NULL && (ifi->ifi_flags & IFF_UP) != 0) {
-    char namebuffer[IF_NAMESIZE];
 
+  if (iface == NULL && (ifi->ifi_flags & (IFF_UP|IFF_RUNNING)) == (IFF_UP|IFF_RUNNING)) {
     if (if_indextoname(ifi->ifi_index, namebuffer)) {
       if ((oif = olsrif_ifwithname(namebuffer)) != NULL) {
         /* try to take interface up, will trigger ifchange */
@@ -141,8 +141,12 @@ static void netlink_process_link(struct nlmsghdr *h)
 
   if (iface == NULL && oif == NULL) {
     /* this is not an OLSR interface */
-    olsr_trigger_ifchange(ifi->ifi_index, NULL,
-        (ifi->ifi_flags & IFF_UP) == 0 ? IFCHG_IF_REMOVE : IFCHG_IF_ADD);
+    if ((ifi->ifi_flags & IFF_UP) != 0 && (ifi->ifi_flags & IFF_RUNNING) != 0) {
+      olsr_trigger_ifchange(ifi->ifi_index, NULL, IFCHG_IF_ADD);
+    }
+    else if ((ifi->ifi_flags & IFF_UP) == 0 && (ifi->ifi_flags & IFF_RUNNING) == 0){
+      olsr_trigger_ifchange(ifi->ifi_index, NULL, IFCHG_IF_REMOVE);
+    }
   }
 }
 
@@ -178,6 +182,8 @@ static void rtnetlink_read(int sock, void *data __attribute__ ((unused)), unsign
               len, ret, plen);
       return;
     }
+
+    OLSR_PRINTF(3, "Netlink message received: type %x\n", nlh->nlmsg_type);
     if ((nlh->nlmsg_type == RTM_NEWLINK) || ( nlh->nlmsg_type == RTM_DELLINK)) {
       /* handle ifup/ifdown */
       netlink_process_link(nlh);
@@ -303,11 +309,10 @@ int olsr_os_policy_rule(int family, int rttable, uint32_t priority, const char *
   return err;
 }
 
-int
-olsr_os_localhost_if(union olsr_ip_addr *ip, bool create)
+static int
+olsr_add_ip(int ifindex, union olsr_ip_addr *ip, const char *l, bool create)
 {
   struct olsr_ipadd_req req;
-  static char l[] = "lo:olsr";
 
   memset(&req, 0, sizeof(req));
 
@@ -321,14 +326,27 @@ olsr_os_localhost_if(union olsr_ip_addr *ip, bool create)
   }
   req.ifa.ifa_family = olsr_cnf->ip_version;
 
-  olsr_netlink_addreq(&req.n, sizeof(req), IFA_LABEL, l, strlen(l) + 1);
   olsr_netlink_addreq(&req.n, sizeof(req), IFA_LOCAL, ip, olsr_cnf->ipsize);
+  if (l) {
+    olsr_netlink_addreq(&req.n, sizeof(req), IFA_LABEL, l, strlen(l) + 1);
+  }
 
   req.ifa.ifa_prefixlen = olsr_cnf->ipsize * 8;
 
-  req.ifa.ifa_index = if_nametoindex("lo");
+  req.ifa.ifa_index = ifindex;
 
   return olsr_netlink_send(&req.n);
+}
+
+int
+olsr_os_localhost_if(union olsr_ip_addr *ip, bool create)
+{
+  static char l[] = "lo:olsr";
+  return olsr_add_ip(if_nametoindex("lo"), ip, l, create);
+}
+
+int olsr_os_ifip(int ifindex, union olsr_ip_addr *ip, bool create) {
+  return olsr_add_ip(ifindex, ip, NULL, create);
 }
 
 static int olsr_new_netlink_route(int family, int rttable, int if_index, int metric, int protocol,

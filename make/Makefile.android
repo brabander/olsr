@@ -12,10 +12,17 @@ MANDIR =
 SRCS += 	$(wildcard src/linux/*.c src/unix/*.c)
 HDRS +=		$(wildcard src/linux/*.h src/unix/*.h)
 
-CPPFLAGS += 	-Dlinux
+CPPFLAGS += 	-Dlinux -DLINUX_NETLINK_ROUTING
 CPPFLAGS += 	-Dandroid
+
+# bionic libc: setbuf() segfaults, do not use
+CPPFLAGS +=	-D'setbuf(a,b)='
+
+# bionic libc: missing declaration
 CPPFLAGS +=	-DINET_ADDRSTRLEN=16
+# bionic libc: renamed declaration
 CPPFLAGS +=	-Dipv6mr_interface=ipv6mr_ifindex
+# bionic libc: missing declarations
 CPPFLAGS +=	-D'IPTOS_PREC(tos)=((tos)&0xe0)'
 CPPFLAGS +=	-D'IPTOS_TOS(tos)=((tos)&0x1e)'
 CPPFLAGS +=	-DOLSRD_GLOBAL_CONF_FILE=\"$(CFGFILE)\"
@@ -46,11 +53,13 @@ CC = $(CROSS_COMPILE)gcc
 endif
 
 CFLAGS += -I$(NDK_ARCH)/usr/include
+CFLAGS += -I$(TOPDIR)/android
 
 LDFLAGS += -nostartfiles -nodefaultlibs -nostdlib
 LDFLAGS += -Wl,--dynamic-linker -Wl,/system/bin/linker
-LDFLAGS += -Wl,-L$(NDK_ARCH)/usr/lib
+LDFLAGS += -L$(NDK_ARCH)/usr/lib
 LDFLAGS += -Wl,-rpath-link -Wl,$(NDK_ARCH)/usr/lib
+LDFLAGS += -llog
 ifndef OLSRD_PLUGIN
 LDFLAGS += $(NDK_ARCH)/usr/lib/crtbegin_dynamic.o
 endif
