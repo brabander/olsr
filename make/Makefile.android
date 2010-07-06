@@ -44,11 +44,12 @@ endif
 # http://developer.android.com/sdk/ndk/1.5_r1/index.html
 
 NDK = /usr/src/android-ndk-1.5_r1
-NDK_ARCH = $(NDK)/build/platforms/android-1.5/arch-arm
+NDK_ARCH = $(NDK)/build/platforms/android-3/arch-arm
 
 ifneq ($(shell uname -m),armv6l)
 # You are not compiling with Debian direct on the phone
-CROSS_COMPILE = $(NDK)/build/prebuilt/linux-x86/arm-eabi-4.2.1/bin/arm-eabi-
+CURRENT_SYSTEM = $(shell uname -s | tr A-Z a-z)
+CROSS_COMPILE = $(NDK)/build/prebuilt/$(CURRENT_SYSTEM)-x86/arm-eabi-4.2.1/bin/arm-eabi-
 CC = $(CROSS_COMPILE)gcc
 endif
 
