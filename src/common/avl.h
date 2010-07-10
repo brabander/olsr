@@ -114,17 +114,6 @@ avl_walk_prev_c(const struct avl_node *node)
   return node->prev;
 }
 
-extern avl_tree_comp avl_comp_default;
-extern avl_tree_comp avl_comp_addr_origin_default;
-extern avl_tree_comp avl_comp_prefix_default;
-extern avl_tree_comp avl_comp_prefix_origin_default;
-extern int avl_comp_ipv4(const void *, const void *);
-extern int avl_comp_ipv6(const void *, const void *);
-extern int avl_comp_mac(const void *, const void *);
-extern int avl_comp_strcasecmp(const void *, const void *);
-extern int avl_comp_int(const void *, const void *);
-extern int avl_comp_interface_id(const void *, const void *);
-
 /*
  * Macro to define an inline function to map from a list_node offset back to the
  * base of the datastructure. That way you save an extra data pointer.
