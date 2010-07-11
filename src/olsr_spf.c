@@ -121,7 +121,7 @@ olsr_spf_del_cand_tree(struct avl_tree *tree, struct tc_entry *tc)
  * Insert an SPF result at the end of the path list.
  */
 static void
-olsr_spf_add_path_list(struct list_node *head, int *path_count, struct tc_entry *tc)
+olsr_spf_add_path_list(struct list_entity *head, int *path_count, struct tc_entry *tc)
 {
 #if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str pathbuf, nbuf;
@@ -207,7 +207,7 @@ olsr_spf_relax(struct avl_tree *cand_tree, struct tc_entry *tc)
       }
 
       /* remove from result list if necessary */
-      if (new_tc->path_list_node.next != NULL && new_tc->path_list_node.prev != NULL) {
+      if (list_node_added(&new_tc->path_list_node)) {
         list_remove(&new_tc->path_list_node);
       }
 
@@ -242,7 +242,7 @@ olsr_spf_relax(struct avl_tree *cand_tree, struct tc_entry *tc)
  * on the candidate tree.
  */
 static void
-olsr_spf_run_full(struct avl_tree *cand_tree, struct list_node *path_list, int *path_count)
+olsr_spf_run_full(struct avl_tree *cand_tree, struct list_entity *path_list, int *path_count)
 {
   struct tc_entry *tc;
 
@@ -277,7 +277,7 @@ olsr_calculate_routing_table(void)
 #endif
   struct avl_tree cand_tree;
   struct avl_node *rtp_tree_node;
-  struct list_node path_list;          /* head of the path_list */
+  struct list_entity path_list;          /* head of the path_list */
   struct tc_entry *tc;
   struct rt_path *rtp;
   struct tc_edge_entry *tc_edge;
@@ -301,7 +301,7 @@ olsr_calculate_routing_table(void)
    * Prepare the candidate tree and result list.
    */
   avl_init(&cand_tree, avl_comp_etx);
-  list_head_init(&path_list);
+  list_init_head(&path_list);
   olsr_bump_routingtree_version();
 
   /*
@@ -312,7 +312,7 @@ olsr_calculate_routing_table(void)
     tc->path_cost = ROUTE_COST_BROKEN;
     tc->hops = 0;
     tc->cand_tree_node.key = NULL;
-    list_node_init(&tc->path_list_node);
+    list_init_head(&tc->path_list_node);
   }
   OLSR_FOR_ALL_TC_ENTRIES_END(tc);
 
@@ -371,9 +371,10 @@ olsr_calculate_routing_table(void)
   /*
    * In the path list we have all the reachable nodes in our topology.
    */
-  for (; !list_is_empty(&path_list); list_remove(path_list.next)) {
+  while (!list_is_empty(&path_list)) {
+    tc = list_first_element(&path_list, tc, path_list_node);
+    list_remove(&tc->path_list_node);
 
-    tc = pathlist2tc(path_list.next);
     link = tc->next_hop;
 
     if (!link) {

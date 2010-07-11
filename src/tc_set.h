@@ -73,7 +73,7 @@ struct tc_entry {
   union olsr_ip_addr addr;             /* vertex_node key */
   struct avl_node cand_tree_node;      /* SPF candidate heap, node keyed by path_etx */
   olsr_linkcost path_cost;             /* SPF calculated distance, cand_tree_node key */
-  struct list_node path_list_node;     /* SPF result list */
+  struct list_entity path_list_node;   /* SPF result list */
   struct avl_tree edge_tree;           /* subtree for edges */
   struct avl_tree prefix_tree;         /* subtree for prefixes */
   struct avl_tree mid_tree;            /* subtree for MID entries */
@@ -101,7 +101,6 @@ struct tc_entry {
 
 
 AVLNODE2STRUCT(cand_tree2tc, tc_entry, cand_tree_node);
-LISTNODE2STRUCT(pathlist2tc, struct tc_entry, path_list_node);
 
 /*
  * macros for traversing vertices, edges and prefixes in the link state database.

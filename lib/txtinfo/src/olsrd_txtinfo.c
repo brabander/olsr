@@ -391,6 +391,7 @@ txtinfo_link(struct comport_connection *con,
     const char *cmd __attribute__ ((unused)), const char *param)
 {
   struct link_entry *lnk;
+  struct list_iterator iterator;
   size_t i;
   const char *template;
   int indexLength;
@@ -408,7 +409,7 @@ txtinfo_link(struct comport_connection *con,
   }
 
   /* Link set */
-  OLSR_FOR_ALL_LINK_ENTRIES(lnk) {
+  OLSR_FOR_ALL_LINK_ENTRIES(lnk, iterator) {
     olsr_ip_to_string(&buf_localip, &lnk->local_iface_addr);
     olsr_ip_to_string(&buf_neighip, &lnk->neighbor_iface_addr);
     strscpy(buf_sym, lnk->status == SYM_LINK ? OLSR_YES : OLSR_NO, sizeof(buf_sym));
@@ -424,7 +425,7 @@ txtinfo_link(struct comport_connection *con,
     if (abuf_templatef(&con->out, template, values_link, tmpl_indices, indexLength) < 0) {
         return ABUF_ERROR;
     }
-  } OLSR_FOR_ALL_LINK_ENTRIES_END(lnk);
+  }
 
   return CONTINUE;
 }
@@ -540,6 +541,7 @@ txtinfo_hna(struct comport_connection *con,
     const char *cmd __attribute__ ((unused)), const char *param __attribute__ ((unused)))
 {
   const struct ip_prefix_entry *hna;
+  struct list_iterator iterator;
   struct tc_entry *tc;
   const char *template;
   int indexLength;
@@ -557,7 +559,7 @@ txtinfo_hna(struct comport_connection *con,
   }
 
   /* Announced HNA entries */
-  OLSR_FOR_ALL_IPPREFIX_ENTRIES(&olsr_cnf->hna_entries, hna) {
+  OLSR_FOR_ALL_IPPREFIX_ENTRIES(&olsr_cnf->hna_entries, hna, iterator) {
     olsr_ip_to_string(&buf_localip, &olsr_cnf->router_id);
     olsr_ip_prefix_to_string(&buf_destprefix, &hna->net);
     strscpy(buf_vtime.buf, "0.0", sizeof(buf_vtime));
@@ -566,7 +568,7 @@ txtinfo_hna(struct comport_connection *con,
         return ABUF_ERROR;
     }
   }
-  OLSR_FOR_ALL_IPPREFIX_ENTRIES_END()
+
   /* HNA entries */
   OLSR_FOR_ALL_TC_ENTRIES(tc) {
     struct hna_net *tmp_net;
@@ -601,6 +603,7 @@ txtinfo_mid(struct comport_connection *con,
 {
   struct tc_entry *tc;
   struct interface *interface;
+  struct list_iterator iterator;
 
   const char *template;
   int indexLength;
@@ -617,7 +620,7 @@ txtinfo_mid(struct comport_connection *con,
     return ABUF_ERROR;
   }
 
-  OLSR_FOR_ALL_INTERFACES(interface) {
+  OLSR_FOR_ALL_INTERFACES(interface, iterator) {
     if (olsr_ipcmp(&olsr_cnf->router_id, &interface->ip_addr) != 0) {
       olsr_ip_to_string(&buf_localip, &olsr_cnf->router_id);
       olsr_ip_to_string(&buf_aliasip, &interface->ip_addr);
@@ -627,7 +630,7 @@ txtinfo_mid(struct comport_connection *con,
           return ABUF_ERROR;
       }
     }
-  } OLSR_FOR_ALL_INTERFACES_END(interface)
+  }
 
   /* MID root is the TC entry */
   OLSR_FOR_ALL_TC_ENTRIES(tc) {

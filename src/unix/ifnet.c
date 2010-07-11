@@ -608,7 +608,6 @@ chk_if_up(struct olsr_if_config *iface)
   lock_interface(iface->interf);
 
   /* Queue */
-  list_node_init(&ifp->int_node);
   list_add_before(&interface_head, &ifp->int_node);
 
   return 1;

@@ -277,6 +277,7 @@ olsr_forward_message(struct olsr_message *msg, uint8_t *binary, struct interface
   union olsr_ip_addr *src;
   struct nbr_entry *neighbor;
   struct interface *ifn;
+  struct list_iterator iterator;
   uint8_t *tmp;
 #if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
@@ -329,7 +330,7 @@ olsr_forward_message(struct olsr_message *msg, uint8_t *binary, struct interface
       msg->type, olsr_ip_to_string(&buf, src));
 
   /* looping trough interfaces */
-  OLSR_FOR_ALL_INTERFACES(ifn) {
+  OLSR_FOR_ALL_INTERFACES(ifn, iterator) {
     if (net_output_pending(ifn)) {
       /* dont forward to incoming interface if interface is mode ether */
       if (in_if->mode == IF_MODE_ETHER && ifn == in_if)
@@ -357,7 +358,6 @@ olsr_forward_message(struct olsr_message *msg, uint8_t *binary, struct interface
       }
     }
   }
-  OLSR_FOR_ALL_INTERFACES_END(ifn);
 
   return 1;
 }

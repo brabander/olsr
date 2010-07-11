@@ -53,6 +53,7 @@
 #include "olsr_ip_prefix_list.h"
 #include "olsr_logging.h"
 
+#include <stdlib.h>
 #include <net/route.h>
 #include <arpa/inet.h>
 #ifdef linux
@@ -391,7 +392,7 @@ add_to_ping_list(const char *ping_address, struct ping_list *the_ping_list)
 
 
 static struct hna_list *
-add_to_hna_list(struct hna_list *list_root, union olsr_ip_addr *hna_net, uint8_t hna_prefixlen)
+add_to_hna_list(struct hna_list *listold_root, union olsr_ip_addr *hna_net, uint8_t hna_prefixlen)
 {
   struct hna_list *new = olsr_malloc(sizeof(struct hna_list), "hna list");
   //memcpy(&new->hna_net,hna_net,sizeof(union hna_net));
@@ -401,7 +402,7 @@ add_to_hna_list(struct hna_list *list_root, union olsr_ip_addr *hna_net, uint8_t
   new->hna_added = 0;
   new->probe_ok = 0;
   new->ping_hosts = NULL;
-  new->next = list_root;
+  new->next = listold_root;
   return new;
 }
 

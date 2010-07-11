@@ -693,6 +693,7 @@ static void* check_neighbour_host(void* neighbour) {
 
 static void spread_host(struct guest_client * host) {
   struct interface *ifp;
+  struct list_iterator iterator;
   uint8_t msg_buffer[MAXMESSAGESIZE - OLSR_HEADERSIZE] __attribute__ ((aligned));
   uint8_t *curr = msg_buffer;
   uint8_t *length_field, *last;
@@ -725,23 +726,22 @@ static void spread_host(struct guest_client * host) {
   //Put in Message size
   pkt_put_u16(&length_field, curr - msg_buffer);
 
-  OLSR_FOR_ALL_INTERFACES(ifp)
-        {
-          if (net_outbuffer_bytes_left(ifp) < curr - msg_buffer) {
-            net_output(ifp);
-            set_buffer_timer(ifp);
-          }
-          // buffer gets pushed out in single_hna, or at flush-time
-          net_outbuffer_push(ifp, msg_buffer, curr - msg_buffer);
-        }OLSR_FOR_ALL_INTERFACES_END(ifp)
+  OLSR_FOR_ALL_INTERFACES(ifp, iterator) {
+    if (net_outbuffer_bytes_left(ifp) < curr - msg_buffer) {
+      net_output(ifp);
+      set_buffer_timer(ifp);
+    }
+    // buffer gets pushed out in single_hna, or at flush-time
+    net_outbuffer_push(ifp, msg_buffer, curr - msg_buffer);
+  }
 
 }
 
 // sends packet immedeately!
 void single_hna(union olsr_ip_addr * ip, uint32_t vtime) {
-
   union olsr_ip_addr subnet;
   struct interface *ifp;
+  struct list_iterator iterator;
   uint8_t msg_buffer[MAXMESSAGESIZE - OLSR_HEADERSIZE] __attribute__ ((aligned));
   uint8_t *curr = msg_buffer;
   uint8_t *length_field, *last;
@@ -772,13 +772,12 @@ void single_hna(union olsr_ip_addr * ip, uint32_t vtime) {
 
   pkt_put_u16(&length_field, curr - msg_buffer);
 
-  OLSR_FOR_ALL_INTERFACES(ifp)
-        {
-          net_output(ifp);
-          net_outbuffer_push(ifp, msg_buffer, curr - msg_buffer);
-          net_output(ifp);
-          set_buffer_timer(ifp);
-        }OLSR_FOR_ALL_INTERFACES_END(ifp)
+  OLSR_FOR_ALL_INTERFACES(ifp, iterator) {
+    net_output(ifp);
+    net_outbuffer_push(ifp, msg_buffer, curr - msg_buffer);
+    net_output(ifp);
+    set_buffer_timer(ifp);
+  }
 }
 
 static void olsr_event1(void *foo __attribute__ ((unused)) ) {

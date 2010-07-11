@@ -105,23 +105,23 @@ struct olsr_cookie_info *map_poll_timer_cookie;
  * my own hostnames, service_lines and dns-servers
  * are store in a linked list (without hashing)
  * */
-static struct list_node name_list[HASHSIZE];
+static struct list_entity name_list[HASHSIZE];
 struct name_entry *my_names = NULL;
 static bool name_table_changed = true;
 
-static struct list_node service_list[HASHSIZE];
+static struct list_entity service_list[HASHSIZE];
 static struct name_entry *my_services = NULL;
 static bool service_table_changed = true;
 
-static struct list_node mac_list[HASHSIZE];
+static struct list_entity mac_list[HASHSIZE];
 static struct name_entry *my_macs = NULL;
 static bool mac_table_changed = true;
 
-static struct list_node forwarder_list[HASHSIZE];
+static struct list_entity forwarder_list[HASHSIZE];
 static struct name_entry *my_forwarders = NULL;
 static bool forwarder_table_changed = true;
 
-struct list_node latlon_list[HASHSIZE];
+struct list_entity latlon_list[HASHSIZE];
 static bool latlon_table_changed = true;
 
 /* backoff timer for writing changes into a file */
@@ -192,11 +192,11 @@ name_constructor(void)
 
   /* init the lists heads */
   for (i = 0; i < HASHSIZE; i++) {
-    list_head_init(&name_list[i]);
-    list_head_init(&forwarder_list[i]);
-    list_head_init(&service_list[i]);
-    list_head_init(&mac_list[i]);
-    list_head_init(&latlon_list[i]);
+    list_init_head(&name_list[i]);
+    list_init_head(&forwarder_list[i]);
+    list_init_head(&service_list[i]);
+    list_init_head(&mac_list[i]);
+    list_init_head(&latlon_list[i]);
   }
 
   msg_gen_timer_cookie = olsr_alloc_cookie("Nameservice: message gen", OLSR_COOKIE_TYPE_TIMER);
@@ -502,11 +502,11 @@ name_destructor(void)
   free_name_entry_list(&my_macs);
   free_name_entry_list(&my_forwarders);
 
-  free_all_list_entries(name_list);
-  free_all_list_entries(service_list);
-  free_all_list_entries(mac_list);
-  free_all_list_entries(forwarder_list);
-  free_all_list_entries(latlon_list);
+  free_all_listold_entries(name_list);
+  free_all_listold_entries(service_list);
+  free_all_listold_entries(mac_list);
+  free_all_listold_entries(forwarder_list);
+  free_all_listold_entries(latlon_list);
 
   olsr_stop_timer(write_file_timer);
   write_file_timer = NULL;
@@ -520,23 +520,17 @@ name_destructor(void)
 
 /* free all list entries */
 void
-free_all_list_entries(struct list_node *this_db_list)
+free_all_listold_entries(struct list_entity *this_db_list)
 {
   struct db_entry *db;
-  struct list_node *list_head, *list_node, *list_node_next;
+  struct list_entity *list_head, *loop, *safe;
 
   int i;
 
   for (i = 0; i < HASHSIZE; i++) {
-
     list_head = &this_db_list[i];
 
-    for (list_node = list_head->next; list_node != list_head; list_node = list_node_next) {
-
-      /* prefetch next node before loosing context */
-      list_node_next = list_node->next;
-
-      db = list2db(list_node);
+    list_for_each_element_safe(list_head, db, db_list, loop, safe) {
       olsr_namesvc_delete_db_entry(db);
     }
   }
@@ -619,6 +613,7 @@ olsr_namesvc_gen(void *foo __attribute__ ((unused)))
   uint8_t buffer[10240];
   struct olsr_message msg;
   struct interface *ifn;
+  struct list_iterator iterator;
   int namesize;
   uint8_t *curr, *sizeptr;
 
@@ -639,7 +634,7 @@ olsr_namesvc_gen(void *foo __attribute__ ((unused)))
   pkt_put_u16(&sizeptr, namesize);
 
   /* looping trough interfaces */
-  OLSR_FOR_ALL_INTERFACES(ifn) {
+  OLSR_FOR_ALL_INTERFACES(ifn, iterator) {
     OLSR_DEBUG(LOG_PLUGINS, "NAME PLUGIN: Generating packet - [%s]\n", ifn->int_name);
 
     if (net_outbuffer_push(ifn, buffer, namesize) != namesize) {
@@ -650,7 +645,6 @@ olsr_namesvc_gen(void *foo __attribute__ ((unused)))
       }
     }
   }
-  OLSR_FOR_ALL_INTERFACES_END(ifn);
 }
 
 
@@ -934,11 +928,11 @@ update_name_entry(union olsr_ip_addr *originator, const struct namemsg *msg, con
  */
 void
 insert_new_name_in_list(union olsr_ip_addr *originator,
-                        struct list_node *this_list, const struct name *from_packet, bool * this_table_changed, uint32_t vtime)
+                        struct list_entity *this_list, const struct name *from_packet, bool * this_table_changed, uint32_t vtime)
 {
   int hash;
   struct db_entry *entry;
-  struct list_node *list_head, *list_node;
+  struct list_entity *list_head, *loop;
 
   bool entry_found = false;
 
@@ -946,10 +940,8 @@ insert_new_name_in_list(union olsr_ip_addr *originator,
 
   /* find the entry for originator, if there is already one */
   list_head = &this_list[hash];
-  for (list_node = list_head->next; list_node != list_head; list_node = list_node->next) {
 
-    entry = list2db(list_node);
-
+  list_for_each_element(list_head, entry, db_list, loop) {
     if (olsr_ipcmp(originator, &entry->originator) == 0) {
 #if !defined REMOVE_LOG_DEBUG
       struct ipaddr_str strbuf;
@@ -985,7 +977,7 @@ insert_new_name_in_list(union olsr_ip_addr *originator,
     entry->names = NULL;
 
     /* insert to the list */
-    list_add_before(&this_list[hash], &entry->db_list);
+    list_add_tail(&this_list[hash], &entry->db_list);
 
     //delegate to function for parsing the packet and linking it to entry->names
     decap_namemsg(from_packet, &entry->names, this_table_changed);
@@ -1047,7 +1039,7 @@ write_hosts_file(void)
   int hash;
   struct name_entry *name;
   struct db_entry *entry;
-  struct list_node *list_head, *list_node;
+  struct list_entity *list_head, *loop;
   FILE *hosts;
   FILE *add_hosts;
   int c = 0;
@@ -1097,10 +1089,8 @@ write_hosts_file(void)
   // write received names
   for (hash = 0; hash < HASHSIZE; hash++) {
     list_head = &name_list[hash];
-    for (list_node = list_head->next; list_node != list_head; list_node = list_node->next) {
 
-      entry = list2db(list_node);
-
+    list_for_each_element(list_head, entry, db_list, loop) {
       for (name = entry->names; name != NULL; name = name->next) {
         struct ipaddr_str strbuf;
         OLSR_DEBUG(LOG_PLUGINS, "%s\t%s%s\t#%s\n",
@@ -1178,7 +1168,7 @@ write_services_file(bool writemacs)
   int hash;
   struct name_entry *name;
   struct db_entry *entry;
-  struct list_node *list_head, *list_node;
+  struct list_entity *list_head, *loop;
   FILE *file;
   time_t currtime;
 
@@ -1206,10 +1196,8 @@ write_services_file(bool writemacs)
   // write received services or macs
   for (hash = 0; hash < HASHSIZE; hash++) {
     list_head = writemacs ? &mac_list[hash] : &service_list[hash];
-    for (list_node = list_head->next; list_node != list_head; list_node = list_node->next) {
 
-      entry = list2db(list_node);
-
+    list_for_each_element(list_head, entry, db_list, loop) {
       for (name = entry->names; name != NULL; name = name->next) {
         struct ipaddr_str strbuf;
         OLSR_DEBUG(LOG_PLUGINS, "%s\t\t#%s\n", name->name, olsr_ip_to_string(&strbuf, &entry->originator));
@@ -1299,7 +1287,7 @@ write_resolv_file(void)
   int hash;
   struct name_entry *name;
   struct db_entry *entry;
-  struct list_node *list_head, *list_node;
+  struct list_entity *list_head, *loop;
   struct rt_entry *route;
   static struct rt_entry *nameserver_routes[NAMESERVER_COUNT + 1];
   FILE *resolv;
@@ -1314,10 +1302,8 @@ write_resolv_file(void)
 
   for (hash = 0; hash < HASHSIZE; hash++) {
     list_head = &forwarder_list[hash];
-    for (list_node = list_head->next; list_node != list_head; list_node = list_node->next) {
 
-      entry = list2db(list_node);
-
+    list_for_each_element(list_head, entry, db_list, loop) {
       for (name = entry->names; name != NULL; name = name->next) {
 #if !defined REMOVE_LOG_DEBUG
         struct ipaddr_str strbuf;
@@ -1430,6 +1416,7 @@ bool
 allowed_ip(const union olsr_ip_addr *addr)
 {
   struct ip_prefix_entry *hna;
+  struct list_iterator iterator;
   struct interface *iface;
   union olsr_ip_addr tmp_ip, tmp_msk;
 #if !defined REMOVE_LOG_DEBUG
@@ -1438,17 +1425,16 @@ allowed_ip(const union olsr_ip_addr *addr)
 #endif
   OLSR_DEBUG(LOG_PLUGINS, "checking %s\n", olsr_ip_to_string(&strbuf, addr));
 
-  OLSR_FOR_ALL_INTERFACES(iface) {
+  OLSR_FOR_ALL_INTERFACES(iface, iterator) {
     OLSR_DEBUG(LOG_PLUGINS, "interface %s\n", olsr_ip_to_string(&strbuf, &iface->ip_addr));
     if (olsr_ipcmp(&iface->ip_addr, addr) == 0) {
       OLSR_DEBUG(LOG_PLUGINS, "MATCHED\n");
       return true;
     }
   }
-  OLSR_FOR_ALL_INTERFACES_END(iface);
 
   if (olsr_cnf->ip_version == AF_INET) {
-    OLSR_FOR_ALL_IPPREFIX_ENTRIES(&olsr_cnf->hna_entries, hna) {
+    OLSR_FOR_ALL_IPPREFIX_ENTRIES(&olsr_cnf->hna_entries, hna, iterator) {
       union olsr_ip_addr netmask;
       OLSR_DEBUG(LOG_PLUGINS, "HNA %s\n", olsr_ip_prefix_to_string(&prefixstr, &hna->net));
       if (hna->net.prefix_len == 0) {
@@ -1460,9 +1446,8 @@ allowed_ip(const union olsr_ip_addr *addr)
         return true;
       }
     }
-    OLSR_FOR_ALL_IPPREFIX_ENTRIES_END()
   } else {
-    OLSR_FOR_ALL_IPPREFIX_ENTRIES(&olsr_cnf->hna_entries, hna) {
+    OLSR_FOR_ALL_IPPREFIX_ENTRIES(&olsr_cnf->hna_entries, hna, iterator) {
       unsigned int i;
       OLSR_DEBUG(LOG_PLUGINS, "HNA %s\n", olsr_ip_prefix_to_string(&prefixstr, &hna->net));
       if (hna->net.prefix_len == 0)
@@ -1476,7 +1461,6 @@ allowed_ip(const union olsr_ip_addr *addr)
         return true;
       }
     }
-    OLSR_FOR_ALL_IPPREFIX_ENTRIES_END()
   }
   return false;
 }
@@ -1602,13 +1586,14 @@ bool
 get_isdefhna_latlon(void)
 {
   struct ip_prefix_entry *hna;
-  OLSR_FOR_ALL_IPPREFIX_ENTRIES(&olsr_cnf->hna_entries, hna) {
+  struct list_iterator iterator;
+
+  OLSR_FOR_ALL_IPPREFIX_ENTRIES(&olsr_cnf->hna_entries, hna, iterator) {
     if (hna->net.prefix_len == 0) {
       return true;
     }
   }
-  OLSR_FOR_ALL_IPPREFIX_ENTRIES_END()
-    return false;
+  return false;
 }
 
 /**
@@ -1638,15 +1623,13 @@ lookup_name_latlon(union olsr_ip_addr *ip)
 {
   int hash;
   struct db_entry *entry;
-  struct list_node *list_head, *list_node;
+  struct list_entity *list_head, *loop;
   struct name_entry *name;
 
   for (hash = 0; hash < HASHSIZE; hash++) {
     list_head = &name_list[hash];
-    for (list_node = list_head->next; list_node != list_head; list_node = list_node->next) {
 
-      entry = list2db(list_node);
-
+    list_for_each_element(list_head, entry, db_list, loop) {
       for (name = entry->names; name != NULL; name = name->next) {
         if (olsr_ipcmp(&name->ip, ip) == 0)
           return name->name;

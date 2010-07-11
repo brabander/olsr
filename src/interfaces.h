@@ -122,7 +122,7 @@ struct olsr_netbuf {
  * interface participating in the OLSRD routing
  */
 struct interface {
-  struct list_node int_node;           /* List of all interfaces */
+  struct list_entity int_node;         /* List of all interfaces */
 
   enum interface_mode mode;            /* mode of the interface, default is mesh */
 
@@ -170,19 +170,8 @@ struct interface {
   uint32_t refcount;                   /* Refcount */
 };
 
-LISTNODE2STRUCT(list2interface, struct interface, int_node);
-
 /* deletion safe macro for interface list traversal */
-#define OLSR_FOR_ALL_INTERFACES(interface) \
-{ \
-  struct list_node *_interface_node, *_next_interface_node; \
-  for (_interface_node = interface_head.next; \
-    _interface_node != &interface_head; \
-    _interface_node = _next_interface_node) { \
-    _next_interface_node = _interface_node->next; \
-    interface = list2interface(_interface_node);
-#define OLSR_FOR_ALL_INTERFACES_END(interface) }}
-
+#define OLSR_FOR_ALL_INTERFACES(interface, iterator) list_for_each_element_safe(&interface_head, interface, int_node, iterator.loop, iterator.safe)
 
 struct interface_lost {
   struct avl_node node;
@@ -207,7 +196,7 @@ AVLNODE2STRUCT(node_tree2lostif, interface_lost, node);
 #define IFCHG_IF_UPDATE        3
 
 /* The interface list head */
-extern struct list_node EXPORT(interface_head);
+extern struct list_entity EXPORT(interface_head);
 
 typedef int (*ifchg_cb_func) (struct interface *, int);
 

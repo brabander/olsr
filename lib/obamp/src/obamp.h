@@ -43,7 +43,7 @@
 #ifndef _OBAMP_OBAMP_H
 #define _OBAMP_OBAMP_H
 
-#include "list.h"
+#include "common/list.h"
 
 #include "plugin.h"             /* union set_plugin_parameter_addon */
 
@@ -146,7 +146,7 @@ struct ObampNode {
 
   u_int8_t DataSeqNumber;
 
-  struct list_head list;
+  struct list_entity list;
 };
 
 //Interfaces of the router not talking OLSR, where we capture the multicast traffic
@@ -154,7 +154,7 @@ struct ObampSniffingIf {
 
   int skd;                             //Socket descriptor
   char ifName[16];                     //Interface name
-  struct list_head list;
+  struct list_entity list;
 
 };
 

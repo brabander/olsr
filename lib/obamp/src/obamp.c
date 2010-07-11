@@ -53,6 +53,7 @@
 #include <netinet/ip.h>         /* struct ip */
 #include <netinet/udp.h>        /* struct udphdr */
 #include <unistd.h>             /* close() */
+#include <stdlib.h>             /* free() */
 
 #include <netinet/in.h>
 #include <netinet/ip6.h>
@@ -71,8 +72,11 @@
 
 /* plugin includes */
 #include "obamp.h"
-#include "list.h"
+#include "common/list.h"
 
+
+#define OLSR_FOR_ALL_OBAMPNODE_ENTRIES(n, iterator) list_for_each_element_safe(&ListOfObampNodes, n, list, iterator.loop, iterator.safe)
+#define OLSR_FOR_ALL_OBAMPSNIFF_ENTRIES(s, iterator) list_for_each_element_safe(&ListOfObampSniffingIf, s, list, iterator.loop, iterator.safe)
 
 struct ObampNodeState *myState;        //Internal state of the OBAMP node
 
@@ -81,10 +85,10 @@ List of all other OBAMP nodes
 if there is a mesh link the isMesh flag is set to 1
 if the link is used in the distribution tree the isTree flag is set to 1
 */
-struct list_head ListOfObampNodes;
+struct list_entity ListOfObampNodes;
 
 //List of Non OLSR Interfaces to capture and send multicast traffic to
-struct list_head ListOfObampSniffingIf;
+struct list_entity ListOfObampSniffingIf;
 
 //udp socket used for OBAMP signalling
 int sdudp = -1;
@@ -99,20 +103,17 @@ select_tree_anchor(void)
 
   struct ObampNode *tmp;               //temp pointers used when parsing the list
   struct ObampNode *best;
-  struct list_head *pos;
-
+  struct list_iterator iterator;
   struct rt_entry *rt;                 //"rt->rt_best->rtp_metric.cost" is the value you are looking for, a 32 bit
 
   unsigned int mincost = 15;
 
   best = NULL;
 
-  if (list_empty(&ListOfObampNodes) == 0) {     //if the list is NOT empty
+  if (list_is_empty(&ListOfObampNodes) == 0) {     //if the list is NOT empty
 
     //Scroll the list
-    list_for_each(pos, &ListOfObampNodes) {     //loop to update min cost
-
-      tmp = list_entry(pos, struct ObampNode, list);
+    OLSR_FOR_ALL_OBAMPNODE_ENTRIES(tmp, iterator) {
       if (tmp->status == 1) {
         rt = olsr_lookup_routing_table(&tmp->neighbor_ip_addr);
 
@@ -248,17 +249,13 @@ CreateObampSniffingInterfaces(void)
 {
 
   struct ObampSniffingIf *tmp;
-  struct list_head *pos;
-
+  struct list_iterator iterator;
   OLSR_DEBUG(LOG_PLUGINS, "CreateObampSniffingInterfaces");
 
-
-  if (list_empty(&ListOfObampSniffingIf) == 0) {        //if the list is NOT empty
+  if (list_is_empty(&ListOfObampSniffingIf) == 0) {        //if the list is NOT empty
     OLSR_DEBUG(LOG_PLUGINS, "adding interfaces");
 
-    list_for_each(pos, &ListOfObampSniffingIf) {
-
-      tmp = list_entry(pos, struct ObampSniffingIf, list);
+    OLSR_FOR_ALL_OBAMPSNIFF_ENTRIES(tmp, iterator) {
       tmp->skd = CreateCaptureSocket(tmp->ifName);
     }
   } else
@@ -286,7 +283,7 @@ activate_tree_link(struct OBAMP_tree_link_ack *ack)
   struct ipaddr_str buf;
 #endif
   struct ObampNode *tmp;
-  struct list_head *pos;
+  struct list_iterator iterator;
 
   if (memcmp(&myState->CoreAddress.v4, &ack->CoreAddress.v4, sizeof(struct in_addr)) != 0) {
     OLSR_DEBUG(LOG_PLUGINS, "Discarding message with no coherent core address");
@@ -299,9 +296,7 @@ activate_tree_link(struct OBAMP_tree_link_ack *ack)
     return;
   } else {
 
-    list_for_each(pos, &ListOfObampNodes) {
-
-      tmp = list_entry(pos, struct ObampNode, list);
+    OLSR_FOR_ALL_OBAMPNODE_ENTRIES(tmp, iterator) {
       if (tmp->neighbor_ip_addr.v4.s_addr == ack->router_id.v4.s_addr) {
 
         tmp->isTree = 1;
@@ -414,7 +409,8 @@ tree_link_ack(struct OBAMP_tree_link_req *req)
   struct in_addr addr;
 
   struct ObampNode *tmp;
-  struct list_head *pos;
+  struct list_iterator iterator;
+
 #if !defined(REMOVE_LOG_DEBUG)
   struct ipaddr_str buf;
 #endif
@@ -439,9 +435,7 @@ tree_link_ack(struct OBAMP_tree_link_req *req)
 
   addr = req->router_id.v4;
 
-  list_for_each(pos, &ListOfObampNodes) {
-
-    tmp = list_entry(pos, struct ObampNode, list);
+  OLSR_FOR_ALL_OBAMPNODE_ENTRIES(tmp, iterator) {
     if (tmp->neighbor_ip_addr.v4.s_addr == req->router_id.v4.s_addr) {
 
       tmp->isTree = 1;
@@ -529,9 +523,9 @@ printObampNodesList(void)
   struct ipaddr_str buf;
 #endif
   struct ObampNode *tmp;
-  struct list_head *pos;
+  struct list_iterator iterator;
 
-  if (list_empty(&ListOfObampNodes) == 0) {     //if the list is NOT empty
+  if (!list_is_empty(&ListOfObampNodes)) {     //if the list is NOT empty
 
 
     OLSR_DEBUG(LOG_PLUGINS, "--------------------NODE STATUS---------");
@@ -541,10 +535,7 @@ printObampNodesList(void)
 
     OLSR_DEBUG(LOG_PLUGINS, "Number \t IP \t\t IsMesh \t IsTree \t MeshLock \t outerTreeLink");
 
-    list_for_each(pos, &ListOfObampNodes) {
-
-      tmp = list_entry(pos, struct ObampNode, list);
-
+    OLSR_FOR_ALL_OBAMPNODE_ENTRIES(tmp, iterator) {
       OLSR_DEBUG(LOG_PLUGINS, "%d \t\t %s \t %d \t\t %d \t\t %d \t\t %d", i, ip4_to_string(&buf, tmp->neighbor_ip_addr.v4),
                  tmp->isMesh, tmp->isTree, tmp->MeshLock, tmp->outerTreeLink);
 
@@ -561,13 +552,11 @@ DoIHaveATreeLink(void)
 
   //struct ipaddr_str buf;
   struct ObampNode *tmp;
-  struct list_head *pos;
+  struct list_iterator iterator;
 
-  if (list_empty(&ListOfObampNodes) == 0) {     //if the list is NOT empty
+  if (!list_is_empty(&ListOfObampNodes)) {     //if the list is NOT empty
 
-    list_for_each(pos, &ListOfObampNodes) {
-
-      tmp = list_entry(pos, struct ObampNode, list);
+    OLSR_FOR_ALL_OBAMPNODE_ENTRIES(tmp, iterator) {
       if (tmp->isTree == 1)
         return 1;
 
@@ -583,16 +572,11 @@ unsolicited_tree_destroy(void *x)
 
   //struct ipaddr_str buf;
   struct ObampNode *tmp;
-  struct list_head *pos;
+  struct list_iterator iterator;
 
-  if (list_empty(&ListOfObampNodes) == 0) {     //if the list is NOT empty
-
-    list_for_each(pos, &ListOfObampNodes) {
-
-      tmp = list_entry(pos, struct ObampNode, list);
-      if (tmp->isTree == 0)
-        send_destroy_tree_link(&tmp->neighbor_ip_addr.v4);
-
+  OLSR_FOR_ALL_OBAMPNODE_ENTRIES(tmp, iterator) {
+    if (tmp->isTree == 0) {
+      send_destroy_tree_link(&tmp->neighbor_ip_addr.v4);
     }
   }
   x = NULL;
@@ -604,16 +588,11 @@ DoIHaveAMeshLink(void)
 
   //struct ipaddr_str buf;
   struct ObampNode *tmp;
-  struct list_head *pos;
+  struct list_iterator iterator;
 
-  if (list_empty(&ListOfObampNodes) == 0) {     //if the list is NOT empty
-
-    list_for_each(pos, &ListOfObampNodes) {
-
-      tmp = list_entry(pos, struct ObampNode, list);
-      if (tmp->isMesh == 1)
-        return 1;
-
+  OLSR_FOR_ALL_OBAMPNODE_ENTRIES(tmp, iterator) {
+    if (tmp->isMesh == 1) {
+      return 1;
     }
   }
   return 0;
@@ -622,27 +601,19 @@ DoIHaveAMeshLink(void)
 static void
 reset_tree_links(void)
 {
-
-  //struct ipaddr_str buf;
   struct ObampNode *tmp;
-  struct list_head *pos;
+  struct list_iterator iterator;
 
   OLSR_DEBUG(LOG_PLUGINS,"Reset Tree Links Now");
-  if (list_empty(&ListOfObampNodes) == 0) {     //if the list is NOT empty
 
-    list_for_each(pos, &ListOfObampNodes) {
-
-      tmp = list_entry(pos, struct ObampNode, list);
-      tmp->isTree = 0;
-      tmp->outerTreeLink = 0;
-    }
+  OLSR_FOR_ALL_OBAMPNODE_ENTRIES(tmp, iterator) {
+    tmp->isTree = 0;
+    tmp->outerTreeLink = 0;
   }
 
   memset(&myState->ParentId.v4, 0, sizeof(myState->ParentId.v4));
   memset(&myState->OldParentId.v4, 1, sizeof(myState->OldParentId.v4));
   myState->TreeCreateSequenceNumber=0;
-
-
 };
 
 
@@ -654,31 +625,25 @@ deactivate_tree_link(struct OBAMP_tree_destroy *destroy_msg)
   struct ipaddr_str buf;
 #endif
   struct ObampNode *tmp;
-  struct list_head *pos;
+  struct list_iterator iterator;
 
   if (memcmp(&myState->CoreAddress.v4, &destroy_msg->CoreAddress.v4, sizeof(struct in_addr)) != 0) {
     OLSR_DEBUG(LOG_PLUGINS, "Discarding message with no coherent core address");
     return;
   }
 
-    list_for_each(pos, &ListOfObampNodes) {
-
-      tmp = list_entry(pos, struct ObampNode, list);
-      if (tmp->neighbor_ip_addr.v4.s_addr == destroy_msg->router_id.v4.s_addr) {
-
-        tmp->isTree = 0;
-        OLSR_DEBUG(LOG_PLUGINS, "Tree link to %s deactivated", ip4_to_string(&buf, tmp->neighbor_ip_addr.v4));
+  OLSR_FOR_ALL_OBAMPNODE_ENTRIES(tmp, iterator) {
+    if (tmp->neighbor_ip_addr.v4.s_addr == destroy_msg->router_id.v4.s_addr) {
+      tmp->isTree = 0;
+      OLSR_DEBUG(LOG_PLUGINS, "Tree link to %s deactivated", ip4_to_string(&buf, tmp->neighbor_ip_addr.v4));
         
-	if (memcmp(&tmp->neighbor_ip_addr.v4, &myState->ParentId.v4, sizeof(struct in_addr)) == 0) {
-		OLSR_DEBUG(LOG_PLUGINS,"RESET TREE LINKS: I lost tree link with my PARENT");
-		reset_tree_links();
-	}
-
-        return;
-
+      if (memcmp(&tmp->neighbor_ip_addr.v4, &myState->ParentId.v4, sizeof(struct in_addr)) == 0) {
+        OLSR_DEBUG(LOG_PLUGINS,"RESET TREE LINKS: I lost tree link with my PARENT");
+        reset_tree_links();
       }
+      return;
     }
-
+  }
 }
 
 //Core Election. The Core is the one with the smallest IP Address
@@ -689,7 +654,7 @@ CoreElection(void)
   struct ipaddr_str buf;
 #endif
   struct ObampNode *tmp;
-  struct list_head *pos;
+  struct list_iterator iterator;
   u_int32_t smallestIP = 0xFFFFFFFF;
 
   //Update my current IP address
@@ -698,68 +663,55 @@ CoreElection(void)
   OLSR_DEBUG(LOG_PLUGINS, "SETUP: my IP - %s", ip4_to_string(&buf, myState->myipaddr.v4));
 
 
-  if (list_empty(&ListOfObampNodes) == 0) {     //if the list is NOT empty
-
-    list_for_each(pos, &ListOfObampNodes) {
-
-      tmp = list_entry(pos, struct ObampNode, list);
-      if (tmp->neighbor_ip_addr.v4.s_addr < smallestIP) {
-
-        smallestIP = tmp->neighbor_ip_addr.v4.s_addr;
-        OLSR_DEBUG(LOG_PLUGINS, "CoreElection: current smallest IP is - %s", ip4_to_string(&buf, tmp->neighbor_ip_addr.v4));
-
-      };
-    }
-    //Check if I'm the core.
-
-    if (myState->myipaddr.v4.s_addr < smallestIP) {     //I'm the core
-
-      if (myState->myipaddr.v4.s_addr == myState->CoreAddress.v4.s_addr) {      //I'm was already the core
-        return;
-      } else {                  //I'm becoming core
-
-        myState->CoreAddress = myState->myipaddr;
-        myState->iamcore = 1;
-        myState->TreeCreateSequenceNumber = 0;
-        OLSR_DEBUG(LOG_PLUGINS,"Calling Reset Tree Links"); 
-	reset_tree_links();
-        OLSR_DEBUG(LOG_PLUGINS, "I'm the core");
-      }
-    } else {
-      if (myState->CoreAddress.v4.s_addr == smallestIP) {       //the core did not change
-        return;
-      } else {                  //core changed
-        myState->iamcore = 0;
-        myState->CoreAddress.v4.s_addr = smallestIP;
-        OLSR_DEBUG(LOG_PLUGINS,"Calling Reset Tree Links"); 
-	reset_tree_links();
-        OLSR_DEBUG(LOG_PLUGINS, "CoreElection: current Core is - %s", ip4_to_string(&buf, tmp->neighbor_ip_addr.v4));
-      }
-    }
-
+  if (list_is_empty(&ListOfObampNodes)) {     //if the list is empty
+    OLSR_DEBUG(LOG_PLUGINS, "CoreElection: I'm alone I'm the core");
+    myState->CoreAddress = myState->myipaddr;
+    myState->iamcore = 1;
+    myState->TreeCreateSequenceNumber = 0;
+    OLSR_DEBUG(LOG_PLUGINS,"Calling Reset Tree Links");
+    reset_tree_links();
+    return;
   }
 
-  else {                        //List is empty I'm the core
-    OLSR_DEBUG(LOG_PLUGINS, "CoreElection: I'm alone I'm the core");
+  OLSR_FOR_ALL_OBAMPNODE_ENTRIES(tmp, iterator) {
+    if (tmp->neighbor_ip_addr.v4.s_addr < smallestIP) {
+      smallestIP = tmp->neighbor_ip_addr.v4.s_addr;
+      OLSR_DEBUG(LOG_PLUGINS, "CoreElection: current smallest IP is - %s", ip4_to_string(&buf, tmp->neighbor_ip_addr.v4));
+    };
+  }
+
+  //Check if I'm the core.
+  if (myState->myipaddr.v4.s_addr < smallestIP) {     //I'm the core
+    if (myState->myipaddr.v4.s_addr == myState->CoreAddress.v4.s_addr) {      //I'm was already the core
+      return;
+    }
+
+    //I'm becoming core
     myState->CoreAddress = myState->myipaddr;
     myState->iamcore = 1;
     myState->TreeCreateSequenceNumber = 0;
     OLSR_DEBUG(LOG_PLUGINS,"Calling Reset Tree Links"); 
     reset_tree_links();
+    OLSR_DEBUG(LOG_PLUGINS, "I'm the core");
+  } else {
+    if (myState->CoreAddress.v4.s_addr == smallestIP) {       //the core did not change
+      return;
+    }
 
-
-
+    //core changed
+    myState->iamcore = 0;
+    myState->CoreAddress.v4.s_addr = smallestIP;
+    OLSR_DEBUG(LOG_PLUGINS,"Calling Reset Tree Links");
+    reset_tree_links();
+    OLSR_DEBUG(LOG_PLUGINS, "CoreElection: current Core is - %s", ip4_to_string(&buf, tmp->neighbor_ip_addr.v4));
   }
-
 }
 
 //Starts a UDP listening port for OBAMP signalling
 static int
 UdpServer(void)
 {
-
   struct sockaddr_in addr;
-
 
   if ((sdudp = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1) {
     OLSR_DEBUG(LOG_PLUGINS, "Socket UDP error");
@@ -785,10 +737,8 @@ UdpServer(void)
 static void
 decap_data(char *buffer)
 {
-
-  //struct ipaddr_str buf; //buf to print debug infos
   struct ObampSniffingIf *tmp;         //temp pointers used when parsing the list
-  struct list_head *pos;
+  struct list_iterator iterator;
   unsigned char *ipPacket;
   int stripped_len;
   struct ip *ipHeader;
@@ -803,53 +753,37 @@ decap_data(char *buffer)
   ipHeader = (struct ip *)ipPacket;
   ip6Header = (struct ip6_hdr *)ipPacket;
 
+  OLSR_FOR_ALL_OBAMPSNIFF_ENTRIES(tmp, iterator) {
+    memset(&dest, 0, sizeof(dest));
+    dest.sll_family = AF_PACKET;
+    if ((ipPacket[0] & 0xf0) == 0x40) {
+      dest.sll_protocol = htons(ETH_P_IP);
+      stripped_len = ntohs(ipHeader->ip_len);
+    }
+    if ((ipPacket[0] & 0xf0) == 0x60) {
+      dest.sll_protocol = htons(ETH_P_IPV6);
+      stripped_len = 40 + ntohs(ip6Header->ip6_plen); //IPv6 Header size (40) + payload_len
+    }
+    //TODO: if packet is not IP die here
 
-  if (list_empty(&ListOfObampSniffingIf) == 0) {        //if the list is NOT empty
-//OLSR_DEBUG(LOG_PLUGINS,"DECAP DATA");
+    dest.sll_ifindex = if_nametoindex(tmp->ifName);
+    dest.sll_halen = IFHWADDRLEN;
 
-    list_for_each(pos, &ListOfObampSniffingIf) {
+    /* Use all-ones as destination MAC address. When the IP destination is
+     * a multicast address, the destination MAC address should normally also
+     * be a multicast address. E.g., when the destination IP is 224.0.0.1,
+     * the destination MAC should be 01:00:5e:00:00:01. However, it does not
+     * seem to matter when the destination MAC address is set to all-ones
+     * in that case. */
+    memset(dest.sll_addr, 0xFF, IFHWADDRLEN);
 
-      tmp = list_entry(pos, struct ObampSniffingIf, list);
-      //tmp->skd = CreateCaptureSocket(tmp->ifName);
-
-
-
-      memset(&dest, 0, sizeof(dest));
-      dest.sll_family = AF_PACKET;
-      if ((ipPacket[0] & 0xf0) == 0x40) {
-        dest.sll_protocol = htons(ETH_P_IP);
-        stripped_len = ntohs(ipHeader->ip_len);
-      }
-      if ((ipPacket[0] & 0xf0) == 0x60) {
-        dest.sll_protocol = htons(ETH_P_IPV6);
-        stripped_len = 40 + ntohs(ip6Header->ip6_plen); //IPv6 Header size (40) + payload_len
-      }
-      //TODO: if packet is not IP die here
-
-
-      dest.sll_ifindex = if_nametoindex(tmp->ifName);
-      dest.sll_halen = IFHWADDRLEN;
-
-      /* Use all-ones as destination MAC address. When the IP destination is
-       * a multicast address, the destination MAC address should normally also
-       * be a multicast address. E.g., when the destination IP is 224.0.0.1,
-       * the destination MAC should be 01:00:5e:00:00:01. However, it does not
-       * seem to matter when the destination MAC address is set to all-ones
-       * in that case. */
-      memset(dest.sll_addr, 0xFF, IFHWADDRLEN);
-
-      nBytesWritten = sendto(tmp->skd, ipPacket, stripped_len, 0, (struct sockaddr *)&dest, sizeof(dest));
-      if (nBytesWritten != stripped_len) {
-        OLSR_DEBUG(LOG_PLUGINS, "sendto() error forwarding unpacked encapsulated pkt on \"%s\"", tmp->ifName);
-      } else {
-
-        OLSR_DEBUG(LOG_PLUGINS, "OBAMP: --> unpacked and forwarded on \"%s\"\n", tmp->ifName);
-      }
-
-
+    nBytesWritten = sendto(tmp->skd, ipPacket, stripped_len, 0, (struct sockaddr *)&dest, sizeof(dest));
+    if (nBytesWritten != stripped_len) {
+      OLSR_DEBUG(LOG_PLUGINS, "sendto() error forwarding unpacked encapsulated pkt on \"%s\"", tmp->ifName);
+    } else {
+      OLSR_DEBUG(LOG_PLUGINS, "OBAMP: --> unpacked and forwarded on \"%s\"\n", tmp->ifName);
     }
   }
-
 }
 
 
@@ -859,34 +793,24 @@ CheckDataFromTreeLink(char *buffer)
 {
 
   struct ObampNode *tmp;               //temp pointers used when parsing the list
-  struct list_head *pos;
+  struct list_iterator iterator;
   struct OBAMP_data_message4 *data_msg;
 
   data_msg = (struct OBAMP_data_message4 *)buffer;
 
-  if (list_empty(&ListOfObampNodes) == 0) {     //if the list is NOT empty
-
-    //Scroll the list
-    list_for_each(pos, &ListOfObampNodes) {
-      tmp = list_entry(pos, struct ObampNode, list);
-      //Scroll the list until we find the entry relative to the last hop of the packet we are processing
-      if (memcmp(&tmp->neighbor_ip_addr.v4, &data_msg->last_hop, sizeof(struct in_addr)) == 0) {
-
-        if (tmp->isTree == 1) {  //OK we receive data from a neighbor that we have a tree link with
-          return 1;
-        }
-
-	else{
-          OLSR_DEBUG(LOG_PLUGINS, "DISCARDING DATA PACKET SENT BY NOT TREE NEIGHBOR");
-	  send_destroy_tree_link(&tmp->neighbor_ip_addr.v4);
-          return 0;
-	}
+  //Scroll the list
+  OLSR_FOR_ALL_OBAMPNODE_ENTRIES(tmp, iterator) {
+    //Scroll the list until we find the entry relative to the last hop of the packet we are processing
+    if (memcmp(&tmp->neighbor_ip_addr.v4, &data_msg->last_hop, sizeof(struct in_addr)) == 0) {
+      if (tmp->isTree == 1) {  //OK we receive data from a neighbor that we have a tree link with
+        return 1;
       }
+      OLSR_DEBUG(LOG_PLUGINS, "DISCARDING DATA PACKET SENT BY NOT TREE NEIGHBOR");
+      send_destroy_tree_link(&tmp->neighbor_ip_addr.v4);
+      return 0;
     }
   }
-
   return 0;
-
 }
 
 
@@ -895,43 +819,31 @@ CheckDupData(char *buffer)
 {
 
   struct ObampNode *tmp;               //temp pointers used when parsing the list
-  struct list_head *pos;
+  struct list_iterator iterator;
   struct OBAMP_data_message4 *data_msg;
 
   data_msg = (struct OBAMP_data_message4 *)buffer;
 
+  //Scroll the list
+  OLSR_FOR_ALL_OBAMPNODE_ENTRIES(tmp, iterator) {
+    if (memcmp(&tmp->neighbor_ip_addr.v4, &data_msg->router_id, sizeof(struct in_addr)) == 0) {
+      OLSR_DEBUG(LOG_PLUGINS, "Processing Data Packet %d - Last seen was %d",data_msg->SequenceNumber, tmp->DataSeqNumber);
 
-  //Check duplicate data packet
-  if (list_empty(&ListOfObampNodes) == 0) {     //if the list is NOT empty
-
-    //Scroll the list
-    list_for_each(pos, &ListOfObampNodes) {
-      tmp = list_entry(pos, struct ObampNode, list);
-
-      if (memcmp(&tmp->neighbor_ip_addr.v4, &data_msg->router_id, sizeof(struct in_addr)) == 0) {
-
-	OLSR_DEBUG(LOG_PLUGINS, "Processing Data Packet %d - Last seen was %d",data_msg->SequenceNumber, tmp->DataSeqNumber);
-	
-        if (tmp->DataSeqNumber == 0) {  //First packet received from this host
-          tmp->DataSeqNumber = data_msg->SequenceNumber;
-          return 1;
-        }
-
-	if ( ((data_msg->SequenceNumber > tmp->DataSeqNumber) && ((data_msg->SequenceNumber - tmp->DataSeqNumber ) <= 127)) || ((tmp->DataSeqNumber > data_msg->SequenceNumber) && ((tmp->DataSeqNumber - data_msg->SequenceNumber) > 127 ))) //data_msg->SequenceNumber > tmp->DataSeqNumber
-	{
-	tmp->DataSeqNumber = data_msg->SequenceNumber;
-	return 1;
-	}
-	else{
-          OLSR_DEBUG(LOG_PLUGINS, "DISCARDING DUP PACKET");
-          return 0;
-	}
+      if (tmp->DataSeqNumber == 0) {  //First packet received from this host
+        tmp->DataSeqNumber = data_msg->SequenceNumber;
+        return 1;
       }
+
+      if ( ((data_msg->SequenceNumber > tmp->DataSeqNumber) && ((data_msg->SequenceNumber - tmp->DataSeqNumber ) <= 127)) || ((tmp->DataSeqNumber > data_msg->SequenceNumber) && ((tmp->DataSeqNumber - data_msg->SequenceNumber) > 127 ))) //data_msg->SequenceNumber > tmp->DataSeqNumber
+      {
+        tmp->DataSeqNumber = data_msg->SequenceNumber;
+        return 1;
+      }
+      OLSR_DEBUG(LOG_PLUGINS, "DISCARDING DUP PACKET");
+      return 0;
     }
   }
-
   return 1;
-
 }
 
 static void
@@ -943,7 +855,7 @@ forward_obamp_data(char *buffer)
   struct ipaddr_str buf2;
 #endif
   struct ObampNode *tmp;               //temp pointers used when parsing the list
-  struct list_head *pos;
+  struct list_iterator iterator;
   struct OBAMP_data_message4 *data_msg;
   struct sockaddr_in si_other;
   struct in_addr temporary;
@@ -953,29 +865,21 @@ forward_obamp_data(char *buffer)
   temporary.s_addr  = data_msg->last_hop;
   data_msg->last_hop = myState->myipaddr.v4.s_addr;
 
-  if (list_empty(&ListOfObampNodes) == 0) {     //if the list is NOT empty
+  //Scroll the list
+  OLSR_FOR_ALL_OBAMPNODE_ENTRIES(tmp, iterator) {
+    if (tmp->isTree == 1 && memcmp(&tmp->neighbor_ip_addr.v4, &temporary.s_addr, 4) != 0) {
+      OLSR_DEBUG(LOG_PLUGINS, "FORWARDING OBAMP DATA TO node %s because come from %s", ip4_to_string(&buf, tmp->neighbor_ip_addr.v4), ip4_to_string(&buf2,temporary));
 
-    //Scroll the list
-    list_for_each(pos, &ListOfObampNodes) {
-      tmp = list_entry(pos, struct ObampNode, list);
+      //FORWARD DATA
+      memset((char *)&si_other, 0, sizeof(si_other));
+      si_other.sin_family = AF_INET;
+      si_other.sin_port = htons(OBAMP_SIGNALLING_PORT);
+      si_other.sin_addr = tmp->neighbor_ip_addr.v4;
 
-      if (tmp->isTree == 1 && memcmp(&tmp->neighbor_ip_addr.v4, &temporary.s_addr, 4) != 0) {
-        OLSR_DEBUG(LOG_PLUGINS, "FORWARDING OBAMP DATA TO node %s because come from %s", ip4_to_string(&buf, tmp->neighbor_ip_addr.v4), ip4_to_string(&buf2,temporary));
-        //FORWARD DATA
-
-
-        memset((char *)&si_other, 0, sizeof(si_other));
-        si_other.sin_family = AF_INET;
-        si_other.sin_port = htons(OBAMP_SIGNALLING_PORT);
-        si_other.sin_addr = tmp->neighbor_ip_addr.v4;
-        //sendto(sdudp, data_msg, sizeof(struct OBAMP_data_message), 0, (struct sockaddr *)&si_other, sizeof(si_other));
-	sendto(sdudp, data_msg, 17+data_msg->datalen, 0, (struct sockaddr *)&si_other, sizeof(si_other));
-
-
-      }
+      //sendto(sdudp, data_msg, sizeof(struct OBAMP_data_message), 0, (struct sockaddr *)&si_other, sizeof(si_other));
+      sendto(sdudp, data_msg, 17+data_msg->datalen, 0, (struct sockaddr *)&si_other, sizeof(si_other));
     }
   }
-
 }
 
 
@@ -986,7 +890,7 @@ manage_hello(char *packet)
   struct OBAMP_hello *hello;
 
   struct ObampNode *tmp;               //temp pointers used when parsing the list
-  struct list_head *pos;
+  struct list_iterator iterator;
 
   hello = (struct OBAMP_hello *)packet;
 
@@ -996,23 +900,18 @@ manage_hello(char *packet)
     return;
   }
 
-  if (list_empty(&ListOfObampNodes) == 0) {     //if the list is NOT empty
-
-    //Scroll the list
-    list_for_each(pos, &ListOfObampNodes) {
-      tmp = list_entry(pos, struct ObampNode, list);
-
-      if (memcmp(&tmp->neighbor_ip_addr.v4, &hello->router_id.v4, sizeof(struct in_addr)) == 0) {       //I search in the list the neighbor I received the hello from
-
-        tmp->isMesh = 1;
-        tmp->MeshLock = _MESH_LOCK_;
-
-      }
-    }
-  } else {
+  if (!list_is_empty(&ListOfObampNodes)) {     //if the list is empty
     OLSR_DEBUG(LOG_PLUGINS, "Very strange, list cannot be empty here !");
+    return;
   }
 
+  //Scroll the list
+  OLSR_FOR_ALL_OBAMPNODE_ENTRIES(tmp, iterator) {
+     if (memcmp(&tmp->neighbor_ip_addr.v4, &hello->router_id.v4, sizeof(struct in_addr)) == 0) {       //I search in the list the neighbor I received the hello from
+      tmp->isMesh = 1;
+      tmp->MeshLock = _MESH_LOCK_;
+    }
+  }
 }
 
 static void
@@ -1027,81 +926,77 @@ manage_tree_create(char *packet)
 #endif
 
   struct ObampNode *tmp;               //temp pointers used when parsing the list
-  struct list_head *pos;
+  struct list_iterator iterator;
+
   OLSR_DEBUG(LOG_PLUGINS,"manage_tree_create");
   msg = (struct OBAMP_tree_create *)packet;
 
   if (msg->MessageID != OBAMP_TREECREATE) {
     OLSR_DEBUG(LOG_PLUGINS, "BIG PROBLEM, I'M IN THIS FUNCTION BUT MESSAGE IS NOT TREE CREATE");
+    return;
   }
 
-  else {
-    //FIRST OF ALL CHECK CORE
-    if (memcmp(&myState->CoreAddress.v4, &msg->CoreAddress.v4, sizeof(struct in_addr)) != 0) {
-      OLSR_DEBUG(LOG_PLUGINS, "Discarding message with no coherent core address");
-      return;
-    }
-    if (myState->iamcore == 1) {        //I'm core and receiving tree create over a loop
-      return;
-    } else {
+  //FIRST OF ALL CHECK CORE
+  if (memcmp(&myState->CoreAddress.v4, &msg->CoreAddress.v4, sizeof(struct in_addr)) != 0) {
+    OLSR_DEBUG(LOG_PLUGINS, "Discarding message with no coherent core address");
+    return;
+  }
+  if (myState->iamcore == 1) {        //I'm core and receiving tree create over a loop
+    return;
+  }
 
+  // TODO: cleanup this statement
+  if ( (((msg->SequenceNumber > myState->TreeCreateSequenceNumber) && ((msg->SequenceNumber - myState->TreeCreateSequenceNumber ) <= 127))
+      || ((myState->TreeCreateSequenceNumber > msg->SequenceNumber) && ((myState->TreeCreateSequenceNumber - msg->SequenceNumber) > 127 ))
+       /*myState->TreeCreateSequenceNumber < msg->SequenceNumber*/) || myState->TreeCreateSequenceNumber == 0 ) {
+    //If tree create is not a duplicate
+    OLSR_DEBUG(LOG_PLUGINS, "myState->TreeCreateSequenceNumber < msg->SequenceNumber --- %d < %d",myState->TreeCreateSequenceNumber,msg->SequenceNumber);
+    myState->TreeCreateSequenceNumber = msg->SequenceNumber;
 
-      if ( (((msg->SequenceNumber > myState->TreeCreateSequenceNumber) && ((msg->SequenceNumber - myState->TreeCreateSequenceNumber ) <= 127)) || ((myState->TreeCreateSequenceNumber > msg->SequenceNumber) && ((myState->TreeCreateSequenceNumber - msg->SequenceNumber) > 127 ))    /*myState->TreeCreateSequenceNumber < msg->SequenceNumber*/) || myState->TreeCreateSequenceNumber == 0 ) {    //If tree create is not a duplicate
-        OLSR_DEBUG(LOG_PLUGINS, "myState->TreeCreateSequenceNumber < msg->SequenceNumber --- %d < %d",myState->TreeCreateSequenceNumber,msg->SequenceNumber);
-	myState->TreeCreateSequenceNumber = msg->SequenceNumber;
+    // A bug was fixed here a battlemeshv3
+    // myState->OldParentId.v4 = myState->ParentId.v4;
+    // myState->ParentId.v4 = msg->router_id.v4;
 
-	//A bug was fixed here a battlemeshv3
-        //myState->OldParentId.v4 = myState->ParentId.v4;
-        //myState->ParentId.v4 = msg->router_id.v4;
-
-        //if (memcmp(&myState->OldParentId.v4, &myState->ParentId.v4, sizeof(struct in_addr)) != 0)       //If it changed
-        if (memcmp(&msg->router_id.v4, &myState->ParentId.v4, sizeof(struct in_addr)) != 0)       //If it changed
-        {
-          OLSR_DEBUG(LOG_PLUGINS, "Receiving a tree message from a link that is not parent");
-	  if (DoIHaveATreeLink() == 0 ) {
-          OLSR_DEBUG(LOG_PLUGINS,"Calling Reset Tree Links"); 
-	  reset_tree_links();
-          myState->ParentId.v4 = msg->router_id.v4;
-          myState->OldParentId.v4 = myState->ParentId.v4;
-          tree_link_req(&msg->router_id.v4);
-	  }
-	  else {
-	  //I have a tree link already, evaluate new parent ??
-	  
-	  }
-        }
-	else { //Receiving a TreeCreate from my parent so I can refresh hearthbeat
-        myState->TreeHeartBeat = TREE_HEARTBEAT;
-        
-	//FORWARD the tree message on the mesh
-	if (list_empty(&ListOfObampNodes) == 0) {       //if the list is NOT empty
-
-          //Scroll the list
-          list_for_each(pos, &ListOfObampNodes) {
-            tmp = list_entry(pos, struct ObampNode, list);
-
-            if (tmp->isMesh == 1 && memcmp(&tmp->neighbor_ip_addr.v4, &msg->router_id.v4, sizeof(struct in_addr)) != 0) {       //Is neighbor and not the originator of this tree create
-		if (DoIHaveATreeLink() == 1 ) { //I forward only if I have a link tree to the core ready
-              tree_create_forward_to(&tmp->neighbor_ip_addr.v4, msg);
-              OLSR_DEBUG(LOG_PLUGINS, "FORWARDING TREE CREATE ORIGINATOR %s TO node %s ", ip4_to_string(&buf2, msg->router_id.v4),
-                         ip4_to_string(&buf, tmp->neighbor_ip_addr.v4));
-		}
-
-            }
-          }
-        } else {
-          OLSR_DEBUG(LOG_PLUGINS, "Very strange, list cannot be empty here !");
-        }
-       }
-      } //END IF TREE CREATE IS NOT A DUPLICATE 
+    // if (memcmp(&myState->OldParentId.v4, &myState->ParentId.v4, sizeof(struct in_addr)) != 0)       //If it changed
+    if (memcmp(&msg->router_id.v4, &myState->ParentId.v4, sizeof(struct in_addr)) != 0)       //If it changed
+    {
+      OLSR_DEBUG(LOG_PLUGINS, "Receiving a tree message from a link that is not parent");
+      if (DoIHaveATreeLink() == 0 ) {
+        OLSR_DEBUG(LOG_PLUGINS,"Calling Reset Tree Links");
+        reset_tree_links();
+        myState->ParentId.v4 = msg->router_id.v4;
+        myState->OldParentId.v4 = myState->ParentId.v4;
+        tree_link_req(&msg->router_id.v4);
+      }
       else {
-	
-        OLSR_DEBUG(LOG_PLUGINS, "myState->TreeCreateSequenceNumber < msg->SequenceNumber --- %d < %d",myState->TreeCreateSequenceNumber,msg->SequenceNumber);
-        OLSR_DEBUG(LOG_PLUGINS, "DISCARDING DUP TREE CREATE");
+        // I have a tree link already, evaluate new parent ??
       }
     }
-  }
+    else { //Receiving a TreeCreate from my parent so I can refresh hearthbeat
+      myState->TreeHeartBeat = TREE_HEARTBEAT;
+        
+      // FORWARD the tree message on the mesh
+      if (list_is_empty(&ListOfObampNodes)) {       //if the list is empty
+        OLSR_DEBUG(LOG_PLUGINS, "Very strange, list cannot be empty here !");
+      }
 
+      //Scroll the list
+      OLSR_FOR_ALL_OBAMPNODE_ENTRIES(tmp, iterator) {
+        if (tmp->isMesh == 1 && memcmp(&tmp->neighbor_ip_addr.v4, &msg->router_id.v4, sizeof(struct in_addr)) != 0) {
+          //Is neighbor and not the originator of this tree create
+          if (DoIHaveATreeLink() == 1 ) { //I forward only if I have a link tree to the core ready
+            tree_create_forward_to(&tmp->neighbor_ip_addr.v4, msg);
+            OLSR_DEBUG(LOG_PLUGINS, "FORWARDING TREE CREATE ORIGINATOR %s TO node %s ", ip4_to_string(&buf2, msg->router_id.v4),
+                       ip4_to_string(&buf, tmp->neighbor_ip_addr.v4));
+          }
+        }
+      }
+    } //END IF TREE CREATE IS NOT A DUPLICATE
+  }
+  else {
+   OLSR_DEBUG(LOG_PLUGINS, "myState->TreeCreateSequenceNumber < msg->SequenceNumber --- %d < %d",myState->TreeCreateSequenceNumber,msg->SequenceNumber);
+   OLSR_DEBUG(LOG_PLUGINS, "DISCARDING DUP TREE CREATE");
+  }
 }
 
 void
@@ -1194,18 +1089,17 @@ addObampNode4(struct in_addr *ipv4, u_int8_t status)
 #endif
   struct ObampNode *neighbor_to_add;
   struct ObampNode *tmp;
-  struct list_head *pos;
-
+  struct list_iterator iterator;
   neighbor_to_add = olsr_malloc(sizeof(struct ObampNode), "OBAMPNode");
 
 //OLSR_DEBUG(LOG_PLUGINS,"Adding to list node - %s\n",ip4_to_string(&buf,*ipv4));
 
 
-  if (list_empty(&ListOfObampNodes) != 0) {     //Empty list
-//OLSR_DEBUG(LOG_PLUGINS,"List is empty %d adding first node\n",list_empty(&ListOfObampNodes));
+  if (list_is_empty(&ListOfObampNodes)) {     //Empty list
+    //OLSR_DEBUG(LOG_PLUGINS,"List is empty %d adding first node\n",listold_empty(&ListOfObampNodes));
 
     memcpy(&neighbor_to_add->neighbor_ip_addr.v4, ipv4, sizeof(neighbor_to_add->neighbor_ip_addr.v4));
-    list_add(&(neighbor_to_add->list), &ListOfObampNodes);
+    list_add_head(&ListOfObampNodes, &(neighbor_to_add->list));
 
     init_overlay_neighbor(neighbor_to_add);
     neighbor_to_add->status = status;
@@ -1213,30 +1107,30 @@ addObampNode4(struct in_addr *ipv4, u_int8_t status)
     OLSR_DEBUG(LOG_PLUGINS, "Added to list node as first node- %s\n", ip4_to_string(&buf, *ipv4));
 
     CoreElection();
+    return 0;
+  }
 
-  } else {                      //Some node already in list
+  //Some node already in list
 
-//Scroll the list to check if the element already exists
-    list_for_each(pos, &ListOfObampNodes) {
-
-      tmp = list_entry(pos, struct ObampNode, list);
-      if (memcmp(&tmp->neighbor_ip_addr.v4, ipv4, sizeof(tmp->neighbor_ip_addr.v4)) == 0) {
-        //OLSR_DEBUG(LOG_PLUGINS,"Node already present in list %s\n",ip4_to_string(&buf,*ipv4));
-        tmp->Texpire = _Texpire_;       //Refresh Texpire
-        neighbor_to_add->status = status;
-        free(neighbor_to_add);
-        return 1;
-      }
+  //Scroll the list to check if the element already exists
+  OLSR_FOR_ALL_OBAMPNODE_ENTRIES(tmp, iterator) {
+    if (memcmp(&tmp->neighbor_ip_addr.v4, ipv4, sizeof(tmp->neighbor_ip_addr.v4)) == 0) {
+      //OLSR_DEBUG(LOG_PLUGINS,"Node already present in list %s\n",ip4_to_string(&buf,*ipv4));
+      tmp->Texpire = _Texpire_;       //Refresh Texpire
+      neighbor_to_add->status = status;
+      free(neighbor_to_add);
+      return 1;
     }
-//Add element to list
-// neighbor_to_add->Texpire=_Texpire_; //Refresh Texpire
-    OLSR_DEBUG(LOG_PLUGINS, "Adding to list node (NOT FIRST)- %s\n", ip4_to_string(&buf, *ipv4));
-    memcpy(&neighbor_to_add->neighbor_ip_addr.v4, ipv4, sizeof(neighbor_to_add->neighbor_ip_addr.v4));
-    list_add(&(neighbor_to_add->list), &ListOfObampNodes);
-    init_overlay_neighbor(neighbor_to_add);
-    neighbor_to_add->status = status;
-    CoreElection();
-  }                             //end else
+  }
+
+  //Add element to list
+  // neighbor_to_add->Texpire=_Texpire_; //Refresh Texpire
+  OLSR_DEBUG(LOG_PLUGINS, "Adding to list node (NOT FIRST)- %s\n", ip4_to_string(&buf, *ipv4));
+  memcpy(&neighbor_to_add->neighbor_ip_addr.v4, ipv4, sizeof(neighbor_to_add->neighbor_ip_addr.v4));
+  list_add_tail(&ListOfObampNodes, &(neighbor_to_add->list));
+  init_overlay_neighbor(neighbor_to_add);
+  neighbor_to_add->status = status;
+  CoreElection();
   return 0;
 }                               //End AddObampNode
 
@@ -1313,6 +1207,7 @@ olsr_obamp_gen(void *packet, int len)
   uint8_t buffer[10240];
   struct olsr_message msg;
   struct interface *ifn;
+  struct list_iterator iterator;
   uint8_t *curr, *sizeptr;
 
   /* fill message */
@@ -1332,7 +1227,7 @@ olsr_obamp_gen(void *packet, int len)
   pkt_put_u16(&sizeptr, len);
 
   /* looping trough interfaces */
-  OLSR_FOR_ALL_INTERFACES(ifn) {
+  OLSR_FOR_ALL_INTERFACES(ifn, iterator) {
     if (net_outbuffer_push(ifn, buffer, len) != len) {
       /* send data and try again */
       net_output(ifn);
@@ -1341,109 +1236,95 @@ olsr_obamp_gen(void *packet, int len)
       }
     }
   }
-  OLSR_FOR_ALL_INTERFACES_END(ifn);
 }
 
 void
-outer_tree_create(void *x)
+outer_tree_create(void *x __attribute__ ((unused)))
 {
-
   struct ObampNode *tmp;               //temp pointers used when parsing the list
-  struct list_head *pos;
+  struct list_iterator iterator;
 
+  if (!((DoIHaveATreeLink() == 0) && (myState->iamcore == 0))) {   //If there are tree links
+    return;
+  }
 
-  if ((DoIHaveATreeLink() == 0) && (myState->iamcore == 0)) {   //If there are not tree links
+  if (list_is_empty(&ListOfObampNodes) == 0) {   //if the list is empty
+    OLSR_DEBUG(LOG_PLUGINS, "List empty can't send OUTER_TREE_CREATE");
+  }
 
-    if (list_empty(&ListOfObampNodes) == 0) {   //if the list is NOT empty
+  if (DoIHaveAMeshLink() == 0) {
+    OLSR_DEBUG(LOG_PLUGINS, "Weird, no mesh links. Maybe other OBAMP nodes are very far (HUGE ETX)");
+    return;
+  }
 
+  // Update my current IP address
+  memcpy(&myState->myipaddr.v4, &olsr_cnf->router_id, olsr_cnf->ipsize);
+  //OLSR_DEBUG(LOG_PLUGINS,"SETUP: my IP - %s",ip4_to_string(&buf,myState->myipaddr.v4));
 
-      if (DoIHaveAMeshLink() == 0) {
-        OLSR_DEBUG(LOG_PLUGINS, "Weird, no mesh links. Maybe other OBAMP nodes are very far (HUGE ETX)");
-
-      } else {
-
-        //Update my current IP address
-        memcpy(&myState->myipaddr.v4, &olsr_cnf->router_id, olsr_cnf->ipsize);
-        //OLSR_DEBUG(LOG_PLUGINS,"SETUP: my IP - %s",ip4_to_string(&buf,myState->myipaddr.v4));
-        list_for_each(pos, &ListOfObampNodes) {
-          tmp = list_entry(pos, struct ObampNode, list);
-          if ((tmp->neighbor_ip_addr.v4.s_addr < myState->myipaddr.v4.s_addr) && (tmp->isMesh == 1)) {
-            return;             //I have a neighbor that will send a outer tree create for me
-          }
-        }
-        //tree create
-        OLSR_DEBUG(LOG_PLUGINS, "OUTER TREE CREATE");
-        tmp = select_tree_anchor();
-        if (tmp == NULL) {
-          OLSR_DEBUG(LOG_PLUGINS, "CANT FIND ANCHOR");
-          return;
-        }
-        tmp->isMesh = 1;
-        tmp->outerTreeLink = 1;
-        myState->OldParentId.v4 = tmp->neighbor_ip_addr.v4;
-        myState->ParentId.v4 = tmp->neighbor_ip_addr.v4;
-        myState->TreeHeartBeat = TREE_HEARTBEAT;
-        tree_link_req(&tmp->neighbor_ip_addr.v4);
-
-      }
-
-
-    } else {
-      OLSR_DEBUG(LOG_PLUGINS, "List empty can't send OUTER_TREE_CREATE");
+  OLSR_FOR_ALL_OBAMPNODE_ENTRIES(tmp, iterator) {
+    if ((tmp->neighbor_ip_addr.v4.s_addr < myState->myipaddr.v4.s_addr) && (tmp->isMesh == 1)) {
+      return;             //I have a neighbor that will send a outer tree create for me
     }
   }
-  x = NULL;
+
+  //tree create
+  OLSR_DEBUG(LOG_PLUGINS, "OUTER TREE CREATE");
+  tmp = select_tree_anchor();
+  if (tmp == NULL) {
+    OLSR_DEBUG(LOG_PLUGINS, "CANT FIND ANCHOR");
+    return;
+  }
+
+  tmp->isMesh = 1;
+  tmp->outerTreeLink = 1;
+  myState->OldParentId.v4 = tmp->neighbor_ip_addr.v4;
+  myState->ParentId.v4 = tmp->neighbor_ip_addr.v4;
+  myState->TreeHeartBeat = TREE_HEARTBEAT;
+  tree_link_req(&tmp->neighbor_ip_addr.v4);
 }
 
 
 void
-tree_create(void *x)
+tree_create(void *x __attribute__ ((unused)))
 {
 #if !defined(REMOVE_LOG_DEBUG)
   struct ipaddr_str buf;
 #endif
   struct ObampNode *tmp;               //temp pointers used when parsing the list
-  struct list_head *pos;
+  struct list_iterator iterator;
 
-//Check if I'm core
-  if (myState->iamcore == 1) {
-
-    if (list_empty(&ListOfObampNodes) == 0) {   //if the list is NOT empty
-
-      //Scroll the list
-      list_for_each(pos, &ListOfObampNodes) {
-
-        tmp = list_entry(pos, struct ObampNode, list);
-        if (tmp->isMesh == 1) { //Is neighbor
-          //send tree create
-
-          tree_create_gen(&tmp->neighbor_ip_addr.v4);
-
-
-          OLSR_DEBUG(LOG_PLUGINS, "CORE SENDS TREE CREATE TO node %s ", ip4_to_string(&buf, tmp->neighbor_ip_addr.v4));
-
-        }
-      }
-    } else {
-      OLSR_DEBUG(LOG_PLUGINS, "List empty can't send TREE_CREATE");
-    }
-
+  // Check if I'm core
+  if (myState->iamcore != 1) {
+    return;
   }
 
-  x = NULL;
+  if (list_is_empty(&ListOfObampNodes)) {   //if the list is empty
+    OLSR_DEBUG(LOG_PLUGINS, "List empty can't send TREE_CREATE");
+    return;
+  }
+
+  //Scroll the list
+  OLSR_FOR_ALL_OBAMPNODE_ENTRIES(tmp, iterator) {
+    if (tmp->isMesh == 1) { //Is neighbor
+      //send tree create
+      tree_create_gen(&tmp->neighbor_ip_addr.v4);
+
+      OLSR_DEBUG(LOG_PLUGINS, "CORE SENDS TREE CREATE TO node %s ", ip4_to_string(&buf, tmp->neighbor_ip_addr.v4));
+    }
+  }
 }
 
 
 
 
 void
-mesh_create(void *x)
+mesh_create(void *x __attribute__ ((unused)))
 {
 #if !defined(REMOVE_LOG_DEBUG)
   struct ipaddr_str buf;
 #endif
   struct ObampNode *tmp;               //temp pointers used when parsing the list
-  struct list_head *pos;
+  struct list_iterator iterator;
 
   struct rt_entry *rt;                 //"rt->rt_best->rtp_metric.cost" is the value you are looking for, a 32 bit
 
@@ -1451,155 +1332,135 @@ mesh_create(void *x)
 
   int meshchanged = 0;
 
-  if (list_empty(&ListOfObampNodes) == 0) {     //if the list is NOT empty
-
-    //Scroll the list
-    list_for_each(pos, &ListOfObampNodes) {
-
-      tmp = list_entry(pos, struct ObampNode, list);
-
-      //set every OBAMP node to be NOT neighbor
-      tmp->wasMesh = tmp->isMesh;
-
-      //MeshLock in case mesh link is requested from neighbor
-      if (tmp->MeshLock == 0 && tmp->outerTreeLink == 0)
-        tmp->isMesh = 0;
-
-      rt = olsr_lookup_routing_table(&tmp->neighbor_ip_addr);
-
-      if (rt == NULL) {         //route is not present yet
-        continue;
-      }
-      //OLSR_DEBUG(LOG_PLUGINS,"ROUTING TO node %s costs %u",ip4_to_string(&buf,tmp->neighbor_ip_addr.v4),rt->rt_best->rtp_metric.cost/65536);
-
-      if (rt->rt_best->rtp_metric.cost / 65536 > 5) {
-        continue;               //we not not consider links that are poorer than ETX=5
-      }
-      //update min cost
-      if ((rt->rt_best->rtp_metric.cost / 65536) < mincost)
-        mincost = (rt->rt_best->rtp_metric.cost / 65536);
-
-    }                           //end for each
-
-    //now that I know the mincost to the closer OBAMP node I choose my neighbor set
-    list_for_each(pos, &ListOfObampNodes) {
-
-      tmp = list_entry(pos, struct ObampNode, list);
-      rt = olsr_lookup_routing_table(&tmp->neighbor_ip_addr);
-
-      if (rt == NULL) {         //route is not present yet
-        continue;
-      }
-
-      if (rt->rt_best->rtp_metric.cost / 65536 > 5) {
-        continue;               //we not not consider links that are poorer than ETX=5
-      }
-
-      if ((rt->rt_best->rtp_metric.cost / 65536) - 1 < mincost) {       //Choose for mesh
-
-        tmp->isMesh = 1;
-        OLSR_DEBUG(LOG_PLUGINS, "Choosed Overlay Neighbor node %s costs %u", ip4_to_string(&buf, tmp->neighbor_ip_addr.v4),
-                   rt->rt_best->rtp_metric.cost / 65536);
-
-        obamp_hello(&tmp->neighbor_ip_addr.v4);
-
-
-      }
-
-      if (tmp->outerTreeLink == 1)
-        obamp_hello(&tmp->neighbor_ip_addr.v4);
-
-
-      if (tmp->isMesh != tmp->wasMesh) {
-        meshchanged++;
-        if (tmp->isMesh == 0 && tmp->isTree == 1) {
-
-          tmp->isTree = 0;
-	  send_destroy_tree_link(&tmp->neighbor_ip_addr.v4);
-	
-        if (memcmp(&tmp->neighbor_ip_addr.v4, &myState->ParentId.v4, sizeof(struct in_addr)) == 0) {
-		OLSR_DEBUG(LOG_PLUGINS,"RESET TREE LINKS: I lost tree link with my PARENT");
-		reset_tree_links();
-	}       
-
-        }
-      }
-
-    }                           //end for each
-
-    if (meshchanged) {
-      //trigger signalling
-    }
-
-
-  } else {
+  if (list_is_empty(&ListOfObampNodes)) {     //if the list is empty
     OLSR_DEBUG(LOG_PLUGINS, "List empty can't create Overlay Mesh");
+    return;
   }
 
-  x = NULL;
+  //Scroll the list
+  OLSR_FOR_ALL_OBAMPNODE_ENTRIES(tmp, iterator) {
+    //set every OBAMP node to be NOT neighbor
+    tmp->wasMesh = tmp->isMesh;
+
+    //MeshLock in case mesh link is requested from neighbor
+    if (tmp->MeshLock == 0 && tmp->outerTreeLink == 0) {
+      tmp->isMesh = 0;
+    }
+
+    rt = olsr_lookup_routing_table(&tmp->neighbor_ip_addr);
+    if (rt == NULL) {         //route is not present yet
+      continue;
+    }
+
+    //OLSR_DEBUG(LOG_PLUGINS,"ROUTING TO node %s costs %u",ip4_to_string(&buf,tmp->neighbor_ip_addr.v4),rt->rt_best->rtp_metric.cost/65536);
+
+    if (rt->rt_best->rtp_metric.cost / 65536 > 5) {
+      continue;               //we not not consider links that are poorer than ETX=5
+    }
+
+    //update min cost
+    if ((rt->rt_best->rtp_metric.cost / 65536) < mincost) {
+      mincost = (rt->rt_best->rtp_metric.cost / 65536);
+    }
+  } //end for each
+
+  //now that I know the mincost to the closer OBAMP node I choose my neighbor set
+  OLSR_FOR_ALL_OBAMPNODE_ENTRIES(tmp, iterator) {
+    rt = olsr_lookup_routing_table(&tmp->neighbor_ip_addr);
+    if (rt == NULL) {         //route is not present yet
+      continue;
+    }
+
+    if (rt->rt_best->rtp_metric.cost / 65536 > 5) {
+      continue;               //we not not consider links that are poorer than ETX=5
+    }
+
+    if ((rt->rt_best->rtp_metric.cost / 65536) - 1 < mincost) {       //Choose for mesh
+      tmp->isMesh = 1;
+      OLSR_DEBUG(LOG_PLUGINS, "Choosed Overlay Neighbor node %s costs %u", ip4_to_string(&buf, tmp->neighbor_ip_addr.v4),
+                 rt->rt_best->rtp_metric.cost / 65536);
+
+      obamp_hello(&tmp->neighbor_ip_addr.v4);
+    }
+
+    if (tmp->outerTreeLink == 1) {
+      obamp_hello(&tmp->neighbor_ip_addr.v4);
+    }
+
+    if (tmp->isMesh != tmp->wasMesh) {
+      meshchanged++;
+      if (tmp->isMesh == 0 && tmp->isTree == 1) {
+        tmp->isTree = 0;
+        send_destroy_tree_link(&tmp->neighbor_ip_addr.v4);
+
+        if (memcmp(&tmp->neighbor_ip_addr.v4, &myState->ParentId.v4, sizeof(struct in_addr)) == 0) {
+          OLSR_DEBUG(LOG_PLUGINS,"RESET TREE LINKS: I lost tree link with my PARENT");
+          reset_tree_links();
+        }
+      }
+    }
+  }                           //end for each
+
+  if (meshchanged) {
+    //trigger signalling
+  }
 }
 
 
 void
-purge_nodes(void *x)
+purge_nodes(void *x __attribute__ ((unused)))
 {
 #if !defined(REMOVE_LOG_DEBUG)
   struct ipaddr_str buf;
 #endif
   struct ObampNode *tmp;
-  struct list_head *pos;
-
+  struct list_iterator iterator;
   int nodesdeleted = 0;
 
-  if (myState->TreeHeartBeat > 0)
+  if (myState->TreeHeartBeat > 0) {
     myState->TreeHeartBeat--;
+  }
 
-  if (myState->TreeRequestDelay > 0)
+  if (myState->TreeRequestDelay > 0) {
     myState->TreeRequestDelay--;
+  }
 
   if (myState->TreeHeartBeat == 0 && myState->iamcore == 0){ 
     OLSR_DEBUG(LOG_PLUGINS,"Calling Reset Tree Links"); 
     reset_tree_links();
-    }
-
-//OLSR_DEBUG(LOG_PLUGINS,"OBAMP: Timer Expired Purging Nodes");
-
-
-  if (list_empty(&ListOfObampNodes) == 0) {     //if the list is NOT empty
-
-    list_for_each(pos, &ListOfObampNodes) {
-
-      tmp = list_entry(pos, struct ObampNode, list);
-      tmp->Texpire--;
-      if (tmp->MeshLock != 0)
-        tmp->MeshLock--;
-
-      //OLSR_DEBUG(LOG_PLUGINS,"Updating node %s with Texpire %d",ip4_to_string(&buf,tmp->neighbor_ip_addr.v4),tmp->Texpire);
-      if (tmp->Texpire == 0) {  //purge
-        OLSR_DEBUG(LOG_PLUGINS, "Purging node %s", ip4_to_string(&buf, tmp->neighbor_ip_addr.v4));
-        list_del(pos);
-        //OLSR_DEBUG(LOG_PLUGINS,"OBAMP CHECK EMPTY %d",list_empty(&ListOfObampNodes));
-
-        free(tmp);
-        nodesdeleted++;
-      }
-
-    }
-
-    if (nodesdeleted != 0)
-      CoreElection();
-
-  } else {
-//OLSR_DEBUG(LOG_PLUGINS,"OBAMP: List empty");
-
   }
 
-  x = NULL;
+  //OLSR_DEBUG(LOG_PLUGINS,"OBAMP: Timer Expired Purging Nodes");
+  if (list_is_empty(&ListOfObampNodes)) {     //if the list is empty
+    //OLSR_DEBUG(LOG_PLUGINS,"OBAMP: List empty");
+    return;
+  }
+
+  OLSR_FOR_ALL_OBAMPNODE_ENTRIES(tmp, iterator) {
+    tmp->Texpire--;
+    if (tmp->MeshLock != 0) {
+      tmp->MeshLock--;
+    }
+
+    //OLSR_DEBUG(LOG_PLUGINS,"Updating node %s with Texpire %d",ip4_to_string(&buf,tmp->neighbor_ip_addr.v4),tmp->Texpire);
+    if (tmp->Texpire == 0) {  //purge
+      OLSR_DEBUG(LOG_PLUGINS, "Purging node %s", ip4_to_string(&buf, tmp->neighbor_ip_addr.v4));
+      list_remove(&tmp->list);
+      //OLSR_DEBUG(LOG_PLUGINS,"OBAMP CHECK EMPTY %d",listold_empty(&ListOfObampNodes));
+
+      free(tmp);
+      nodesdeleted++;
+    }
+  }
+
+  if (nodesdeleted != 0) {
+    CoreElection();
+  }
 }
 
 
 void
-obamp_alive_gen(void *x  __attribute__ ((unused)))
+obamp_alive_gen(void *x __attribute__ ((unused)))
 {
   struct OBAMP_alive myAlive;
   OLSR_DEBUG(LOG_PLUGINS, "Calling obamp_alive_gen\n");
@@ -1626,102 +1487,86 @@ EncapFlowInObamp(int skfd, void *data __attribute__ ((unused)), unsigned int fla
   struct ipaddr_str buf;
 #endif
   struct ObampNode *tmp;
-  struct list_head *pos;
+  struct list_iterator iterator;
 
   union olsr_ip_addr dst;              /* Destination IP address in captured packet */
   struct ip *ipHeader;                 /* The IP header inside the captured IP packet */
   struct ip6_hdr *ipHeader6;           /* The IP header inside the captured IP packet */
 
-  if (skfd >= 0) {
-    struct sockaddr_ll pktAddr;
-    socklen_t addrLen = sizeof(pktAddr);
-    int nBytes;
+  struct sockaddr_ll pktAddr;
+  socklen_t addrLen;
+  int nBytes;
 
-    nBytes = recvfrom(skfd, ipPacket, 1500,     //TODO: optimize me
-                      0, (struct sockaddr *)&pktAddr, &addrLen);
-    if (nBytes < 0) {
+  if (skfd < 0) {
+    return;
+  }
 
-      return;                   /* for */
+  addrLen = sizeof(pktAddr);
+
+  nBytes = recvfrom(skfd, ipPacket, 1500,     //TODO: optimize me
+                    0, (struct sockaddr *)&pktAddr, &addrLen);
+  if (nBytes < 0) {
+    return;
+  }
+
+  /* Check if the number of received bytes is large enough for an IP
+   * packet which contains at least a minimum-size IP header.
+   * Note: There is an apparent bug in the packet socket implementation in
+   * combination with VLAN interfaces. On a VLAN interface, the value returned
+   * by 'recvfrom' may (but need not) be 4 (bytes) larger than the value
+   * returned on a non-VLAN interface, for the same ethernet frame. */
+  if (nBytes < (int)sizeof(struct ip)) {
+    OLSR_DEBUG(LOG_PLUGINS, "Captured frame too short");
+    return;                   /* for */
+  }
+
+  if (pktAddr.sll_pkttype == PACKET_OUTGOING || pktAddr.sll_pkttype == PACKET_MULTICAST)      // ||
+    //pktAddr.sll_pkttype == PACKET_BROADCAST)
+  {
+    //do here
+    if ((ipPacket[0] & 0xf0) == 0x40) {       //IPV4
+      ipHeader = (struct ip *)ipPacket;
+
+      dst.v4 = ipHeader->ip_dst;
+
+      /* Only forward multicast packets. If configured, also forward local broadcast packets */
+      if (!IsMulticast(&dst)) {
+        return;
+      }
+
+      if (ipHeader->ip_p != SOL_UDP) {
+        /* Not UDP */
+        OLSR_DEBUG(LOG_PLUGINS, "NON UDP PACKET\n");
+        return;               /* for */
+      }
+
+      //Forward the packet to tree links
+      OLSR_FOR_ALL_OBAMPNODE_ENTRIES(tmp, iterator) {
+        if (tmp->isTree == 1) {
+          OLSR_DEBUG(LOG_PLUGINS, "Pushing data to Tree link to %s", ip4_to_string(&buf, tmp->neighbor_ip_addr.v4));
+          SendOBAMPData(&tmp->neighbor_ip_addr.v4, ipPacket, nBytes);
+        }
+      }
+    }                         //END IPV4
+    else if ((ipPacket[0] & 0xf0) == 0x60) {  //IPv6
+      ipHeader6 = (struct ip6_hdr *)ipPacket;
+      if (ipHeader6->ip6_dst.s6_addr[0] != 0xff) {     //Multicast
+        return;               //not multicast
+      }
+
+      if (ipHeader6->ip6_nxt != SOL_UDP) {
+        /* Not UDP */
+        OLSR_DEBUG(LOG_PLUGINS, "NON UDP PACKET\n");
+        return;               /* for */
+      }
+    }                         //END IPV6
+    else {
+      return;                 //Is not IP packet
     }
 
-    /* if (nBytes < 0) */
-    /* Check if the number of received bytes is large enough for an IP
-     * packet which contains at least a minimum-size IP header.
-     * Note: There is an apparent bug in the packet socket implementation in
-     * combination with VLAN interfaces. On a VLAN interface, the value returned
-     * by 'recvfrom' may (but need not) be 4 (bytes) larger than the value
-     * returned on a non-VLAN interface, for the same ethernet frame. */
-    if (nBytes < (int)sizeof(struct ip)) {
-
-      OLSR_DEBUG(LOG_PLUGINS, "Captured frame too short");
-      return;                   /* for */
-    }
-
-    if (pktAddr.sll_pkttype == PACKET_OUTGOING || pktAddr.sll_pkttype == PACKET_MULTICAST)      // ||
-      //pktAddr.sll_pkttype == PACKET_BROADCAST)
-    {
-
-      //do here
-      if ((ipPacket[0] & 0xf0) == 0x40) {       //IPV4
-
-        ipHeader = (struct ip *)ipPacket;
-
-        dst.v4 = ipHeader->ip_dst;
-
-        /* Only forward multicast packets. If configured, also forward local broadcast packets */
-        if (IsMulticast(&dst)) {
-          /* continue */
-        } else {
-          return;
-        }
-        if (ipHeader->ip_p != SOL_UDP) {
-          /* Not UDP */
-          OLSR_DEBUG(LOG_PLUGINS, "NON UDP PACKET\n");
-          return;               /* for */
-        } else {
-          //Forward the packet to tree links
-          if (list_empty(&ListOfObampNodes) == 0) {     //if the list is NOT empty
-
-            list_for_each(pos, &ListOfObampNodes) {
-
-              tmp = list_entry(pos, struct ObampNode, list);
-              if (tmp->isTree == 1) {
-
-                OLSR_DEBUG(LOG_PLUGINS, "Pushing data to Tree link to %s", ip4_to_string(&buf, tmp->neighbor_ip_addr.v4));
-                SendOBAMPData(&tmp->neighbor_ip_addr.v4, ipPacket, nBytes);
-
-              }
-            }
-          }
-        }
-
-      }                         //END IPV4
-
-      else if ((ipPacket[0] & 0xf0) == 0x60) {  //IPv6
-
-        ipHeader6 = (struct ip6_hdr *)ipPacket;
-        if (ipHeader6->ip6_dst.s6_addr[0] == 0xff)      //Multicast
-        {
-          //Continua
-        } else {
-          return;               //not multicast
-        }
-        if (ipHeader6->ip6_nxt != SOL_UDP) {
-          /* Not UDP */
-          OLSR_DEBUG(LOG_PLUGINS, "NON UDP PACKET\n");
-          return;               /* for */
-        }
-
-      }                         //END IPV6
-      else
-        return;                 //Is not IP packet
-
-      // send the packet to OLSR forward mechanism
-      // SendOBAMPData(&tmp->neighbor_ip_addr.v6,ipPacket,nBytes);
-
-
-    }                           /* if (pktAddr.sll_pkttype == ...) */
-  }                             /* if (skfd >= 0 && (FD_ISSET...)) */
+    // send the packet to OLSR forward mechanism
+    // SendOBAMPData(&tmp->neighbor_ip_addr.v6,ipPacket,nBytes);
+  }                           /* if (pktAddr.sll_pkttype == ...) */
 }                               /* EncapFlowInObamp */
 
 //This function is called from olsrd_plugin.c and adds to the list the interfaces specified in the configuration file to sniff multicast traffic
@@ -1744,7 +1589,7 @@ AddObampSniffingIf(const char *ifName,
 
   OLSR_DEBUG(LOG_PLUGINS, "Adding interface to list");
 
-  list_add(&(ifToAdd->list), &ListOfObampSniffingIf);
+  list_add_tail(&ListOfObampSniffingIf, &(ifToAdd->list));
 
   OLSR_DEBUG(LOG_PLUGINS, "Adding if %s to list of ObampSniffingIfaces", ifToAdd->ifName);
 
@@ -1755,7 +1600,7 @@ AddObampSniffingIf(const char *ifName,
 int
 PreInitOBAMP(void)
 {
-  INIT_LIST_HEAD(&ListOfObampSniffingIf);
+  list_init_head(&ListOfObampSniffingIf);
   return 0;
 
 }
@@ -1809,7 +1654,7 @@ InitOBAMP(void)
 
   OLSR_DEBUG(LOG_PLUGINS, "SETUP: my IP - %s", ip4_to_string(&buf, myState->myipaddr.v4));
 
-  INIT_LIST_HEAD(&ListOfObampNodes);
+  list_init_head(&ListOfObampNodes);
 
 //OLSR cookies stuff for timers
   OBAMP_alive_gen_timer_cookie = olsr_alloc_cookie("OBAMP Alive Generation", OLSR_COOKIE_TYPE_TIMER);

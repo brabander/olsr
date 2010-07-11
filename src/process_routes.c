@@ -46,9 +46,9 @@
 
 #include <errno.h>
 
-static struct list_node add_kernel_list;
-static struct list_node chg_kernel_list;
-static struct list_node del_kernel_list;
+static struct list_entity add_kernel_list;
+static struct list_entity chg_kernel_list;
+static struct list_entity del_kernel_list;
 
 /*
  * Function hooks for plugins to intercept
@@ -64,9 +64,9 @@ olsr_init_export_route(void)
   OLSR_INFO(LOG_ROUTING, "Initialize route processing...\n");
 
   /* the add/chg/del kernel queues */
-  list_head_init(&add_kernel_list);
-  list_head_init(&chg_kernel_list);
-  list_head_init(&del_kernel_list);
+  list_init_head(&add_kernel_list);
+  list_init_head(&chg_kernel_list);
+  list_init_head(&del_kernel_list);
 
   olsr_add_route_function = olsr_kernel_add_route;
   olsr_del_route_function = olsr_kernel_del_route;
@@ -94,12 +94,12 @@ olsr_delete_all_kernel_routes(void)
  * Enqueue a route on a kernel add/chg/del queue.
  */
 static void
-olsr_enqueue_rt(struct list_node *head_node, struct rt_entry *rt)
+olsr_enqueue_rt(struct list_entity *head_node, struct rt_entry *rt)
 {
   const struct rt_nexthop *nh;
 
   /* if this node is already on some changelist we are done */
-  if (list_node_on_list(&rt->rt_change_node)) {
+  if (list_node_added(&rt->rt_change_node)) {
     return;
   }
 
@@ -152,7 +152,7 @@ olsr_add_route(struct rt_entry *rt)
     while (0 <= olsr_del_route_function(&defrt, olsr_cnf->ip_version)) {
     }
     olsr_cnf->del_gws = false;
-    exit(9);
+    olsr_exit(9);
   }
 
   if (0 > olsr_add_route_function(rt, olsr_cnf->ip_version)) {
@@ -177,12 +177,12 @@ olsr_add_route(struct rt_entry *rt)
  * the queue needs to be traversed from head to tail.
  */
 static void
-olsr_add_routes(struct list_node *head_node)
+olsr_add_routes(struct list_entity *head_node)
 {
   struct rt_entry *rt;
 
   while (!list_is_empty(head_node)) {
-    rt = changelist2rt(head_node->next);
+    rt = list_first_element(head_node, rt, rt_change_node);
     olsr_add_route(rt);
 
     list_remove(&rt->rt_change_node);
@@ -197,10 +197,10 @@ olsr_add_routes(struct list_node *head_node)
  * the queue needs to be traversed from tail to head.
  */
 static void
-olsr_chg_kernel_routes(struct list_node *head_node)
+olsr_chg_kernel_routes(struct list_entity *head_node)
 {
   struct rt_entry *rt;
-  struct list_node *node;
+  struct list_iterator iterator;
 
   if (list_is_empty(head_node)) {
     return;
@@ -211,8 +211,7 @@ olsr_chg_kernel_routes(struct list_node *head_node)
    * traverse from the end to the beginning of the list,
    * such that nexthop routes are deleted last.
    */
-  for (node = head_node->prev; head_node != node; node = node->prev) {
-    rt = changelist2rt(node);
+  OLSR_FOR_ALL_RTLIST_ENTRIES(head_node, rt, iterator) {
     olsr_del_route(rt);
   }
 
@@ -221,8 +220,7 @@ olsr_chg_kernel_routes(struct list_node *head_node)
    * Traverse from the beginning to the end of the list,
    * such that nexthop routes are added first.
    */
-  while (!list_is_empty(head_node)) {
-    rt = changelist2rt(head_node->next);
+  OLSR_FOR_ALL_RTLIST_ENTRIES(head_node, rt, iterator) {
     olsr_add_route(rt);
 
     list_remove(&rt->rt_change_node);
@@ -237,13 +235,12 @@ olsr_chg_kernel_routes(struct list_node *head_node)
  * the queue needs to be traversed from tail to head.
  */
 static void
-olsr_del_kernel_routes(struct list_node *head_node)
+olsr_del_kernel_routes(struct list_entity *head_node)
 {
   struct rt_entry *rt;
+  struct list_iterator iterator;
 
-  while (!list_is_empty(head_node)) {
-    rt = changelist2rt(head_node->prev);
-
+  OLSR_FOR_ALL_RTLIST_ENTRIES(head_node, rt, iterator) {
     /*
      * Only attempt to delete the route from kernel if it was
      * installed previously. A reference to the interface gets

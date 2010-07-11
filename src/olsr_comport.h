@@ -90,7 +90,7 @@ struct comport_connection {
   /*
    * internal part of the server
    */
-  struct list_node node;
+  struct list_entity node;
   int fd;
   enum connection_state state;
   enum http_header_type send_as;
@@ -99,8 +99,6 @@ struct comport_connection {
   bool is_http, show_echo;
   struct autobuf in;
 };
-
-LISTNODE2STRUCT(comport_node2con, struct comport_connection, node);
 
 void olsr_com_init(bool);
 void olsr_com_destroy(void);

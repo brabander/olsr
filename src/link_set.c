@@ -59,7 +59,7 @@
 #include <assert.h>
 
 /* head node for all link sets */
-struct list_node link_entry_head;
+struct list_entity link_entry_head;
 
 static struct olsr_cookie_info *link_dead_timer_cookie = NULL;
 static struct olsr_cookie_info *link_loss_timer_cookie = NULL;
@@ -85,7 +85,7 @@ olsr_init_link_set(void)
   OLSR_INFO(LOG_LINKS, "Initialize linkset...\n");
 
   /* Init list head */
-  list_head_init(&link_entry_head);
+  list_init_head(&link_entry_head);
 
   link_dead_timer_cookie = olsr_alloc_cookie("Link dead", OLSR_COOKIE_TYPE_TIMER);
   link_loss_timer_cookie = olsr_alloc_cookie("Link loss", OLSR_COOKIE_TYPE_TIMER);
@@ -138,14 +138,14 @@ struct link_entry *
 get_best_link_to_neighbor(struct nbr_entry *nbr)
 {
   struct link_entry *walker, *good_link;
+  struct list_iterator iterator;
   olsr_linkcost curr_lcost = LINK_COST_BROKEN;
 
   /* we haven't selected any links, yet */
   good_link = NULL;
 
   /* loop through all links that we have */
-  OLSR_FOR_ALL_LINK_ENTRIES(walker) {
-
+  OLSR_FOR_ALL_LINK_ENTRIES(walker, iterator) {
     /* if this is not a link to the neighour in question, skip */
     if (walker->neighbor != nbr || lookup_link_status(walker) != SYM_LINK)
       continue;
@@ -159,7 +159,6 @@ get_best_link_to_neighbor(struct nbr_entry *nbr)
       good_link = walker;
     }
   }
-  OLSR_FOR_ALL_LINK_ENTRIES_END(walker);
 
   /*
    * if we haven't found any symmetric links, try to return an asymmetric link.
@@ -257,18 +256,18 @@ void
 olsr_delete_link_entry_by_if(const struct interface *ifp)
 {
   struct link_entry *link;
+  struct list_iterator iterator;
 #if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
 #endif
 
-  OLSR_FOR_ALL_LINK_ENTRIES(link) {
+  OLSR_FOR_ALL_LINK_ENTRIES(link, iterator) {
     if (ifp == link->inter) {
       OLSR_DEBUG(LOG_LINKS, "Removing link %s of interface %s\n",
           olsr_ip_to_string(&buf, &link->neighbor_iface_addr), ifp->int_name);
       olsr_delete_link_entry(link);
     }
   }
-  OLSR_FOR_ALL_LINK_ENTRIES_END(link);
 }
 
 /**
@@ -463,13 +462,13 @@ int
 check_neighbor_link(const union olsr_ip_addr *int_addr)
 {
   struct link_entry *link;
+  struct list_iterator iterator;
 
-  OLSR_FOR_ALL_LINK_ENTRIES(link) {
+  OLSR_FOR_ALL_LINK_ENTRIES(link, iterator) {
     if (olsr_ipcmp(int_addr, &link->neighbor_iface_addr) == 0) {
       return lookup_link_status(link);
     }
   }
-  OLSR_FOR_ALL_LINK_ENTRIES_END(link);
 
   return UNSPEC_LINK;
 }
@@ -486,8 +485,9 @@ struct link_entry *
 lookup_link_entry(const union olsr_ip_addr *remote, const union olsr_ip_addr *remote_main, const struct interface *local)
 {
   struct link_entry *link;
+  struct list_iterator iterator;
 
-  OLSR_FOR_ALL_LINK_ENTRIES(link) {
+  OLSR_FOR_ALL_LINK_ENTRIES(link, iterator) {
     if (olsr_ipcmp(remote, &link->neighbor_iface_addr) == 0 && (link->if_name ? !strcmp(link->if_name, local->int_name)
                                                                 : olsr_ipcmp(&local->ip_addr, &link->local_iface_addr) == 0)) {
       /* check the remote-main address only if there is one given */
@@ -503,7 +503,6 @@ lookup_link_entry(const union olsr_ip_addr *remote, const union olsr_ip_addr *re
       return link;
     }
   }
-  OLSR_FOR_ALL_LINK_ENTRIES_END(link);
 
   return NULL;
 }
@@ -577,20 +576,19 @@ int
 replace_neighbor_link_set(const struct nbr_entry *old, struct nbr_entry *new)
 {
   struct link_entry *link;
+  struct list_iterator iterator;
   int retval = 0;
 
   if (list_is_empty(&link_entry_head)) {
     return retval;
   }
 
-  OLSR_FOR_ALL_LINK_ENTRIES(link) {
-
+  OLSR_FOR_ALL_LINK_ENTRIES(link, iterator) {
     if (link->neighbor == old) {
       link->neighbor = new;
       retval++;
     }
   }
-  OLSR_FOR_ALL_LINK_ENTRIES_END(link);
 
   return retval;
 }
@@ -636,6 +634,7 @@ olsr_print_link_set(void)
 #if !defined REMOVE_LOG_INFO
   /* The whole function makes no sense without it. */
   struct link_entry *walker;
+  struct list_iterator iterator;
   char totaltxt[256];
   const char *txt;
   int addrsize;
@@ -672,7 +671,7 @@ olsr_print_link_set(void)
   OLSR_INFO(LOG_LINKS, "\n--- %s ---------------------------------------------------- LINKS\n\n", olsr_wallclock_string());
   OLSR_INFO_NH(LOG_LINKS, "%-*s  %-6s %s %s\n", addrsize, "IP address", "hyst", totaltxt , olsr_get_linklabel(0));
 
-  OLSR_FOR_ALL_LINK_ENTRIES(walker) {
+  OLSR_FOR_ALL_LINK_ENTRIES(walker, iterator) {
     struct ipaddr_str buf;
     char lqbuffer[LQTEXT_MAXLENGTH];
 
@@ -705,7 +704,7 @@ olsr_print_link_set(void)
     OLSR_INFO_NH(LOG_LINKS, "%-*s %s %s\n",
                  addrsize, olsr_ip_to_string(&buf, &walker->neighbor_iface_addr),
                  totaltxt, olsr_get_linkcost_text(walker->linkcost, false, lqbuffer, sizeof(lqbuffer)));
-  } OLSR_FOR_ALL_LINK_ENTRIES_END(walker);
+  }
 #endif
 }
 
@@ -737,6 +736,7 @@ generate_hello(void *p) {
   uint8_t *curr = msg_buffer;
   uint8_t *length_field, *last;
   struct link_entry *link;
+  struct list_iterator iterator;
   uint8_t writeLinkType, writeNeighType;
   OLSR_INFO(LOG_PACKET_CREATION, "Building Hello for %s\n-------------------\n", ifp->int_name);
 
@@ -757,7 +757,7 @@ generate_hello(void *p) {
   last = msg_buffer + sizeof(msg_buffer) - olsr_cnf->ipsize;
 
   /* first calculate local link status */
-  OLSR_FOR_ALL_LINK_ENTRIES(link) {
+  OLSR_FOR_ALL_LINK_ENTRIES(link, iterator) {
     if (olsr_ipcmp(&link->local_iface_addr, &ifp->ip_addr) != 0) {
       link->iflocal_link_status = UNSPEC_LINK;
     }
@@ -774,14 +774,14 @@ generate_hello(void *p) {
     else {
       link->iflocal_neigh_status = NOT_NEIGH;
     }
-  } OLSR_FOR_ALL_LINK_ENTRIES_END(link)
+  }
 
   for (writeNeighType = 0; writeNeighType < COUNT_NEIGH_TYPES; writeNeighType++) {
     for (writeLinkType = 0; writeLinkType < COUNT_LINK_TYPES; writeLinkType++) {
       bool first = true;
       uint8_t *linkstart = NULL;
 
-      OLSR_FOR_ALL_LINK_ENTRIES(link) {
+      OLSR_FOR_ALL_LINK_ENTRIES(link, iterator) {
         if (link->iflocal_link_status != writeLinkType
             || link->iflocal_neigh_status != writeNeighType) {
           continue;
@@ -799,7 +799,7 @@ generate_hello(void *p) {
 
         pkt_put_ipaddress(&curr, &link->neighbor_iface_addr);
         olsr_serialize_hello_lq_pair(&curr, link);
-      } OLSR_FOR_ALL_LINK_ENTRIES_END(link)
+      }
 
       /* fix length field of hello block */
       if (linkstart != NULL) {

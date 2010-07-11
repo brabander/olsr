@@ -183,6 +183,7 @@ olsr_mdns_gen(unsigned char *packet, int len)
   int aligned_size;
   struct olsr_message msg;
   struct interface *ifn;
+  struct list_iterator iterator;
   uint8_t *sizeptr, *curr;
   
   aligned_size=len;
@@ -217,7 +218,7 @@ olsr_mdns_gen(unsigned char *packet, int len)
   }
 
   /* looping trough interfaces */
-  OLSR_FOR_ALL_INTERFACES(ifn) {
+  OLSR_FOR_ALL_INTERFACES(ifn, iterator) {
     //OLSR_PRINTF(1, "MDNS PLUGIN: Generating packet - [%s]\n", ifn->int_name);
 
     if (net_outbuffer_push(ifn, buffer, aligned_size) != aligned_size) {
@@ -228,7 +229,6 @@ olsr_mdns_gen(unsigned char *packet, int len)
       }
     }
   }
-  OLSR_FOR_ALL_INTERFACES_END(ifn);
 }
 
 /* -------------------------------------------------------------------------

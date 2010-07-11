@@ -647,8 +647,8 @@ diff -Nur quagga-0.98.6/ospfd/ospf_vty.c quagga-0.98.6.patched/ospfd/ospf_vty.c
    int source;
 @@ -5574,7 +5605,7 @@
  
- DEFUN (ospf_distribute_list_out,
-        ospf_distribute_list_out_cmd,
+ DEFUN (ospf_distribute_listold_out,
+        ospf_distribute_listold_out_cmd,
 -       "distribute-list WORD out (kernel|connected|static|rip|bgp)",
 +       "distribute-list WORD out (kernel|connected|static|rip|bgp|olsr|batman)",
         "Filter networks in routing updates\n"
@@ -668,8 +668,8 @@ diff -Nur quagga-0.98.6/ospfd/ospf_vty.c quagga-0.98.6.patched/ospfd/ospf_vty.c
    int source;
 @@ -5596,7 +5630,7 @@
  
- DEFUN (no_ospf_distribute_list_out,
-        no_ospf_distribute_list_out_cmd,
+ DEFUN (no_ospf_distribute_listold_out,
+        no_ospf_distribute_listold_out_cmd,
 -       "no distribute-list WORD out (kernel|connected|static|rip|bgp)",
 +       "no distribute-list WORD out (kernel|connected|static|rip|bgp|olsr|batman)",
         NO_STR

@@ -56,7 +56,7 @@
 
 /* OBAMP includes */
 #include "obamp.h"
-#include "list.h"
+#include "common/list.h"
 
 static void __attribute__ ((constructor)) my_init(void);
 static void __attribute__ ((destructor)) my_fini(void);

@@ -88,10 +88,10 @@ struct rt_entry {
   struct rt_nexthop rt_nexthop;        /* nexthop of FIB route */
   struct rt_metric rt_metric;          /* metric of FIB route */
   struct avl_tree rt_path_tree;
-  struct list_node rt_change_node;     /* queue for kernel FIB add/chg/del */
+  struct list_entity rt_change_node;     /* queue for kernel FIB add/chg/del */
 };
 
-LISTNODE2STRUCT(changelist2rt, struct rt_entry, rt_change_node);
+#define OLSR_FOR_ALL_RTLIST_ENTRIES(head, rt_entry, iterator) list_for_each_element_safe(head, rt_entry, rt_change_node, iterator.loop, iterator.safe)
 
 /*
  * For every received route a rt_path is added to the RIB.

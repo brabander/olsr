@@ -66,7 +66,7 @@ typedef void (*timer_cb_func) (void *); /* callback function */
  * which causes the timer to run forever until manually stopped.
  */
 struct timer_entry {
-  struct list_node timer_list;         /* Wheel membership */
+  struct list_entity timer_list;         /* Wheel membership */
   uint32_t timer_clock;                /* when timer shall fire (absolute time) */
   unsigned int timer_period;           /* set for periodical timers (relative time) */
   struct olsr_cookie_info *timer_cookie;       /* used for diag stuff */
@@ -77,9 +77,6 @@ struct timer_entry {
   timer_cb_func timer_cb;              /* callback function */
   void *timer_cb_context;              /* context pointer */
 };
-
-/* inline to recast from timer_list back to timer_entry */
-LISTNODE2STRUCT(list2timer, struct timer_entry, timer_list);
 
 #define OLSR_TIMER_ONESHOT    0 /* One shot timer */
 #define OLSR_TIMER_PERIODIC   1 /* Periodic timer */
@@ -130,21 +127,12 @@ struct olsr_socket_entry {
   socket_handler_func process_pollrate;
   void *data;
   unsigned int flags;
-  struct list_node socket_node;
+  struct list_entity socket_node;
 };
 
-LISTNODE2STRUCT(list2socket, struct olsr_socket_entry, socket_node);
-
 /* deletion safe macro for socket list traversal */
-#define OLSR_FOR_ALL_SOCKETS(socket) \
-{ \
-  struct list_node *_socket_node, *_next_socket_node; \
-  for (_socket_node = socket_head.next; \
-    _socket_node != &socket_head; \
-    _socket_node = _next_socket_node) { \
-    _next_socket_node = _socket_node->next; \
-    socket = list2socket(_socket_node);
-#define OLSR_FOR_ALL_SOCKETS_END(socket) }}
+
+#define OLSR_FOR_ALL_SOCKETS(socket, iterator) list_for_each_element_safe(&socket_head, socket, socket_node, iterator.loop, iterator.safe)
 
 uint32_t EXPORT(olsr_getTimestamp) (uint32_t s);
 int32_t EXPORT(olsr_getTimeDue) (uint32_t s);

@@ -326,6 +326,7 @@ olsr_input_hna(struct olsr_message *msg,
 void
 generate_hna(void *p __attribute__ ((unused))) {
   struct interface *ifp;
+  struct list_iterator iterator;
   struct ip_prefix_entry *h;
   uint8_t msg_buffer[MAXMESSAGESIZE - OLSR_HEADERSIZE] __attribute__ ((aligned));
   uint8_t *curr = msg_buffer;
@@ -347,14 +348,14 @@ generate_hna(void *p __attribute__ ((unused))) {
   pkt_put_u16(&curr, get_msg_seqno());
 
   last = msg_buffer + sizeof(msg_buffer) - olsr_cnf->ipsize;
-  OLSR_FOR_ALL_IPPREFIX_ENTRIES(&olsr_cnf->hna_entries, h) {
+  OLSR_FOR_ALL_IPPREFIX_ENTRIES(&olsr_cnf->hna_entries, h, iterator) {
     union olsr_ip_addr subnet;
 
     olsr_prefix_to_netmask(&subnet, h->net.prefix_len);
     sendHNA = true;
     pkt_put_ipaddress(&curr, &h->net.prefix);
     pkt_put_ipaddress(&curr, &subnet);
-  } OLSR_FOR_ALL_IPPREFIX_ENTRIES_END()
+  }
 
   if (!sendHNA) {
     return;
@@ -362,13 +363,13 @@ generate_hna(void *p __attribute__ ((unused))) {
 
   pkt_put_u16(&length_field, curr - msg_buffer);
 
-  OLSR_FOR_ALL_INTERFACES(ifp) {
+  OLSR_FOR_ALL_INTERFACES(ifp, iterator) {
     if (net_outbuffer_bytes_left(ifp) < curr - msg_buffer) {
       net_output(ifp);
       set_buffer_timer(ifp);
     }
     net_outbuffer_push(ifp, msg_buffer, curr - msg_buffer);
-  } OLSR_FOR_ALL_INTERFACES_END(ifp)
+  }
 }
 
 /*

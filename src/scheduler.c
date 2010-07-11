@@ -51,6 +51,7 @@
 
 #include <unistd.h>
 #include <assert.h>
+#include <stdlib.h>
 
 /* Timer data, global. Externed in scheduler.h */
 uint32_t now_times;                    /* relative time compared to startup (in milliseconds */
@@ -58,14 +59,14 @@ struct timeval first_tv;               /* timevalue during startup */
 struct timeval last_tv;                /* timevalue used for last olsr_times() calculation */
 
 /* Hashed root of all timers */
-static struct list_node timer_wheel[TIMER_WHEEL_SLOTS];
+static struct list_entity timer_wheel[TIMER_WHEEL_SLOTS];
 static uint32_t timer_last_run;        /* remember the last timeslot walk */
 
 /* Memory cookie for the block based memory manager */
 static struct olsr_cookie_info *timer_mem_cookie = NULL;
 
 /* Head of all OLSR used sockets */
-static struct list_node socket_head = { &socket_head, &socket_head };
+static struct list_entity socket_head;
 
 /* Prototypes */
 static void walk_timers(uint32_t *);
@@ -187,7 +188,6 @@ add_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, v
   new_entry->flags = flags;
 
   /* Queue */
-  list_node_init(&new_entry->socket_node);
   list_add_before(&socket_head, &new_entry->socket_node);
 }
 
@@ -203,6 +203,7 @@ int
 remove_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm)
 {
   struct olsr_socket_entry *entry;
+  struct list_iterator iterator;
 
   if (fd < 0 || (pf_pr == NULL && pf_imm == NULL)) {
     OLSR_WARN(LOG_SCHEDULER, "Bogus socket entry - not processing...");
@@ -210,14 +211,13 @@ remove_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm
   }
   OLSR_DEBUG(LOG_SCHEDULER, "Removing OLSR socket entry %d\n", fd);
 
-  OLSR_FOR_ALL_SOCKETS(entry) {
+  OLSR_FOR_ALL_SOCKETS(entry, iterator) {
     if (entry->fd == fd && entry->process_immediate == pf_imm && entry->process_pollrate == pf_pr) {
       list_remove(&entry->socket_node);
       free(entry);
       return 1;
     }
   }
-  OLSR_FOR_ALL_SOCKETS_END(entry);
   return 0;
 }
 
@@ -225,26 +225,26 @@ void
 enable_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, unsigned int flags)
 {
   struct olsr_socket_entry *entry;
+  struct list_iterator iterator;
 
-  OLSR_FOR_ALL_SOCKETS(entry) {
+  OLSR_FOR_ALL_SOCKETS(entry, iterator) {
     if (entry->fd == fd && entry->process_immediate == pf_imm && entry->process_pollrate == pf_pr) {
       entry->flags |= flags;
     }
   }
-  OLSR_FOR_ALL_SOCKETS_END(entry);
 }
 
 void
 disable_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, unsigned int flags)
 {
   struct olsr_socket_entry *entry;
+  struct list_iterator iterator;
 
-  OLSR_FOR_ALL_SOCKETS(entry) {
+  OLSR_FOR_ALL_SOCKETS(entry, iterator) {
     if (entry->fd == fd && entry->process_immediate == pf_imm && entry->process_pollrate == pf_pr) {
       entry->flags &= ~flags;
     }
   }
-  OLSR_FOR_ALL_SOCKETS_END(entry);
 }
 
 /**
@@ -254,12 +254,13 @@ void
 olsr_flush_sockets(void)
 {
   struct olsr_socket_entry *entry;
+  struct list_iterator iterator;
 
-  OLSR_FOR_ALL_SOCKETS(entry) {
+  OLSR_FOR_ALL_SOCKETS(entry, iterator) {
     CLOSESOCKET(entry->fd);
     list_remove(&entry->socket_node);
     free(entry);
-  } OLSR_FOR_ALL_SOCKETS_END(entry);
+  }
 }
 
 static void
@@ -267,6 +268,7 @@ poll_sockets(void)
 {
   int n;
   struct olsr_socket_entry *entry;
+  struct list_iterator iterator;
   fd_set ibits, obits;
   struct timeval tvp = { 0, 0 };
   int hfd = 0, fdsets = 0;
@@ -282,7 +284,7 @@ poll_sockets(void)
   FD_ZERO(&obits);
 
   /* Adding file-descriptors to FD set */
-  OLSR_FOR_ALL_SOCKETS(entry) {
+  OLSR_FOR_ALL_SOCKETS(entry, iterator) {
     if (entry->process_pollrate == NULL) {
       continue;
     }
@@ -298,7 +300,6 @@ poll_sockets(void)
       hfd = entry->fd + 1;
     }
   }
-  OLSR_FOR_ALL_SOCKETS_END(entry);
 
   /* Running select on the FD set */
   do {
@@ -315,7 +316,7 @@ poll_sockets(void)
 
   /* Update time since this is much used by the parsing functions */
   now_times = olsr_times();
-  OLSR_FOR_ALL_SOCKETS(entry) {
+  OLSR_FOR_ALL_SOCKETS(entry, iterator) {
     int flags;
     if (entry->process_pollrate == NULL) {
       continue;
@@ -331,7 +332,6 @@ poll_sockets(void)
       entry->process_pollrate(entry->fd, entry->data, flags);
     }
   }
-  OLSR_FOR_ALL_SOCKETS_END(entry);
 }
 
 static void
@@ -361,13 +361,14 @@ handle_fds(uint32_t next_interval)
   /* do at least one select */
   for (;;) {
     struct olsr_socket_entry *entry;
+    struct list_iterator iterator;
     fd_set ibits, obits;
     int n, hfd = 0, fdsets = 0;
     FD_ZERO(&ibits);
     FD_ZERO(&obits);
 
     /* Adding file-descriptors to FD set */
-    OLSR_FOR_ALL_SOCKETS(entry) {
+    OLSR_FOR_ALL_SOCKETS(entry, iterator) {
       if (entry->process_immediate == NULL) {
         continue;
       }
@@ -383,7 +384,6 @@ handle_fds(uint32_t next_interval)
         hfd = entry->fd + 1;
       }
     }
-    OLSR_FOR_ALL_SOCKETS_END(entry);
 
     if (hfd == 0 && (long)remaining <= 0) {
       /* we are over the interval and we have no fd's. Skip the select() etc. */
@@ -404,7 +404,7 @@ handle_fds(uint32_t next_interval)
 
     /* Update time since this is much used by the parsing functions */
     now_times = olsr_times();
-    OLSR_FOR_ALL_SOCKETS(entry) {
+    OLSR_FOR_ALL_SOCKETS(entry, iterator) {
       int flags;
       if (entry->process_immediate == NULL) {
         continue;
@@ -420,7 +420,6 @@ handle_fds(uint32_t next_interval)
         entry->process_immediate(entry->fd, entry->data, flags);
       }
     }
-    OLSR_FOR_ALL_SOCKETS_END(entry);
 
     /* calculate the next timeout */
     remaining = TIME_DUE(next_interval);
@@ -530,8 +529,10 @@ olsr_init_timers(void)
   last_tv = first_tv;
   now_times = olsr_times();
 
+  /* init lists */
+  list_init_head(&socket_head);
   for (idx = 0; idx < TIMER_WHEEL_SLOTS; idx++) {
-    list_head_init(&timer_wheel[idx]);
+    list_init_head(&timer_wheel[idx]);
   }
 
   /*
@@ -561,29 +562,32 @@ walk_timers(uint32_t * last_run)
    * The latter is meant as a safety belt if the scheduler falls behind.
    */
   while ((*last_run <= now_times) && (wheel_slot_walks < TIMER_WHEEL_SLOTS)) {
-    struct list_node tmp_head_node;
+    struct list_entity tmp_head_node;
     /* keep some statistics */
     unsigned int timers_walked = 0, timers_fired = 0;
 
     /* Get the hash slot for this clocktick */
-    struct list_node *const timer_head_node = &timer_wheel[*last_run & TIMER_WHEEL_MASK];
+    struct list_entity *timer_head_node;
+
+    timer_head_node = &timer_wheel[*last_run & TIMER_WHEEL_MASK];
 
     /* Walk all entries hanging off this hash bucket. We treat this basically as a stack
      * so that we always know if and where the next element is.
      */
-    list_head_init(&tmp_head_node);
+    list_init_head(&tmp_head_node);
     while (!list_is_empty(timer_head_node)) {
       /* the top element */
-      struct list_node *const timer_node = timer_head_node->next;
-      struct timer_entry *const timer = list2timer(timer_node);
+      struct timer_entry *timer;
+
+      timer = list_first_element(timer_head_node, timer, timer_list);
 
       /*
        * Dequeue and insert to a temporary list.
        * We do this to avoid loosing our walking context when
        * multiple timers fire.
        */
-      list_remove(timer_node);
-      list_add_after(&tmp_head_node, timer_node);
+      list_remove(&timer->timer_list);
+      list_add_after(&tmp_head_node, &timer->timer_list);
       timers_walked++;
 
       /* Ready to fire ? */
@@ -654,7 +658,7 @@ walk_timers(uint32_t * last_run)
 void
 olsr_flush_timers(void)
 {
-  struct list_node *timer_head_node;
+  struct list_entity *timer_head_node;
   unsigned int wheel_slot = 0;
 
   for (wheel_slot = 0; wheel_slot < TIMER_WHEEL_SLOTS; wheel_slot++) {
@@ -662,7 +666,10 @@ olsr_flush_timers(void)
 
     /* Kill all entries hanging off this hash bucket. */
     while (!list_is_empty(timer_head_node)) {
-      olsr_stop_timer(list2timer(timer_head_node->next));
+      struct timer_entry *timer;
+
+      timer = list_first_element(timer_head_node, timer, timer_list);
+      olsr_stop_timer(timer);
     }
   }
 }

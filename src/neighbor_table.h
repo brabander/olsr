@@ -131,7 +131,7 @@ AVLNODE2STRUCT(nbr2_con_node_to_connector, nbr_con, nbr2_tree_node);
  */
 extern struct avl_tree EXPORT(nbr_tree);
 extern struct avl_tree EXPORT(nbr2_tree);
-extern struct olsr_cookie_info *nbr2_list_timer_cookie;
+extern struct olsr_cookie_info *nbr2_listold_timer_cookie;
 
 void olsr_init_neighbor_table(void);
 

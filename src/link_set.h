@@ -84,11 +84,8 @@ struct link_entry {
   /* cost of this link */
   olsr_linkcost linkcost;
 
-  struct list_node link_list;          /* double linked list of all link entries */
+  struct list_entity link_list;          /* double linked list of all link entries */
 };
-
-/* inline to recast from link_list back to link_entry */
-LISTNODE2STRUCT(list2link, struct link_entry, link_list);
 
 #define OLSR_LINK_JITTER       5        /* percent */
 #define OLSR_LINK_HELLO_JITTER 0        /* percent jitter */
@@ -96,18 +93,10 @@ LISTNODE2STRUCT(list2link, struct link_entry, link_list);
 #define OLSR_LINK_LOSS_JITTER  0        /* percent jitter */
 
 /* deletion safe macro for link entry traversal */
-#define OLSR_FOR_ALL_LINK_ENTRIES(link) \
-{ \
-  struct list_node *link_head_node, *link_node, *next_link_node; \
-  link_head_node = &link_entry_head; \
-  for (link_node = link_head_node->next; \
-    link_node != link_head_node; link_node = next_link_node) { \
-    next_link_node = link_node->next; \
-    link = list2link(link_node);
-#define OLSR_FOR_ALL_LINK_ENTRIES_END(link) }}
+#define OLSR_FOR_ALL_LINK_ENTRIES(link, iterator) list_for_each_element_safe(&link_entry_head, link, link_list, iterator.loop, iterator.safe)
 
 /* Externals */
-extern struct list_node EXPORT(link_entry_head);
+extern struct list_entity EXPORT(link_entry_head);
 extern bool link_changes;
 
 /* Function prototypes */

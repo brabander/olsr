@@ -70,7 +70,7 @@ struct olsr_cookie_info {
 
   /* only for memory cookies */
   size_t ci_size;                      /* Fixed size for block allocations */
-  struct list_node ci_free_list;       /* List head for recyclable blocks */
+  struct list_entity ci_free_list;       /* List head for recyclable blocks */
   unsigned int ci_free_list_usage;     /* Length of free list */
   uint16_t ci_membrand;
 };

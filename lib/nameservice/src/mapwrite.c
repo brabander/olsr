@@ -69,7 +69,7 @@ lookup_position_latlon(union olsr_ip_addr *ip)
 {
   int hash;
   struct db_entry *entry;
-  struct list_node *list_head, *list_node;
+  struct list_entity *list_head, *loop;
 
   if (olsr_ipcmp(ip, &olsr_cnf->router_id) == 0) {
     return my_latlon_str;
@@ -77,10 +77,8 @@ lookup_position_latlon(union olsr_ip_addr *ip)
 
   for (hash = 0; hash < HASHSIZE; hash++) {
     list_head = &latlon_list[hash];
-    for (list_node = list_head->next; list_node != list_head; list_node = list_node->next) {
 
-      entry = list2db(list_node);
-
+    list_for_each_element(list_head, entry, db_list, loop) {
       if (entry->names && olsr_ipcmp(&entry->originator, ip) == 0) {
         return entry->names->name;
       }
@@ -146,13 +144,10 @@ mapwrite_work(FILE * fmap)
   }
   for (hash = 0; hash < HASHSIZE; hash++) {
     struct db_entry *entry;
-    struct list_node *list_head, *list_node;
+    struct list_entity *list_head, *loop;
 
     list_head = &latlon_list[hash];
-    for (list_node = list_head->next; list_node != list_head; list_node = list_node->next) {
-
-      entry = list2db(list_node);
-
+    list_for_each_element(list_head, entry, db_list, loop) {
       if (NULL != entry->names) {
         if (0 > fprintf(fmap, "Node('%s',%s,'%s','%s');\n",
                         olsr_ip_to_string(&strbuf1, &entry->originator),

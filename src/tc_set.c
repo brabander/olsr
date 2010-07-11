@@ -202,7 +202,7 @@ olsr_change_myself_tc(void)
         entry->tc_edge = olsr_add_tc_edge_entry(tc_myself, &entry->nbr_addr, 0);
         entry->tc_edge->neighbor = entry;
       }
-    } OLSR_FOR_ALL_LINK_ENTRIES_END(link);
+    } OLSR_FOR_ALL_NBR_ENTRIES_END()
   }
   changes_topology = true;
 }
@@ -933,6 +933,7 @@ olsr_output_lq_tc_internal(void *ctx  __attribute__ ((unused)), union olsr_ip_ad
 {
   static int ttl_list[] = { 2, 8, 2, 16, 2, 8, 2, MAX_TTL };
   struct interface *ifp;
+  struct list_iterator iterator;
   struct nbr_entry *nbr;
   struct link_entry *link;
   uint8_t msg_buffer[MAXMESSAGESIZE - OLSR_HEADERSIZE] __attribute__ ((aligned));
@@ -1057,13 +1058,13 @@ olsr_output_lq_tc_internal(void *ctx  __attribute__ ((unused)), union olsr_ip_ad
   pkt_put_u16(&length_field, curr - msg_buffer);
 
   /* send to all interfaces */
-  OLSR_FOR_ALL_INTERFACES(ifp) {
+  OLSR_FOR_ALL_INTERFACES(ifp, iterator) {
     if (net_outbuffer_bytes_left(ifp) < curr - msg_buffer) {
       net_output(ifp);
       set_buffer_timer(ifp);
     }
     net_outbuffer_push(ifp, msg_buffer, curr - msg_buffer);
-  } OLSR_FOR_ALL_INTERFACES_END(ifp)
+  }
   return nextFragment;
 }
 

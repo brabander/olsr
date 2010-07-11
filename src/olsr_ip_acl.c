@@ -46,8 +46,8 @@
 void
 ip_acl_init(struct ip_acl *acl)
 {
-  list_head_init(&acl->accept);
-  list_head_init(&acl->reject);
+  list_init_head(&acl->accept);
+  list_init_head(&acl->reject);
   acl->default_accept = false;
   acl->first_accept = false;
 }
@@ -74,27 +74,26 @@ ip_acl_remove(struct ip_acl *acl, const union olsr_ip_addr *net, uint8_t prefix_
 bool
 ip_acl_acceptable(struct ip_acl *acl, const union olsr_ip_addr *ip, int ip_version)
 {
-  struct list_node *first, *second;
+  struct list_entity *first, *second;
   struct ip_prefix_entry *entry;
+  struct list_iterator iterator;
 
   first = acl->first_accept ? &acl->accept : &acl->reject;
   second = acl->first_accept ? &acl->reject : &acl->accept;
 
   /* first run */
-  OLSR_FOR_ALL_IPPREFIX_ENTRIES(first, entry) {
+  OLSR_FOR_ALL_IPPREFIX_ENTRIES(first, entry, iterator) {
     if (ip_in_net(ip, &entry->net, ip_version)) {
       return acl->first_accept;
     }
   }
-  OLSR_FOR_ALL_IPPREFIX_ENTRIES_END();
 
   /* second run */
-  OLSR_FOR_ALL_IPPREFIX_ENTRIES(second, entry) {
+  OLSR_FOR_ALL_IPPREFIX_ENTRIES(second, entry, iterator) {
     if (ip_in_net(ip, &entry->net, ip_version)) {
       return !acl->first_accept;
     }
   }
-  OLSR_FOR_ALL_IPPREFIX_ENTRIES_END();
 
   /* just use default */
   return acl->default_accept;

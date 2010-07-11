@@ -58,7 +58,7 @@
 #include <assert.h>
 
 /* The interface list head */
-struct list_node interface_head;
+struct list_entity interface_head;
 
 /* tree of lost interface IPs */
 struct avl_tree interface_lost_tree;
@@ -97,7 +97,7 @@ init_interfaces(void)
   struct olsr_if_config *tmp_if;
 
   /* Initial values */
-  list_head_init(&interface_head);
+  list_init_head(&interface_head);
   avl_init(&interface_lost_tree, avl_comp_default);
 
   /*
@@ -177,11 +177,12 @@ is_lost_interface_ip(union olsr_ip_addr *ip) {
 void destroy_interfaces(void) {
   struct interface *iface;
   struct interface_lost *lost;
+  struct list_iterator iterator;
 
-  OLSR_FOR_ALL_INTERFACES(iface) {
+  OLSR_FOR_ALL_INTERFACES(iface, iterator) {
     struct interface **ptr = &iface;
     remove_interface(ptr);
-  } OLSR_FOR_ALL_INTERFACES_END()
+  }
 
   OLSR_FOR_ALL_LOSTIF_ENTRIES(lost) {
     remove_lost_interface_ip(lost);
@@ -312,6 +313,7 @@ struct interface *
 if_ifwithaddr(const union olsr_ip_addr *addr)
 {
   struct interface *ifp;
+  struct list_iterator iterator;
   if (!addr) {
     return NULL;
   }
@@ -319,22 +321,18 @@ if_ifwithaddr(const union olsr_ip_addr *addr)
   if (olsr_cnf->ip_version == AF_INET) {
 
     /* IPv4 */
-    OLSR_FOR_ALL_INTERFACES(ifp) {
+    OLSR_FOR_ALL_INTERFACES(ifp, iterator) {
       if (ip4cmp(&ifp->int_addr.sin_addr, &addr->v4) == 0) {
         return ifp;
       }
     }
-    OLSR_FOR_ALL_INTERFACES_END(ifp);
-
   } else {
-
     /* IPv6 */
-    OLSR_FOR_ALL_INTERFACES(ifp) {
+    OLSR_FOR_ALL_INTERFACES(ifp, iterator) {
       if (ip6cmp(&ifp->int6_addr.sin6_addr, &addr->v6) == 0) {
         return ifp;
       }
     }
-    OLSR_FOR_ALL_INTERFACES_END(ifp);
   }
   return NULL;
 }
@@ -350,13 +348,13 @@ struct interface *
 if_ifwithsock(int fd)
 {
   struct interface *ifp;
+  struct list_iterator iterator;
 
-  OLSR_FOR_ALL_INTERFACES(ifp) {
+  OLSR_FOR_ALL_INTERFACES(ifp, iterator) {
     if (ifp->olsr_socket == fd) {
       return ifp;
     }
   }
-  OLSR_FOR_ALL_INTERFACES_END(ifp);
 
   return NULL;
 }
@@ -373,14 +371,14 @@ struct interface *
 if_ifwithname(const char *if_name)
 {
   struct interface *ifp;
-  OLSR_FOR_ALL_INTERFACES(ifp) {
+  struct list_iterator iterator;
 
+  OLSR_FOR_ALL_INTERFACES(ifp, iterator) {
     /* good ol' strcmp should be sufficient here */
     if (strcmp(ifp->int_name, if_name) == 0) {
       return ifp;
     }
   }
-  OLSR_FOR_ALL_INTERFACES_END(ifp);
 
   return NULL;
 }
@@ -398,12 +396,12 @@ struct interface *
 if_ifwithindex(const int if_index)
 {
   struct interface *ifp;
-  OLSR_FOR_ALL_INTERFACES(ifp) {
+  struct list_iterator iterator;
+  OLSR_FOR_ALL_INTERFACES(ifp, iterator) {
     if (ifp->if_index == if_index) {
       return ifp;
     }
   }
-  OLSR_FOR_ALL_INTERFACES_END(ifp);
 
   return NULL;
 }
@@ -450,7 +448,7 @@ unlock_interface(struct interface *ifp)
   }
 
   /* Node must be dequeued at this point */
-  assert(!list_node_on_list(&ifp->int_node));
+  assert(!list_node_added(&ifp->int_node));
 
   /* Free memory */
   free(ifp->int_name);

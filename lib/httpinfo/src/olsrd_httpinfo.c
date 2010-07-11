@@ -911,11 +911,13 @@ build_config_body(struct autobuf *abuf)
   section_title(abuf, "Announced HNA entries");
   if (list_is_empty(&olsr_cnf->hna_entries)) {
     struct ip_prefix_entry *hna;
+    struct list_iterator iterator;
+
     abuf_puts(abuf, "<tr><th>Network</th></tr>\n");
-    OLSR_FOR_ALL_IPPREFIX_ENTRIES(&olsr_cnf->hna_entries, hna) {
+    OLSR_FOR_ALL_IPPREFIX_ENTRIES(&olsr_cnf->hna_entries, hna, iterator) {
       struct ipprefix_str netbuf;
       abuf_appendf(abuf, "<tr><td>%s</td></tr>\n", olsr_ip_prefix_to_string(&netbuf, &hna->net));
-    } OLSR_FOR_ALL_IPPREFIX_ENTRIES_END()
+    }
   } else {
     abuf_puts(abuf, "<tr><td></td></tr>\n");
   }
@@ -927,6 +929,7 @@ build_neigh_body(struct autobuf *abuf)
 {
   struct nbr_entry *neigh;
   struct link_entry *lnk;
+  struct list_iterator iterator;
   size_t i;
   const char *colspan = resolve_ip_addresses ? " colspan=\"2\"" : "";
 
@@ -940,7 +943,7 @@ build_neigh_body(struct autobuf *abuf)
   abuf_puts(abuf, "</tr>\n");
 
   /* Link set */
-  OLSR_FOR_ALL_LINK_ENTRIES(lnk) {
+  OLSR_FOR_ALL_LINK_ENTRIES(lnk, iterator) {
     char lqbuffer[LQTEXT_MAXLENGTH];
     abuf_puts(abuf, "<tr>");
     build_ipaddr_with_link(abuf, &lnk->local_iface_addr, -1);
@@ -951,7 +954,7 @@ build_neigh_body(struct autobuf *abuf)
     }
     abuf_appendf(abuf, "<td>%s</td>", olsr_get_linkcost_text(lnk->linkcost, false, lqbuffer, sizeof(lqbuffer)));
     abuf_puts(abuf, "</tr>\n");
-  } OLSR_FOR_ALL_LINK_ENTRIES_END(lnk);
+  }
 
   abuf_puts(abuf, "</table>\n");
 

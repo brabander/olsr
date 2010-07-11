@@ -39,6 +39,7 @@
  *
  */
 #include <string.h>
+#include <stdlib.h>
 
 #include "olsr_cfg.h"
 #include "olsr_logging.h"

@@ -39,24 +39,27 @@
  *
  */
 
+#include <stdlib.h>
+
 #include "olsr_types.h"
 #include "olsr.h"
 #include "ipcalc.h"
 #include "olsr_ip_prefix_list.h"
 
 void
-ip_prefix_list_flush(struct list_node *ip_prefix_head)
+ip_prefix_list_flush(struct list_entity *ip_prefix_head)
 {
   struct ip_prefix_entry *entry;
+  struct list_iterator iterator;
 
-  OLSR_FOR_ALL_IPPREFIX_ENTRIES(ip_prefix_head, entry) {
+  OLSR_FOR_ALL_IPPREFIX_ENTRIES(ip_prefix_head, entry, iterator) {
     list_remove(&entry->node);
     free(entry);
-  } OLSR_FOR_ALL_IPPREFIX_ENTRIES_END();
+  }
 }
 
 void
-ip_prefix_list_add(struct list_node *ip_prefix_head, const union olsr_ip_addr *net, uint8_t prefix_len)
+ip_prefix_list_add(struct list_entity *ip_prefix_head, const union olsr_ip_addr *net, uint8_t prefix_len)
 {
   struct ip_prefix_entry *new_entry = olsr_malloc(sizeof(*new_entry), "new ip_prefix");
 
@@ -68,31 +71,31 @@ ip_prefix_list_add(struct list_node *ip_prefix_head, const union olsr_ip_addr *n
 }
 
 int
-ip_prefix_list_remove(struct list_node *ip_prefix_head, const union olsr_ip_addr *net, uint8_t prefix_len, int ip_version)
+ip_prefix_list_remove(struct list_entity *ip_prefix_head, const union olsr_ip_addr *net, uint8_t prefix_len, int ip_version)
 {
   struct ip_prefix_entry *h;
+  struct list_iterator iterator;
 
-  OLSR_FOR_ALL_IPPREFIX_ENTRIES(ip_prefix_head, h) {
+  OLSR_FOR_ALL_IPPREFIX_ENTRIES(ip_prefix_head, h, iterator) {
     if (ipcmp(ip_version, net, &h->net.prefix) == 0 && h->net.prefix_len == prefix_len) {
       list_remove(&h->node);
       free(h);
       return 1;
     }
   }
-  OLSR_FOR_ALL_IPPREFIX_ENTRIES_END();
   return 0;
 }
 
 struct ip_prefix_entry *
-ip_prefix_list_find(struct list_node *ip_prefix_head, const union olsr_ip_addr *net, uint8_t prefix_len, int ip_version)
+ip_prefix_list_find(struct list_entity *ip_prefix_head, const union olsr_ip_addr *net, uint8_t prefix_len, int ip_version)
 {
   struct ip_prefix_entry *h;
+  struct list_iterator iterator;
 
-  OLSR_FOR_ALL_IPPREFIX_ENTRIES(ip_prefix_head, h) {
+  OLSR_FOR_ALL_IPPREFIX_ENTRIES(ip_prefix_head, h, iterator) {
     if (prefix_len == h->net.prefix_len && ipcmp(ip_version, net, &h->net.prefix) == 0) {
       return h;
     }
   }
-  OLSR_FOR_ALL_IPPREFIX_ENTRIES_END();
   return NULL;
 }

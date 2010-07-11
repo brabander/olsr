@@ -68,7 +68,9 @@
 
 #define COMPORT_MAX_INPUTBUFFER 65536
 
-struct list_node olsr_comport_head;
+#define OLSR_FOR_ALL_COMPORT_ENTRIES(comport, iterator) list_for_each_element_safe(&olsr_comport_head, comport, node, iterator.loop, iterator.safe)
+
+struct list_entity olsr_comport_head;
 
 /* server socket */
 static int comsocket_http = 0;
@@ -101,7 +103,7 @@ void olsr_com_init(bool failfast) {
   connection_http_count = 0;
   connection_txt_count = 0;
 
-  list_head_init(&olsr_comport_head);
+  list_init_head(&olsr_comport_head);
 
   olsr_com_init_http();
   olsr_com_init_txt();
@@ -131,12 +133,10 @@ void olsr_com_init(bool failfast) {
 }
 
 void olsr_com_destroy(void) {
-  while (!list_is_empty(&olsr_comport_head)) {
-    struct comport_connection *con;
-
-    if (NULL != (con = comport_node2con(olsr_comport_head.next))) {
-      olsr_com_cleanup_session(con);
-    }
+  struct comport_connection *con;
+  struct list_iterator iterator;
+  OLSR_FOR_ALL_COMPORT_ENTRIES(con, iterator) {
+    olsr_com_cleanup_session(con);
   }
 
   olsr_com_destroy_http();

@@ -52,6 +52,7 @@ olsr_calculate_lq_mpr(void)
   struct nbr2_entry *nbr2;
   struct nbr_con *walker;
   struct link_entry *lnk;
+  struct list_iterator iterator;
   int k;
   struct nbr_entry *neigh;
   olsr_linkcost best, best_1hop;
@@ -165,9 +166,10 @@ olsr_calculate_lq_mpr(void)
   } OLSR_FOR_ALL_NBR2_ENTRIES_END();
 
   /* ugly hack */
-  OLSR_FOR_ALL_LINK_ENTRIES(lnk) {
+  OLSR_FOR_ALL_LINK_ENTRIES(lnk, iterator) {
     lnk->is_mpr = lnk->neighbor->is_mpr;
-  } OLSR_FOR_ALL_LINK_ENTRIES_END(lnk)
+  }
+
   if (mpr_changes && olsr_cnf->tc_redundancy > 0)
     signal_link_changes(true);
 }

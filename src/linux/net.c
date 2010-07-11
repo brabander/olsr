@@ -275,6 +275,7 @@ int
 restore_settings(int version)
 {
   struct interface *ifs;
+  struct list_iterator iterator;
 
   OLSR_INFO(LOG_NETWORKING, "Restoring network state\n");
 
@@ -310,7 +311,7 @@ restore_settings(int version)
     return 0;
   }
 
-  OLSR_FOR_ALL_INTERFACES(ifs) {
+  OLSR_FOR_ALL_INTERFACES(ifs, iterator) {
     char procfile[FILENAME_MAX];
     FILE *proc_fd;
     /* ICMP redirects */
@@ -337,7 +338,6 @@ restore_settings(int version)
       fclose(proc_fd);
     }
   }
-  OLSR_FOR_ALL_INTERFACES_END(ifs);
 
   return 1;
 }

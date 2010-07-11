@@ -1,7 +1,6 @@
-
 /*
- * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
+ * PacketBB handler library (see RFC 5444)
+ * Copyright (c) 2010 Henning Rogge <henning.rogge@fkie.fraunhofer.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,41 +30,28 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * Visit http://www.olsr.org for more information.
+ * Visit http://www.olsr.org/git for more information.
  *
  * If you find this software useful feel free to make a donation
  * to the project. For more information see the website or contact
  * the copyright holders.
- *
  */
 
-#ifndef OLSR_IP_PREFIX_ACL_H_
-#define OLSR_IP_PREFIX_ACL_H_
+#ifndef CONTAINER_OF_H_
+#define CONTAINER_OF_H_
 
-#include "defs.h"
-#include "olsr_types.h"
-#include "common/list.h"
+#include "stddef.h"
 
-struct ip_acl {
-  struct list_entity accept;
-  struct list_entity reject;
-  bool first_accept;
-  bool default_accept;
-};
+#ifndef container_of
 
-void EXPORT(ip_acl_init) (struct ip_acl *);
-void EXPORT(ip_acl_flush) (struct ip_acl *);
-void EXPORT(ip_acl_add) (struct ip_acl *, const union olsr_ip_addr *, uint8_t, bool);
-void ip_acl_remove(struct ip_acl *, const union olsr_ip_addr *, uint8_t, bool, int);
-bool EXPORT(ip_acl_acceptable) (struct ip_acl *, const union olsr_ip_addr *, int);
-
-#endif /* OLSR_IP_PREFIX_ACL_H_ */
-
-/*
- * Local Variables:
- * mode: c
- * style: linux
- * c-basic-offset: 4
- * indent-tabs-mode: nil
- * End:
+/**
+ * casts an embedded node of a list/tree into the surrounding struct
+ * @param ptr pointer to node
+ * @param type data type of surrounding struct
+ * @param member name of node inside struct
+ * @return pointer to surrounding struct
  */
+#define container_of(ptr, type, member) ((type *)( (char *)(ptr) - offsetof(type,member) ))
+#endif
+
+#endif /* CONTAINER_OF_H_ */

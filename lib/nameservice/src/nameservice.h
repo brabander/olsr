@@ -112,16 +112,14 @@ struct db_entry {
   union olsr_ip_addr originator;       /* IP address of the node this entry describes */
   struct timer_entry *db_timer;        /* Validity time */
   struct name_entry *names;            /* list of names this originator declares */
-  struct list_node db_list;            /* linked list of db entries per hash container */
+  struct list_entity db_list;            /* linked list of db entries per hash container */
 };
 
-/* inline to recast from db_list back to db_entry */
-LISTNODE2STRUCT(list2db, struct db_entry, db_list);
 
 #define OLSR_NAMESVC_DB_JITTER 5        /* percent */
 
 extern struct name_entry *my_names;
-extern struct list_node latlon_list[HASHSIZE];
+extern struct list_entity latlon_list[HASHSIZE];
 extern float my_lat, my_lon;
 extern struct olsr_cookie_info *map_poll_timer_cookie;
 
@@ -142,13 +140,13 @@ struct name_entry *add_name_to_list(struct name_entry *my_list, const char *valu
 struct name_entry *remove_nonvalid_names_from_list(struct name_entry *my_list, int type);
 
 void
-  free_all_list_entries(struct list_node *);
+  free_all_listold_entries(struct list_entity *);
 
 void
   decap_namemsg(const struct name *from_packet, struct name_entry **to, bool * this_table_changed);
 
 void
-  insert_new_name_in_list(union olsr_ip_addr *, struct list_node *, const struct name *, bool *, uint32_t);
+  insert_new_name_in_list(union olsr_ip_addr *, struct list_entity *, const struct name *, bool *, uint32_t);
 
 bool allowed_hostname_or_ip_in_service(const char *service_line, const regmatch_t * hostname_or_ip);
 

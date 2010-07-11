@@ -43,6 +43,7 @@
 #include "defs.h"
 #include "olsr_cookie.h"
 #include "log.h"
+#include "common/list.h"
 #include "valgrind/valgrind.h"
 #include "valgrind/memcheck.h"
 
@@ -78,7 +79,7 @@ olsr_alloc_cookie(const char *cookie_name, olsr_cookie_type cookie_type)
 
   /* Init the free list */
   if (cookie_type == OLSR_COOKIE_TYPE_MEMORY) {
-    list_head_init(&ci->ci_free_list);
+    list_init_head(&ci->ci_free_list);
     VALGRIND_CREATE_MEMPOOL(ci, 0, 1);
 
     ci->ci_membrand = next_brand_id++;
@@ -97,7 +98,7 @@ olsr_alloc_cookie(const char *cookie_name, olsr_cookie_type cookie_type)
 static void
 olsr_free_cookie(struct olsr_cookie_info *ci)
 {
-  struct list_node *memory_list;
+  struct list_entity *memory_list;
 
   /* remove from tree */
   avl_delete(&olsr_cookie_tree, &ci->node);
@@ -229,7 +230,7 @@ olsr_cookie_malloc(struct olsr_cookie_info *ci)
 {
   void *ptr;
   struct olsr_cookie_mem_brand *branding;
-  struct list_node *free_list_node;
+  struct list_entity *free_list_node;
 #if !defined REMOVE_LOG_DEBUG
   bool reuse = false;
 #endif
@@ -330,7 +331,7 @@ olsr_cookie_malloc(struct olsr_cookie_info *ci)
 void
 olsr_cookie_free(struct olsr_cookie_info *ci, void *ptr)
 {
-  struct list_node *free_list_node;
+  struct list_entity *free_list_node;
 #if !defined REMOVE_LOG_DEBUG
   bool reuse = false;
 #endif
@@ -357,8 +358,8 @@ olsr_cookie_free(struct olsr_cookie_info *ci, void *ptr)
    */
   if ((ci->ci_free_list_usage < COOKIE_FREE_LIST_THRESHOLD) || (ci->ci_free_list_usage < ci->ci_usage / COOKIE_FREE_LIST_THRESHOLD)) {
 
-    free_list_node = (struct list_node *)ptr;
-    list_node_init(free_list_node);
+    free_list_node = (struct list_entity *)ptr;
+    list_init_node(free_list_node);
 
     /*
      * Before enqueuing the node to the free list,
@@ -367,14 +368,14 @@ olsr_cookie_free(struct olsr_cookie_info *ci, void *ptr)
      * log a false positive.
      */
     if (list_is_empty(&ci->ci_free_list)) {
-      list_add_before(&ci->ci_free_list, free_list_node);
+      list_add_tail(&ci->ci_free_list, free_list_node);
     } else {
 
       /*
        * Make next item accessible, add it and make next item inaccessible.
        */
       VALGRIND_MAKE_MEM_DEFINED(ci->ci_free_list.prev, ci->ci_size);
-      list_add_before(&ci->ci_free_list, free_list_node);
+      list_add_tail(&ci->ci_free_list, free_list_node);
       VALGRIND_MAKE_MEM_NOACCESS(ci->ci_free_list.prev, ci->ci_size);
     }
 

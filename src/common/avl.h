@@ -115,7 +115,7 @@ avl_walk_prev_c(const struct avl_node *node)
 }
 
 /*
- * Macro to define an inline function to map from a list_node offset back to the
+ * Macro to define an inline function to map from a listold_node offset back to the
  * base of the datastructure. That way you save an extra data pointer.
  */
 #define AVLNODE2STRUCT(funcname, structname, avlnodename) \

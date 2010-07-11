@@ -1568,7 +1568,7 @@ olsr_get_default_cfg(void)
   assert(cfg->log_target_syslog == false);
 
   assert(cfg->plugins == NULL);
-  list_head_init(&cfg->hna_entries);
+  list_init_head(&cfg->hna_entries);
   assert(cfg->if_configs == NULL);
 
   cfg->pollrate = DEF_POLLRATE;

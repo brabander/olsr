@@ -42,6 +42,9 @@
 /*
  * Dynamic linked library for the olsr.org olsr daemon
  */
+
+#include <stdlib.h>
+
 #include "olsr.h"
 #include "ipcalc.h"
 #include "neighbor_table.h"

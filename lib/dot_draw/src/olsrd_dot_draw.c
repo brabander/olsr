@@ -264,6 +264,7 @@ pcf_event(int ipc_connection, int chgs_neighborhood, int chgs_topology, int chgs
     struct nbr_entry *neighbor_table_tmp;
     struct tc_entry *tc;
     struct ip_prefix_entry *hna;
+    struct list_iterator iterator;
 
     /* Print tables to IPC socket */
     ipc_send_str(ipc_connection, "digraph topology\n{\n");
@@ -296,9 +297,9 @@ pcf_event(int ipc_connection, int chgs_neighborhood, int chgs_topology, int chgs
     OLSR_FOR_ALL_TC_ENTRIES_END(tc);
 
     /* Local HNA entries */
-    OLSR_FOR_ALL_IPPREFIX_ENTRIES(&olsr_cnf->hna_entries, hna) {
+    OLSR_FOR_ALL_IPPREFIX_ENTRIES(&olsr_cnf->hna_entries, hna, iterator) {
       ipc_print_net(ipc_connection, &olsr_cnf->router_id, &hna->net);
-    } OLSR_FOR_ALL_IPPREFIX_ENTRIES_END()
+    }
       ipc_send_str(ipc_connection, "}\n\n");
 
     res = 1;

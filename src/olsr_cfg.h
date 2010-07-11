@@ -192,7 +192,7 @@ struct olsr_config {
   bool log_target_syslog;              /* Log output also to syslog? */
 
   struct plugin_entry *plugins;        /* List of plugins to load with plparams */
-  struct list_node hna_entries;        /* List of manually configured HNA entries */
+  struct list_entity hna_entries;      /* List of manually configured HNA entries */
   struct olsr_if_config *if_configs;   /* List of devices to be used by olsrd */
 
   uint32_t pollrate;               /* Main loop poll rate, in milliseconds */

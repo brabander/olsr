@@ -388,6 +388,7 @@ FindNeighbors(struct TBestNeighbors *neighbors,
               union olsr_ip_addr *source, union olsr_ip_addr *forwardedBy, union olsr_ip_addr *forwardedTo, int *nPossibleNeighbors)
 {
   struct link_entry *walker;
+  struct list_iterator iterator;
   olsr_linkcost previousLinkEtx = LINK_COST_BROKEN;
   olsr_linkcost bestEtx = LINK_COST_BROKEN;
 
@@ -408,7 +409,7 @@ FindNeighbors(struct TBestNeighbors *neighbors,
     }
   }
 
-  OLSR_FOR_ALL_LINK_ENTRIES(walker) {
+  OLSR_FOR_ALL_LINK_ENTRIES(walker, iterator) {
 #if !defined REMOVE_LOG_DEBUG
     struct ipaddr_str buf;
 #endif
@@ -555,7 +556,6 @@ FindNeighbors(struct TBestNeighbors *neighbors,
 
     *nPossibleNeighbors += 1;
   }
-  OLSR_FOR_ALL_LINK_ENTRIES_END(walker);
 
   /* Display the result of the neighbor search */
   if (*nPossibleNeighbors == 0) {
