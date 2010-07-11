@@ -110,29 +110,26 @@ select_tree_anchor(void)
 
   best = NULL;
 
-  if (list_is_empty(&ListOfObampNodes) == 0) {     //if the list is NOT empty
-
-    //Scroll the list
-    OLSR_FOR_ALL_OBAMPNODE_ENTRIES(tmp, iterator) {
-      if (tmp->status == 1) {
-        rt = olsr_lookup_routing_table(&tmp->neighbor_ip_addr);
-
-        if (rt == NULL) {       //route is not present yet
-          OLSR_DEBUG(LOG_PLUGINS, "No route present to this anchor");
-          continue;
-        }
-        //update best neighbor
-        if ((rt->rt_best->rtp_metric.cost / 65536) < mincost)
-          best = tmp;
-      }
-    }
-    return best;
-
-  } else {
+  if (list_is_empty(&ListOfObampNodes)) {     //if the list is empty
     OLSR_DEBUG(LOG_PLUGINS, "List empty can't create Overlay Mesh");
+    return NULL;
   }
-  return NULL;
 
+  //Scroll the list
+  OLSR_FOR_ALL_OBAMPNODE_ENTRIES(tmp, iterator) {
+    if (tmp->status == 1) {
+      rt = olsr_lookup_routing_table(&tmp->neighbor_ip_addr);
+
+      if (rt == NULL) {       //route is not present yet
+        OLSR_DEBUG(LOG_PLUGINS, "No route present to this anchor");
+        continue;
+      }
+      //update best neighbor
+      if ((rt->rt_best->rtp_metric.cost / 65536) < mincost)
+        best = tmp;
+    }
+  }
+  return best;
 }
 
 //Creates a OBAMP_DATA message and sends it to the specified destination
@@ -252,16 +249,16 @@ CreateObampSniffingInterfaces(void)
   struct list_iterator iterator;
   OLSR_DEBUG(LOG_PLUGINS, "CreateObampSniffingInterfaces");
 
-  if (list_is_empty(&ListOfObampSniffingIf) == 0) {        //if the list is NOT empty
-    OLSR_DEBUG(LOG_PLUGINS, "adding interfaces");
-
-    OLSR_FOR_ALL_OBAMPSNIFF_ENTRIES(tmp, iterator) {
-      tmp->skd = CreateCaptureSocket(tmp->ifName);
-    }
-  } else
+  if (list_is_empty(&ListOfObampSniffingIf)) {        //if the list is empty
     OLSR_DEBUG(LOG_PLUGINS, "List of sniffin interfaces was empty");
+    return 0;
+  }
 
+  OLSR_DEBUG(LOG_PLUGINS, "adding interfaces");
 
+  OLSR_FOR_ALL_OBAMPSNIFF_ENTRIES(tmp, iterator) {
+    tmp->skd = CreateCaptureSocket(tmp->ifName);
+  }
   return 0;
 }
 
@@ -525,25 +522,25 @@ printObampNodesList(void)
   struct ObampNode *tmp;
   struct list_iterator iterator;
 
-  if (!list_is_empty(&ListOfObampNodes)) {     //if the list is NOT empty
-
-
-    OLSR_DEBUG(LOG_PLUGINS, "--------------------NODE STATUS---------");
-    OLSR_DEBUG(LOG_PLUGINS, "---Current Core: %s", ip4_to_string(&buf, myState->CoreAddress.v4));
-    OLSR_DEBUG(LOG_PLUGINS, "---Current Parent: %s", ip4_to_string(&buf, myState->ParentId.v4));
-
-
-    OLSR_DEBUG(LOG_PLUGINS, "Number \t IP \t\t IsMesh \t IsTree \t MeshLock \t outerTreeLink");
-
-    OLSR_FOR_ALL_OBAMPNODE_ENTRIES(tmp, iterator) {
-      OLSR_DEBUG(LOG_PLUGINS, "%d \t\t %s \t %d \t\t %d \t\t %d \t\t %d", i, ip4_to_string(&buf, tmp->neighbor_ip_addr.v4),
-                 tmp->isMesh, tmp->isTree, tmp->MeshLock, tmp->outerTreeLink);
-
-      i++;
-    }
-    OLSR_DEBUG(LOG_PLUGINS, "----------------------------------------");
-
+  if (list_is_empty(&ListOfObampNodes)) {     //if the list is empty
+    return;
   }
+
+
+  OLSR_DEBUG(LOG_PLUGINS, "--------------------NODE STATUS---------");
+  OLSR_DEBUG(LOG_PLUGINS, "---Current Core: %s", ip4_to_string(&buf, myState->CoreAddress.v4));
+  OLSR_DEBUG(LOG_PLUGINS, "---Current Parent: %s", ip4_to_string(&buf, myState->ParentId.v4));
+
+
+  OLSR_DEBUG(LOG_PLUGINS, "Number \t IP \t\t IsMesh \t IsTree \t MeshLock \t outerTreeLink");
+
+  OLSR_FOR_ALL_OBAMPNODE_ENTRIES(tmp, iterator) {
+    OLSR_DEBUG(LOG_PLUGINS, "%d \t\t %s \t %d \t\t %d \t\t %d \t\t %d", i, ip4_to_string(&buf, tmp->neighbor_ip_addr.v4),
+               tmp->isMesh, tmp->isTree, tmp->MeshLock, tmp->outerTreeLink);
+
+    i++;
+  }
+  OLSR_DEBUG(LOG_PLUGINS, "----------------------------------------");
 }
 
 static int
@@ -554,12 +551,13 @@ DoIHaveATreeLink(void)
   struct ObampNode *tmp;
   struct list_iterator iterator;
 
-  if (!list_is_empty(&ListOfObampNodes)) {     //if the list is NOT empty
+  if (list_is_empty(&ListOfObampNodes)) {     //if the list is empty
+    return 0;
+  }
 
-    OLSR_FOR_ALL_OBAMPNODE_ENTRIES(tmp, iterator) {
-      if (tmp->isTree == 1)
-        return 1;
-
+  OLSR_FOR_ALL_OBAMPNODE_ENTRIES(tmp, iterator) {
+    if (tmp->isTree == 1) {
+      return 1;
     }
   }
   return 0;
