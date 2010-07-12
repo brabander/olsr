@@ -15,17 +15,14 @@ HDRS +=		$(wildcard src/linux/*.h src/unix/*.h)
 CPPFLAGS += 	-Dlinux -DLINUX_NETLINK_ROUTING
 CPPFLAGS += 	-Dandroid
 
-# bionic libc: setbuf() segfaults, do not use
-CPPFLAGS +=	-D'setbuf(a,b)='
-
 # bionic libc: missing declaration
 CPPFLAGS +=	-DINET_ADDRSTRLEN=16
-# bionic libc: renamed declaration
-CPPFLAGS +=	-Dipv6mr_interface=ipv6mr_ifindex
 # bionic libc: missing declarations
 CPPFLAGS +=	-D'IPTOS_PREC(tos)=((tos)&0xe0)'
 CPPFLAGS +=	-D'IPTOS_TOS(tos)=((tos)&0x1e)'
 CPPFLAGS +=	-DOLSRD_GLOBAL_CONF_FILE=\"$(CFGFILE)\"
+
+# Compilation flags from build/toolchains/arm-eabi-4.2.1/setup.mk
 CPPFLAGS +=  \
 	-march=armv5te -mtune=xscale \
 	-msoft-float -fpic \
@@ -44,8 +41,8 @@ CPPFLAGS +=  \
 	-finline-limit=300
 else
 CPPFLAGS += \
-   -fno-omit-frame-pointer \
-   -fno-strict-aliasing
+	-fno-omit-frame-pointer \
+	-fno-strict-aliasing
 endif
 
 PLUGIN_FULLNAME ?= $(PLUGIN_NAME).so.$(PLUGIN_VER)
