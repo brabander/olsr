@@ -26,6 +26,27 @@ CPPFLAGS +=	-Dipv6mr_interface=ipv6mr_ifindex
 CPPFLAGS +=	-D'IPTOS_PREC(tos)=((tos)&0xe0)'
 CPPFLAGS +=	-D'IPTOS_TOS(tos)=((tos)&0x1e)'
 CPPFLAGS +=	-DOLSRD_GLOBAL_CONF_FILE=\"$(CFGFILE)\"
+CPPFLAGS +=  \
+	-march=armv5te -mtune=xscale \
+	-msoft-float -fpic \
+	-mthumb-interwork \
+	-ffunction-sections \
+	-funwind-tables \
+	-fstack-protector \
+	-fno-short-enums \
+	-D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ \
+	-D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__
+ifeq ($(DEBUG),0)
+CPPFLAGS +=  \
+	-fomit-frame-pointer \
+	-fstrict-aliasing \
+	-funswitch-loops \
+	-finline-limit=300
+else
+CPPFLAGS += \
+   -fno-omit-frame-pointer \
+   -fno-strict-aliasing
+endif
 
 PLUGIN_FULLNAME ?= $(PLUGIN_NAME).so.$(PLUGIN_VER)
 INSTALL_LIB =	install -D -m 755 $(PLUGIN_FULLNAME) $(LIBDIR)/$(PLUGIN_FULLNAME); \
@@ -56,8 +77,9 @@ endif
 CFLAGS += -I$(NDK_ARCH)/usr/include
 CFLAGS += -I$(TOPDIR)/android
 
-LDFLAGS += -nostartfiles -nodefaultlibs -nostdlib
+LDFLAGS += -nostartfiles -nodefaultlibs -nostdlib -Bdynamic
 LDFLAGS += -Wl,--dynamic-linker -Wl,/system/bin/linker
+LDFLAGS += -Wl,--gc-sections -Wl,-z,nocopyreloc
 LDFLAGS += -L$(NDK_ARCH)/usr/lib
 LDFLAGS += -Wl,-rpath-link -Wl,$(NDK_ARCH)/usr/lib
 LDFLAGS += -llog
