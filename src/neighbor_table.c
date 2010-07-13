@@ -73,8 +73,8 @@ void
 olsr_init_neighbor_table(void)
 {
   OLSR_INFO(LOG_NEIGHTABLE, "Initializing neighbor tree.\n");
-  avl_init(&nbr_tree, avl_comp_default);
-  avl_init(&nbr2_tree, avl_comp_default);
+  avl_init(&nbr_tree, avl_comp_default, false, NULL);
+  avl_init(&nbr2_tree, avl_comp_default, false, NULL);
 
   nbr_connector_timer_cookie = olsr_alloc_cookie("Neighbor connector", OLSR_COOKIE_TYPE_TIMER);
   nbr_connector_mem_cookie = olsr_alloc_cookie("Neighbor connector", OLSR_COOKIE_TYPE_MEMORY);
@@ -119,7 +119,7 @@ olsr_add_nbr_entry(const union olsr_ip_addr *addr)
   nbr->is_sym = false;
 
   /* Init subtree for nbr2 connectors */
-  avl_init(&nbr->con_tree, avl_comp_default);
+  avl_init(&nbr->con_tree, avl_comp_default, false, NULL);
 
   nbr->linkcount = 0;
   nbr->is_mpr = false;
@@ -137,7 +137,7 @@ olsr_add_nbr_entry(const union olsr_ip_addr *addr)
 
   /* Add to the global neighbor tree */
   nbr->nbr_node.key = &nbr->nbr_addr;
-  avl_insert(&nbr_tree, &nbr->nbr_node, false);
+  avl_insert(&nbr_tree, &nbr->nbr_node);
 
   return nbr;
 }
@@ -152,7 +152,7 @@ void
 olsr_delete_nbr_entry(struct nbr_entry *nbr)
 {
   struct nbr_con *connector;
-
+  struct list_iterator iterator;
 #if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
 #endif
@@ -162,9 +162,9 @@ olsr_delete_nbr_entry(struct nbr_entry *nbr)
   /*
    * Remove all references pointing to this neighbor.
    */
-  OLSR_FOR_ALL_NBR_CON_ENTRIES(nbr, connector) {
+  OLSR_FOR_ALL_NBR_CON_ENTRIES(nbr, connector, iterator) {
     olsr_delete_nbr_con(connector);
-  } OLSR_FOR_ALL_NBR_CON_ENTRIES_END()
+  }
 
   /* remove corresponding tc_edge if not already removed by olsr_delete_all_tc_entries() */
   if (nbr->tc_edge) {
@@ -197,7 +197,7 @@ struct nbr_entry *
 olsr_lookup_nbr_entry(const union olsr_ip_addr *addr, bool lookupalias)
 {
   const union olsr_ip_addr *main_addr = NULL;
-  struct avl_node *node;
+  struct nbr_entry *nbr;
 
   /*
    * Find main address of node
@@ -209,11 +209,8 @@ olsr_lookup_nbr_entry(const union olsr_ip_addr *addr, bool lookupalias)
     main_addr = addr;
   }
 
-  node = avl_find(&nbr_tree, addr);
-  if (node) {
-    return nbr_node_to_nbr(node);
-  }
-  return NULL;
+  nbr = avl_find_element(&nbr_tree, addr, nbr, nbr_node);
+  return nbr;
 }
 
 void olsr_update_nbr_status(struct nbr_entry *entry) {
@@ -287,13 +284,13 @@ olsr_add_nbr2_entry(const union olsr_ip_addr *addr) {
   nbr2 = olsr_cookie_malloc(nbr2_mem_cookie);
 
   /* Init neighbor connector subtree */
-  avl_init(&nbr2->con_tree, avl_comp_default);
+  avl_init(&nbr2->con_tree, avl_comp_default, false, NULL);
 
   nbr2->nbr2_addr = *addr;
 
   /* Add to global neighbor 2 tree */
   nbr2->nbr2_node.key = &nbr2->nbr2_addr;
-  avl_insert(&nbr2_tree, &nbr2->nbr2_node, false);
+  avl_insert(&nbr2_tree, &nbr2->nbr2_node);
 
   return nbr2;
 }
@@ -306,6 +303,7 @@ olsr_add_nbr2_entry(const union olsr_ip_addr *addr) {
 void
 olsr_delete_nbr2_entry(struct nbr2_entry *nbr2) {
   struct nbr_con *connector;
+  struct list_iterator iterator;
 
 #if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
@@ -316,9 +314,9 @@ olsr_delete_nbr2_entry(struct nbr2_entry *nbr2) {
   /*
    * Remove all references pointing to this two hop neighbor.
    */
-  OLSR_FOR_ALL_NBR2_CON_ENTRIES(nbr2, connector) {
+  OLSR_FOR_ALL_NBR2_CON_ENTRIES(nbr2, connector, iterator) {
     internal_delete_nbr_con(connector);
-  } OLSR_FOR_ALL_NBR2_CON_ENTRIES_END();
+  }
 
   /* Remove from global neighbor tree */
   avl_delete(&nbr2_tree, &nbr2->nbr2_node);
@@ -330,7 +328,7 @@ olsr_delete_nbr2_entry(struct nbr2_entry *nbr2) {
 struct nbr2_entry *
 olsr_lookup_nbr2_entry(const union olsr_ip_addr *addr, bool lookupalias) {
   const union olsr_ip_addr *main_addr = NULL;
-  struct avl_node *node;
+  struct nbr2_entry *entry;
 
   /*
    * Find main address of node
@@ -342,11 +340,8 @@ olsr_lookup_nbr2_entry(const union olsr_ip_addr *addr, bool lookupalias) {
     main_addr = addr;
   }
 
-  node = avl_find(&nbr2_tree, addr);
-  if (node) {
-    return nbr2_node_to_nbr2(node);
-  }
-  return NULL;
+  entry = avl_find_element(&nbr2_tree, addr, entry, nbr2_node);
+  return entry;
 }
 
 /**
@@ -382,8 +377,8 @@ olsr_link_nbr_nbr2(struct nbr_entry *nbr, const union olsr_ip_addr *nbr2_addr, u
   connector->nbr_tree_node.key = &nbr2->nbr2_addr;
   connector->nbr2_tree_node.key = &nbr->nbr_addr;
 
-  avl_insert(&nbr->con_tree, &connector->nbr_tree_node, false);
-  avl_insert(&nbr2->con_tree, &connector->nbr2_tree_node, false);
+  avl_insert(&nbr->con_tree, &connector->nbr_tree_node);
+  avl_insert(&nbr2->con_tree, &connector->nbr2_tree_node);
 
   connector->path_linkcost = LINK_COST_BROKEN;
 
@@ -436,12 +431,8 @@ olsr_delete_nbr_con(struct nbr_con *connector) {
  */
 struct nbr_con *
 olsr_lookup_nbr_con_entry(struct nbr_entry *nbr, const union olsr_ip_addr *nbr2_addr) {
-  struct avl_node *node;
-
-  node = avl_find(&nbr->con_tree, nbr2_addr);
-  if (node) {
-    return nbr_con_node_to_connector(node);
-  }
+  struct nbr_con *con;
+  con = avl_find_element(&nbr->con_tree, nbr2_addr, con, nbr_tree_node);
   return NULL;
 }
 
@@ -455,12 +446,8 @@ olsr_lookup_nbr_con_entry(struct nbr_entry *nbr, const union olsr_ip_addr *nbr2_
  */
 struct nbr_con *
 olsr_lookup_nbr2_con_entry(struct nbr2_entry *nbr2, const union olsr_ip_addr *nbr_addr) {
-  struct avl_node *node;
-
-  node = avl_find(&nbr2->con_tree, nbr_addr);
-  if (node) {
-    return nbr2_con_node_to_connector(node);
-  }
+  struct nbr_con *con;
+  con = avl_find_element(&nbr2->con_tree, nbr_addr, con, nbr2_tree_node);
   return NULL;
 }
 
@@ -495,13 +482,14 @@ olsr_print_neighbor_table(void)
   struct ipaddr_str buf;
   struct nbr2_entry *nbr2;
   struct nbr_con *connector;
+  struct list_iterator iterator, iterator2;
   char lqbuffer[LQTEXT_MAXLENGTH];
   bool first;
 
   OLSR_INFO(LOG_NEIGHTABLE, "\n--- %s ------------------------------------------------ NEIGHBORS\n\n"
             "%-*s\tSYM\tMPR\tMPRS\twill\n", olsr_wallclock_string(), ipwidth, "IP address");
 
-  OLSR_FOR_ALL_NBR_ENTRIES(nbr) {
+  OLSR_FOR_ALL_NBR_ENTRIES(nbr, iterator) {
 
     lnk = get_best_link_to_neighbor_ip(&nbr->nbr_addr);
     if (!lnk) {
@@ -514,22 +502,22 @@ olsr_print_neighbor_table(void)
                  nbr->is_mpr ? "YES" : "NO",
                  nbr->mprs_count == 0  ? "NO  " : "YES ",
                  nbr->willingness);
-  } OLSR_FOR_ALL_NBR_ENTRIES_END();
+  }
 
   OLSR_INFO(LOG_2NEIGH, "\n--- %s ----------------------- TWO-HOP NEIGHBORS\n\n"
             "IP addr (2-hop)  IP addr (1-hop)  Total cost\n", olsr_wallclock_string());
 
-  OLSR_FOR_ALL_NBR2_ENTRIES(nbr2) {
+  OLSR_FOR_ALL_NBR2_ENTRIES(nbr2, iterator) {
     first = true;
-    OLSR_FOR_ALL_NBR2_CON_ENTRIES(nbr2, connector) {
+    OLSR_FOR_ALL_NBR2_CON_ENTRIES(nbr2, connector, iterator2) {
       OLSR_INFO_NH(LOG_2NEIGH, "%-*s  %-*s  %s\n",
                    ipwidth, first ? olsr_ip_to_string(&buf, &nbr2->nbr2_addr) : "",
                    ipwidth, olsr_ip_to_string(&buf, &connector->nbr->nbr_addr),
                    olsr_get_linkcost_text(connector->path_linkcost, false, lqbuffer, sizeof(lqbuffer)));
 
       first = false;
-    } OLSR_FOR_ALL_NBR2_CON_ENTRIES_END()
-  } OLSR_FOR_ALL_NBR2_ENTRIES_END()
+    }
+  }
 
 #endif
 }

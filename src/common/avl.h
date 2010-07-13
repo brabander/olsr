@@ -1,7 +1,7 @@
-
 /*
- * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
+ * PacketBB handler library (see RFC 5444)
+ * Copyright (c) 2010 Henning Rogge <hrogge@googlemail.com>
+ * Original OLSRd implementation by Hannes Gredler <hannes@gredler.at>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,107 +31,462 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * Visit http://www.olsr.org for more information.
+ * Visit http://www.olsr.org/git for more information.
  *
  * If you find this software useful feel free to make a donation
  * to the project. For more information see the website or contact
  * the copyright holders.
- *
  */
 
 #ifndef _AVL_H
 #define _AVL_H
 
-#include "../defs.h"
 #include <stddef.h>
+#include <stdbool.h>
 
-struct avl_node {
-  struct avl_node *parent;
-  struct avl_node *left;
-  struct avl_node *right;
-  struct avl_node *next;
-  struct avl_node *prev;
-  void *key;
-  signed char balance;
-  unsigned char leader;
-};
+#include "list.h"
+#include "container_of.h"
 
-typedef int (*avl_tree_comp) (const void *, const void *);
+/* Support for OLSR.org linker symbol export */
+#define EXPORT(sym) sym
 
-struct avl_tree {
-  struct avl_node *root;
-  struct avl_node *first;
-  struct avl_node *last;
-  unsigned int count;
-  avl_tree_comp comp;
-};
-
-void EXPORT(avl_init)(struct avl_tree *, avl_tree_comp);
-struct avl_node *EXPORT(avl_find) (struct avl_tree *, const void *);
-int EXPORT(avl_insert)(struct avl_tree *, struct avl_node *, bool);
-void EXPORT(avl_delete)(struct avl_tree *, struct avl_node *);
-
-static INLINE struct avl_node *
-avl_walk_first(struct avl_tree *tree)
-{
-  return tree->first;
-}
-static INLINE struct avl_node *
-avl_walk_last(struct avl_tree *tree)
-{
-  return tree->last;
-}
-static INLINE struct avl_node *
-avl_walk_next(struct avl_node *node)
-{
-  return node->next;
-}
-static INLINE struct avl_node *
-avl_walk_prev(struct avl_node *node)
-{
-  return node->prev;
-}
-
-/* and const versions*/
-static INLINE const struct avl_node *
-avl_walk_first_c(const struct avl_tree *tree)
-{
-  return tree->first;
-}
-static INLINE const struct avl_node *
-avl_walk_last_c(const struct avl_tree *tree)
-{
-  return tree->last;
-}
-static INLINE const struct avl_node *
-avl_walk_next_c(const struct avl_node *node)
-{
-  return node->next;
-}
-static INLINE const struct avl_node *
-avl_walk_prev_c(const struct avl_node *node)
-{
-  return node->prev;
-}
-
-/*
- * Macro to define an inline function to map from a listold_node offset back to the
- * base of the datastructure. That way you save an extra data pointer.
+/**
+ * This element is a member of a avl-tree. It must be contained in all
+ * larger structs that should be put into a tree.
  */
-#define AVLNODE2STRUCT(funcname, structname, avlnodename) \
-static INLINE struct structname * funcname (struct avl_node *ptr)\
-{\
-  if (!ptr) return NULL; \
-  return ((struct structname *) ((char *)ptr - offsetof(struct structname,avlnodename))); \
+struct avl_node {
+  /**
+   * Linked list node for supporting easy iteration and multiple
+   * elments with the same key.
+   *
+   * this must be the first element of an avl_node to
+   * make casting for lists easier
+   */
+  struct list_entity list;
+
+  /**
+   * Pointer to parent node in tree, NULL if root node
+   */
+  struct avl_node *parent;
+
+  /**
+   * Pointer to left child
+   */
+  struct avl_node *left;
+
+  /**
+   * Pointer to right child
+   */
+  struct avl_node *right;
+
+  /**
+   * pointer to key of node
+   */
+  void *key;
+
+  /**
+   * balance state of AVL tree (0,-1,+1)
+   */
+  signed char balance;
+
+  /**
+   * true if first of a series of nodes with same key
+   */
+  bool leader;
+};
+
+/**
+ * Prototype for avl comparators
+ * @param k1 first key
+ * @param k2 second key
+ * @param ptr custom data for tree comparator
+ * @return +1 if k1>k2, -1 if k1<k2, 0 if k1==k2
+ */
+typedef int (*avl_tree_comp) (const void *k1, const void *k2, void *ptr);
+
+/**
+ * This struct is the central management part of an avl tree.
+ * One of them is necessary for each avl_tree.
+ */
+struct avl_tree {
+  /**
+   * Head of linked list node for supporting easy iteration
+   * and multiple elments with the same key.
+   */
+  struct list_entity list_head;
+
+  /**
+   * pointer to the root node of the avl tree, NULL if tree is empty
+   */
+  struct avl_node *root;
+
+  /**
+   * number of nodes in the avl tree
+   */
+  unsigned int count;
+
+  /**
+   * true if multiple nodes with the same key are
+   * allowed in the tree, false otherwise
+   */
+  bool allow_dups;
+
+  /**
+   * pointer to the tree comparator
+   *
+   * First two parameters are keys to compare,
+   * third parameter is a copy of cmp_ptr
+   */
+  avl_tree_comp comp;
+
+  /**
+   * custom pointer delivered to the tree comparator
+   */
+  void *cmp_ptr;
+};
+
+/**
+ * internal enum for avl_find_... macros
+ */
+enum avl_find_mode {
+  AVL_FIND_EQUAL,
+  AVL_FIND_LESSEQUAL,
+  AVL_FIND_GREATEREQUAL
+};
+
+void EXPORT(avl_init)(struct avl_tree *, avl_tree_comp, bool, void *);
+struct avl_node *EXPORT(avl_find)(struct avl_tree *, const void *);
+struct avl_node *EXPORT(avl_find_greaterequal)(struct avl_tree *tree, const void *key);
+struct avl_node *EXPORT(avl_find_lessequal)(struct avl_tree *tree, const void *key);
+int EXPORT(avl_insert)(struct avl_tree *, struct avl_node *);
+void EXPORT(avl_delete)(struct avl_tree *, struct avl_node *);
+void *EXPORT(__avl_find_element)(struct avl_tree *tree, const void *key,
+    size_t offset, enum avl_find_mode mode);
+
+/**
+ * @param tree pointer to avl-tree
+ * @param node pointer to node of the tree
+ * @return true if node is the first one of the tree, false otherwise
+ */
+static inline bool
+avl_is_first(struct avl_tree *tree, struct avl_node *node) {
+  return tree->list_head.next == &node->list;
 }
 
-#define OLSR_FOR_ALL_AVL_ENTRIES(avltreeptr, convfunc, variable) \
-{ \
-  struct avl_node *convfunc##node, *convfunc##next_node; \
-  for (convfunc##node = avl_walk_first(avltreeptr); convfunc##node; convfunc##node = convfunc##next_node) { \
-    convfunc##next_node = avl_walk_next(convfunc##node); \
-    variable = convfunc (convfunc##node);
-#define OLSR_FOR_ALL_AVL_ENTRIES_END() }}
+/**
+ * @param tree pointer to avl-tree
+ * @param node pointer to node of the tree
+ * @return true if node is the last one of the tree, false otherwise
+ */
+static inline bool
+avl_is_last(struct avl_tree *tree, struct avl_node *node) {
+  return tree->list_head.prev == &node->list;
+}
+
+/**
+ * @param tree pointer to avl-tree
+ * @return true if the tree is empty, false otherwise
+ */
+static inline bool
+avl_is_empty(struct avl_tree *tree) {
+  return tree->count == 0;
+}
+
+/**
+ * @param tree pointer to avl-tree
+ * @param key pointer to key
+ * @param element pointer to a node element
+ *    (don't need to be initialized)
+ * @param node_element name of the avl_node element inside the
+ *    larger struct
+ * @return pointer to tree element with the specified key,
+ *    NULL if no element was found
+ */
+#define avl_find_element(tree, key, element, node_element) \
+  ((typeof(*(element)) *)__avl_find_element(tree, key, offsetof(typeof(*(element)), node_element), AVL_FIND_EQUAL))
+
+/**
+ * @param tree pointer to avl-tree
+ * @param key pointer to specified key
+ * @param element pointer to a node element
+ *    (don't need to be initialized)
+ * @param node_element name of the avl_node element inside the
+ *    larger struct
+ * return pointer to last tree element with less or equal key than specified key,
+ *    NULL if no element was found
+ */
+#define avl_find_le_element(tree, key, element, node_element) \
+  ((typeof(*(element)) *)__avl_find_element(tree, key, offsetof(typeof(*(element)), node_element), AVL_FIND_LESSEQUAL))
+
+/**
+ * @param tree pointer to avl-tree
+ * @param key pointer to specified key
+ * @param element pointer to a node element
+ *    (don't need to be initialized)
+ * @param node_element name of the avl_node element inside the
+ *    larger struct
+ * return pointer to first tree element with greater or equal key than specified key,
+ *    NULL if no element was found
+ */
+#define avl_find_ge_element(tree, key, element, node_element) \
+  ((typeof(*(element)) *)__avl_find_element(tree, key, offsetof(typeof(*(element)), node_element), AVL_FIND_GREATEREQUAL))
+
+/**
+ * This function must not be called for an empty tree
+ *
+ * @param tree pointer to avl-tree
+ * @param element pointer to a node element
+ *    (don't need to be initialized)
+ * @param node_member name of the avl_node element inside the
+ *    larger struct
+ * @return pointer to the first element of the avl_tree
+ *    (automatically converted to type 'element')
+ */
+#define avl_first_element(tree, element, node_member) \
+  container_of((tree)->list_head.next, typeof(*(element)), node_member)
+
+/**
+ * @param tree pointer to tree
+ * @param element pointer to a node struct that contains the avl_node
+ *    (don't need to be initialized)
+ * @param node_member name of the avl_node element inside the
+ *    larger struct
+ * @return pointer to the last element of the avl_tree
+ *    (automatically converted to type 'element')
+ */
+#define avl_last_element(tree, element, node_member) \
+  container_of((tree)->list_head.prev, typeof(*(element)), node_member)
+
+/**
+ * This function must not be called for the last element of
+ * an avl tree
+ *
+ * @param element pointer to a node of the tree
+ * @param node_member name of the avl_node element inside the
+ *    larger struct
+ * @return pointer to the node after 'element'
+ *    (automatically converted to type 'element')
+ */
+#define avl_next_element(element, node_member) \
+  container_of((&(element)->node_member.list)->next, typeof(*(element)), node_member)
+
+/**
+ * This function must not be called for the first element of
+ * an avl tree
+ *
+ * @param element pointer to a node of the tree
+ * @param node_member name of the avl_node element inside the
+ *    larger struct
+ * @return pointer to the node before 'element'
+ *    (automatically converted to type 'element')
+ */
+#define avl_prev_element(element, node_member) \
+  container_of((&(element)->node_member.list)->prev, typeof(*(element)), node_member)
+
+/**
+ * Loop over all elements of an avl_tree, used similar to a for() command.
+ * This loop should not be used if elements are removed from the tree during
+ * the loop.
+ *
+ * @param tree pointer to avl-tree
+ * @param element pointer to a node of the tree, this element will
+ *    contain the current node of the tree during the loop
+ * @param node_member name of the avl_node element inside the
+ *    larger struct
+ * @param loop_ptr pointer to an list_entity which is used as
+ *    the internal iterator
+ */
+#define avl_for_each_element(tree, element, node_member, loop_ptr) \
+  list_for_each_element(&(tree)->list_head, element, node_member, loop_ptr)
+
+/**
+ * Loop over all elements of an avl_tree backwards, used similar to a for() command.
+ * This loop should not be used if elements are removed from the tree during
+ * the loop.
+ *
+ * @param tree pointer to avl-tree
+ * @param element pointer to a node of the tree, this element will
+ *    contain the current node of the tree during the loop
+ * @param node_member name of the avl_node element inside the
+ *    larger struct
+ * @param loop_ptr pointer to an list_entity which is used as
+ *    the internal iterator
+ */
+#define avl_for_each_element_reverse(tree, element, node_member, loop_ptr) \
+  list_for_each_element_reverse(&(tree)->list_head, element, node_member, loop_ptr)
+
+/**
+ * Loop over a block of elements of a tree, used similar to a for() command.
+ * This loop should not be used if elements are removed from the tree during
+ * the loop.
+ *
+ * @param first pointer to first element of loop
+ * @param last pointer to last element of loop
+ * @param element pointer to a node of the tree, this element will
+ *    contain the current node of the list during the loop
+ * @param node_member name of the avl_node element inside the
+ *    larger struct
+ * @param loop_ptr pointer to an list_entity which is used as the
+ *    internal iterator
+ */
+#define avl_for_element_range(first, last, element, node_member, loop_ptr) \
+  __list_for_element_range(&(first)->node_member.list, &(last)->node_member.list, element, node_member, loop_ptr)
+
+/**
+ * Loop over a block of elements of a tree backwards, used similar to a for() command.
+ * This loop should not be used if elements are removed from the tree during
+ * the loop.
+ *
+ * @param first pointer to first element of loop
+ * @param last pointer to last element of loop
+ * @param element pointer to a node of the tree, this element will
+ *    contain the current node of the list during the loop
+ * @param node_member name of the avl_node element inside the
+ *    larger struct
+ * @param loop_ptr pointer to an list_entity which is used as the
+ *    internal iterator
+ */
+#define avl_for_element_range_reverse(first, last, element, node_member, loop_ptr) \
+  __list_for_element_range_reverse(&(first)->node_member.list, &(last)->node_member.list, element, node_member, loop_ptr)
+
+/**
+ * Loop over a block of elements of a tree, used similar to a for() command.
+ * This loop should not be used if elements are removed from the tree during
+ * the loop.
+ * The loop runs from the element 'first' to the end of the tree.
+ *
+ * @param tree pointer to avl-tree
+ * @param first pointer to first element of loop
+ * @param element pointer to a node of the tree, this element will
+ *    contain the current node of the list during the loop
+ * @param node_member name of the avl_node element inside the
+ *    larger struct
+ * @param loop_ptr pointer to an list_entity which is used as the
+ *    internal iterator
+ */
+#define avl_for_element_to_last(tree, first, element, node_member, loop_ptr) \
+  __list_for_element_range(&(first)->node_member.list, (tree)->list_head.prev, element, node_member, loop_ptr)
+
+/**
+ * Loop over a block of elements of a tree backwards, used similar to a for() command.
+ * This loop should not be used if elements are removed from the tree during
+ * the loop.
+ * The loop runs from the element 'first' to the end of the tree.
+ *
+ * @param tree pointer to avl-tree
+ * @param first pointer to first element of loop
+ * @param element pointer to a node of the tree, this element will
+ *    contain the current node of the list during the loop
+ * @param node_member name of the avl_node element inside the
+ *    larger struct
+ * @param loop_ptr pointer to an list_entity which is used as the
+ *    internal iterator
+ */
+#define avl_for_element_to_last_reverse(tree, first, element, node_member, loop_ptr) \
+  __list_for_element_range_reverse(&(first)->node_member.list, (tree)->list_head.prev, element, node_member, loop_ptr)
+
+/**
+ * Loop over a block of elements of a tree, used similar to a for() command.
+ * This loop should not be used if elements are removed from the tree during
+ * the loop.
+ * The loop runs from the start of the tree to the element 'last'.
+ *
+ * @param tree pointer to avl-tree
+ * @param last pointer to last element of loop
+ * @param element pointer to a node of the tree, this element will
+ *    contain the current node of the list during the loop
+ * @param node_member name of the avl_node element inside the
+ *    larger struct
+ * @param loop_ptr pointer to an list_entity which is used as the
+ *    internal iterator
+ */
+#define avl_for_first_to_element(tree, last, element, node_member, loop_ptr) \
+    __list_for_element_range((tree)->list_head.next, &(last)->node_member.list, element, node_member, loop_ptr)
+
+/**
+ * Loop over a block of elements of a tree backwards, used similar to a for() command.
+ * This loop should not be used if elements are removed from the tree during
+ * the loop.
+ * The loop runs from the start of the tree to the element 'last'.
+ *
+ * @param tree pointer to avl-tree
+ * @param last pointer to last element of loop
+ * @param element pointer to a node of the tree, this element will
+ *    contain the current node of the list during the loop
+ * @param node_member name of the avl_node element inside the
+ *    larger struct
+ * @param loop_ptr pointer to an list_entity which is used as the
+ *    internal iterator
+ */
+#define avl_for_first_to_element_reverse(tree, last, element, node_member, loop_ptr) \
+    __list_for_element_range_reverse((tree)->list_head.next, &(last)->node_member.list, element, node_member, loop_ptr)
+
+/**
+ * Loop over all elements of an avl_tree, used similar to a for() command.
+ * This loop can be used if the current element might be removed from
+ * the tree during the loop. Other elements should not be removed during
+ * the loop.
+ *
+ * @param tree pointer to avl-tree
+ * @param element pointer to a node of the tree, this element will
+ *    contain the current node of the tree during the loop
+ * @param node_member name of the avl_node element inside the
+ *    larger struct
+ * @param loop_ptr pointer to an list_entity which is used as the
+ *    internal iterator for the loop
+ * @param safe_ptr pointer to an list_entity which is used to store
+ *    the next node during the loop
+ */
+#define avl_for_each_element_safe(tree, element, node_member, loop_ptr, safe_ptr) \
+  list_for_each_element_safe(&(tree)->list_head, element, node_member, loop_ptr, safe_ptr)
+
+/**
+ * Loop over all elements of an avl_tree backwards, used similar to a for() command.
+ * This loop can be used if the current element might be removed from
+ * the tree during the loop. Other elements should not be removed during
+ * the loop.
+ *
+ * @param tree pointer to avl-tree
+ * @param element pointer to a node of the tree, this element will
+ *    contain the current node of the tree during the loop
+ * @param node_member name of the avl_node element inside the
+ *    larger struct
+ * @param loop_ptr pointer to an list_entity which is used as the
+ *    internal iterator for the loop
+ * @param safe_ptr pointer to an list_entity which is used to store
+ *    the next node during the loop
+ */
+#define avl_for_each_element_reverse_safe(tree, element, node_member, loop_ptr, safe_ptr) \
+  list_for_each_element_reverse_safe(&(tree)->list_head, element, node_member, loop_ptr, safe_ptr)
+
+/**
+ * A special loop that removes all elements of the tree and cleans up the tree
+ * root. The loop body is responsible to free the node elements of the tree.
+ *
+ * This loop is much faster than a normal one for clearing the tree because it
+ * does not rebalance the tree after each removal. Do NOT use a break command
+ * inside.
+ * You can free the memory of the elements within the loop.
+ * Do NOT call avl_delete() on the elements within the loop,
+ *
+ * @param tree pointer to avl-tree
+ * @param element pointer to a node of the tree, this element will
+ *    contain the current node of the tree during the loop
+ * @param node_member name of the avl_node element inside the
+ *    larger struct
+ * @param loop_ptr pointer to an list_entity which is used as the
+ *    internal iterator for the loop
+ * @param safe_ptr pointer to an list_entity which is used to store
+ *    the next node during the loop
+ */
+#define avl_remove_all_elements(tree, element, node_member, loop_ptr, safe_ptr) \
+  for (loop_ptr = (tree)->list_head.next, safe_ptr = loop_ptr->next, \
+         element = container_of(loop_ptr, typeof(*(element)), node_member), \
+         list_init_head(&(tree)->list_head), \
+         (tree)->root = NULL, (tree)->count = 0; \
+       loop_ptr != &(tree)->list_head; \
+       loop_ptr = safe_ptr, safe_ptr = loop_ptr->next, \
+         element = container_of(loop_ptr, typeof(*(element)), node_member))
 
 #endif /* _AVL_H */
 

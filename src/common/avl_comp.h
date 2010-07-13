@@ -1,7 +1,7 @@
-
 /*
- * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
+ * PacketBB handler library (see RFC 5444)
+ * Copyright (c) 2010 Henning Rogge <hrogge@googlemail.com>
+ * Original OLSRd implementation by Hannes Gredler <hannes@gredler.at>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,48 +31,24 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * Visit http://www.olsr.org for more information.
+ * Visit http://www.olsr.org/git for more information.
  *
  * If you find this software useful feel free to make a donation
  * to the project. For more information see the website or contact
  * the copyright holders.
- *
  */
 
+#ifndef AVL_COMP_H_
+#define AVL_COMP_H_
 
-#ifndef _OLSR_HNA
-#define _OLSR_HNA
-
-#include "olsr_types.h"
-#include "olsr_protocol.h"
-#include "duplicate_set.h"
 #include "common/avl.h"
 
-struct hna_net {
-  struct avl_node hna_tc_node;         /* node in the per-tc hna tree */
-  struct olsr_ip_prefix hna_prefix;    /* the prefix, key */
-  struct timer_entry *hna_net_timer;   /* expiration timer */
-  struct tc_entry *hna_tc;             /* backpointer to the owning tc entry */
-  uint16_t tc_entry_seqno;             /* sequence number for cleanup */
-};
+/* Support for OLSR.org linker symbol export */
+#define EXPORT(sym) sym
 
-#define OLSR_HNA_NET_JITTER 5   /* percent */
+int EXPORT(avl_comp_uint32)(const void *k1, const void *k2, void *ptr);
+int EXPORT(avl_comp_uint16)(const void *k1, const void *k2, void *ptr);
+int EXPORT(avl_comp_uint8)(const void *k1, const void *k2, void *ptr);
+int EXPORT(avl_comp_mem)(const void *k1, const void *k2, void *ptr);
 
-#define OLSR_FOR_ALL_TC_HNA_ENTRIES(tc, hna_set, iterator) avl_for_each_element_safe(&tc->hna_tree, hna_set, hna_tc_node, iterator.loop, iterator.safe)
-
-/* HNA msg input parser */
-void olsr_input_hna(struct olsr_message *, struct interface *, union olsr_ip_addr *, enum duplicate_status);
-
-void olsr_init_hna_set(void);
-void olsr_flush_hna_nets(struct tc_entry *tc);
-void olsr_print_hna_set(void);
-void generate_hna(void *p);
-
-#endif
-
-/*
- * Local Variables:
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * End:
- */
+#endif /* AVL_COMP_H_ */

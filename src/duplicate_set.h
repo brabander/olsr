@@ -76,13 +76,8 @@ bool olsr_is_duplicate_message(struct olsr_message *m, bool forward_set, enum du
 void olsr_print_duplicate_table(void);
 void olsr_flush_duplicate_entries(void);
 
-AVLNODE2STRUCT(duptree2dupentry, dup_entry, avl);
-
-#define OLSR_FOR_ALL_FORWARD_DUP_ENTRIES(dup) OLSR_FOR_ALL_AVL_ENTRIES(&forward_set, duptree2dupentry, dup)
-#define OLSR_FOR_ALL_FORWARD_DUP_ENTRIES_END() OLSR_FOR_ALL_AVL_ENTRIES_END()
-
-#define OLSR_FOR_ALL_PROCESS_DUP_ENTRIES(dup) OLSR_FOR_ALL_AVL_ENTRIES(&processing_set, duptree2dupentry, dup)
-#define OLSR_FOR_ALL_PROCESS_DUP_ENTRIES_END() OLSR_FOR_ALL_AVL_ENTRIES_END()
+#define OLSR_FOR_ALL_FORWARD_DUP_ENTRIES(dup, iterator) avl_for_each_element_safe(&forward_set, dup, avl, iterator.loop, iterator.safe)
+#define OLSR_FOR_ALL_PROCESS_DUP_ENTRIES(dup, iterator) avl_for_each_element_safe(&processing_set, dup, avl, iterator.loop, iterator.safe)
 
 extern struct avl_tree forward_set, processing_set;
 #endif /*DUPLICATE_SET_H_ */

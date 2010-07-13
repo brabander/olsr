@@ -52,6 +52,8 @@
 #include "olsr_comport_txt.h"
 #include "plugin_loader.h"
 
+#define OLSR_FOR_EACH_TXTCMD_ENTRY(cmd, iterator) avl_for_each_element_safe(&txt_normal_tree, cmd, node, iterator.loop, iterator.safe)
+
 struct txt_repeat_data {
   struct timer_entry *timer;
   struct autobuf *buf;
@@ -122,8 +124,8 @@ void
 olsr_com_init_txt(void) {
   size_t i;
 
-  avl_init(&txt_normal_tree, &avl_comp_strcasecmp);
-  avl_init(&txt_help_tree, &avl_comp_strcasecmp);
+  avl_init(&txt_normal_tree, &avl_comp_strcasecmp, false, NULL);
+  avl_init(&txt_help_tree, &avl_comp_strcasecmp, false, NULL);
 
   txtcommand_cookie = olsr_alloc_cookie("comport txt commands", OLSR_COOKIE_TYPE_MEMORY);
   olsr_cookie_set_memory_size(txtcommand_cookie, sizeof(struct olsr_txtcommand));
@@ -152,7 +154,7 @@ olsr_com_add_normal_txtcommand (const char *command, olsr_txthandler handler) {
   txt->node.key = strdup(command);
   txt->handler = handler;
 
-  avl_insert(&txt_normal_tree, &txt->node, false);
+  avl_insert(&txt_normal_tree, &txt->node);
   return txt;
 }
 
@@ -164,7 +166,7 @@ olsr_com_add_help_txtcommand (const char *command, olsr_txthandler handler) {
   txt->node.key = strdup(command);
   txt->handler = handler;
 
-  avl_insert(&txt_help_tree, &txt->node, false);
+  avl_insert(&txt_help_tree, &txt->node);
   return txt;
 }
 
@@ -342,9 +344,10 @@ static enum olsr_txtcommand_result
 olsr_txtcmd_help(struct comport_connection *con,
     const char *cmd __attribute__ ((unused)), const char *param) {
   struct olsr_txtcommand *ptr;
+  struct list_iterator iterator;
 
   if (param != NULL) {
-    ptr = (struct olsr_txtcommand *)avl_find(&txt_help_tree, cmd);
+    ptr = avl_find_element(&txt_help_tree, cmd, ptr, node);
     if (ptr != NULL) {
       return ptr->handler(con, param, NULL);
     }
@@ -355,12 +358,10 @@ olsr_txtcmd_help(struct comport_connection *con,
     return ABUF_ERROR;
   }
 
-  ptr = (struct olsr_txtcommand *)avl_walk_first(&txt_normal_tree);
-  while (ptr) {
+  OLSR_FOR_EACH_TXTCMD_ENTRY(ptr, iterator) {
     if (abuf_appendf(&con->out, "  %s\n", (char *)ptr->node.key) < 0) {
       return ABUF_ERROR;
     }
-    ptr = (struct olsr_txtcommand *)avl_walk_next(&ptr->node);
   }
 
   if (abuf_puts(&con->out, "Use 'help <command> to see a help text for a certain command\n") < 0) {
@@ -472,17 +473,18 @@ olsr_txtcmd_version(struct comport_connection *con,
 static enum olsr_txtcommand_result
 olsr_txtcmd_plugin(struct comport_connection *con, const char *cmd, const char *param) {
   struct olsr_plugin *plugin;
+  struct list_iterator iterator;
   char *para2 = NULL;
   if (param == NULL || strcasecmp(param, "list") == 0) {
     if (abuf_puts(&con->out, "Table:\n") < 0) {
       return ABUF_ERROR;
     }
-    OLSR_FOR_ALL_PLUGIN_ENTRIES(plugin) {
+    OLSR_FOR_ALL_PLUGIN_ENTRIES(plugin, iterator) {
       if (abuf_appendf(&con->out, " %-30s\t%s\t%s\n",
           plugin->name, plugin->internal_active ? "active" : "", plugin->internal_dlhandle == NULL ? "static" : "") < 0) {
         return ABUF_ERROR;
       }
-    } OLSR_FOR_ALL_PLUGIN_ENTRIES_END()
+    }
     return CONTINUE;
   }
 

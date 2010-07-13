@@ -54,14 +54,14 @@
 struct avl_tree olsr_cookie_tree;
 
 void olsr_cookie_init(void) {
-  avl_init(&olsr_cookie_tree, &avl_comp_strcasecmp);
+  avl_init(&olsr_cookie_tree, &avl_comp_strcasecmp, false, NULL);
 }
 
 /*
  * Allocate a cookie for the next available cookie id.
  */
 struct olsr_cookie_info *
-olsr_alloc_cookie(const char *cookie_name, olsr_cookie_type cookie_type)
+olsr_alloc_cookie(const char *cookie_name, enum olsr_cookie_type cookie_type)
 {
   static uint16_t next_brand_id = 1;
 
@@ -88,7 +88,7 @@ olsr_alloc_cookie(const char *cookie_name, olsr_cookie_type cookie_type)
     ci->ci_membrand = 0;
   }
 
-  avl_insert(&olsr_cookie_tree, &ci->node, true);
+  avl_insert(&olsr_cookie_tree, &ci->node);
   return ci;
 }
 
@@ -137,13 +137,14 @@ void
 olsr_delete_all_cookies(void)
 {
   struct olsr_cookie_info *info;
+  struct list_iterator iterator;
 
   /*
    * Walk the full index range and kill 'em all.
    */
-  OLSR_FOR_ALL_COOKIES(info) {
+  OLSR_FOR_ALL_COOKIES(info, iterator) {
     olsr_free_cookie(info);
-  } OLSR_FOR_ALL_COOKIES_END()
+  }
 }
 
 /*

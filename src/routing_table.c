@@ -264,7 +264,7 @@ olsr_init_routing_table(void)
   OLSR_INFO(LOG_ROUTING, "RIB: initialize routing tree...\n");
 
   /* the routing tree */
-  avl_init(&routingtree, avl_comp_prefix_default);
+  avl_init(&routingtree, avl_comp_prefix_default, false, NULL);
   routingtree_version = 0;
 
   /*
@@ -288,15 +288,14 @@ olsr_init_routing_table(void)
 struct rt_entry *
 olsr_lookup_routing_table(const union olsr_ip_addr *dst)
 {
-  struct avl_node *rt_tree_node;
+  struct rt_entry *rt;
   struct olsr_ip_prefix prefix;
 
   prefix.prefix = *dst;
   prefix.prefix_len = 8 * olsr_cnf->ipsize;
 
-  rt_tree_node = avl_find(&routingtree, &prefix);
-
-  return rt_tree_node ? rt_tree2rt(rt_tree_node) : NULL;
+  rt = avl_find_element(&routingtree, &prefix, rt, rt_tree_node);
+  return rt;
 }
 
 /**
@@ -343,10 +342,10 @@ olsr_alloc_rt_entry(struct olsr_ip_prefix *prefix)
   rt->rt_dst = *prefix;
 
   rt->rt_tree_node.key = &rt->rt_dst;
-  avl_insert(&routingtree, &rt->rt_tree_node, false);
+  avl_insert(&routingtree, &rt->rt_tree_node);
 
   /* init the originator subtree */
-  avl_init(&rt->rt_path_tree, avl_comp_addr_origin_default);
+  avl_init(&rt->rt_path_tree, avl_comp_addr_origin_default, false, NULL);
 
   return rt;
 }
@@ -372,7 +371,7 @@ olsr_alloc_rt_path(struct tc_entry *tc, struct olsr_ip_prefix *prefix, uint8_t o
   rtp->rtp_prefix_tree_node.key = &rtp->rtp_dst;
 
   /* insert to the tc prefix tree */
-  avl_insert(&tc->prefix_tree, &rtp->rtp_prefix_tree_node, false);
+  avl_insert(&tc->prefix_tree, &rtp->rtp_prefix_tree_node);
 
   /* backlink to the owning tc entry */
   rtp->rtp_tc = tc;
@@ -402,7 +401,6 @@ void
 olsr_insert_rt_path(struct rt_path *rtp, struct tc_entry *tc, struct link_entry *link)
 {
   struct rt_entry *rt;
-  struct avl_node *node;
 
   /*
    * no unreachable routes please.
@@ -421,26 +419,21 @@ olsr_insert_rt_path(struct rt_path *rtp, struct tc_entry *tc, struct link_entry 
   /*
    * first check if there is a route_entry for the prefix.
    */
-  node = avl_find(&routingtree, &rtp->rtp_dst);
+  rt = avl_find_element(&routingtree, &rtp->rtp_dst, rt, rt_tree_node);
 
-  if (!node) {
-
+  if (!rt) {
     /* no route entry yet */
     rt = olsr_alloc_rt_entry(&rtp->rtp_dst);
-
     if (!rt) {
       return;
     }
-
-  } else {
-    rt = rt_tree2rt(node);
   }
 
   /*
    * Insert to the route entry originator tree
    * The key has been initialized in olsr_alloc_rt_path().
    */
-  avl_insert(&rt->rt_path_tree, &rtp->rtp_tree_node, false);
+  avl_insert(&rt->rt_path_tree, &rtp->rtp_tree_node);
 
   /* backlink to the owning route entry */
   rtp->rtp_rt = rt;
@@ -566,16 +559,13 @@ void
 olsr_rt_best(struct rt_entry *rt)
 {
   /* grab the first entry */
-  struct avl_node *node = avl_walk_first(&rt->rt_path_tree);
+  struct rt_path *rtp, *best;
+  struct list_iterator iterator;
 
-  assert(node != NULL);         /* should not happen */
+  assert (!avl_is_empty(&rt->rt_path_tree));
 
-  rt->rt_best = rtp_tree2rtp(node);
-
-  /* walk all remaining originator entries */
-  while ((node = avl_walk_next(node))) {
-    struct rt_path *rtp = rtp_tree2rtp(node);
-
+  best = NULL;
+  OLSR_FOR_ALL_RT_PATH_ENTRIES(rt, rtp, iterator) {
     if (olsr_cmp_rtp(rtp, rt->rt_best, current_inetgw)) {
       rt->rt_best = rtp;
     }
@@ -608,7 +598,6 @@ olsr_insert_routing_table(const union olsr_ip_addr *dst, int plen, const union o
 #endif
   struct tc_entry *tc;
   struct rt_path *rtp;
-  struct avl_node *node;
   struct olsr_ip_prefix prefix;
 
   /*
@@ -632,9 +621,9 @@ olsr_insert_routing_table(const union olsr_ip_addr *dst, int plen, const union o
   prefix.prefix_len = plen;
   prefix.prefix_origin = origin;
 
-  node = avl_find(&tc->prefix_tree, &prefix);
+  rtp = avl_find_element(&tc->prefix_tree, &prefix, rtp, rtp_prefix_tree_node);
 
-  if (!node) {
+  if (!rtp) {
 
     /* no rt_path for this prefix yet */
     rtp = olsr_alloc_rt_path(tc, &prefix, origin);
@@ -648,9 +637,6 @@ olsr_insert_routing_table(const union olsr_ip_addr *dst, int plen, const union o
 
     /* overload the hna change bit for flagging a prefix change */
     changes_hna = true;
-
-  } else {
-    rtp = rtp_prefix_tree2rtp(node);
   }
 
   return rtp;
@@ -668,7 +654,6 @@ olsr_delete_routing_table(union olsr_ip_addr *dst, int plen, union olsr_ip_addr 
 
   struct tc_entry *tc;
   struct rt_path *rtp;
-  struct avl_node *node;
   struct olsr_ip_prefix prefix;
 
   /*
@@ -690,10 +675,8 @@ olsr_delete_routing_table(union olsr_ip_addr *dst, int plen, union olsr_ip_addr 
   prefix.prefix_len = plen;
   prefix.prefix_origin = origin;
 
-  node = avl_find(&tc->prefix_tree, &prefix);
-
-  if (node) {
-    rtp = rtp_prefix_tree2rtp(node);
+  rtp = avl_find_element(&tc->prefix_tree, &prefix, rtp, rtp_prefix_tree_node);
+  if (rtp) {
     olsr_delete_rt_path(rtp);
 
     OLSR_DEBUG(LOG_ROUTING, "RIB: del prefix %s/%d from %s\n",
@@ -752,20 +735,21 @@ olsr_rtp_to_string(const struct rt_path *rtp)
  *
  */
 void
-olsr_print_routing_table(struct avl_tree *tree __attribute__ ((unused)))
+olsr_print_routing_table(void)
 {
   /* The whole function makes no sense without it. */
 #if !defined REMOVE_LOG_INFO
-  struct avl_node *rt_tree_node;
+  struct rt_entry *rt;
+  struct rt_path *rtp;
+
   char lqbuffer[LQTEXT_MAXLENGTH];
+  struct list_iterator iterator, iterator2;
 
   OLSR_INFO(LOG_ROUTING, "ROUTING TABLE\n");
 
-  for (rt_tree_node = avl_walk_first(tree); rt_tree_node != NULL; rt_tree_node = avl_walk_next(rt_tree_node)) {
-    struct avl_node *rtp_tree_node;
+  OLSR_FOR_ALL_RT_ENTRIES(rt, iterator) {
     struct ipaddr_str origstr, gwstr;
     struct ipprefix_str prefixstr;
-    struct rt_entry *rt = rt_tree2rt(rt_tree_node);
 
     /* first the route entry */
     OLSR_INFO_NH(LOG_ROUTING, "%s, via %s dev %s, best-originator %s\n",
@@ -775,8 +759,7 @@ olsr_print_routing_table(struct avl_tree *tree __attribute__ ((unused)))
                  olsr_ip_to_string(&gwstr, &rt->rt_best->rtp_originator.prefix));
 
     /* walk the per-originator path tree of routes */
-    for (rtp_tree_node = avl_walk_first(&rt->rt_path_tree); rtp_tree_node != NULL; rtp_tree_node = avl_walk_next(rtp_tree_node)) {
-      struct rt_path *rtp = rtp_tree2rtp(rtp_tree_node);
+    OLSR_FOR_ALL_RT_PATH_ENTRIES(rt, rtp, iterator2) {
       OLSR_INFO_NH(LOG_ROUTING, "\tfrom %s, cost %s, metric %u, via %s, dev %s, v %u\n",
                    olsr_ip_to_string(&origstr, &rtp->rtp_originator.prefix),
                    olsr_get_linkcost_text(rtp->rtp_metric.cost, true, lqbuffer, sizeof(lqbuffer)),

@@ -97,7 +97,7 @@ init_net(void)
   const char *const *defaults = olsr_cnf->ip_version == AF_INET ? deny_ipv4_defaults : deny_ipv6_defaults;
 
   /* Init filter tree */
-  avl_init(&filter_tree, avl_comp_default);
+  avl_init(&filter_tree, avl_comp_default, false, NULL);
 
   if (*defaults) {
     OLSR_INFO(LOG_NETWORKING, "Initializing invalid IP list.\n");
@@ -117,10 +117,11 @@ void
 deinit_netfilters(void)
 {
   struct filter_entry *filter;
-  OLSR_FOR_ALL_FILTERS(filter) {
+  struct list_iterator iterator;
+  OLSR_FOR_ALL_FILTERS(filter, iterator) {
     avl_delete(&filter_tree, &filter->filter_node);
     free(filter);
-  } OLSR_FOR_ALL_FILTERS_END();
+  }
 }
 
 /**
@@ -403,7 +404,7 @@ olsr_add_invalid_address(const union olsr_ip_addr *addr)
 
   filter->filter_addr = *addr;
   filter->filter_node.key = &filter->filter_addr;
-  avl_insert(&filter_tree, &filter->filter_node, false);
+  avl_insert(&filter_tree, &filter->filter_node);
 
   OLSR_INFO(LOG_NETWORKING, "Added %s to filter set\n", olsr_ip_to_string(&buf, &filter->filter_addr));
 }
@@ -412,9 +413,7 @@ olsr_add_invalid_address(const union olsr_ip_addr *addr)
 bool
 olsr_validate_address(const union olsr_ip_addr *addr)
 {
-  const struct filter_entry *filter = filter_tree2filter(avl_find(&filter_tree, addr));
-
-  if (filter) {
+  if (avl_find(&filter_tree, addr)) {
 #if !defined REMOVE_LOG_DEBUG
     struct ipaddr_str buf;
 #endif

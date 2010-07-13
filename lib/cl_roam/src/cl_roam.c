@@ -178,6 +178,7 @@ struct guest_client * get_client_by_ip(union olsr_ip_addr ip) {
 static void *
 relay_spread_host(union olsr_ip_addr host_ip, union olsr_ip_addr master_ip, uint8_t TTL, uint8_t Hopcount) {
   struct interface *ifp;
+  struct list_iterator iterator;
   uint8_t msg_buffer[MAXMESSAGESIZE - OLSR_HEADERSIZE] __attribute__ ((aligned));
   uint8_t *curr = msg_buffer;
   uint8_t *length_field, *last;
@@ -215,17 +216,16 @@ relay_spread_host(union olsr_ip_addr host_ip, union olsr_ip_addr master_ip, uint
   //Put in Message size
   pkt_put_u16(&length_field, curr - msg_buffer);
 
-  OLSR_FOR_ALL_INTERFACES(ifp)
-        {
-          if (net_outbuffer_bytes_left(ifp) < curr - msg_buffer) {
-            net_output(ifp);
-            set_buffer_timer(ifp);
-          }
-          // buffer gets pushed NOW
-          net_outbuffer_push(ifp, msg_buffer, curr - msg_buffer);
-          net_output(ifp);
-          set_buffer_timer(ifp);
-        }OLSR_FOR_ALL_INTERFACES_END(ifp)
+  OLSR_FOR_ALL_INTERFACES(ifp, iterator) {
+    if (net_outbuffer_bytes_left(ifp) < curr - msg_buffer) {
+      net_output(ifp);
+      set_buffer_timer(ifp);
+    }
+    // buffer gets pushed NOW
+    net_outbuffer_push(ifp, msg_buffer, curr - msg_buffer);
+    net_output(ifp);
+    set_buffer_timer(ifp);
+  }
 
   OLSR_INFO(LOG_PLUGINS, "Relayed some foo!");
 
@@ -787,17 +787,16 @@ static void olsr_event1(void *foo __attribute__ ((unused)) ) {
 
 static void olsr_event2(void *foo  __attribute__ ((unused))) {
   struct nbr_entry *nbr;
+  struct list_iterator iterator;
 
-  OLSR_FOR_ALL_NBR_ENTRIES(nbr)
-        {
-          int rc;
-          pthread_t thread;
-          rc = pthread_create(&thread, NULL, check_neighbour_host, (void *) nbr);
-          if (rc) {
-            printf("ERROR; return code from pthread_create() is %d\n", rc);
-            exit(-1);
-          }
-
-        }OLSR_FOR_ALL_NBR_ENTRIES_END();
+  OLSR_FOR_ALL_NBR_ENTRIES(nbr, iterator) {
+    int rc;
+    pthread_t thread;
+    rc = pthread_create(&thread, NULL, check_neighbour_host, (void *) nbr);
+    if (rc) {
+      printf("ERROR; return code from pthread_create() is %d\n", rc);
+      exit(-1);
+    }
+  }
 }
 

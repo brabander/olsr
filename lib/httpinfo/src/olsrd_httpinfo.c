@@ -770,6 +770,8 @@ static void
 build_routes_body(struct autobuf *abuf)
 {
   struct rt_entry *rt;
+  struct list_iterator iterator;
+
   const char *colspan = resolve_ip_addresses ? " colspan=\"2\"" : "";
   section_title(abuf, "OLSR Routes in Kernel");
   abuf_appendf(abuf,
@@ -777,9 +779,9 @@ build_routes_body(struct autobuf *abuf)
                colspan, colspan);
 
   /* Walk the route table */
-  OLSR_FOR_ALL_RT_ENTRIES(rt) {
+  OLSR_FOR_ALL_RT_ENTRIES(rt, iterator) {
     build_route(abuf, rt);
-  } OLSR_FOR_ALL_RT_ENTRIES_END(rt);
+  }
 
   abuf_puts(abuf, "</table>\n");
 }
@@ -929,7 +931,7 @@ build_neigh_body(struct autobuf *abuf)
 {
   struct nbr_entry *neigh;
   struct link_entry *lnk;
-  struct list_iterator iterator;
+  struct list_iterator iterator, iterator2;
   size_t i;
   const char *colspan = resolve_ip_addresses ? " colspan=\"2\"" : "";
 
@@ -963,7 +965,7 @@ build_neigh_body(struct autobuf *abuf)
                "<tr><th%s>IP Address</th><th>SYM</th><th>MPR</th><th>MPRS</th><th>Willingness</th><th>2 Hop Neighbors</th></tr>\n",
                colspan);
   /* Neighbors */
-  OLSR_FOR_ALL_NBR_ENTRIES(neigh) {
+  OLSR_FOR_ALL_NBR_ENTRIES(neigh, iterator) {
     struct nbr_con *connector;
     int thop_cnt;
     abuf_puts(abuf, "<tr>");
@@ -981,13 +983,13 @@ build_neigh_body(struct autobuf *abuf)
     abuf_puts(abuf, "<td><select>\n" "<option>IP ADDRESS</option>\n");
 
     thop_cnt = 0;
-    OLSR_FOR_ALL_NBR_CON_ENTRIES(neigh, connector) {
+    OLSR_FOR_ALL_NBR_CON_ENTRIES(neigh, connector, iterator2) {
       struct ipaddr_str strbuf;
       abuf_appendf(abuf, "<option>%s</option>\n", olsr_ip_to_string(&strbuf, &connector->nbr2->nbr2_addr));
       thop_cnt++;
-    } OLSR_FOR_ALL_NBR_CON_ENTRIES_END()
+    }
     abuf_appendf(abuf, "</select> (%d)</td></tr>\n", thop_cnt);
-  } OLSR_FOR_ALL_NBR_ENTRIES_END()
+  }
 
   abuf_puts(abuf, "</table>\n");
 }
@@ -996,6 +998,7 @@ static void
 build_topo_body(struct autobuf *abuf)
 {
   struct tc_entry *tc;
+  struct list_iterator iterator, iterator2;
   const char *colspan = resolve_ip_addresses ? " colspan=\"2\"" : "";
 
   section_title(abuf, "Topology Entries");
@@ -1003,9 +1006,9 @@ build_topo_body(struct autobuf *abuf)
   abuf_puts(abuf, "<th colspan=\"3\">Linkcost</th>");
   abuf_puts(abuf, "</tr>\n");
 
-  OLSR_FOR_ALL_TC_ENTRIES(tc) {
+  OLSR_FOR_ALL_TC_ENTRIES(tc, iterator) {
     struct tc_edge_entry *tc_edge;
-    OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
+    OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge, iterator2) {
       if (tc_edge->edge_inv) {
         char lqbuffer[LQTEXT_MAXLENGTH];
         abuf_puts(abuf, "<tr>");
@@ -1015,8 +1018,8 @@ build_topo_body(struct autobuf *abuf)
                      olsr_get_linkcost_text(tc_edge->cost, false, lqbuffer, sizeof(lqbuffer)));
         abuf_puts(abuf, "</tr>\n");
       }
-    } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END();
-  } OLSR_FOR_ALL_TC_ENTRIES_END();
+    }
+  }
 
   abuf_puts(abuf, "</table>\n");
 }
@@ -1025,24 +1028,25 @@ static void
 build_mid_body(struct autobuf *abuf)
 {
   struct tc_entry *tc;
+  struct list_iterator iterator, iterator2;
   const char *colspan = resolve_ip_addresses ? " colspan=\"2\"" : "";
 
   section_title(abuf, "MID Entries");
   abuf_appendf(abuf, "<tr><th%s>Main Address</th><th>Aliases</th></tr>\n", colspan);
 
   /* MID */
-  OLSR_FOR_ALL_TC_ENTRIES(tc) {
+  OLSR_FOR_ALL_TC_ENTRIES(tc, iterator) {
     struct mid_entry *alias;
     abuf_puts(abuf, "<tr>");
     build_ipaddr_with_link(abuf, &tc->addr, -1);
     abuf_puts(abuf, "<td><select>\n<option>IP ADDRESS</option>\n");
 
-    OLSR_FOR_ALL_TC_MID_ENTRIES(tc, alias) {
+    OLSR_FOR_ALL_TC_MID_ENTRIES(tc, alias, iterator2) {
       struct ipaddr_str strbuf;
       abuf_appendf(abuf, "<option>%s</option>\n", olsr_ip_to_string(&strbuf, &alias->mid_alias_addr));
-    } OLSR_FOR_ALL_TC_MID_ENTRIES_END(tc, alias);
+    }
     abuf_appendf(abuf, "</select> (%u)</td></tr>\n", tc->mid_tree.count);
-  } OLSR_FOR_ALL_TC_ENTRIES_END();
+  }
 
   abuf_puts(abuf, "</table>\n");
 }

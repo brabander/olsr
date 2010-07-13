@@ -61,7 +61,7 @@ struct timer_entry *spf_backoff_timer = NULL;
  * after compiler optimization.
  */
 static int
-avl_comp_etx(const void *etx1, const void *etx2)
+avl_comp_etx(const void *etx1, const void *etx2, void *ptr __attribute__ ((unused)))
 {
   if (*(const olsr_linkcost *)etx1 < *(const olsr_linkcost *)etx2) {
     return -1;
@@ -91,7 +91,7 @@ olsr_spf_add_cand_tree(struct avl_tree *tree, struct tc_entry *tc)
   OLSR_DEBUG(LOG_ROUTING, "SPF: insert candidate %s, cost %s\n",
              olsr_ip_to_string(&buf, &tc->addr), olsr_get_linkcost_text(tc->path_cost, false, lqbuffer, sizeof(lqbuffer)));
 
-  avl_insert(tree, &tc->cand_tree_node, true);
+  avl_insert(tree, &tc->cand_tree_node);
 }
 
 /*
@@ -145,7 +145,11 @@ olsr_spf_add_path_list(struct list_entity *head, int *path_count, struct tc_entr
 static struct tc_entry *
 olsr_spf_extract_best(struct avl_tree *tree)
 {
-  return (tree->count > 0 ? cand_tree2tc(avl_walk_first(tree)) : NULL);
+  struct tc_entry *tc = NULL;
+  if (tree->count) {
+    tc = avl_first_element(tree, tc, cand_tree_node);
+  }
+  return tc;
 }
 
 
@@ -160,6 +164,7 @@ static void
 olsr_spf_relax(struct avl_tree *cand_tree, struct tc_entry *tc)
 {
   struct tc_edge_entry *tc_edge;
+  struct list_iterator iterator;
   olsr_linkcost new_cost;
 
 #if !defined REMOVE_LOG_DEBUG
@@ -173,7 +178,7 @@ olsr_spf_relax(struct avl_tree *cand_tree, struct tc_entry *tc)
   /*
    * loop through all edges of this vertex.
    */
-  OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
+  OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge, iterator) {
     struct tc_entry *new_tc;
 
     assert (tc_edge->edge_inv);
@@ -226,7 +231,7 @@ olsr_spf_relax(struct avl_tree *cand_tree, struct tc_entry *tc)
                  olsr_get_linkcost_text(new_cost, true, lqbuffer, sizeof(lqbuffer)),
                  tc->next_hop ? olsr_ip_to_string(&nbuf, &tc->next_hop->neighbor_iface_addr) : "<none>", new_tc->hops);
     }
-  } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END()
+  }
 }
 
 /*
@@ -276,7 +281,6 @@ olsr_calculate_routing_table(void)
   struct timeval t1, t2, t3, t4, t5, spf_init, spf_run, route, kernel, total;
 #endif
   struct avl_tree cand_tree;
-  struct avl_node *rtp_tree_node;
   struct list_entity path_list;          /* head of the path_list */
   struct tc_entry *tc;
   struct rt_path *rtp;
@@ -284,6 +288,7 @@ olsr_calculate_routing_table(void)
   struct nbr_entry *neigh;
   struct link_entry *link;
   int path_count = 0;
+  struct list_iterator iterator;
 
   /* We are done if our backoff timer is running */
   if (spf_backoff_timer) {
@@ -300,22 +305,20 @@ olsr_calculate_routing_table(void)
   /*
    * Prepare the candidate tree and result list.
    */
-  avl_init(&cand_tree, avl_comp_etx);
+  avl_init(&cand_tree, avl_comp_etx, true, NULL);
   list_init_head(&path_list);
   olsr_bump_routingtree_version();
 
   /*
    * Initialize vertices in the lsdb.
    */
-  OLSR_FOR_ALL_TC_ENTRIES(tc) {
+  OLSR_FOR_ALL_TC_ENTRIES(tc, iterator) {
     tc->next_hop = NULL;
     tc->path_cost = ROUTE_COST_BROKEN;
     tc->hops = 0;
     tc->cand_tree_node.key = NULL;
     list_init_head(&tc->path_list_node);
   }
-  OLSR_FOR_ALL_TC_ENTRIES_END(tc);
-
 
   /*
    * Check if there was a change in the main IP address.
@@ -341,7 +344,7 @@ olsr_calculate_routing_table(void)
   /*
    * Set the next-hops of our neighbor link.
    */
-  OLSR_FOR_ALL_NBR_ENTRIES(neigh) {
+  OLSR_FOR_ALL_NBR_ENTRIES(neigh, iterator) {
     tc_edge = neigh->tc_edge;
 
     if (neigh->is_sym) {
@@ -351,7 +354,6 @@ olsr_calculate_routing_table(void)
       tc_edge->edge_inv->tc->next_hop = get_best_link_to_neighbor(neigh);
     }
   }
-  OLSR_FOR_ALL_NBR_ENTRIES_END()
 
 #ifdef SPF_PROFILING
   gettimeofday(&t2, NULL);
@@ -397,10 +399,7 @@ olsr_calculate_routing_table(void)
      * If the prefix is already in the RIB, refresh the entry such
      * that olsr_delete_outdated_routes() does not purge it off.
      */
-    for (rtp_tree_node = avl_walk_first(&tc->prefix_tree); rtp_tree_node; rtp_tree_node = avl_walk_next(rtp_tree_node)) {
-
-      rtp = rtp_prefix_tree2rtp(rtp_tree_node);
-
+    OLSR_FOR_ALL_PREFIX_ENTRIES(tc, rtp, iterator) {
       if (rtp->rtp_rt) {
 
         /*

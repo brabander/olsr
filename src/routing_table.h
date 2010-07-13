@@ -113,8 +113,7 @@ struct rt_path {
   uint32_t rtp_version;                /* for detection of outdated rt_paths */
 };
 
-AVLNODE2STRUCT(rtp_tree2rtp, rt_path, rtp_tree_node);
-AVLNODE2STRUCT(rtp_prefix_tree2rtp, rt_path, rtp_prefix_tree_node);
+#define OLSR_FOR_ALL_RT_PATH_ENTRIES(rt, rtp, iterator) avl_for_each_element_safe(&rt->rt_path_tree, rtp, rtp_tree_node, iterator.loop, iterator.safe)
 
 /*
  * Different routes types used in olsrd.
@@ -139,10 +138,7 @@ enum olsr_rt_origin {
  * the loop prefetches the next node in order to not loose context if
  * for example the caller wants to delete the current rt_entry.
  */
-AVLNODE2STRUCT(rt_tree2rt, rt_entry, rt_tree_node);
-#define OLSR_FOR_ALL_RT_ENTRIES(rt) OLSR_FOR_ALL_AVL_ENTRIES(&routingtree, rt_tree2rt, rt)
-#define OLSR_FOR_ALL_RT_ENTRIES_END(rt) OLSR_FOR_ALL_AVL_ENTRIES_END()
-
+#define OLSR_FOR_ALL_RT_ENTRIES(rt, iterator) avl_for_each_element_safe(&routingtree, rt, rt_tree_node, iterator.loop, iterator.safe)
 
 /**
  * IPv4 <-> IPv6 wrapper
@@ -229,7 +225,7 @@ olsr_fib_metric(const struct rt_metric *met)
 
 char *olsr_rt_to_string(const struct rt_entry *);
 char *olsr_rtp_to_string(const struct rt_path *);
-void olsr_print_routing_table(struct avl_tree *);
+void olsr_print_routing_table(void);
 
 /**
  * depending on the operation (add/chg/del) the nexthop

@@ -72,7 +72,7 @@ olsr_init_mid_set(void)
 {
   OLSR_INFO(LOG_MID, "Initialize MID set...\n");
 
-  avl_init(&mid_tree, avl_comp_default);
+  avl_init(&mid_tree, avl_comp_default, false, NULL);
 
   /*
    * Get some cookies for getting stats to ease troubleshooting.
@@ -139,12 +139,15 @@ olsr_flush_tc_duplicates(struct mid_entry *alias) {
 static void
 olsr_flush_nbr2_duplicates(struct mid_entry *alias)
 {
-  struct tc_entry *tc = alias->mid_tc;
+  struct tc_entry *tc;
+  struct list_iterator iterator;
 #if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf1, buf2;
 #endif
 
-  OLSR_FOR_ALL_TC_MID_ENTRIES(tc, alias) {
+  tc = alias->mid_tc;
+
+  OLSR_FOR_ALL_TC_MID_ENTRIES(tc, alias, iterator) {
     struct nbr_entry *nbr;
     struct nbr2_entry *nbr2 = olsr_lookup_nbr2_entry(&alias->mid_alias_addr, false);
 
@@ -174,7 +177,6 @@ olsr_flush_nbr2_duplicates(struct mid_entry *alias)
       }
     }
   }
-  OLSR_FOR_ALL_TC_MID_ENTRIES_END(tc, mid_alias);
 }
 
 /**
@@ -256,13 +258,13 @@ olsr_insert_mid_entry(const union olsr_ip_addr *main_addr,
    * Insert into the per-tc mid subtree.
    */
   alias->mid_tc_node.key = &alias->mid_alias_addr;
-  avl_insert(&tc->mid_tree, &alias->mid_tc_node, false);
+  avl_insert(&tc->mid_tree, &alias->mid_tc_node);
 
   /*
    * Insert into the global mid tree.
    */
   alias->mid_node.key = &alias->mid_alias_addr;
-  avl_insert(&mid_tree, &alias->mid_node, false);
+  avl_insert(&mid_tree, &alias->mid_node);
 
   /*
    * Add a rt_path for the alias.
@@ -332,7 +334,9 @@ olsr_update_mid_entry(const union olsr_ip_addr *main_addr,
 struct mid_entry *
 olsr_lookup_tc_mid_entry(struct tc_entry *tc, const union olsr_ip_addr *adr)
 {
-  return (alias_tree2mid(avl_find(&tc->mid_tree, adr)));
+  struct mid_entry *mid;
+  mid = avl_find_element(&tc->mid_tree, adr, mid, mid_tc_node);
+  return mid;
 }
 
 /**
@@ -344,7 +348,9 @@ olsr_lookup_tc_mid_entry(struct tc_entry *tc, const union olsr_ip_addr *adr)
 static struct mid_entry *
 olsr_lookup_mid_entry(const union olsr_ip_addr *adr)
 {
-  return (global_tree2mid(avl_find(&mid_tree, adr)));
+  struct mid_entry *mid;
+  mid = avl_find_element(&mid_tree, adr, mid, mid_node);
+  return mid;
 }
 
 /**
@@ -407,10 +413,10 @@ void
 olsr_flush_mid_entries(struct tc_entry *tc)
 {
   struct mid_entry *alias;
-
-  OLSR_FOR_ALL_TC_MID_ENTRIES(tc, alias) {
+  struct list_iterator iterator;
+  OLSR_FOR_ALL_TC_MID_ENTRIES(tc, alias, iterator) {
     olsr_delete_mid_entry(alias);
-  } OLSR_FOR_ALL_TC_MID_ENTRIES_END(tc, alias);
+  }
 }
 
 /**
@@ -423,15 +429,16 @@ olsr_print_mid_set(void)
 #if !defined REMOVE_LOG_INFO
   struct tc_entry *tc;
   struct mid_entry *alias;
+  struct list_iterator iterator;
   struct ipaddr_str buf1, buf2;
 
   OLSR_INFO(LOG_MID, "\n--- %s ------------------------------------------------- MID\n\n", olsr_wallclock_string());
 
-  OLSR_FOR_ALL_TC_ENTRIES(tc) {
-    OLSR_FOR_ALL_TC_MID_ENTRIES(tc, alias) {
+  OLSR_FOR_ALL_TC_ENTRIES(tc, iterator) {
+    OLSR_FOR_ALL_TC_MID_ENTRIES(tc, alias, iterator) {
       OLSR_INFO_NH(LOG_MID, "%-15s: %s\n", olsr_ip_to_string(&buf1, &tc->addr), olsr_ip_to_string(&buf2, &alias->mid_alias_addr));
-    } OLSR_FOR_ALL_TC_MID_ENTRIES_END(tc, alias);
-  } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
+    }
+  }
 #endif
 }
 

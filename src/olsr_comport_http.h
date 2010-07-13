@@ -94,9 +94,7 @@ struct olsr_html_site {
   void (*sitehandler)(struct comport_connection *con, struct http_request *request);
 };
 
-AVLNODE2STRUCT(html_tree2site, olsr_html_site, node);
-#define OLSR_FOR_ALL_HTML_ENTRIES(site) OLSR_FOR_ALL_AVL_ENTRIES(&http_handler_tree, html_tree2site, site)
-#define OLSR_FOR_ALL_HTML_ENTRIES_END() OLSR_FOR_ALL_AVL_ENTRIES_END()
+#define OLSR_FOR_ALL_HTML_ENTRIES(site, iterator) avl_for_each_element_safe(&http_handler_tree, site, node, iterator.loop, iterator.safe)
 
 void olsr_com_init_http(void);
 void olsr_com_destroy_http(void);

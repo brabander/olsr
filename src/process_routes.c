@@ -265,17 +265,9 @@ static void
 olsr_delete_outdated_routes(struct rt_entry *rt)
 {
   struct rt_path *rtp;
-  struct avl_node *rtp_tree_node, *next_rtp_tree_node;
+  struct list_iterator iterator;
 
-  for (rtp_tree_node = avl_walk_first(&rt->rt_path_tree); rtp_tree_node != NULL; rtp_tree_node = next_rtp_tree_node) {
-
-    /*
-     * pre-fetch the next node before loosing context.
-     */
-    next_rtp_tree_node = avl_walk_next(rtp_tree_node);
-
-    rtp = rtp_tree2rtp(rtp_tree_node);
-
+  OLSR_FOR_ALL_RT_PATH_ENTRIES(rt, rtp, iterator) {
     /*
      * check the version number which gets incremented on every SPF run.
      * comparing for unequalness avoids handling version number wraps.
@@ -283,7 +275,7 @@ olsr_delete_outdated_routes(struct rt_entry *rt)
     if (routingtree_version != rtp->rtp_version) {
 
       /* remove from the originator tree */
-      avl_delete(&rt->rt_path_tree, rtp_tree_node);
+      avl_delete(&rt->rt_path_tree, &rtp->rtp_tree_node);
       rtp->rtp_rt = NULL;
     }
   }
@@ -302,12 +294,13 @@ void
 olsr_update_rib_routes(void)
 {
   struct rt_entry *rt;
+  struct list_iterator iterator;
 
   OLSR_DEBUG(LOG_ROUTING, "Updating kernel routes...\n");
 
   /* walk all routes in the RIB. */
 
-  OLSR_FOR_ALL_RT_ENTRIES(rt) {
+  OLSR_FOR_ALL_RT_ENTRIES(rt, iterator) {
 
     /* eliminate first unused routes */
     olsr_delete_outdated_routes(rt);
@@ -339,7 +332,6 @@ olsr_update_rib_routes(void)
       }
     }
   }
-  OLSR_FOR_ALL_RT_ENTRIES_END();
 }
 
 /**
@@ -358,7 +350,7 @@ olsr_update_kernel_routes(void)
   /* route additions */
   olsr_add_routes(&add_kernel_list);
 #ifdef DEBUG
-  olsr_print_routing_table(&routingtree);
+  olsr_print_routing_table();
 #endif
 }
 

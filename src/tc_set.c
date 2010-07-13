@@ -106,15 +106,15 @@ olsr_add_tc_entry(const union olsr_ip_addr *adr)
   /*
    * Insert into the global tc tree.
    */
-  avl_insert(&tc_tree, &tc->vertex_node, false);
+  avl_insert(&tc_tree, &tc->vertex_node);
 
   /*
    * Initialize subtrees for edges, prefixes, HNAs and MIDs.
    */
-  avl_init(&tc->edge_tree, avl_comp_default);
-  avl_init(&tc->prefix_tree, avl_comp_prefix_origin_default);
-  avl_init(&tc->mid_tree, avl_comp_default);
-  avl_init(&tc->hna_tree, avl_comp_prefix_default);
+  avl_init(&tc->edge_tree, avl_comp_default, true, NULL);
+  avl_init(&tc->prefix_tree, avl_comp_prefix_origin_default, false, NULL);
+  avl_init(&tc->mid_tree, avl_comp_default, false, NULL);
+  avl_init(&tc->hna_tree, avl_comp_prefix_default, false, NULL);
 
   /*
    * Add a rt_path for ourselves.
@@ -133,7 +133,7 @@ olsr_init_tc(void)
 {
   OLSR_INFO(LOG_TC, "Initialize topology set...\n");
 
-  avl_init(&tc_tree, avl_comp_default);
+  avl_init(&tc_tree, avl_comp_default, false, NULL);
 
   /*
    * Get some cookies for getting stats to ease troubleshooting.
@@ -154,6 +154,7 @@ void
 olsr_change_myself_tc(void)
 {
   struct nbr_entry *entry;
+  struct list_iterator iterator;
   bool main_ip_change = false;
 
   if (tc_myself) {
@@ -166,14 +167,14 @@ olsr_change_myself_tc(void)
     }
 
     /* flush local edges */
-    OLSR_FOR_ALL_NBR_ENTRIES(entry) {
+    OLSR_FOR_ALL_NBR_ENTRIES(entry, iterator) {
       if (entry->tc_edge) {
         /* clean up local edges if necessary */
         entry->tc_edge->neighbor = NULL;
         olsr_delete_tc_edge_entry(entry->tc_edge);
         entry->tc_edge = NULL;
       }
-    } OLSR_FOR_ALL_NBR_ENTRIES_END()
+    }
 
     /*
      * Flush our own tc_entry.
@@ -194,7 +195,7 @@ olsr_change_myself_tc(void)
   tc_myself = olsr_add_tc_entry(&olsr_cnf->router_id);
 
   if (main_ip_change) {
-    OLSR_FOR_ALL_NBR_ENTRIES(entry) {
+    OLSR_FOR_ALL_NBR_ENTRIES(entry, iterator) {
     /**
      * check if a main ip change destroyed our TC entries
      */
@@ -202,7 +203,7 @@ olsr_change_myself_tc(void)
         entry->tc_edge = olsr_add_tc_edge_entry(tc_myself, &entry->nbr_addr, 0);
         entry->tc_edge->neighbor = entry;
       }
-    } OLSR_FOR_ALL_NBR_ENTRIES_END()
+    }
   }
   changes_topology = true;
 }
@@ -219,6 +220,7 @@ olsr_delete_tc_entry(struct tc_entry *tc)
 {
   struct tc_edge_entry *tc_edge;
   struct rt_path *rtp;
+  struct list_iterator iterator;
 
 #if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
@@ -226,9 +228,9 @@ olsr_delete_tc_entry(struct tc_entry *tc)
   OLSR_DEBUG(LOG_TC, "TC: del entry %s\n", olsr_ip_to_string(&buf, &tc->addr));
 
   /* The delete all non-virtual edges */
-  OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
+  OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge, iterator) {
     olsr_delete_tc_edge_entry(tc_edge);
-  } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END();
+  }
 
   /* Stop running timers */
   olsr_stop_timer(tc->validity_timer);
@@ -244,9 +246,9 @@ olsr_delete_tc_entry(struct tc_entry *tc)
     return;
   }
 
-  OLSR_FOR_ALL_PREFIX_ENTRIES(tc, rtp) {
+  OLSR_FOR_ALL_PREFIX_ENTRIES(tc, rtp, iterator) {
     olsr_delete_rt_path(rtp);
-  } OLSR_FOR_ALL_PREFIX_ENTRIES_END();
+  }
 
   /* Flush all MID aliases and kill the MID timer */
   olsr_flush_mid_entries(tc);
@@ -267,10 +269,10 @@ olsr_delete_tc_entry(struct tc_entry *tc)
 struct tc_entry *
 olsr_lookup_tc_entry(const union olsr_ip_addr *adr)
 {
-  struct avl_node *node;
+  struct tc_entry *tc;
 
-  node = avl_find(&tc_tree, adr);
-  return node ? vertex_tree2tc(node) : NULL;
+  tc = avl_find_element(&tc_tree, adr, tc, vertex_node);
+  return tc;
 }
 
 /*
@@ -379,7 +381,7 @@ olsr_add_tc_edge_entry(struct tc_entry *tc, const union olsr_ip_addr *addr, uint
    * However we need duplicate key support for the case of local
    * parallel links where we add one tc_edge per link_entry.
    */
-  avl_insert(&tc->edge_tree, &tc_edge->edge_node, true);
+  avl_insert(&tc->edge_tree, &tc_edge->edge_node);
 
   /*
    * Connect backpointer.
@@ -498,17 +500,17 @@ static bool
 delete_outdated_tc_edges(struct tc_entry *tc)
 {
   struct tc_edge_entry *tc_edge;
+  struct list_iterator iterator;
   bool retval = false;
 
   OLSR_DEBUG(LOG_TC, "TC: deleting outdated TC-edge entries\n");
 
-  OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
+  OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge, iterator) {
     if (SEQNO_GREATER_THAN(tc->ansn, tc_edge->ansn)) {
       olsr_delete_tc_edge_entry(tc_edge);
       retval = true;
     }
   }
-  OLSR_FOR_ALL_TC_EDGE_ENTRIES_END();
 
   if (retval)
     changes_topology = true;
@@ -527,14 +529,15 @@ static int
 olsr_delete_revoked_tc_edges(struct tc_entry *tc, uint16_t ansn, union olsr_ip_addr *lower_border, union olsr_ip_addr *upper_border)
 {
   struct tc_edge_entry *tc_edge;
+  struct list_iterator iterator;
   int retval = 0;
   bool passedLowerBorder = false;
 
   OLSR_DEBUG(LOG_TC, "TC: deleting revoked TCs\n");
 
-  OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
+  OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge, iterator) {
     if (!passedLowerBorder) {
-      if (avl_comp_default(lower_border, &tc_edge->T_dest_addr) <= 0) {
+      if (avl_comp_default(lower_border, &tc_edge->T_dest_addr, NULL) <= 0) {
         passedLowerBorder = true;
       } else {
         continue;
@@ -542,7 +545,7 @@ olsr_delete_revoked_tc_edges(struct tc_entry *tc, uint16_t ansn, union olsr_ip_a
     }
 
     if (passedLowerBorder) {
-      if (avl_comp_default(upper_border, &tc_edge->T_dest_addr) <= 0) {
+      if (avl_comp_default(upper_border, &tc_edge->T_dest_addr, NULL) <= 0) {
         break;
       }
     }
@@ -552,7 +555,6 @@ olsr_delete_revoked_tc_edges(struct tc_entry *tc, uint16_t ansn, union olsr_ip_a
       retval = 1;
     }
   }
-  OLSR_FOR_ALL_TC_EDGE_ENTRIES_END();
 
   if (retval)
     changes_topology = true;
@@ -633,11 +635,10 @@ olsr_tc_update_edge(struct tc_entry *tc, uint16_t ansn, const unsigned char **cu
 struct tc_edge_entry *
 olsr_lookup_tc_edge(struct tc_entry *tc, const union olsr_ip_addr *edge_addr)
 {
-  struct avl_node *edge_node;
+  struct tc_edge_entry *edge;
 
-  edge_node = avl_find(&tc->edge_tree, edge_addr);
-
-  return edge_node ? edge_tree2tc_edge(edge_node) : NULL;
+  edge = avl_find_element(&tc->edge_tree, edge_addr, edge, edge_node);
+  return edge;
 }
 
 /**
@@ -649,6 +650,7 @@ olsr_print_tc_table(void)
 #if !defined REMOVE_LOG_INFO
   /* The whole function makes no sense without it. */
   struct tc_entry *tc;
+  struct list_iterator iterator, iterator2;
   const int ipwidth = olsr_cnf->ip_version == AF_INET ? 15 : 30;
   static char NONE[] = "-";
 
@@ -656,7 +658,7 @@ olsr_print_tc_table(void)
   OLSR_INFO_NH(LOG_TC, "%-*s %-*s %-7s      %8s %12s %5s\n", ipwidth,
                "Source IP addr", ipwidth, "Dest IP addr", "", olsr_get_linklabel(0), "vtime", "ansn");
 
-  OLSR_FOR_ALL_TC_ENTRIES(tc) {
+  OLSR_FOR_ALL_TC_ENTRIES(tc, iterator) {
     struct tc_edge_entry *tc_edge;
     struct millitxt_buf tbuf;
     char *vtime = NONE;
@@ -666,7 +668,7 @@ olsr_print_tc_table(void)
       vtime = tbuf.buf;
     }
 
-    OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
+    OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge, iterator2) {
       struct ipaddr_str addrbuf, dstaddrbuf;
       char lqbuffer1[LQTEXT_MAXLENGTH];
 
@@ -678,8 +680,8 @@ olsr_print_tc_table(void)
                    olsr_get_linkcost_text(tc_edge->cost, false, lqbuffer1, sizeof(lqbuffer1)),
                    vtime, tc_edge->ansn);
 
-    } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END();
-  } OLSR_FOR_ALL_TC_ENTRIES_END();
+    }
+  }
 #endif
 }
 
@@ -866,10 +868,11 @@ void
 olsr_delete_all_tc_entries(void) {
   struct tc_entry *tc;
   struct tc_edge_entry *edge;
+  struct list_iterator iterator, iterator2;
 
   /* delete tc_edges */
-  OLSR_FOR_ALL_TC_ENTRIES(tc) {
-    OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, edge) {
+  OLSR_FOR_ALL_TC_ENTRIES(tc, iterator) {
+    OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, edge, iterator2) {
       if (edge->neighbor) {
         /* break connector with neighbor */
         edge->neighbor->tc_edge = NULL;
@@ -877,13 +880,13 @@ olsr_delete_all_tc_entries(void) {
       }
       edge->edge_inv = NULL;
       internal_delete_tc_edge_entry(edge);
-    } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END()
-  } OLSR_FOR_ALL_TC_ENTRIES_END(tc)
+    }
+  }
 
   /* delete tc_entries */
-  OLSR_FOR_ALL_TC_ENTRIES(tc) {
+  OLSR_FOR_ALL_TC_ENTRIES(tc, iterator) {
     olsr_delete_tc_entry(tc);
-  } OLSR_FOR_ALL_TC_ENTRIES_END(tc)
+  }
 
   /* kill tc_myself */
   tc_myself = NULL;
@@ -936,6 +939,7 @@ olsr_output_lq_tc_internal(void *ctx  __attribute__ ((unused)), union olsr_ip_ad
   struct list_iterator iterator;
   struct nbr_entry *nbr;
   struct link_entry *link;
+  struct nbr_entry *prevNbr;
   uint8_t msg_buffer[MAXMESSAGESIZE - OLSR_HEADERSIZE] __attribute__ ((aligned));
   uint8_t *curr = msg_buffer;
   uint8_t *length_field, *border_flags, *seqno, *last;
@@ -978,24 +982,23 @@ olsr_output_lq_tc_internal(void *ctx  __attribute__ ((unused)), union olsr_ip_ad
 
   last = msg_buffer + sizeof(msg_buffer) - olsr_cnf->ipsize - olsr_sizeof_TCLQ();
 
-  OLSR_FOR_ALL_NBR_ENTRIES(nbr) {
+  OLSR_FOR_ALL_NBR_ENTRIES(nbr, iterator) {
     /* allow fragmentation */
     if (skip) {
-      struct nbr_entry *prevNbr;
       if (olsr_ipcmp(&nbr->nbr_addr, nextIp) != 0) {
         continue;
       }
       skip = false;
 
       /* rewrite lower border flag */
-      prevNbr = nbr_node_to_nbr(nbr->nbr_node.prev);
+      prevNbr = avl_prev_element(nbr, nbr_node);
       *border_flags = calculate_border_flag(&prevNbr->nbr_addr, &nbr->nbr_addr);
     }
 
     /* too long ? */
     if (curr > last) {
       /* rewrite upper border flag */
-      struct nbr_entry *prevNbr = nbr_node_to_nbr(nbr->nbr_node.prev);
+      prevNbr = avl_prev_element(nbr, nbr_node);
 
       *(border_flags+1) = calculate_border_flag(&prevNbr->nbr_addr, &nbr->nbr_addr);
       *nextIp = nbr->nbr_addr;
@@ -1046,7 +1049,7 @@ olsr_output_lq_tc_internal(void *ctx  __attribute__ ((unused)), union olsr_ip_ad
     olsr_serialize_tc_lq(&curr, link);
 
     sendTC = true;
-  } OLSR_FOR_ALL_NBR_ENTRIES_END()
+  }
 
   if (!sendTC && skip) {
     OLSR_DEBUG(LOG_TC, "Nothing to send for this TC...\n");

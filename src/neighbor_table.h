@@ -102,13 +102,9 @@ struct nbr2_entry {
  * the loop prefetches the next node in order to not loose context if
  * for example the caller wants to delete the current entry.
  */
-AVLNODE2STRUCT(nbr_node_to_nbr, nbr_entry, nbr_node);
-#define OLSR_FOR_ALL_NBR_ENTRIES(nbr) OLSR_FOR_ALL_AVL_ENTRIES(&nbr_tree, nbr_node_to_nbr, nbr)
-#define OLSR_FOR_ALL_NBR_ENTRIES_END() OLSR_FOR_ALL_AVL_ENTRIES_END()
+#define OLSR_FOR_ALL_NBR_ENTRIES(nbr, iterator) avl_for_each_element_safe(&nbr_tree, nbr, nbr_node, iterator.loop, iterator.safe)
 
-AVLNODE2STRUCT(nbr_con_node_to_connector, nbr_con, nbr_tree_node);
-#define OLSR_FOR_ALL_NBR_CON_ENTRIES(nbr, con) OLSR_FOR_ALL_AVL_ENTRIES(&nbr->con_tree, nbr_con_node_to_connector, con)
-#define OLSR_FOR_ALL_NBR_CON_ENTRIES_END() OLSR_FOR_ALL_AVL_ENTRIES_END()
+#define OLSR_FOR_ALL_NBR_CON_ENTRIES(nbr, con, iterator) avl_for_each_element_safe(&nbr->con_tree, con, nbr_tree_node, iterator.loop, iterator.safe)
 
 /*
  * macros for traversing two-hop neighbors and neighbor ref lists.
@@ -118,13 +114,9 @@ AVLNODE2STRUCT(nbr_con_node_to_connector, nbr_con, nbr_tree_node);
  * the loop prefetches the next node in order to not loose context if
  * for example the caller wants to delete the current entry.
  */
-AVLNODE2STRUCT(nbr2_node_to_nbr2, nbr2_entry, nbr2_node);
-#define OLSR_FOR_ALL_NBR2_ENTRIES(nbr2) OLSR_FOR_ALL_AVL_ENTRIES(&nbr2_tree, nbr2_node_to_nbr2, nbr2)
-#define OLSR_FOR_ALL_NBR2_ENTRIES_END(nbr2) OLSR_FOR_ALL_AVL_ENTRIES_END()
+#define OLSR_FOR_ALL_NBR2_ENTRIES(nbr2, iterator) avl_for_each_element_safe(&nbr2_tree, nbr2, nbr2_node, iterator.loop, iterator.safe)
 
-AVLNODE2STRUCT(nbr2_con_node_to_connector, nbr_con, nbr2_tree_node);
-#define OLSR_FOR_ALL_NBR2_CON_ENTRIES(nbr2, con) OLSR_FOR_ALL_AVL_ENTRIES(&nbr2->con_tree, nbr2_con_node_to_connector, con)
-#define OLSR_FOR_ALL_NBR2_CON_ENTRIES_END() OLSR_FOR_ALL_AVL_ENTRIES_END()
+#define OLSR_FOR_ALL_NBR2_CON_ENTRIES(nbr2, con, iterator) avl_for_each_element_safe(&nbr2->con_tree, con, nbr2_tree_node, iterator.loop, iterator.safe)
 
 /*
  * The one hop neighbor and two hop neighbor trees.

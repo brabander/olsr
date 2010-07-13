@@ -48,12 +48,12 @@
 
 extern struct avl_tree olsr_cookie_tree;
 
-typedef enum olsr_cookie_type_ {
+enum olsr_cookie_type {
   OLSR_COOKIE_TYPE_MIN,
   OLSR_COOKIE_TYPE_MEMORY,
   OLSR_COOKIE_TYPE_TIMER,
   OLSR_COOKIE_TYPE_MAX
-} olsr_cookie_type;
+};
 
 /*
  * This is a cookie. A cookie is a tool aimed for olsrd developers.
@@ -63,7 +63,7 @@ typedef enum olsr_cookie_type_ {
 struct olsr_cookie_info {
   struct avl_node node;
   char *ci_name;                       /* Name */
-  olsr_cookie_type ci_type;            /* Type of cookie */
+  enum olsr_cookie_type ci_type;       /* Type of cookie */
   unsigned int ci_flags;               /* Misc. flags */
   unsigned int ci_usage;               /* Stats, resource usage */
   unsigned int ci_changes;             /* Stats, resource churn */
@@ -75,9 +75,7 @@ struct olsr_cookie_info {
   uint16_t ci_membrand;
 };
 
-AVLNODE2STRUCT(cookie_node2cookie, olsr_cookie_info, node);
-#define OLSR_FOR_ALL_COOKIES(ci) OLSR_FOR_ALL_AVL_ENTRIES(&olsr_cookie_tree, cookie_node2cookie, ci)
-#define OLSR_FOR_ALL_COOKIES_END() OLSR_FOR_ALL_AVL_ENTRIES_END()
+#define OLSR_FOR_ALL_COOKIES(ci, iterator) avl_for_each_element_safe(&olsr_cookie_tree, ci, node, iterator.loop, iterator.safe)
 
 /* Cookie flags */
 #define COOKIE_NO_MEMCLEAR  ( 1 << 0)   /* Do not clear memory */
@@ -97,7 +95,7 @@ struct olsr_cookie_mem_brand {
 
 /* Externals. */
 void olsr_cookie_init(void);
-struct olsr_cookie_info *EXPORT(olsr_alloc_cookie) (const char *, olsr_cookie_type);
+struct olsr_cookie_info *EXPORT(olsr_alloc_cookie) (const char *, enum olsr_cookie_type);
 void olsr_delete_all_cookies(void);
 void EXPORT(olsr_cookie_set_memory_size) (struct olsr_cookie_info *, size_t);
 void EXPORT(olsr_cookie_set_memory_clear) (struct olsr_cookie_info *, bool);

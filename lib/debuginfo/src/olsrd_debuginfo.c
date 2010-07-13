@@ -208,8 +208,8 @@ olsrd_plugin_init(void)
 
   memset(&total_msg_traffic, 0, sizeof(total_msg_traffic));
   memset(&total_pkt_traffic, 0, sizeof(total_pkt_traffic));
-  avl_init(&stat_msg_tree, avl_comp_default);
-  avl_init(&stat_pkt_tree, avl_comp_default);
+  avl_init(&stat_msg_tree, avl_comp_default, false, NULL);
+  avl_init(&stat_pkt_tree, avl_comp_default, false, NULL);
 
   olsr_parser_add_function(&olsr_msg_statistics, PROMISCUOUS);
   olsr_preprocessor_add_function(&olsr_packet_statistics);
@@ -225,7 +225,7 @@ static struct debug_msgtraffic *get_msgtraffic_entry(union olsr_ip_addr *ip) {
     memcpy(&tr->ip, ip, sizeof(union olsr_ip_addr));
     tr->node.key = &tr->ip;
 
-    avl_insert(&stat_msg_tree, &tr->node, false);
+    avl_insert(&stat_msg_tree, &tr->node);
   }
   return tr;
 }
@@ -241,7 +241,7 @@ static struct debug_pkttraffic *get_pkttraffic_entry(union olsr_ip_addr *ip, str
 
     tr->int_name = strdup(in ? in->int_name : "---");
 
-    avl_insert(&stat_pkt_tree, &tr->node, false);
+    avl_insert(&stat_pkt_tree, &tr->node);
   }
   return tr;
 }
@@ -251,6 +251,7 @@ update_statistics_ptr(void *data __attribute__ ((unused)))
 {
   struct debug_msgtraffic *msg;
   struct debug_pkttraffic *pkt;
+  struct list_iterator iterator;
   uint32_t last_slot, i;
 
   last_slot = current_slot;
@@ -260,7 +261,7 @@ update_statistics_ptr(void *data __attribute__ ((unused)))
   }
 
   /* move data from "current" template to slot array */
-  OLSR_FOR_ALL_MSGTRAFFIC_ENTRIES(msg) {
+  OLSR_FOR_ALL_MSGTRAFFIC_ENTRIES(msg, iterator) {
     /* subtract old values from node count and total count */
     for (i=0; i<DTR_MSG_COUNT; i++) {
       msg->total.data[i] -= msg->traffic[current_slot].data[i];
@@ -283,9 +284,9 @@ update_statistics_ptr(void *data __attribute__ ((unused)))
       avl_delete(&stat_msg_tree, &msg->node);
       olsr_cookie_free(statistics_msg_mem, msg);
     }
-  } OLSR_FOR_ALL_MSGTRAFFIC_ENTRIES_END()
+  }
 
-  OLSR_FOR_ALL_PKTTRAFFIC_ENTRIES(pkt) {
+  OLSR_FOR_ALL_PKTTRAFFIC_ENTRIES(pkt, iterator) {
     /* subtract old values from node count and total count */
     for (i=0; i<DTR_PKT_COUNT; i++) {
       pkt->total.data[i] -= pkt->traffic[current_slot].data[i];
@@ -309,7 +310,7 @@ update_statistics_ptr(void *data __attribute__ ((unused)))
       free(pkt->int_name);
       olsr_cookie_free(statistics_pkt_mem, pkt);
     }
-  } OLSR_FOR_ALL_PKTTRAFFIC_ENTRIES_END()
+  }
 }
 
 /* update message statistics */
@@ -405,6 +406,7 @@ debuginfo_msgstat(struct comport_connection *con,
     const char *cmd __attribute__ ((unused)), const char *param __attribute__ ((unused)))
 {
   struct debug_msgtraffic *tr;
+  struct list_iterator iterator;
 
   if (abuf_appendf(&con->out, "Slot size: %d seconds\tSlot count: %d\n", traffic_interval, traffic_slots) < 0) {
     return ABUF_ERROR;
@@ -417,11 +419,11 @@ debuginfo_msgstat(struct comport_connection *con,
   }
 
   if (param == NULL || strcasecmp(param, "node") == 0) {
-    OLSR_FOR_ALL_MSGTRAFFIC_ENTRIES(tr) {
+    OLSR_FOR_ALL_MSGTRAFFIC_ENTRIES(tr, iterator) {
       if (debuginfo_print_msgstat(&con->out, &tr->ip, &tr->traffic[current_slot])) {
         return ABUF_ERROR;
       }
-    } OLSR_FOR_ALL_MSGTRAFFIC_ENTRIES_END()
+    }
   }
   else {
     uint32_t mult = 1, divisor = 1;
@@ -451,14 +453,14 @@ debuginfo_msgstat(struct comport_connection *con,
       return CONTINUE;
     }
 
-    OLSR_FOR_ALL_MSGTRAFFIC_ENTRIES(tr) {
+    OLSR_FOR_ALL_MSGTRAFFIC_ENTRIES(tr, iterator) {
       for (i=0; i<DTR_MSG_COUNT; i++) {
         cnt.data[i] = (tr->total.data[i] * mult) / divisor;
       }
       if (debuginfo_print_msgstat(&con->out, &tr->ip, &cnt)) {
         return ABUF_ERROR;
       }
-    } OLSR_FOR_ALL_MSGTRAFFIC_ENTRIES_END()
+    }
   }
 
   return CONTINUE;
@@ -478,6 +480,7 @@ debuginfo_pktstat(struct comport_connection *con,
     const char *cmd __attribute__ ((unused)), const char *param __attribute__ ((unused)))
 {
   struct debug_pkttraffic *tr;
+  struct list_iterator iterator;
 
   if (abuf_appendf(&con->out, "Slot size: %d seconds\tSlot count: %d\n", traffic_interval, traffic_slots) < 0) {
     return ABUF_ERROR;
@@ -490,11 +493,11 @@ debuginfo_pktstat(struct comport_connection *con,
   }
 
   if (param == NULL || strcasecmp(param, "node") == 0) {
-    OLSR_FOR_ALL_PKTTRAFFIC_ENTRIES(tr) {
+    OLSR_FOR_ALL_PKTTRAFFIC_ENTRIES(tr, iterator) {
       if (debuginfo_print_pktstat(&con->out, &tr->ip, tr->int_name, &tr->traffic[current_slot])) {
         return ABUF_ERROR;
       }
-    } OLSR_FOR_ALL_PKTTRAFFIC_ENTRIES_END()
+    }
   }
   else {
     uint32_t mult = 1, divisor = 1;
@@ -524,14 +527,14 @@ debuginfo_pktstat(struct comport_connection *con,
       return CONTINUE;
     }
 
-    OLSR_FOR_ALL_PKTTRAFFIC_ENTRIES(tr) {
+    OLSR_FOR_ALL_PKTTRAFFIC_ENTRIES(tr, iterator) {
       for (i=0; i<DTR_PKT_COUNT; i++) {
         cnt.data[i] = (tr->total.data[i] * mult) / divisor;
       }
       if (debuginfo_print_pktstat(&con->out, &tr->ip, tr->int_name, &cnt)) {
         return ABUF_ERROR;
       }
-    } OLSR_FOR_ALL_PKTTRAFFIC_ENTRIES_END()
+    }
   }
 
   return CONTINUE;
@@ -539,8 +542,9 @@ debuginfo_pktstat(struct comport_connection *con,
 
 static INLINE bool debuginfo_print_cookies_mem(struct autobuf *buf, const char *format) {
   struct olsr_cookie_info *c;
+  struct list_iterator iterator;
 
-  OLSR_FOR_ALL_COOKIES(c) {
+  OLSR_FOR_ALL_COOKIES(c, iterator) {
     if (c == NULL || c->ci_type != OLSR_COOKIE_TYPE_MEMORY) {
       continue;
     }
@@ -549,14 +553,15 @@ static INLINE bool debuginfo_print_cookies_mem(struct autobuf *buf, const char *
         (unsigned long)c->ci_size, c->ci_usage, c->ci_free_list_usage) < 0) {
       return true;
     }
-  } OLSR_FOR_ALL_COOKIES_END()
+  }
   return false;
 }
 
 static INLINE bool debuginfo_print_cookies_timer(struct autobuf *buf, const char *format) {
   struct olsr_cookie_info *c;
+  struct list_iterator iterator;
 
-  OLSR_FOR_ALL_COOKIES(c) {
+  OLSR_FOR_ALL_COOKIES(c, iterator) {
     if (c == NULL || c->ci_type != OLSR_COOKIE_TYPE_TIMER) {
       continue;
     }
@@ -564,7 +569,7 @@ static INLINE bool debuginfo_print_cookies_timer(struct autobuf *buf, const char
                        c->ci_usage, c->ci_changes) < 0) {
       return true;
     }
-  } OLSR_FOR_ALL_COOKIES_END()
+  }
   return false;
 }
 

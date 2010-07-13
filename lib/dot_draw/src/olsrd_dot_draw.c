@@ -264,37 +264,34 @@ pcf_event(int ipc_connection, int chgs_neighborhood, int chgs_topology, int chgs
     struct nbr_entry *neighbor_table_tmp;
     struct tc_entry *tc;
     struct ip_prefix_entry *hna;
-    struct list_iterator iterator;
+    struct list_iterator iterator, iterator2;
 
     /* Print tables to IPC socket */
     ipc_send_str(ipc_connection, "digraph topology\n{\n");
 
     /* Neighbors */
-    OLSR_FOR_ALL_NBR_ENTRIES(neighbor_table_tmp) {
+    OLSR_FOR_ALL_NBR_ENTRIES(neighbor_table_tmp, iterator) {
       ipc_print_neigh_link(ipc_connection, neighbor_table_tmp);
-    } OLSR_FOR_ALL_NBR_ENTRIES_END();
+    }
 
     /* Topology */
-    OLSR_FOR_ALL_TC_ENTRIES(tc) {
+    OLSR_FOR_ALL_TC_ENTRIES(tc, iterator) {
       struct tc_edge_entry *tc_edge;
-      OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
+      OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge, iterator2) {
         if (tc_edge->edge_inv) {
           ipc_print_tc_link(ipc_connection, tc, tc_edge);
         }
       }
-      OLSR_FOR_ALL_TC_EDGE_ENTRIES_END();
     }
-    OLSR_FOR_ALL_TC_ENTRIES_END();
 
     /* HNA entries */
-    OLSR_FOR_ALL_TC_ENTRIES(tc) {
+    OLSR_FOR_ALL_TC_ENTRIES(tc, iterator) {
       /* Check all networks */
       struct hna_net *tmp_net;
-      OLSR_FOR_ALL_TC_HNA_ENTRIES(tc, tmp_net) {
+      OLSR_FOR_ALL_TC_HNA_ENTRIES(tc, tmp_net, iterator2) {
         ipc_print_net(ipc_connection, &tc->addr, &tmp_net->hna_prefix);
       }
-    } OLSR_FOR_ALL_TC_HNA_ENTRIES_END();
-    OLSR_FOR_ALL_TC_ENTRIES_END(tc);
+    }
 
     /* Local HNA entries */
     OLSR_FOR_ALL_IPPREFIX_ENTRIES(&olsr_cnf->hna_entries, hna, iterator) {

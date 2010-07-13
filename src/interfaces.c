@@ -98,7 +98,7 @@ init_interfaces(void)
 
   /* Initial values */
   list_init_head(&interface_head);
-  avl_init(&interface_lost_tree, avl_comp_default);
+  avl_init(&interface_lost_tree, avl_comp_default, false, NULL);
 
   /*
    * Get some cookies for getting stats to ease troubleshooting.
@@ -152,20 +152,17 @@ static void add_lost_interface_ip(union olsr_ip_addr *ip, uint32_t hello_timeout
   lost->node.key = &lost->ip;
   lost->ip = *ip;
   lost->valid_until = olsr_getTimestamp(hello_timeout * 2);
-  avl_insert(&interface_lost_tree, &lost->node, false);
+  avl_insert(&interface_lost_tree, &lost->node);
 
   OLSR_DEBUG(LOG_INTERFACE, "Added %s to lost interface list for %d ms\n",
       olsr_ip_to_string(&buf, ip), hello_timeout*2);
 }
 
 static struct interface_lost *get_lost_interface_ip(union olsr_ip_addr *ip) {
-  struct avl_node *node;
+  struct interface_lost *lost;
   assert(ip);
-  node = avl_find(&interface_lost_tree, ip);
-  if (node) {
-    return node_tree2lostif(node);
-  }
-  return NULL;
+  lost = avl_find_element(&interface_lost_tree, ip, lost, node);
+  return lost;
 }
 
 bool
@@ -184,9 +181,9 @@ void destroy_interfaces(void) {
     remove_interface(ptr);
   }
 
-  OLSR_FOR_ALL_LOSTIF_ENTRIES(lost) {
+  OLSR_FOR_ALL_LOSTIF_ENTRIES(lost, iterator) {
     remove_lost_interface_ip(lost);
-  } OLSR_FOR_ALL_LOSTIF_ENTRIES_END();
+  }
 }
 
 /**
@@ -197,6 +194,7 @@ check_interface_updates(void *foo __attribute__ ((unused)))
 {
   struct olsr_if_config *tmp_if;
   struct interface_lost *lost;
+  struct list_iterator iterator;
 
   OLSR_DEBUG(LOG_INTERFACE, "Checking for updates in the interface set\n");
 
@@ -221,11 +219,11 @@ check_interface_updates(void *foo __attribute__ ((unused)))
   }
 
   /* clean up lost interface tree */
-  OLSR_FOR_ALL_LOSTIF_ENTRIES(lost) {
+  OLSR_FOR_ALL_LOSTIF_ENTRIES(lost, iterator) {
     if (olsr_isTimedOut(lost->valid_until)) {
       remove_lost_interface_ip(lost);
     }
-  } OLSR_FOR_ALL_LOSTIF_ENTRIES_END()
+  }
 }
 
 /**

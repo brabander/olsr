@@ -144,7 +144,7 @@ olsr_com_html2telnet_gate(struct comport_connection *con, struct http_request *r
 
 void
 olsr_com_init_http(void) {
-  avl_init(&http_handler_tree, &avl_comp_strcasecmp);
+  avl_init(&http_handler_tree, &avl_comp_strcasecmp, false, NULL);
 
   htmlsite_cookie = olsr_alloc_cookie("comport http sites", OLSR_COOKIE_TYPE_MEMORY);
   olsr_cookie_set_memory_size(htmlsite_cookie, sizeof(struct olsr_html_site));
@@ -158,9 +158,11 @@ olsr_com_init_http(void) {
 
 void olsr_com_destroy_http(void) {
   struct olsr_html_site *site;
-  OLSR_FOR_ALL_HTML_ENTRIES(site) {
+  struct list_iterator iterator;
+
+  OLSR_FOR_ALL_HTML_ENTRIES(site, iterator) {
     olsr_com_remove_htmlsite(site);
-  } OLSR_FOR_ALL_HTML_ENTRIES_END()
+  }
 }
 
 struct olsr_html_site *
@@ -174,7 +176,7 @@ olsr_com_add_htmlsite(const char *path, const char *content, size_t length) {
   site->site_data = content;
   site->site_length = length;
 
-  avl_insert(&http_handler_tree, &site->node, false);
+  avl_insert(&http_handler_tree, &site->node);
   return site;
 }
 
@@ -189,7 +191,7 @@ olsr_com_add_htmlhandler(void(*sitehandler)(struct comport_connection *con, stru
   site->static_site = false;
   site->sitehandler = sitehandler;
 
-  avl_insert(&http_handler_tree, &site->node, false);
+  avl_insert(&http_handler_tree, &site->node);
   return site;
 }
 

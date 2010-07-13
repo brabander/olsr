@@ -100,13 +100,8 @@ struct debug_pkttraffic {
   struct debug_pkttraffic_count traffic[0];
 };
 
-AVLNODE2STRUCT(msgnode2traffic, debug_msgtraffic, node);
-#define OLSR_FOR_ALL_MSGTRAFFIC_ENTRIES(tr) OLSR_FOR_ALL_AVL_ENTRIES(&stat_msg_tree, msgnode2traffic, tr)
-#define OLSR_FOR_ALL_MSGTRAFFIC_ENTRIES_END() OLSR_FOR_ALL_AVL_ENTRIES_END()
-
-AVLNODE2STRUCT(pktnode2traffic, debug_pkttraffic, node);
-#define OLSR_FOR_ALL_PKTTRAFFIC_ENTRIES(tr) OLSR_FOR_ALL_AVL_ENTRIES(&stat_pkt_tree, pktnode2traffic, tr)
-#define OLSR_FOR_ALL_PKTTRAFFIC_ENTRIES_END() OLSR_FOR_ALL_AVL_ENTRIES_END()
+#define OLSR_FOR_ALL_MSGTRAFFIC_ENTRIES(tr, iterator) avl_for_each_element_safe(&stat_msg_tree, tr, node, iterator.loop, iterator.safe)
+#define OLSR_FOR_ALL_PKTTRAFFIC_ENTRIES(tr, iterator) avl_for_each_element_safe(&stat_pkt_tree, tr, node, iterator.loop, iterator.safe)
 
 #endif
 

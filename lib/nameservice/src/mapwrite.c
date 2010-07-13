@@ -99,7 +99,7 @@ mapwrite_work(FILE * fmap)
   struct ipaddr_str strbuf1, strbuf2;
   struct tc_entry *tc;
   struct tc_edge_entry *tc_edge;
-
+  struct list_iterator iterator, iterator2;
   if (!my_names || !fmap)
     return;
 
@@ -123,17 +123,15 @@ mapwrite_work(FILE * fmap)
     }
   }
 
-  OLSR_FOR_ALL_TC_ENTRIES(tc) {
+  OLSR_FOR_ALL_TC_ENTRIES(tc, iterator) {
     struct mid_entry *alias;
-    OLSR_FOR_ALL_TC_MID_ENTRIES(tc, alias) {
+    OLSR_FOR_ALL_TC_MID_ENTRIES(tc, alias, iterator2) {
       if (0 > fprintf(fmap, "Mid('%s','%s');\n",
                       olsr_ip_to_string(&strbuf1, &tc->addr), olsr_ip_to_string(&strbuf2, &alias->mid_alias_addr))) {
         return;
       }
     }
-    OLSR_FOR_ALL_TC_MID_ENTRIES_END(tc, alias);
   }
-  OLSR_FOR_ALL_TC_ENTRIES_END(tc);
 
   lookup_defhna_latlon(&ip);
   sprintf(my_latlon_str, "%f,%f,%d", my_lat, my_lon, get_isdefhna_latlon());
@@ -159,8 +157,8 @@ mapwrite_work(FILE * fmap)
     }
   }
 
-  OLSR_FOR_ALL_TC_ENTRIES(tc) {
-    OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
+  OLSR_FOR_ALL_TC_ENTRIES(tc, iterator) {
+    OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge, iterator2) {
       char *lla = lookup_position_latlon(&tc->addr);
       char *llb = lookup_position_latlon(&tc_edge->T_dest_addr);
       if (NULL != lla && NULL != llb) {
@@ -189,9 +187,7 @@ mapwrite_work(FILE * fmap)
         }
       }
     }
-    OLSR_FOR_ALL_TC_EDGE_ENTRIES_END();
   }
-  OLSR_FOR_ALL_TC_ENTRIES_END();
 }
 
 #ifndef WIN32

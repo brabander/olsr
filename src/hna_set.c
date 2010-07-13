@@ -79,7 +79,10 @@ olsr_init_hna_set(void)
 static struct hna_net *
 olsr_lookup_hna_net(struct tc_entry *tc, const struct olsr_ip_prefix *prefix)
 {
-  return (hna_tc_tree2hna(avl_find(&tc->hna_tree, prefix)));
+  struct hna_net *hna;
+
+  hna = avl_find_element(&tc->hna_tree, prefix, hna, hna_tc_node);
+  return hna;
 }
 
 /**
@@ -107,7 +110,7 @@ olsr_add_hna_net(struct tc_entry *tc, const struct olsr_ip_prefix *prefix)
    * Insert into the per-tc hna subtree.
    */
   new_net->hna_tc_node.key = &new_net->hna_prefix;
-  avl_insert(&tc->hna_tree, &new_net->hna_tc_node, false);
+  avl_insert(&tc->hna_tree, &new_net->hna_tc_node);
 
   return new_net;
 }
@@ -151,14 +154,16 @@ void
 olsr_flush_hna_nets(struct tc_entry *tc)
 {
   struct hna_net *hna_net;
+  struct list_iterator iterator;
+
 #if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
 #endif
 
   OLSR_DEBUG(LOG_TC, "flush hna nets of '%s' (%u)\n", olsr_ip_to_string(&buf, &tc->addr), tc->edge_tree.count);
-  OLSR_FOR_ALL_TC_HNA_ENTRIES(tc, hna_net) {
+  OLSR_FOR_ALL_TC_HNA_ENTRIES(tc, hna_net, iterator) {
     olsr_delete_hna_net(hna_net);
-  } OLSR_FOR_ALL_TC_HNA_ENTRIES_END()
+  }
 }
 
 /**
@@ -235,16 +240,17 @@ olsr_print_hna_set(void)
   struct ipaddr_str buf;
   struct ipprefix_str prefixstr;
   struct hna_net *hna_net;
+  struct list_iterator iterator;
 
   OLSR_INFO(LOG_HNA, "\n--- %s ------------------------------------------------- HNA\n\n", olsr_wallclock_string());
 
-  OLSR_FOR_ALL_TC_ENTRIES(tc) {
+  OLSR_FOR_ALL_TC_ENTRIES(tc, iterator) {
     OLSR_INFO_NH(LOG_HNA, "HNA-gw %s:\n", olsr_ip_to_string(&buf, &tc->addr));
 
-    OLSR_FOR_ALL_TC_HNA_ENTRIES(tc, hna_net) {
+    OLSR_FOR_ALL_TC_HNA_ENTRIES(tc, hna_net, iterator) {
       OLSR_INFO_NH(LOG_HNA, "\t%-27s\n", olsr_ip_prefix_to_string(&prefixstr, &hna_net->hna_prefix));
-    } OLSR_FOR_ALL_TC_HNA_ENTRIES_END();
-  } OLSR_FOR_ALL_TC_ENTRIES_END();
+    }
+  }
 #endif
 }
 
@@ -252,12 +258,13 @@ static void
 olsr_prune_hna_entries(struct tc_entry *tc)
 {
   struct hna_net *hna_net;
+  struct list_iterator iterator;
 
-  OLSR_FOR_ALL_TC_HNA_ENTRIES(tc, hna_net) {
+  OLSR_FOR_ALL_TC_HNA_ENTRIES(tc, hna_net, iterator) {
     if (hna_net->tc_entry_seqno != tc->hna_seq) {
       olsr_delete_hna_net(hna_net);
     }
-  } OLSR_FOR_ALL_TC_HNA_ENTRIES_END();
+  }
 }
 
 /**

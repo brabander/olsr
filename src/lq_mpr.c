@@ -50,16 +50,16 @@ void
 olsr_calculate_lq_mpr(void)
 {
   struct nbr2_entry *nbr2;
+  struct nbr_entry *neigh;
   struct nbr_con *walker;
   struct link_entry *lnk;
-  struct list_iterator iterator;
+  struct list_iterator iterator, iterator2;
   int k;
-  struct nbr_entry *neigh;
   olsr_linkcost best, best_1hop;
   bool mpr_changes = false;
   bool found_better_path;
 
-  OLSR_FOR_ALL_NBR_ENTRIES(neigh) {
+  OLSR_FOR_ALL_NBR_ENTRIES(neigh, iterator) {
 
     /* Memorize previous MPR status. */
     neigh->was_mpr = neigh->is_mpr;
@@ -78,10 +78,10 @@ olsr_calculate_lq_mpr(void)
       mpr_changes = true;
     }
 
-  } OLSR_FOR_ALL_NBR_ENTRIES_END();
+  }
 
   /* loop through all 2-hop neighbours */
-  OLSR_FOR_ALL_NBR2_ENTRIES(nbr2) {
+  OLSR_FOR_ALL_NBR2_ENTRIES(nbr2, iterator) {
 
     best_1hop = LINK_COST_BROKEN;
 
@@ -106,12 +106,12 @@ olsr_calculate_lq_mpr(void)
       /* see wether we find a better route via an MPR */
       walker = NULL;
       found_better_path = false;
-      OLSR_FOR_ALL_NBR2_CON_ENTRIES(nbr2, walker) {
+      OLSR_FOR_ALL_NBR2_CON_ENTRIES(nbr2, walker, iterator2) {
         if (walker->path_linkcost < best_1hop) {
           found_better_path = true;
           break;
         }
-      } OLSR_FOR_ALL_NBR_CON_ENTRIES_END()
+      }
 
       /* we've reached the end of the list, so we haven't found
        * a better route via an MPR - so, skip MPR selection for
@@ -126,9 +126,9 @@ olsr_calculate_lq_mpr(void)
        */
 
       /* mark all 1-hop neighbours as not selected */
-      OLSR_FOR_ALL_NBR2_CON_ENTRIES(nbr2, walker) {
+      OLSR_FOR_ALL_NBR2_CON_ENTRIES(nbr2, walker, iterator2) {
         walker->nbr->skip = false;
-      } OLSR_FOR_ALL_NBR_CON_ENTRIES_END();
+      }
 
       for (k = 0; k < olsr_cnf->mpr_coverage; k++) {
 
@@ -136,12 +136,12 @@ olsr_calculate_lq_mpr(void)
         neigh = NULL;
         best = LINK_COST_BROKEN;
 
-        OLSR_FOR_ALL_NBR2_CON_ENTRIES(nbr2, walker) {
+        OLSR_FOR_ALL_NBR2_CON_ENTRIES(nbr2, walker, iterator2) {
           if (walker->nbr->is_sym && !walker->nbr->skip && walker->path_linkcost < best) {
             neigh = walker->nbr;
             best = walker->path_linkcost;
           }
-        } OLSR_FOR_ALL_NBR2_CON_ENTRIES_END();
+        }
 
         /*
          * Found a 1-hop neighbor that we haven't previously selected.
@@ -163,7 +163,7 @@ olsr_calculate_lq_mpr(void)
           break;
         }
       }
-  } OLSR_FOR_ALL_NBR2_ENTRIES_END();
+  }
 
   /* ugly hack */
   OLSR_FOR_ALL_LINK_ENTRIES(lnk, iterator) {

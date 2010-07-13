@@ -99,9 +99,6 @@ struct tc_entry {
 
 #define OLSR_TC_VTIME_JITTER 5 /* percent */
 
-
-AVLNODE2STRUCT(cand_tree2tc, tc_entry, cand_tree_node);
-
 /*
  * macros for traversing vertices, edges and prefixes in the link state database.
  * it is recommended to use this because it hides all the internal
@@ -110,16 +107,9 @@ AVLNODE2STRUCT(cand_tree2tc, tc_entry, cand_tree_node);
  * the loop prefetches the next node in order to not loose context if
  * for example the caller wants to delete the current entry.
  */
-AVLNODE2STRUCT(vertex_tree2tc, tc_entry, vertex_node);
-#define OLSR_FOR_ALL_TC_ENTRIES(tc) OLSR_FOR_ALL_AVL_ENTRIES(&tc_tree, vertex_tree2tc, tc)
-#define OLSR_FOR_ALL_TC_ENTRIES_END(tc) OLSR_FOR_ALL_AVL_ENTRIES_END()
-
-AVLNODE2STRUCT(edge_tree2tc_edge, tc_edge_entry, edge_node);
-#define OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) OLSR_FOR_ALL_AVL_ENTRIES(&tc->edge_tree, edge_tree2tc_edge, tc_edge)
-#define OLSR_FOR_ALL_TC_EDGE_ENTRIES_END() OLSR_FOR_ALL_AVL_ENTRIES_END()
-
-#define OLSR_FOR_ALL_PREFIX_ENTRIES(tc, rtp) OLSR_FOR_ALL_AVL_ENTRIES(&tc->prefix_tree, rtp_prefix_tree2rtp, rtp)
-#define OLSR_FOR_ALL_PREFIX_ENTRIES_END() OLSR_FOR_ALL_AVL_ENTRIES_END()
+#define OLSR_FOR_ALL_TC_ENTRIES(tc, iterator) avl_for_each_element_safe(&tc_tree, tc, vertex_node, iterator.loop, iterator.safe)
+#define OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge, iterator) avl_for_each_element_safe(&tc->edge_tree, tc_edge, edge_node, iterator.loop, iterator.safe)
+#define OLSR_FOR_ALL_PREFIX_ENTRIES(tc, rtp, iterator) avl_for_each_element_safe(&tc->prefix_tree, rtp, rtp_prefix_tree_node, iterator.loop, iterator.safe)
 
 extern struct avl_tree EXPORT(tc_tree);
 extern struct tc_entry *tc_myself;

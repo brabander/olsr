@@ -258,9 +258,9 @@ lq_etxff_timer(void __attribute__ ((unused)) * context)
     link->linkcost = lq_etxff_calc_link_entry_cost(link);
   }
 
-  OLSR_FOR_ALL_NBR_ENTRIES(nbr) {
+  OLSR_FOR_ALL_NBR_ENTRIES(nbr, iterator) {
     olsr_neighbor_cost_may_changed(nbr);
-  } OLSR_FOR_ALL_NBR_ENTRIES_END()
+  }
 }
 
 static struct timer_entry *lq_etxff_timer_struct = NULL;

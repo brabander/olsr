@@ -99,12 +99,12 @@ zebra_cleanup(void)
 {
   int i;
   struct rt_entry *tmp;
+  struct list_iterator iterator;
 
   if (zebra.options & OPTION_EXPORT) {
-    OLSR_FOR_ALL_RT_ENTRIES(tmp) {
+    OLSR_FOR_ALL_RT_ENTRIES(tmp, iterator) {
       zebra_del_route(tmp);
     }
-    OLSR_FOR_ALL_RT_ENTRIES_END(tmp);
   }
 
   for (i = 0; i < ZEBRA_ROUTE_MAX; i++)
@@ -118,6 +118,7 @@ static void
 zebra_reconnect(void)
 {
   struct rt_entry *tmp;
+  struct list_iterator iterator;
   int i;
 
   zebra_connect();
@@ -125,10 +126,9 @@ zebra_reconnect(void)
     return;                     // try again next time
 
   if (zebra.options & OPTION_EXPORT) {
-    OLSR_FOR_ALL_RT_ENTRIES(tmp) {
+    OLSR_FOR_ALL_RT_ENTRIES(tmp, iterator) {
       zebra_add_route(tmp);
     }
-    OLSR_FOR_ALL_RT_ENTRIES_END(tmp);
   }
 
   for (i = 0; i < ZEBRA_ROUTE_MAX; i++)

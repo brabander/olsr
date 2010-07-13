@@ -45,10 +45,12 @@
 #include <assert.h>
 #include <errno.h>
 
-#include "ipcalc.h"
 #include "defs.h"
+#include "common/avl.h"
+#include "common/avl_olsr_comp.h"
 #include "olsr.h"
 #include "log.h"
+#include "ipcalc.h"
 #include "scheduler.h"
 #include "parser.h"
 #include "plugin_loader.h"
@@ -212,6 +214,7 @@ main(int argc, char *argv[])
 #endif
 
   /* Set avl tree comparator */
+#if 0
   if (olsr_cnf->ipsize == 4) {
     avl_comp_default = avl_comp_ipv4;
     avl_comp_addr_origin_default = avl_comp_ipv4_addr_origin;
@@ -223,7 +226,7 @@ main(int argc, char *argv[])
     avl_comp_prefix_default = avl_comp_ipv6_prefix;
     avl_comp_prefix_origin_default = avl_comp_ipv6_prefix_origin;
   }
-
+#endif
   /* initialize logging */
   olsr_log_init();
 
@@ -526,13 +529,14 @@ static void
 olsr_shutdown(void)
 {
   struct mid_entry *mid;
+  struct list_iterator iterator;
 
   olsr_delete_all_kernel_routes();
 
   /* Flush MID database */
-  OLSR_FOR_ALL_MID_ENTRIES(mid) {
+  OLSR_FOR_ALL_MID_ENTRIES(mid, iterator) {
     olsr_delete_mid_entry(mid);
-  } OLSR_FOR_ALL_MID_ENTRIES_END();
+  }
 
   /* Flush TC database */
   olsr_delete_all_tc_entries();

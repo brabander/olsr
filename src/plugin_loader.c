@@ -76,21 +76,20 @@ olsr_hookup_plugin(struct olsr_plugin *pl_def) {
   assert (pl_def->name);
   fprintf(stdout, "hookup %s\n", pl_def->name);
   if (!plugin_tree_initialized) {
-    avl_init(&plugin_tree, avl_comp_strcasecmp);
+    avl_init(&plugin_tree, avl_comp_strcasecmp, false, NULL);
     plugin_tree_initialized = true;
   }
   pl_def->p_node.key = strdup(pl_def->name);
-  avl_insert(&plugin_tree, &pl_def->p_node, false);
+  avl_insert(&plugin_tree, &pl_def->p_node);
 }
 
 struct olsr_plugin *olsr_get_plugin(const char *libname) {
-  struct avl_node *node;
+  struct olsr_plugin *plugin;
   /* SOT: Hacked away the funny plugin check which fails if pathname is included */
   if (strrchr(libname, '/')) libname = strrchr(libname, '/') + 1;
-  if ((node = avl_find(&plugin_tree, libname)) != NULL) {
-    return plugin_node2tree(node);
-  }
-  return NULL;
+
+  plugin = avl_find_element(&plugin_tree, libname, plugin, p_node);
+  return plugin;
 }
 
 void
@@ -100,7 +99,7 @@ olsr_init_pluginsystem(void) {
 
   /* could already be initialized */
   if (!plugin_tree_initialized) {
-    avl_init(&plugin_tree, avl_comp_strcasecmp);
+    avl_init(&plugin_tree, avl_comp_strcasecmp, false, NULL);
     plugin_tree_initialized = true;
   }
 }
@@ -138,9 +137,10 @@ void olsr_plugins_init(bool fail_fast) {
 
 void olsr_plugins_enable(enum plugin_type type, bool fail_fast) {
   struct olsr_plugin *plugin;
+  struct list_iterator iterator;
 
   /* activate all plugins (configured and static linked ones) */
-  OLSR_FOR_ALL_PLUGIN_ENTRIES(plugin) {
+  OLSR_FOR_ALL_PLUGIN_ENTRIES(plugin, iterator) {
     if ((type != PLUGIN_TYPE_ALL && type != plugin->type) || plugin->internal_active) {
       continue;
     }
@@ -152,18 +152,18 @@ void olsr_plugins_enable(enum plugin_type type, bool fail_fast) {
       }
       OLSR_WARN(LOG_PLUGINS, "Error, cannot activate plugin %s.\n", plugin->name);
     }
-  } OLSR_FOR_ALL_PLUGIN_ENTRIES_END(plugin)
+  }
   OLSR_INFO(LOG_PLUGINS, "All plugins loaded.\n");
 }
 
 void
 olsr_destroy_pluginsystem(void) {
   struct olsr_plugin *plugin;
-
-  OLSR_FOR_ALL_PLUGIN_ENTRIES(plugin) {
+  struct list_iterator iterator;
+  OLSR_FOR_ALL_PLUGIN_ENTRIES(plugin, iterator) {
     olsr_disable_plugin(plugin);
     olsr_internal_unload_plugin(plugin, true);
-  } OLSR_FOR_ALL_PLUGIN_ENTRIES_END(plugin)
+  }
 }
 
 static struct olsr_plugin *
@@ -220,7 +220,7 @@ olsr_load_legacy_plugin(const char *libname, void *dlhandle) {
   /* get parameters */
   get_plugin_parameters(&plugin->internal_param, &plugin->internal_param_cnt);
 
-  avl_insert(&plugin_tree, &plugin->p_node, false);
+  avl_insert(&plugin_tree, &plugin->p_node);
   return plugin;
 }
 
