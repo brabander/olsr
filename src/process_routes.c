@@ -46,7 +46,6 @@
 
 #include <errno.h>
 
-static struct list_entity add_kernel_list;
 static struct list_entity chg_kernel_list;
 static struct list_entity del_kernel_list;
 
@@ -63,8 +62,7 @@ olsr_init_export_route(void)
 {
   OLSR_INFO(LOG_ROUTING, "Initialize route processing...\n");
 
-  /* the add/chg/del kernel queues */
-  list_init_head(&add_kernel_list);
+  /* the add/chg and del kernel queues */
   list_init_head(&chg_kernel_list);
   list_init_head(&del_kernel_list);
 
@@ -91,7 +89,7 @@ olsr_delete_all_kernel_routes(void)
 }
 
 /**
- * Enqueue a route on a kernel add/chg/del queue.
+ * Enqueue a route on a kernel chg/del queue.
  */
 static void
 olsr_enqueue_rt(struct list_entity *head_node, struct rt_entry *rt)
@@ -170,26 +168,6 @@ olsr_add_route(struct rt_entry *rt)
 }
 
 /**
- * process the kernel add list.
- * the routes are already ordered such that nexthop routes
- * are on the head of the queue.
- * nexthop routes need to be added first and therefore
- * the queue needs to be traversed from head to tail.
- */
-static void
-olsr_add_routes(struct list_entity *head_node)
-{
-  struct rt_entry *rt;
-
-  while (!list_is_empty(head_node)) {
-    rt = list_first_element(head_node, rt, rt_change_node);
-    olsr_add_route(rt);
-
-    list_remove(&rt->rt_change_node);
-  }
-}
-
-/**
  * process the kernel change list.
  * the routes are already ordered such that nexthop routes
  * are on the head of the queue.
@@ -207,20 +185,14 @@ olsr_chg_kernel_routes(struct list_entity *head_node)
   }
 
   /*
-   * First pass.
-   * traverse from the end to the beginning of the list,
-   * such that nexthop routes are deleted last.
-   */
-  OLSR_FOR_ALL_RTLIST_ENTRIES(head_node, rt, iterator) {
-    olsr_del_route(rt);
-  }
-
-  /*
-   * Second pass.
    * Traverse from the beginning to the end of the list,
    * such that nexthop routes are added first.
    */
   OLSR_FOR_ALL_RTLIST_ENTRIES(head_node, rt, iterator) {
+
+    /*if netlink and NLFM_REPLACE is available (ipv4 only?) and used in linux/kernel_*.c no delete would be necesarry here */
+    if (rt->rt_nexthop.interface) olsr_del_route(rt); // fresh routes do not have an interface pointer
+
     olsr_add_route(rt);
 
     list_remove(&rt->rt_change_node);
@@ -321,15 +293,8 @@ olsr_update_rib_routes(void)
     if (olsr_nh_change(&rt->rt_best->rtp_nexthop, &rt->rt_nexthop) ||
         (FIBM_CORRECT == olsr_cnf->fib_metric && olsr_hopcount_change(&rt->rt_best->rtp_metric, &rt->rt_metric))) {
 
-      if (!rt->rt_nexthop.interface) {
-
-        /* fresh routes do not have an interface pointer */
-        olsr_enqueue_rt(&add_kernel_list, rt);
-      } else {
-
-        /* this is a route change. */
-        olsr_enqueue_rt(&chg_kernel_list, rt);
-      }
+      olsr_enqueue_rt(&chg_kernel_list, rt);
+     
     }
   }
 }
@@ -344,11 +309,9 @@ olsr_update_kernel_routes(void)
   /* delete unreachable routes */
   olsr_del_kernel_routes(&del_kernel_list);
 
-  /* route changes */
+  /* route changes and additions */
   olsr_chg_kernel_routes(&chg_kernel_list);
 
-  /* route additions */
-  olsr_add_routes(&add_kernel_list);
 #ifdef DEBUG
   olsr_print_routing_table();
 #endif
