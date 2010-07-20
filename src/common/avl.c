@@ -368,7 +368,6 @@ avl_delete(struct avl_tree *tree, struct avl_node *node)
   }
 
   avl_remove(tree, node);
-  node->key = NULL;
 }
 
 static struct avl_node *
