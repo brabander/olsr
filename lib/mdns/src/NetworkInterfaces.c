@@ -253,7 +253,7 @@ CreateInterface(const char *ifName, struct interface *olsrIntf)
       newIf->intAddr.v4.s_addr = inet_addr("0.0.0.0");
     } else {
       /* Downcast to correct sockaddr subtype */
-      newIf->intAddr.v4 = ((struct sockaddr_in *)(ARM_NOWARN_ALIGN)&ifr.ifr_addr)->sin_addr;
+      newIf->intAddr.v4 = ((struct sockaddr_in *)(ARM_NOWARN_ALIGN(&ifr.ifr_addr)))->sin_addr;
     }
 
     /* For a non-OLSR interface, retrieve the IP broadcast address ourselves */
@@ -266,7 +266,7 @@ CreateInterface(const char *ifName, struct interface *olsrIntf)
       newIf->broadAddr.v4.s_addr = inet_addr("0.0.0.0");
     } else {
       /* Downcast to correct sockaddr subtype */
-      newIf->broadAddr.v4 = ((struct sockaddr_in *)(ARM_NOWARN_ALIGN)&ifr.ifr_broadaddr)->sin_addr;
+      newIf->broadAddr.v4 = ((struct sockaddr_in *)(ARM_NOWARN_ALIGN(&ifr.ifr_broadaddr)))->sin_addr;
     }
   }
 
@@ -373,7 +373,7 @@ CreateBmfNetworkInterfaces(struct interface *skipThisIntf)
     //}
 
     /* ...find the OLSR interface structure, if any */
-    ipAddr.v4 = ((struct sockaddr_in *)(ARM_NOWARN_ALIGN)&ifr->ifr_addr)->sin_addr;
+    ipAddr.v4 = ((struct sockaddr_in *)(ARM_NOWARN_ALIGN(&ifr->ifr_addr)))->sin_addr;
     olsrIntf = if_ifwithaddr(&ipAddr);
 
     if (skipThisIntf != NULL && olsrIntf == skipThisIntf) {

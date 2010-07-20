@@ -629,7 +629,7 @@ olsr_namesvc_gen(void *foo __attribute__ ((unused)))
   curr = buffer;
   sizeptr = olsr_put_msg_hdr(&curr, &msg);
 
-  namesize = encap_namemsg((struct namemsg *)(ARM_NOWARN_ALIGN)curr);
+  namesize = encap_namemsg((struct namemsg *)(ARM_NOWARN_ALIGN(curr)));
   namesize += (curr-buffer);
   pkt_put_u16(&sizeptr, namesize);
 
@@ -692,22 +692,22 @@ encap_namemsg(struct namemsg *msg)
 
   // names
   for (my_name = my_names; my_name != NULL; my_name = my_name->next) {
-    pos = create_packet((struct name *)(ARM_NOWARN_ALIGN)pos, my_name);
+    pos = create_packet((struct name *)(ARM_NOWARN_ALIGN(pos)), my_name);
     i++;
   }
   // forwarders
   for (my_name = my_forwarders; my_name != NULL; my_name = my_name->next) {
-    pos = create_packet((struct name *)(ARM_NOWARN_ALIGN)pos, my_name);
+    pos = create_packet((struct name *)(ARM_NOWARN_ALIGN(pos)), my_name);
     i++;
   }
   // services
   for (my_name = my_services; my_name != NULL; my_name = my_name->next) {
-    pos = create_packet((struct name *)(ARM_NOWARN_ALIGN)pos, my_name);
+    pos = create_packet((struct name *)(ARM_NOWARN_ALIGN(pos)), my_name);
     i++;
   }
   // macs
   for (my_name = my_macs; my_name != NULL; my_name = my_name->next) {
-    pos = create_packet((struct name *)(ARM_NOWARN_ALIGN)pos, my_name);
+    pos = create_packet((struct name *)(ARM_NOWARN_ALIGN(pos)), my_name);
     i++;
   }
   // latlon
@@ -730,7 +730,7 @@ encap_namemsg(struct namemsg *msg)
     e.type = NAME_LATLON;
     e.name = s;
     lookup_defhna_latlon(&e.ip);
-    pos = create_packet((struct name *)(ARM_NOWARN_ALIGN)pos, &e);
+    pos = create_packet((struct name *)(ARM_NOWARN_ALIGN(pos)), &e);
     i++;
   }
   // write the namemsg header with the number of announced entries and the protocol version

@@ -330,7 +330,7 @@ add_signature(uint8_t * pck, int *size)
 
   OLSR_DEBUG(LOG_PLUGINS, "[ENC]Adding signature for packet size %d\n", *size);
 
-  msg = (struct s_olsrmsg *)(ARM_NOWARN_ALIGN)&pck[*size];
+  msg = (struct s_olsrmsg *)(ARM_NOWARN_ALIGN(&pck[*size]));
   /* Update size */
   ((struct olsr_packet *)pck)->size = htons(*size + sizeof(struct s_olsrmsg));
 
@@ -409,7 +409,7 @@ validate_packet(struct interface *olsr_if_config, const uint8_t *pck, int *size)
   if (packetsize < 4)
     return 0;
 
-  sig = (const struct s_olsrmsg *)(const ARM_NOWARN_ALIGN)&pck[packetsize];
+  sig = (const struct s_olsrmsg *)(ARM_CONST_NOWARN_ALIGN)&pck[packetsize];
 
   //OLSR_PRINTF(1, "Size: %d\n", packetsize);
 
@@ -656,7 +656,7 @@ parse_cres(struct interface *olsr_if_config, uint8_t *in_msg)
   struct ipaddr_str buf;
 #endif
 
-  msg = (struct c_respmsg *)(ARM_NOWARN_ALIGN)in_msg;
+  msg = (struct c_respmsg *)(ARM_NOWARN_ALIGN(in_msg));
 
   OLSR_DEBUG(LOG_PLUGINS, "[ENC]Challenge-response message received\n");
   OLSR_DEBUG(LOG_PLUGINS, "[ENC]To: %s\n", olsr_ip_to_string(&buf, (union olsr_ip_addr *)&msg->destination));
@@ -750,7 +750,7 @@ parse_rres(uint8_t *in_msg)
   struct ipaddr_str buf;
 #endif
 
-  msg = (struct r_respmsg *)(ARM_NOWARN_ALIGN)in_msg;
+  msg = (struct r_respmsg *)(ARM_NOWARN_ALIGN(in_msg));
 
   OLSR_DEBUG(LOG_PLUGINS, "[ENC]Response-response message received\n");
   OLSR_DEBUG(LOG_PLUGINS, "[ENC]To: %s\n", olsr_ip_to_string(&buf, (union olsr_ip_addr *)&msg->destination));
@@ -840,7 +840,7 @@ parse_challenge(struct interface *olsr_if_config, uint8_t *in_msg)
   struct ipaddr_str buf;
 #endif
 
-  msg = (struct challengemsg *)(ARM_NOWARN_ALIGN)in_msg;
+  msg = (struct challengemsg *)(ARM_NOWARN_ALIGN(in_msg));
 
   OLSR_DEBUG(LOG_PLUGINS, "[ENC]Challenge message received\n");
   OLSR_DEBUG(LOG_PLUGINS, "[ENC]To: %s\n", olsr_ip_to_string(&buf, (union olsr_ip_addr *)&msg->destination));

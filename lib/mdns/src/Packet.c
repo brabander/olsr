@@ -65,7 +65,7 @@ IsIpFragment(unsigned char *ipPacket)
 
   assert(ipPacket != NULL);
 
-  iph = (struct ip *)(ARM_NOWARN_ALIGN)ipPacket;
+  iph = (struct ip *)(ARM_NOWARN_ALIGN(ipPacket));
   if ((ntohs(iph->ip_off) & IP_OFFMASK) != 0) {
     return 1;
   }
@@ -88,7 +88,7 @@ GetIpTotalLength(unsigned char *ipPacket)
 
   assert(ipPacket != NULL);
 
-  iph = (struct iphdr *)(ARM_NOWARN_ALIGN)ipPacket;
+  iph = (struct iphdr *)(ARM_NOWARN_ALIGN(ipPacket));
   return ntohs(iph->tot_len);
 }                               /* GetIpTotalLength */
 
@@ -107,7 +107,7 @@ GetIpHeaderLength(unsigned char *ipPacket)
 
   assert(ipPacket != NULL);
 
-  iph = (struct iphdr *)(ARM_NOWARN_ALIGN)ipPacket;
+  iph = (struct iphdr *)(ARM_NOWARN_ALIGN(ipPacket));
   return iph->ihl << 2;
 }                               /* GetIpHeaderLength */
 
@@ -127,7 +127,7 @@ GetTtl(unsigned char *ipPacket)
 
   assert(ipPacket != NULL);
 
-  iph = (struct iphdr *)(ARM_NOWARN_ALIGN)ipPacket;
+  iph = (struct iphdr *)(ARM_NOWARN_ALIGN(ipPacket));
   return iph->ttl;
 }                               /* GetTtl */
 
@@ -147,7 +147,7 @@ SaveTtlAndChecksum(unsigned char *ipPacket, struct TSaveTtl *sttl)
 
   assert(ipPacket != NULL && sttl != NULL);
 
-  iph = (struct iphdr *)(ARM_NOWARN_ALIGN)ipPacket;
+  iph = (struct iphdr *)(ARM_NOWARN_ALIGN(ipPacket));
   sttl->ttl = iph->ttl;
   sttl->check = ntohs(iph->check);
 }                               /* SaveTtlAndChecksum */
@@ -169,7 +169,7 @@ RestoreTtlAndChecksum(unsigned char *ipPacket, struct TSaveTtl *sttl)
 
   assert(ipPacket != NULL && sttl != NULL);
 
-  iph = (struct iphdr *)(ARM_NOWARN_ALIGN)ipPacket;
+  iph = (struct iphdr *)(ARM_NOWARN_ALIGN(ipPacket));
   iph->ttl = sttl->ttl;
   iph->check = htons(sttl->check);
 }                               /* RestoreTtlAndChecksum */
@@ -192,7 +192,7 @@ DecreaseTtlAndUpdateHeaderChecksum(unsigned char *ipPacket)
 
   assert(ipPacket != NULL);
 
-  iph = (struct iphdr *)(ARM_NOWARN_ALIGN)ipPacket;
+  iph = (struct iphdr *)(ARM_NOWARN_ALIGN(ipPacket));
 
   iph->ttl--;                   /* decrement ttl */
   sum = ntohs(iph->check) + 0x100;      /* increment checksum high byte */
@@ -210,7 +210,7 @@ DecreaseTtlAndUpdateHeaderChecksum(unsigned char *ipPacket)
 struct ip *
 GetIpHeader(unsigned char *encapsulationUdpData)
 {
-  return (struct ip *)(ARM_NOWARN_ALIGN)(encapsulationUdpData + ENCAP_HDR_LEN);
+  return (struct ip *)(ARM_NOWARN_ALIGN(encapsulationUdpData + ENCAP_HDR_LEN));
 }                               /* GetIpHeader */
 
 /* -------------------------------------------------------------------------
