@@ -429,13 +429,13 @@ olsr_print_mid_set(void)
 #if !defined REMOVE_LOG_INFO
   struct tc_entry *tc;
   struct mid_entry *alias;
-  struct list_iterator iterator;
+  struct list_iterator iterator, iterator2;
   struct ipaddr_str buf1, buf2;
 
   OLSR_INFO(LOG_MID, "\n--- %s ------------------------------------------------- MID\n\n", olsr_wallclock_string());
 
   OLSR_FOR_ALL_TC_ENTRIES(tc, iterator) {
-    OLSR_FOR_ALL_TC_MID_ENTRIES(tc, alias, iterator) {
+    OLSR_FOR_ALL_TC_MID_ENTRIES(tc, alias, iterator2) {
       OLSR_INFO_NH(LOG_MID, "%-15s: %s\n", olsr_ip_to_string(&buf1, &tc->addr), olsr_ip_to_string(&buf2, &alias->mid_alias_addr));
     }
   }

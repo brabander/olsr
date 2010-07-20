@@ -123,7 +123,6 @@ struct nbr2_entry {
  */
 extern struct avl_tree EXPORT(nbr_tree);
 extern struct avl_tree EXPORT(nbr2_tree);
-extern struct olsr_cookie_info *nbr2_listold_timer_cookie;
 
 void olsr_init_neighbor_table(void);
 

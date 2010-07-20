@@ -57,11 +57,11 @@ struct avl_tree nbr_tree;
 struct avl_tree nbr2_tree;
 
 /* Some cookies for stats keeping */
-struct olsr_cookie_info *nbr2_mem_cookie = NULL;
-struct olsr_cookie_info *nbr_mem_cookie = NULL;
+static struct olsr_cookie_info *nbr2_mem_cookie = NULL;
+static struct olsr_cookie_info *nbr_mem_cookie = NULL;
 
-struct olsr_cookie_info *nbr_connector_mem_cookie = NULL;
-struct olsr_cookie_info *nbr_connector_timer_cookie = NULL;
+static struct olsr_cookie_info *nbr_connector_mem_cookie = NULL;
+static struct olsr_cookie_info *nbr_connector_timer_cookie = NULL;
 
 static void olsr_expire_nbr_con(void *);
 static void internal_delete_nbr_con(struct nbr_con *connector);
@@ -433,7 +433,7 @@ struct nbr_con *
 olsr_lookup_nbr_con_entry(struct nbr_entry *nbr, const union olsr_ip_addr *nbr2_addr) {
   struct nbr_con *con;
   con = avl_find_element(&nbr->con_tree, nbr2_addr, con, nbr_tree_node);
-  return NULL;
+  return con;
 }
 
 /**
@@ -448,7 +448,7 @@ struct nbr_con *
 olsr_lookup_nbr2_con_entry(struct nbr2_entry *nbr2, const union olsr_ip_addr *nbr_addr) {
   struct nbr_con *con;
   con = avl_find_element(&nbr2->con_tree, nbr_addr, con, nbr2_tree_node);
-  return NULL;
+  return con;
 }
 
 /*
@@ -479,7 +479,7 @@ olsr_print_neighbor_table(void)
   const int ipwidth = olsr_cnf->ip_version == AF_INET ? INET_ADDRSTRLEN : INET6_ADDRSTRLEN;
   struct nbr_entry *nbr;
   struct link_entry *lnk;
-  struct ipaddr_str buf;
+  struct ipaddr_str buf, buf2;
   struct nbr2_entry *nbr2;
   struct nbr_con *connector;
   struct list_iterator iterator, iterator2;
@@ -512,7 +512,7 @@ olsr_print_neighbor_table(void)
     OLSR_FOR_ALL_NBR2_CON_ENTRIES(nbr2, connector, iterator2) {
       OLSR_INFO_NH(LOG_2NEIGH, "%-*s  %-*s  %s\n",
                    ipwidth, first ? olsr_ip_to_string(&buf, &nbr2->nbr2_addr) : "",
-                   ipwidth, olsr_ip_to_string(&buf, &connector->nbr->nbr_addr),
+                   ipwidth, olsr_ip_to_string(&buf2, &connector->nbr->nbr_addr),
                    olsr_get_linkcost_text(connector->path_linkcost, false, lqbuffer, sizeof(lqbuffer)));
 
       first = false;

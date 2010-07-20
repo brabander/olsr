@@ -240,14 +240,14 @@ olsr_print_hna_set(void)
   struct ipaddr_str buf;
   struct ipprefix_str prefixstr;
   struct hna_net *hna_net;
-  struct list_iterator iterator;
+  struct list_iterator iterator, iterator2;
 
   OLSR_INFO(LOG_HNA, "\n--- %s ------------------------------------------------- HNA\n\n", olsr_wallclock_string());
 
   OLSR_FOR_ALL_TC_ENTRIES(tc, iterator) {
     OLSR_INFO_NH(LOG_HNA, "HNA-gw %s:\n", olsr_ip_to_string(&buf, &tc->addr));
 
-    OLSR_FOR_ALL_TC_HNA_ENTRIES(tc, hna_net, iterator) {
+    OLSR_FOR_ALL_TC_HNA_ENTRIES(tc, hna_net, iterator2) {
       OLSR_INFO_NH(LOG_HNA, "\t%-27s\n", olsr_ip_prefix_to_string(&prefixstr, &hna_net->hna_prefix));
     }
   }

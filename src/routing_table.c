@@ -314,8 +314,17 @@ olsr_delete_rt_path(struct rt_path *rtp)
 static bool
 olsr_cmp_rtp(const struct rt_path *rtp1, const struct rt_path *rtp2, const struct rt_path *inetgw)
 {
-  olsr_linkcost etx1 = rtp1->rtp_metric.cost;
-  olsr_linkcost etx2 = rtp2->rtp_metric.cost;
+  olsr_linkcost etx1, etx2;
+
+  if (rtp1 == NULL) {
+    return false;
+  }
+  if (rtp2 == NULL) {
+    return true;
+  }
+
+  etx1 = rtp1->rtp_metric.cost;
+  etx2 = rtp2->rtp_metric.cost;
   if (inetgw == rtp1) {
     if (etx1 < INT32_MAX/1000) {
       etx1 = (etx1 * olsr_cnf->lq_nat_thresh) / 1000;
@@ -381,12 +390,11 @@ void
 olsr_rt_best(struct rt_entry *rt)
 {
   /* grab the first entry */
-  struct rt_path *rtp, *best;
+  struct rt_path *rtp;
   struct list_iterator iterator;
 
   assert (!avl_is_empty(&rt->rt_path_tree));
 
-  best = NULL;
   OLSR_FOR_ALL_RT_PATH_ENTRIES(rt, rtp, iterator) {
     if (olsr_cmp_rtp(rtp, rt->rt_best, current_inetgw)) {
       rt->rt_best = rtp;

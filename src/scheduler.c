@@ -213,9 +213,10 @@ remove_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm
 
   OLSR_FOR_ALL_SOCKETS(entry, iterator) {
     if (entry->fd == fd && entry->process_immediate == pf_imm && entry->process_pollrate == pf_pr) {
-      list_remove(&entry->socket_node);
-      free(entry);
-      return 1;
+      /* just mark this node as "deleted", it will be cleared later at the end of handle_fds() */
+      entry->process_immediate = NULL;
+      entry->process_pollrate = NULL;
+      entry->flags = 0;      return 1;
     }
   }
   return 0;
@@ -337,6 +338,8 @@ poll_sockets(void)
 static void
 handle_fds(uint32_t next_interval)
 {
+  struct olsr_socket_entry *entry;
+  struct list_iterator iterator;
   struct timeval tvp;
   int32_t remaining;
 
@@ -360,8 +363,6 @@ handle_fds(uint32_t next_interval)
 
   /* do at least one select */
   for (;;) {
-    struct olsr_socket_entry *entry;
-    struct list_iterator iterator;
     fd_set ibits, obits;
     int n, hfd = 0, fdsets = 0;
     FD_ZERO(&ibits);
@@ -430,6 +431,14 @@ handle_fds(uint32_t next_interval)
     /* we need an absolute time - milliseconds */
     tvp.tv_sec = remaining / MSEC_PER_SEC;
     tvp.tv_usec = (remaining % MSEC_PER_SEC) * USEC_PER_MSEC;
+  }
+
+  OLSR_FOR_ALL_SOCKETS(entry, iterator) {
+    if (entry->process_immediate == NULL && entry->process_pollrate == NULL) {
+      /* clean up socket handler */
+      list_remove(&entry->socket_node);
+      free(entry);
+    }
   }
 }
 
