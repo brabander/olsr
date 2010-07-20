@@ -1342,6 +1342,12 @@ olsr_sanity_check_cfg(struct olsr_config *cfg)
   struct olsr_if_options *io;
   struct millitxt_buf tbuf;
 
+  /* rttable */
+  if (cfg->rt_table == 0) cfg->rt_table = 254;
+
+  /* rttable_default */
+  if (cfg->rt_table_default == 0) cfg->rt_table_default = cfg->rt_table;
+
   /* IP version */
   if (cfg->ip_version != AF_INET && cfg->ip_version != AF_INET6) {
     fprintf(stderr, "Ipversion %d not allowed!\n", cfg->ip_version);
@@ -1549,7 +1555,7 @@ olsr_get_default_cfg(void)
   cfg->tos = DEF_TOS;
   assert(cfg->rt_proto == 0);
   cfg->rt_table = 254;
-  assert(cfg->rt_table_default == 0);
+  assert(cfg->rt_table_default == 0); /*does this ever fire!*/
   cfg->fib_metric = DEF_FIB_METRIC;
 
   for (i = 0; i < LOG_SOURCE_COUNT; i++) {
