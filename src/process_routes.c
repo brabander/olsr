@@ -141,18 +141,6 @@ olsr_del_route(struct rt_entry *rt)
 static void
 olsr_add_route(struct rt_entry *rt)
 {
-  if (olsr_cnf->del_gws && 0 == rt->rt_dst.prefix_len) {
-    struct rt_entry defrt;
-    memset(&defrt, 0, sizeof(defrt));
-    /*
-     * Note: defrt.nexthop.interface == NULL means "remove unspecified default route"
-     */
-    while (0 <= olsr_del_route_function(&defrt, olsr_cnf->ip_version)) {
-    }
-    olsr_cnf->del_gws = false;
-    olsr_exit(9);
-  }
-
   if (0 > olsr_add_route_function(rt, olsr_cnf->ip_version)) {
     OLSR_WARN(LOG_ROUTING, "KERN: ERROR adding %s: %s\n", olsr_rtp_to_string(rt->rt_best), strerror(errno));
   } else {

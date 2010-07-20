@@ -754,10 +754,6 @@ static olsr_parse_cfg_result
 parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_config *rcfg, char *rmsg)
 {
   switch (optint) {
-  case 'D':                    /* delgw */
-    rcfg->del_gws = true;
-    PARSER_DEBUG_PRINTF("del_gws set to %d\n", rcfg->del_gws);
-    break;
   case 'i':                    /* iface */
     /* Ignored */
     break;
@@ -1549,7 +1545,6 @@ olsr_get_default_cfg(void)
   cfg->allow_no_interfaces = DEF_ALLOW_NO_INTS;
   cfg->willingness_auto = DEF_WILL_AUTO;
   cfg->clear_screen = DEF_CLEAR_SCREEN;
-  assert(cfg->del_gws == false);
 
   cfg->tos = DEF_TOS;
   assert(cfg->rt_proto == 0);
