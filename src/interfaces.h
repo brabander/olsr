@@ -206,12 +206,8 @@ void run_ifchg_cbs(struct interface *, int);
 struct interface *if_ifwithsock(int);
 struct interface *EXPORT(if_ifwithaddr) (const union olsr_ip_addr *);
 struct interface *if_ifwithname(const char *);
-#if 0
 const char *if_ifwithindex_name(const int if_index);
-#endif
-#if 0
 struct interface *if_ifwithindex(const int if_index);
-#endif
 void EXPORT(add_ifchgf) (ifchg_cb_func f);
 #if 0
 int del_ifchgf(ifchg_cb_func f);

@@ -101,15 +101,15 @@ olsr_write_cnf_buf(struct autobuf *abuf, struct olsr_config *cnf, bool write_mor
   abuf_appendf(abuf, "# TOS(type of service) to use. Default is 16\n" "TosValue\t%d\n\n", cnf->tos);
 
   /* RtProto */
-  abuf_appendf(abuf, "# Routing proto flag to use. Operating system default is 0\n" "RtProto\t\t%d\n\n", cnf->rtproto);
+  abuf_appendf(abuf, "# Routing proto flag to use. Operating system default is 0\n" "RtProto\t\t%d\n\n", cnf->rt_proto);
 
   /* RtTable */
-  abuf_appendf(abuf, "# Policy Routing Table to use. Default is 254\n" "RtTable\t\t%d\n\n", cnf->rttable);
+  abuf_appendf(abuf, "# Policy Routing Table to use. Default is 254\n" "RtTable\t\t%d\n\n", cnf->rt_table);
 
   /* RtTableDefault */
   abuf_appendf(abuf,
                "# Policy Routing Table to use for the default Route. Default is 0 (Take the same table as specified by RtTable)\n"
-               "RtTableDefault\t\t%d\n\n", cnf->rttable_default);
+               "RtTableDefault\t\t%d\n\n", cnf->rt_table_default);
 
   /* Willingness */
   abuf_appendf(abuf, "# The fixed willingness to use(0-7)\n"

@@ -880,27 +880,27 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
     {
       int arg = -1;
       sscanf(argstr, "%d", &arg);
-      if (0 <= arg && arg < (1 << (8 * sizeof(rcfg->rtproto))))
-        rcfg->rtproto = arg;
-      PARSER_DEBUG_PRINTF("RtProto: %d\n", rcfg->rtproto);
+      if (0 <= arg && arg < (1 << (8 * sizeof(rcfg->rt_proto))))
+        rcfg->rt_proto = arg;
+      PARSER_DEBUG_PRINTF("RtProto: %d\n", rcfg->rt_proto);
     }
     break;
   case 'R':                    /* RtTableDefault (i) */
     {
       int arg = -1;
       sscanf(argstr, "%d", &arg);
-      if (0 <= arg && arg < (1 << (8 * sizeof(rcfg->rttable_default))))
-        rcfg->rttable_default = arg;
-      PARSER_DEBUG_PRINTF("RtTableDefault: %d\n", rcfg->rttable_default);
+      if (0 <= arg && arg < (1 << (8 * sizeof(rcfg->rt_table_default))))
+        rcfg->rt_table_default = arg;
+      PARSER_DEBUG_PRINTF("RtTableDefault: %d\n", rcfg->rt_table_default);
     }
     break;
   case 'r':                    /* RtTable (i) */
     {
       int arg = -1;
       sscanf(argstr, "%d", &arg);
-      if (0 <= arg && arg < (1 << (8 * sizeof(rcfg->rttable))))
-        rcfg->rttable = arg;
-      PARSER_DEBUG_PRINTF("RtTable: %d\n", rcfg->rttable);
+      if (0 <= arg && arg < (1 << (8 * sizeof(rcfg->rt_table))))
+        rcfg->rt_table = arg;
+      PARSER_DEBUG_PRINTF("RtTable: %d\n", rcfg->rt_table);
     }
     break;
   case 't':                    /* TcRedundancy (i) */
@@ -1552,9 +1552,9 @@ olsr_get_default_cfg(void)
   assert(cfg->del_gws == false);
 
   cfg->tos = DEF_TOS;
-  assert(cfg->rtproto == 0);
-  cfg->rttable = 254;
-  assert(cfg->rttable_default == 0);
+  assert(cfg->rt_proto == 0);
+  cfg->rt_table = 254;
+  assert(cfg->rt_table_default == 0);
   cfg->fib_metric = DEF_FIB_METRIC;
 
   for (i = 0; i < LOG_SOURCE_COUNT; i++) {
@@ -1604,7 +1604,7 @@ olsr_get_default_cfg(void)
 
   assert(cfg->ioctl_s == 0);
 #if defined linux
-  assert(cfg->rts_linux == 0);
+  assert(cfg->rtnl_s == 0);
 #endif
 #if defined __FreeBSD__ || defined __MacOSX__ || defined __NetBSD__ || defined __OpenBSD__
   assert(cfg->rts_bsd == 0);

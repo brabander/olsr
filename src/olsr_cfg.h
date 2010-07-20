@@ -110,6 +110,14 @@
 #include "olsr_ip_acl.h"
 #include "olsr_cfg_data.h"
 
+enum smart_gw_uplinktype {
+  GW_UPLINK_NONE,
+  GW_UPLINK_IPV4,
+  GW_UPLINK_IPV6,
+  GW_UPLINK_IPV46,
+  GW_UPLINK_CNT,
+};
+
 struct olsr_msg_params {
   uint32_t emission_interval;
   uint32_t validity_time;
@@ -180,9 +188,9 @@ struct olsr_config {
   unsigned char source_ip_mode:1;      /* Run OLSR routing in sourceip mode */
 
   uint16_t tos;                        /* IP Type of Service Byte */
-  uint8_t rtproto;                     /* Policy routing proto, 0 == operating sys default */
-  uint8_t rttable;                     /* Policy routing table, 254(main) is default */
-  uint8_t rttable_default;             /* Polroute table for default route, 0==use rttable */
+  uint8_t rt_proto;                     /* Policy routing proto, 0 == operating sys default */
+  uint8_t rt_table;                     /* Policy routing table, 254(main) is default */
+  uint8_t rt_table_default;             /* Polroute table for default route, 0==use rttable */
   olsr_fib_metric_options fib_metric;  /* Determines route metrics update mode */
 
   /* logging information */
@@ -228,8 +236,29 @@ struct olsr_config {
   int exit_value;                      /* Global return value for process termination */
 
   int ioctl_s;                         /* Socket used for ioctl calls */
+
+  union olsr_ip_addr main_addr, unicast_src_ip;
+
 #if defined linux
-  int rts_linux;                       /* Socket used for rtnetlink messages */
+  uint8_t rt_table_tunnel;
+  int32_t rt_table_pri, rt_table_tunnel_pri;
+  int32_t rt_table_defaultolsr_pri, rt_table_default_pri;
+
+  bool use_niit;
+  bool use_src_ip_routes;
+
+  bool smart_gw_active, smart_gw_allow_nat, smart_gw_uplink_nat;
+  enum smart_gw_uplinktype smart_gw_type;
+  uint32_t smart_gw_uplink, smart_gw_downlink;
+  struct olsr_ip_prefix smart_gw_prefix;
+
+  int rtnl_s;                       /* Socket used for rtnetlink messages */
+  int rt_monitor_socket;
+
+  int niit4to6_if_index, niit6to4_if_index;
+
+/*many potential parameters or helper variables for smartgateway*/
+  bool has_ipv4_gateway, has_ipv6_gateway;
 #endif
 #if defined __FreeBSD__ || defined __MacOSX__ || defined __NetBSD__ || defined __OpenBSD__
   int rts_bsd;                         /* Socket used for route changes on BSDs */

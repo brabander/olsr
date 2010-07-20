@@ -94,7 +94,7 @@ extern FILE *EXPORT(debug_handle);
  * CPU will throw BUS_ERROR if alignment does not fit. For this,
  * we add an additional cast to (void *) to prevent the warning.
  */
-#define ARM_NOWARN_ALIGN void *
+#define ARM_NOWARN_ALIGN(x) ((void *)(x))
 #define ARM_CONST_NOWARN_ALIGN const void *
 
 #define ROUND_UP_TO_POWER_OF_2(val, pow2) (((val) + (pow2) - 1) & ~((pow2) - 1))

@@ -45,18 +45,22 @@
 #include "defs.h"
 #include "routing_table.h"
 
-int
-  olsr_kernel_add_route(const struct rt_entry *, int);
+int olsr_kernel_add_route(const struct rt_entry *, int);
 
-int
-  olsr_kernel_del_route(const struct rt_entry *, int);
-
-int olsr_lo_interface(union olsr_ip_addr *ip, bool create);
+int olsr_kernel_del_route(const struct rt_entry *, int);
 
 #endif
 
 #if defined linux
- int olsr_netlink_rule(uint8_t, uint8_t, uint16_t);
+ int rtnetlink_register_socket(int);
+
+ void olsr_os_niit_4to6_route(const struct olsr_ip_prefix *dst_v4, bool set);
+ void olsr_os_niit_6to4_route(const struct olsr_ip_prefix *dst_v6, bool set);
+ void olsr_os_inetgw_tunnel_route(uint32_t if_idx, bool ipv4, bool set);
+
+ int olsr_os_policy_rule(int family, int rttable, uint32_t priority, const char *if_name, bool set);
+ int olsr_os_localhost_if(union olsr_ip_addr *ip, bool create);
+ int olsr_os_ifip(int ifindex, union olsr_ip_addr *ip, bool create);
 #endif
 
 /*

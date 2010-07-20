@@ -381,8 +381,6 @@ if_ifwithname(const char *if_name)
   return NULL;
 }
 
-#if 0
-
 /**
  * Find the interface with a given interface index.
  *
@@ -403,9 +401,6 @@ if_ifwithindex(const int if_index)
 
   return NULL;
 }
-#endif
-
-#if 0
 
 /**
  * Get an interface name for a given interface index
@@ -419,7 +414,6 @@ if_ifwithindex_name(const int if_index)
   const struct interface *const ifp = if_ifwithindex(if_index);
   return ifp == NULL ? "void" : ifp->int_name;
 }
-#endif
 
 /**
  * Lock an interface.

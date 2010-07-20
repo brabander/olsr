@@ -266,16 +266,17 @@ main(int argc, char *argv[])
     olsr_exit(EXIT_FAILURE);
   }
 #if defined linux
-  olsr_cnf->rts_linux = socket(PF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE);
-  if (olsr_cnf->rts_linux < 0) {
+  olsr_cnf->rtnl_s = socket(PF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE);
+  if (olsr_cnf->rtnl_s < 0) {
     OLSR_ERROR(LOG_MAIN, "rtnetlink socket: %s\n", strerror(errno));
     olsr_exit(EXIT_FAILURE);
   }
-  set_nonblocking(olsr_cnf->rts_linux);
+  set_nonblocking(olsr_cnf->rtnl_s);
 
   /* Create rule for RtTable to resolve route insertion problems*/
-  if ( ( olsr_cnf->rttable < 253) & ( olsr_cnf->rttable > 0 ) ) {
-    olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable, RTM_NEWRULE);
+  if ( ( olsr_cnf->rt_table < 253) & ( olsr_cnf->rt_table > 0 ) ) {
+    OLSR_WARN(LOG_NETWORKING,"make sure to have correct policy routing rules (destination based rules are required, or a dummy rule with prio like 65535)");
+    /*olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rt_table, RTM_NEWRULE);*/
   }
 #endif
 
@@ -327,14 +328,17 @@ main(int argc, char *argv[])
     }
   }
 
+#if defined linux
   /* Initializing lo:olsr if necessary */
   if (olsr_cnf->source_ip_mode) {
     OLSR_INFO(LOG_NETWORKING, "Initializing lo:olsr interface for source ip mode...\n");
-    if (olsr_lo_interface(&olsr_cnf->router_id, true) <= 0) {
+    if (olsr_os_localhost_if(&olsr_cnf->router_id, true) <= 0) {
       OLSR_ERROR(LOG_NETWORKING, "Cannot create lo:olsr interface for ip '%s'\n", olsr_ip_to_string(&buf, &olsr_cnf->router_id));
       olsr_exit(EXIT_FAILURE);
     }
   }
+#endif
+
   /* Initializing networkinterfaces */
   if (!init_interfaces()) {
     if (olsr_cnf->allow_no_interfaces) {
@@ -558,10 +562,12 @@ olsr_shutdown(void)
   /* Remove active interfaces */
   destroy_interfaces();
 
+#if defined linux
   /* delete lo:olsr if neccesarry */
   if (olsr_cnf->source_ip_mode) {
-    olsr_lo_interface(&olsr_cnf->router_id, false);
+    olsr_os_localhost_if(&olsr_cnf->router_id, false);
   }
+#endif
 
   /* Reset network settings */
   restore_settings(olsr_cnf->ip_version);
@@ -570,11 +576,11 @@ olsr_shutdown(void)
   CLOSESOCKET(olsr_cnf->ioctl_s);
 
 #if defined linux
-  if ((olsr_cnf->rttable < 253) & (olsr_cnf->rttable > 0)) {
+  /*if ((olsr_cnf->rttable < 253) & (olsr_cnf->rttable > 0)) {
     olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable, RTM_DELRULE);
-  }
+  }*/
 
-  CLOSESOCKET(olsr_cnf->rts_linux);
+  CLOSESOCKET(olsr_cnf->rtnl_s);
 #endif
 
 #if defined __FreeBSD__ || defined __MacOSX__ || defined __NetBSD__ || defined __OpenBSD__

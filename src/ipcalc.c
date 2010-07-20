@@ -57,6 +57,28 @@ const struct in6_addr in6addr_v4mapped_loopback = IN6ADDR_V4MAPPED_LOOPBACK_INIT
 /* initialize it with all zeroes */
 const union olsr_ip_addr all_zero = {.v6 = IN6ADDR_ANY_INIT };
 
+/* ipv4 prefix 0.0.0.0/0 */
+const struct olsr_ip_prefix ipv4_internet_route =
+{
+    .prefix.v4.s_addr = 0,
+    .prefix_len = 0
+};
+
+/* ipv6 prefix ::ffff:0:0/96 */
+const struct olsr_ip_prefix ipv6_mappedv4_route =
+{
+    .prefix.v6.s6_addr = { 0,0,0,0,0,0,0,0,0,0,0xff,0xff,0,0,0,0 },
+    .prefix_len = 96
+};
+
+/* ipv6 prefix 2000::/3 */
+const struct olsr_ip_prefix ipv6_internet_route =
+{
+    .prefix.v6.s6_addr = { 0x20, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+    .prefix_len = 3
+};
+
+
 void
 ip_map_4to6(union olsr_ip_addr *addr) {
   /* ipv4-mapped-ipv6 = ::ff:<ipv4> */
@@ -161,8 +183,8 @@ ip_in_net(const union olsr_ip_addr *ipaddr, const struct olsr_ip_prefix *net, in
   } else {
     /* IPv6 */
     uint32_t netmask;
-    const uint32_t *i = (const uint32_t *)(ARM_NOWARN_ALIGN)&ipaddr->v6.s6_addr;
-    const uint32_t *n = (const uint32_t *)(ARM_NOWARN_ALIGN)&net->prefix.v6.s6_addr;
+    const uint32_t *i = (const uint32_t *) (ARM_NOWARN_ALIGN(&ipaddr->v6.s6_addr));
+    const uint32_t *n = (const uint32_t *) (ARM_NOWARN_ALIGN(&net->prefix.v6.s6_addr));
     unsigned int prefix_len;
     /* First we compare whole unsigned int's */
     for (prefix_len = net->prefix_len; prefix_len > 32; prefix_len -= 32) {
@@ -183,7 +205,7 @@ static const char *
 sockaddr4_to_string(char *const buf, int bufsize, const struct sockaddr *const addr)
 {
   char addrbuf[INET6_ADDRSTRLEN];
-  const struct sockaddr_in *const sin4 = (const struct sockaddr_in *)(const ARM_NOWARN_ALIGN)addr;
+  const struct sockaddr_in *const sin4 = (const struct sockaddr_in *)(ARM_CONST_NOWARN_ALIGN)addr;
   snprintf(buf, bufsize, "IPv4/%s:%d", inet_ntop(AF_INET, &sin4->sin_addr, addrbuf, sizeof(addrbuf)), sin4->sin_port);
   return buf;
 }
@@ -192,7 +214,7 @@ static const char *
 sockaddr6_to_string(char *const buf, int bufsize, const struct sockaddr *const addr)
 {
   char addrbuf[INET6_ADDRSTRLEN];
-  const struct sockaddr_in6 *const sin6 = (const struct sockaddr_in6 *)(const ARM_NOWARN_ALIGN)addr;
+  const struct sockaddr_in6 *const sin6 = (const struct sockaddr_in6 *)(ARM_CONST_NOWARN_ALIGN)addr;
   snprintf(buf, bufsize,
            "IPv6/[%s]:%d/%x/%x",
            inet_ntop(AF_INET6, &sin6->sin6_addr, addrbuf, sizeof(addrbuf)),
@@ -224,6 +246,17 @@ sockaddr_to_string(char *const buf, int bufsize, const struct sockaddr *const ad
   return buf;
 }
 
+bool is_prefix_inetgw(const struct olsr_ip_prefix *prefix) {
+  if (olsr_cnf->ip_version == AF_INET && ip_prefix_is_v4_inetgw(prefix)) {
+    return true;
+  }
+  if (olsr_cnf->ip_version == AF_INET6) {
+    if (ip_prefix_is_v6_inetgw(prefix) || ip_prefix_is_mappedv4_inetgw(prefix)) {
+      return true;
+    }
+  }
+  return false;
+}
 
 /*
  * Local Variables:
