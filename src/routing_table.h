@@ -178,13 +178,6 @@ olsr_bump_routingtree_version(void)
 }
 
 
-int avl_comp_ipv4_prefix(const void *, const void *);
-int avl_comp_ipv6_prefix(const void *, const void *);
-int avl_comp_ipv4_prefix_origin(const void *, const void *);
-int avl_comp_ipv6_prefix_origin(const void *, const void *);
-int avl_comp_ipv4_addr_origin(const void *, const void *);
-int avl_comp_ipv6_addr_origin(const void *, const void *);
-
 void olsr_rt_best(struct rt_entry *);
 
 /**

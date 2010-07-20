@@ -22,4 +22,11 @@ extern int avl_comp_strcasecmp(const void *, const void *, void *);
 extern int avl_comp_int(const void *, const void *, void *);
 extern int avl_comp_interface_id(const void *, const void *, void *);
 
+int avl_comp_ipv4_prefix(const void *, const void *, void *);
+int avl_comp_ipv6_prefix(const void *, const void *, void *);
+int avl_comp_ipv4_prefix_origin(const void *, const void *, void *);
+int avl_comp_ipv6_prefix_origin(const void *, const void *, void *);
+int avl_comp_ipv4_addr_origin(const void *, const void *, void *);
+int avl_comp_ipv6_addr_origin(const void *, const void *, void *);
+
 #endif /* AVL_OLSR_COMP_H_ */
