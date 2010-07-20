@@ -184,7 +184,6 @@ struct olsr_config {
   unsigned char allow_no_interfaces:1; /* Should olsrd stop if no ifaces? */
   unsigned char willingness_auto:1;    /* Willingness in auto mode? */
   unsigned char clear_screen:1;        /* Clear screen during debug output? */
-  unsigned char del_gws:1;             /* Delete InternetGWs at startup? */
   unsigned char source_ip_mode:1;      /* Run OLSR routing in sourceip mode */
 
   uint16_t tos;                        /* IP Type of Service Byte */
