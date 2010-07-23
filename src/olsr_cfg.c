@@ -507,18 +507,11 @@ parse_cfg_interface(char *argstr, struct olsr_config *rcfg, char *rmsg)
           } else if (0 == strcasecmp("HelloValidityTime", p_next[0])) {
             new_if->cnf->hello_params.validity_time = olsr_txt_to_milli(p_next[1]);
             PARSER_DEBUG_PRINTF("\tHELLO validity: %u ms\n", new_if->cnf->hello_params.validity_time);
-          } else if (0 == strcasecmp("Tcinterval", p_next[0])) {
-            PARSER_DEBUG_PRINTF("\tIgnore TC interval1: %s ms in interface\n", p_next[1]);
-          } else if (0 == strcasecmp("TcValidityTime", p_next[0])) {
-            PARSER_DEBUG_PRINTF("\tIgnore TC validity: %s ms in interface\n", p_next[1]);
-          } else if (0 == strcasecmp("Midinterval", p_next[0])) {
-            PARSER_DEBUG_PRINTF("\tIgnore MID interval1: %s ms in interface\n", p_next[1]);
-          } else if (0 == strcasecmp("MidValidityTime", p_next[0])) {
-            PARSER_DEBUG_PRINTF("\tIgnore MID validity: %s ms in interface\n", p_next[1]);
-          } else if (0 == strcasecmp("Hnainterval", p_next[0])) {
-            PARSER_DEBUG_PRINTF("\tIgnore HNA interval1: %s ms in interface\n", p_next[1]);
-          } else if (0 == strcasecmp("HnaValidityTime", p_next[0])) {
-            PARSER_DEBUG_PRINTF("\tIgnore HNA validity: %s ms in interface\n", p_next[1]);
+          } else if ((0 == strcasecmp("Tcinterval", p_next[0])) || (0 == strcasecmp("TcValidityTime", p_next[0])) ||
+                     (0 == strcasecmp("Midinterval", p_next[0])) || (0 == strcasecmp("MidValidityTime", p_next[0])) ||
+                     (0 == strcasecmp("Hnainterval", p_next[0])) || (0 == strcasecmp("HnaValidityTime", p_next[0]))) {
+            fprintf(stderr,"ERROR: %s is deprecated within the interface section. All message intervals/validities except Hellos are global!\n",p_next[0]);
+            exit(1);
           } else if (0 == strcasecmp("Weight", p_next[0])) {
             new_if->cnf->weight.fixed = true;
             PARSER_DEBUG_PRINTF("\tFixed willingness: %d\n", new_if->cnf->weight.value);
@@ -1010,27 +1003,27 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
     break;
   case CFG_HNA_HTIME:
     rcfg->hna_params.emission_interval = olsr_txt_to_milli(argstr);
-    PARSER_DEBUG_PRINTF("\tHNA interval1: %u ms\n", rcfg->hna_params.emission_interval);
+    PARSER_DEBUG_PRINTF("HNA interval1: %u ms\n", rcfg->hna_params.emission_interval);
     break;
   case CFG_HNA_VTIME:
     rcfg->hna_params.validity_time = olsr_txt_to_milli(argstr);
-    PARSER_DEBUG_PRINTF("\tHNA validity: %u ms\n", rcfg->hna_params.validity_time);
+    PARSER_DEBUG_PRINTF("HNA validity: %u ms\n", rcfg->hna_params.validity_time);
     break;
   case CFG_MID_HTIME:
     rcfg->mid_params.emission_interval = olsr_txt_to_milli(argstr);
-    PARSER_DEBUG_PRINTF("\tMID interval1: %u ms\n", rcfg->mid_params.emission_interval);
+    PARSER_DEBUG_PRINTF("MID interval1: %u ms\n", rcfg->mid_params.emission_interval);
     break;
   case CFG_MID_VTIME:
     rcfg->mid_params.validity_time = olsr_txt_to_milli(argstr);
-    PARSER_DEBUG_PRINTF("\tMID validity: %u ms\n", rcfg->mid_params.validity_time);
+    PARSER_DEBUG_PRINTF("MID validity: %u ms\n", rcfg->mid_params.validity_time);
     break;
   case CFG_TC_HTIME:
     rcfg->tc_params.emission_interval = olsr_txt_to_milli(argstr);
-    PARSER_DEBUG_PRINTF("\tTC interval1: %u ms\n", rcfg->tc_params.emission_interval);
+    PARSER_DEBUG_PRINTF("TC interval1: %u ms\n", rcfg->tc_params.emission_interval);
     break;
   case CFG_TC_VTIME:
     rcfg->tc_params.validity_time = olsr_txt_to_milli(argstr);
-    PARSER_DEBUG_PRINTF("\tTC validity: %u ms\n", rcfg->tc_params.validity_time);
+    PARSER_DEBUG_PRINTF("TC validity: %u ms\n", rcfg->tc_params.validity_time);
     break;
 
   default:
@@ -1342,6 +1335,12 @@ olsr_sanity_check_cfg(struct olsr_config *cfg)
   struct olsr_if_options *io;
   struct millitxt_buf tbuf;
 
+  /* rttable */
+  if (cfg->rt_table == 0) cfg->rt_table = 254;
+
+  /* rttable_default */
+  if (cfg->rt_table_default == 0) cfg->rt_table_default = cfg->rt_table;
+
   /* IP version */
   if (cfg->ip_version != AF_INET && cfg->ip_version != AF_INET6) {
     fprintf(stderr, "Ipversion %d not allowed!\n", cfg->ip_version);
@@ -1549,7 +1548,7 @@ olsr_get_default_cfg(void)
   cfg->tos = DEF_TOS;
   assert(cfg->rt_proto == 0);
   cfg->rt_table = 254;
-  assert(cfg->rt_table_default == 0);
+  assert(cfg->rt_table_default == 0); /*does this ever fire!*/
   cfg->fib_metric = DEF_FIB_METRIC;
 
   for (i = 0; i < LOG_SOURCE_COUNT; i++) {
