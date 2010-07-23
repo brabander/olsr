@@ -1026,8 +1026,8 @@ CreateInterface(const char *ifName, struct interface *olsrIntf)
     /* For an OLSR-interface, copy the interface address and broadcast
      * address from the OLSR interface object. Downcast to correct sockaddr
      * subtype. */
-    newIf->intAddr.v4 = olsrIntf->int_addr.sin_addr;
-    newIf->broadAddr.v4 = olsrIntf->int_broadaddr.sin_addr;
+    newIf->intAddr.v4 = olsrIntf->int_src.v4.sin_addr;
+    newIf->broadAddr.v4 = olsrIntf->int_multicast.v4.sin_addr;
   } else {
     /* For a non-OLSR interface, retrieve the IP address ourselves */
     memset(&ifr, 0, sizeof(struct ifreq));

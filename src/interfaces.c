@@ -316,20 +316,9 @@ if_ifwithaddr(const union olsr_ip_addr *addr)
     return NULL;
   }
 
-  if (olsr_cnf->ip_version == AF_INET) {
-
-    /* IPv4 */
-    OLSR_FOR_ALL_INTERFACES(ifp, iterator) {
-      if (ip4cmp(&ifp->int_addr.sin_addr, &addr->v4) == 0) {
-        return ifp;
-      }
-    }
-  } else {
-    /* IPv6 */
-    OLSR_FOR_ALL_INTERFACES(ifp, iterator) {
-      if (ip6cmp(&ifp->int6_addr.sin6_addr, &addr->v6) == 0) {
-        return ifp;
-      }
+  OLSR_FOR_ALL_INTERFACES(ifp, iterator) {
+    if (olsr_ipcmp(&ifp->ip_addr, addr) == 0) {
+      return ifp;
     }
   }
   return NULL;

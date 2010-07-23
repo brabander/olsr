@@ -56,9 +56,9 @@
 #include <sys/time.h>
 
 /* OS dependent functions */
-ssize_t olsr_sendto(int, const void *, size_t, int, const struct sockaddr *, socklen_t);
+ssize_t olsr_sendto(int, const void *, size_t, int, const union olsr_sockaddr *);
 
-ssize_t olsr_recvfrom(int, void *, size_t, int, struct sockaddr *, socklen_t *);
+ssize_t olsr_recvfrom(int, void *, size_t, int, union olsr_sockaddr *, socklen_t *);
 
 int olsr_select(int, fd_set *, fd_set *, fd_set *, struct timeval *);
 
@@ -79,10 +79,6 @@ int getsocket(int, struct interface *);
 int getsocket6(int, struct interface *);
 
 int get_ipv6_address(char *, struct sockaddr_in6 *, int);
-
-int calculate_if_metric(char *);
-
-int check_wireless_interface(char *);
 
 bool is_if_link_up(char *);
 

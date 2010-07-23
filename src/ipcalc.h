@@ -52,6 +52,7 @@
 #include "olsr_types.h"
 #include "defs.h"
 #include "olsr_cfg.h"
+#include "common/string.h"
 
 #include <limits.h>
 #include <string.h>
@@ -148,6 +149,20 @@ static INLINE const char *
 ip6_to_string(struct ipaddr_str *const buf, const struct in6_addr *const addr6)
 {
   return inet_ntop(AF_INET6, addr6, buf->buf, sizeof(buf->buf));
+}
+
+static INLINE const char *
+olsr_sockaddr_to_string(struct ipaddr_str *const buf, const union olsr_sockaddr *s) {
+  if (s->storage.ss_family == AF_INET) {
+    return inet_ntop(AF_INET, &s->v4.sin_addr, buf->buf, sizeof(buf->buf));
+  }
+  else if (s->storage.ss_family == AF_INET6) {
+    return inet_ntop(AF_INET6, &s->v6.sin6_addr, buf->buf, sizeof(buf->buf));
+  }
+  else {
+    strscpy(buf->buf, "unkown ip family", sizeof(buf->buf));
+    return buf->buf;
+  }
 }
 
 static INLINE const char *

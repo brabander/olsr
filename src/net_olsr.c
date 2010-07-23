@@ -314,12 +314,6 @@ del_ptf(packet_transform_function f)
 int
 net_output(struct interface *ifp)
 {
-  union {
-    struct sockaddr sin;
-    struct sockaddr_in sin4;
-    struct sockaddr_in6 sin6;
-  } dstaddr;
-  int dstaddr_size;
   struct ptf *tmp_ptf;
   struct olsr_packet *outmsg;
   int retval;
@@ -338,23 +332,6 @@ net_output(struct interface *ifp)
   /* Set the packetlength */
   outmsg->size = htons(ifp->netbuf.pending);
 
-  if (olsr_cnf->ip_version == AF_INET) {
-    /* IP version 4 */
-
-    /* Copy sin */
-    dstaddr.sin4 = ifp->int_broadaddr;
-    if (dstaddr.sin4.sin_port == 0) {
-      dstaddr.sin4.sin_port = htons(olsr_cnf->olsr_port);
-    }
-    dstaddr_size = sizeof(dstaddr.sin4);
-  } else {
-    /* IP version 6 */
-    /* Copy sin */
-    dstaddr.sin6 = ifp->int6_multaddr;
-    /* No port number???? */
-    dstaddr_size = sizeof(dstaddr.sin6);
-  }
-
   /*
    * Call possible packet transform functions registered by plugins
    */
@@ -362,19 +339,17 @@ net_output(struct interface *ifp)
     tmp_ptf->function(ifp->netbuf.buff, &ifp->netbuf.pending);
   }
 
-  if (olsr_sendto(ifp->send_socket, ifp->netbuf.buff, ifp->netbuf.pending, MSG_DONTROUTE, &dstaddr.sin, dstaddr_size) < 0) {
+  if (olsr_sendto(ifp->send_socket, ifp->netbuf.buff, ifp->netbuf.pending,
+      MSG_DONTROUTE, &ifp->int_multicast) < 0) {
 #if !defined REMOVE_LOG_WARN
     const int save_errno = errno;
+    struct ipaddr_str buf;
 #endif
-#if !defined REMOVE_LOG_DEBUG
-    char sabuf[1024];
-#endif
-    dstaddr.sin.sa_family = olsr_cnf->ip_version;
-    OLSR_WARN(LOG_NETWORKING, "OLSR: sendto IPv%d: %s\n", olsr_cnf->ip_version == AF_INET ? 4 : 6, strerror(save_errno));
-    OLSR_DEBUG_NH(LOG_NETWORKING, "To: %s (size: %d)\n", sockaddr_to_string(sabuf, sizeof(sabuf), &dstaddr.sin, dstaddr_size),
-                  dstaddr_size);
-    OLSR_DEBUG_NH(LOG_NETWORKING, "Socket: %d interface: %d/%s\n", ifp->olsr_socket, ifp->if_index, ifp->int_name);
-    OLSR_DEBUG_NH(LOG_NETWORKING, "Outputsize: %d\n", ifp->netbuf.pending);
+    OLSR_WARN(LOG_NETWORKING, "sending %d bytes (IPv%d) to %s:%d on interface %s/%d: %s (%d)\n",
+            ifp->netbuf.pending, olsr_cnf->ip_version == AF_INET ? 4 : 6,
+            olsr_sockaddr_to_string(&buf, &ifp->int_multicast), ntohs(ifp->int_multicast.v4.sin_port),
+            ifp->int_name, ifp->if_index,
+            strerror(save_errno), save_errno);
     retval = -1;
   }
 

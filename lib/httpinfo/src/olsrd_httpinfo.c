@@ -860,36 +860,26 @@ build_config_body(struct autobuf *abuf)
   abuf_puts(abuf, "<table width=\"100%%\" border=\"0\">\n");
   for (ifs = olsr_cnf->if_configs; ifs != NULL; ifs = ifs->next) {
     const struct interface *const rifs = ifs->interf;
+    struct ipaddr_str addrbuf, bcastbuf;
+
     abuf_appendf(abuf, "<tr><th colspan=\"3\">%s</th>\n", ifs->name);
     if (!rifs) {
       abuf_puts(abuf, "<tr><td colspan=\"3\">Status: DOWN</td></tr>\n");
       continue;
     }
 
-    if (olsr_cnf->ip_version == AF_INET) {
-      struct ipaddr_str addrbuf, maskbuf, bcastbuf;
-      abuf_appendf(abuf,
-                   "<tr>\n"
-                   "<td>IP: %s</td>\n"
-                   "<td>MASK: %s</td>\n"
-                   "<td>BCAST: %s</td>\n"
-                   "</tr>\n",
-                   ip4_to_string(&addrbuf, rifs->int_addr.sin_addr),
-                   ip4_to_string(&maskbuf, rifs->int_netmask.sin_addr), ip4_to_string(&bcastbuf, rifs->int_broadaddr.sin_addr));
-    } else {
-      struct ipaddr_str addrbuf, maskbuf;
-      abuf_appendf(abuf,
-                   "<tr>\n"
-                   "<td>IP: %s</td>\n"
-                   "<td>MCAST: %s</td>\n"
-                   "<td></td>\n"
-                   "</tr>\n",
-                   ip6_to_string(&addrbuf, &rifs->int6_addr.sin6_addr), ip6_to_string(&maskbuf, &rifs->int6_multaddr.sin6_addr));
-    }
+    abuf_appendf(abuf,
+                 "<tr>\n"
+                 "<td>IP: %s</td>\n"
+                 "<td>MCAST: %s</td>\n"
+                 "<td></td>"
+                 "</tr>\n",
+                 olsr_sockaddr_to_string(&addrbuf, &rifs->int_src),
+                 olsr_sockaddr_to_string(&bcastbuf, &rifs->int_multicast));
     abuf_appendf(abuf,
                  "<tr>\n"
                  "<td>MTU: %d</td>\n"
-                 "<td>WLAN: %s</td>\n" "<td>STATUS: UP</td>\n" "</tr>\n", rifs->int_mtu, rifs->is_wireless ? "Yes" : "No");
+                 "<td>STATUS: UP</td>\n" "</tr>\n", rifs->int_mtu);
   }
   abuf_puts(abuf, "</table>\n");
 

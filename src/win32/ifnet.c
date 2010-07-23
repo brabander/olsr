@@ -382,60 +382,6 @@ GetIntInfo(struct InterfaceInfo *Info, char *Name)
 #define IOCTL_NDIS_QUERY_GLOBAL_STATS 0x00170002
 #endif
 
-static int
-IsWireless(char *IntName)
-{
-#if !defined WINCE
-  struct InterfaceInfo Info;
-  char DevName[43];
-  HANDLE DevHand;
-  unsigned int ErrNo;
-  unsigned int Oid;
-  unsigned char OutBuff[100];
-  unsigned long OutBytes;
-
-  if (GetIntInfo(&Info, IntName) < 0)
-    return -1;
-
-  DevName[0] = '\\';
-  DevName[1] = '\\';
-  DevName[2] = '.';
-  DevName[3] = '\\';
-
-  strscpy(DevName + 4, Info.Guid, sizeof(DevName) - 4);
-
-  OLSR_INFO(LOG_NETWORKING, "Checking whether interface %s is wireless.\n", DevName);
-
-  DevHand = CreateFile(DevName, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-
-  if (DevHand == INVALID_HANDLE_VALUE) {
-    ErrNo = GetLastError();
-
-    OLSR_WARN(LOG_NETWORKING, "CreateFile() = %08x, %s\n", ErrNo, StrError(ErrNo));
-    return -1;
-  }
-
-  Oid = OID_802_11_CONFIGURATION;
-
-  if (!DeviceIoControl(DevHand, IOCTL_NDIS_QUERY_GLOBAL_STATS, &Oid, sizeof(Oid), OutBuff, sizeof(OutBuff), &OutBytes, NULL)) {
-    ErrNo = GetLastError();
-
-    CloseHandle(DevHand);
-
-    if (ErrNo == ERROR_GEN_FAILURE || ErrNo == ERROR_INVALID_PARAMETER) {
-      OLSR_INFO(LOG_NETWORKING, "OID not supported. Device probably not wireless.\n");
-      return 0;
-    }
-
-    OLSR_WARN(LOG_NETWORKING, "DeviceIoControl() = %08x, %s\n", ErrNo, StrError(ErrNo));
-    return -1;
-  }
-
-  CloseHandle(DevHand);
-#endif
-  return 1;
-}
-
 void
 ListInterfaces(void)
 {
@@ -513,25 +459,6 @@ chk_if_changed(struct olsr_if_config *IntConf)
   }
 
   Res = 0;
-
-  IsWlan = IsWireless(IntConf->name);
-
-  if (IsWlan < 0)
-    IsWlan = 1;
-
-  if (Int->is_wireless != IsWlan) {
-    OLSR_INFO(LOG_NETWORKING, "\tLAN/WLAN change: %d -> %d.\n", Int->is_wireless, IsWlan);
-
-    Int->is_wireless = IsWlan;
-
-    if (IntConf->cnf->weight.fixed)
-      Int->int_metric = IntConf->cnf->weight.value;
-
-    else
-      Int->int_metric = Info.Metric;
-
-    Res = 1;
-  }
 
   if (Int->int_mtu != Info.Mtu) {
     OLSR_INFO(LOG_NETWORKING, "\tMTU change: %d -> %d.\n", (int)Int->int_mtu, Info.Mtu);
@@ -677,12 +604,6 @@ chk_if_up(struct olsr_if_config *IntConf)
     IsWlan = 1;
 
   New->is_wireless = IsWlan;
-
-  if (IntConf->cnf->weight.fixed)
-    New->int_metric = IntConf->cnf->weight.value;
-
-  else
-    New->int_metric = Info.Metric;
 
   New->olsr_seqnum = rand() & 0xffff;
 

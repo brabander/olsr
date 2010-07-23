@@ -729,59 +729,6 @@ olsr_select(int nfds, fd_set * readfds, fd_set * writefds, fd_set * exceptfds, s
   return select(nfds, readfds, writefds, exceptfds, timeout);
 }
 
-
-int
-check_wireless_interface(char *ifname)
-{
-#if defined __FreeBSD__ &&  !defined FBSD_NO_80211
-
-/* From FreeBSD ifconfig/ifieee80211.c ieee80211_status() */
-  struct ieee80211req ireq;
-  u_int8_t data[32];
-
-  memset(&ireq, 0, sizeof(ireq));
-  strlcpy(ireq.i_name, ifname, sizeof(ireq.i_name));
-  ireq.i_data = &data;
-  ireq.i_type = IEEE80211_IOC_SSID;
-  ireq.i_val = -1;
-  return (ioctl(olsr_cnf->ioctl_s, SIOCG80211, &ireq) >= 0) ? 1 : 0;
-#elif defined __OpenBSD__
-  struct ieee80211_nodereq nr;
-  bzero(&nr, sizeof(nr));
-  strlcpy(nr.nr_ifname, ifname, sizeof(nr.nr_ifname));
-  return (ioctl(olsr_cnf->ioctl_s, SIOCG80211FLAGS, &nr) >= 0) ? 1 : 0;
-#else
-  ifname = NULL;                /* squelsh compiler warning */
-  return 0;
-#endif
-}
-
-int
-calculate_if_metric(char *ifname)
-{
-  if (check_wireless_interface(ifname)) {
-    /* Wireless */
-    return 1;
-  } else {
-    /* Ethernet */
-#if 0
-    /* Andreas: Perhaps SIOCGIFMEDIA is the way to do this? */
-    struct ifmediareq ifm;
-
-    memset(&ifm, 0, sizeof(ifm));
-    strlcpy(ifm.ifm_name, ifname, sizeof(ifm.ifm_name));
-
-    if (ioctl(olsr_cnf->ioctl_s, SIOCGIFMEDIA, &ifm) < 0) {
-      OLSR_WARN(LOG_NETWORKING, "Error SIOCGIFMEDIA(%s)\n", ifm.ifm_name);
-      return WEIGHT_ETHERNET_DEFAULT;
-    }
-
-    OLSR_DEBUG(LOG_NETWORKING, "%s: STATUS 0x%08x\n", ifm.ifm_name, ifm.ifm_status);
-#endif
-    return WEIGHT_ETHERNET_DEFAULT;
-  }
-}
-
 /*
  * Local Variables:
  * c-basic-offset: 2

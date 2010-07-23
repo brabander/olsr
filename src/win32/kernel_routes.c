@@ -97,7 +97,7 @@ olsr_kernel_add_route(const struct rt_entry *rt, int ip_version)
   Row.dwForwardProto = 3;       // MIB_IPPROTO_NETMGMT
   Row.dwForwardAge = INFINITE;
   Row.dwForwardNextHopAS = 0;
-  Row.dwForwardMetric1 = iface ? iface->int_metric : 0 + olsr_fib_metric(&rt->rt_best->rtp_metric);
+  Row.dwForwardMetric1 = olsr_fib_metric(&rt->rt_best->rtp_metric);
   Row.dwForwardMetric2 = -1;
   Row.dwForwardMetric3 = -1;
   Row.dwForwardMetric4 = -1;
@@ -164,7 +164,7 @@ olsr_kernel_del_route(const struct rt_entry *rt, int ip_version)
   Row.dwForwardProto = 3;       // MIB_IPPROTO_NETMGMT
   Row.dwForwardAge = INFINITE;
   Row.dwForwardNextHopAS = 0;
-  Row.dwForwardMetric1 = iface ? iface->int_metric : 0 + olsr_fib_metric(&rt->rt_metric);
+  Row.dwForwardMetric1 = olsr_fib_metric(&rt->rt_metric);
   Row.dwForwardMetric2 = -1;
   Row.dwForwardMetric3 = -1;
   Row.dwForwardMetric4 = -1;

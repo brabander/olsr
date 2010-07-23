@@ -119,6 +119,7 @@ chk_if_changed(struct olsr_if_config *iface)
   struct interface *ifp;
   struct ifreq ifr;
   int if_changes = 0;
+  int int_flags;
 
   OLSR_DEBUG(LOG_INTERFACE, "Checking if %s is set down or changed\n", iface->name);
 
@@ -135,12 +136,12 @@ chk_if_changed(struct olsr_if_config *iface)
     remove_interface(&iface->interf);
     return 0;
   }
-  ifp->int_flags = ifr.ifr_flags;
+  int_flags = ifr.ifr_flags;
 
   /*
    * First check if the interface is set DOWN
    */
-  if ((ifp->int_flags & IFF_UP) == 0) {
+  if ((int_flags & IFF_UP) == 0) {
     OLSR_DEBUG(LOG_INTERFACE, "\tInterface %s not up - removing it...\n", iface->name);
     remove_interface(&iface->interf);
     return 0;
@@ -154,23 +155,17 @@ chk_if_changed(struct olsr_if_config *iface)
 
   /* Check broadcast */
   if (olsr_cnf->ip_version == AF_INET && !iface->cnf->ipv4_broadcast.v4.s_addr &&       /* Skip if fixed bcast */
-      ((ifp->int_flags & IFF_BROADCAST)) == 0) {
+      ((int_flags & IFF_BROADCAST)) == 0) {
     OLSR_DEBUG(LOG_INTERFACE, "\tNo broadcast - removing\n");
     remove_interface(&iface->interf);
     return 0;
   }
 
-  if (ifp->int_flags & IFF_LOOPBACK) {
+  if (int_flags & IFF_LOOPBACK) {
     OLSR_DEBUG(LOG_INTERFACE, "\tThis is a loopback interface - removing it...\n");
     remove_interface(&iface->interf);
     return 0;
   }
-
-  /* trying to detect if interface is wireless. */
-  ifp->is_wireless = check_wireless_interface(ifr.ifr_name);
-
-  /* Set interface metric */
-  ifp->int_metric = iface->cnf->weight.fixed ? iface->cnf->weight.value : calculate_if_metric(ifr.ifr_name);
 
   /* Get MTU */
   if (ioctl(olsr_cnf->ioctl_s, SIOCGIFMTU, &ifr) < 0) {
@@ -212,13 +207,13 @@ chk_if_changed(struct olsr_if_config *iface)
 
     OLSR_DEBUG(LOG_INTERFACE, "\tAddress: %s\n", ip6_to_string(&buf, &tmp_saddr6.sin6_addr));
 
-    if (ip6cmp(&tmp_saddr6.sin6_addr, &ifp->int6_addr.sin6_addr) != 0) {
+    if (ip6cmp(&tmp_saddr6.sin6_addr, &ifp->int_src.v6.sin6_addr) != 0) {
       OLSR_DEBUG(LOG_INTERFACE, "New IP address for %s:\n"
                  "\tOld: %s\n\tNew: %s\n",
-                 ifr.ifr_name, ip6_to_string(&buf, &ifp->int6_addr.sin6_addr), ip6_to_string(&buf, &tmp_saddr6.sin6_addr));
+                 ifr.ifr_name, ip6_to_string(&buf, &ifp->int_src.v6.sin6_addr), ip6_to_string(&buf, &tmp_saddr6.sin6_addr));
 
       /* Update address */
-      ifp->int6_addr.sin6_addr = tmp_saddr6.sin6_addr;
+      ifp->int_src.v6.sin6_addr = tmp_saddr6.sin6_addr;
       ifp->ip_addr.v6 = tmp_saddr6.sin6_addr;
 
       if_changes = 1;
@@ -234,15 +229,15 @@ chk_if_changed(struct olsr_if_config *iface)
       return 0;
     }
 
-    OLSR_DEBUG(LOG_INTERFACE, "\tAddress:%s\n", ip4_to_string(&buf, ifp->int_addr.sin_addr));
+    OLSR_DEBUG(LOG_INTERFACE, "\tAddress:%s\n", ip4_to_string(&buf, ifp->int_src.v4.sin_addr));
 
-    if (ip4cmp(&ifp->int_addr.sin_addr, &tmp_saddr4->sin_addr) != 0) {
+    if (ip4cmp(&ifp->int_src.v4.sin_addr, &tmp_saddr4->sin_addr) != 0) {
       /* New address */
       OLSR_DEBUG(LOG_INTERFACE, "IPv4 address changed for %s\n"
                  "\tOld:%s\n\tNew:%s\n",
-                 ifr.ifr_name, ip4_to_string(&buf, ifp->int_addr.sin_addr), ip4_to_string(&buf, tmp_saddr4->sin_addr));
+                 ifr.ifr_name, ip4_to_string(&buf, ifp->int_src.v4.sin_addr), ip4_to_string(&buf, tmp_saddr4->sin_addr));
 
-      ifp->int_addr = *(struct sockaddr_in *)(ARM_NOWARN_ALIGN(&ifr.ifr_addr));
+      ifp->int_src.v4 = *(struct sockaddr_in *)(ARM_NOWARN_ALIGN(&ifr.ifr_addr));
       ifp->ip_addr.v4 = tmp_saddr4->sin_addr;
 
       if_changes = 1;
@@ -257,19 +252,6 @@ chk_if_changed(struct olsr_if_config *iface)
 
     OLSR_DEBUG(LOG_INTERFACE, "\tNetmask:%s\n", ip4_to_string(&buf, ((struct sockaddr_in *)(ARM_NOWARN_ALIGN(&ifr.ifr_netmask)))->sin_addr));
 
-    if (ip4cmp(&ifp->int_netmask.sin_addr, &((struct sockaddr_in *)(ARM_NOWARN_ALIGN(&ifr.ifr_netmask)))->sin_addr) != 0) {
-      /* New address */
-      OLSR_DEBUG(LOG_INTERFACE, "IPv4 netmask changed for %s\n"
-                 "\tOld:%s\n\tNew:%s\n",
-                 ifr.ifr_name,
-                 ip4_to_string(&buf, ifp->int_netmask.sin_addr),
-                 ip4_to_string(&buf, ((struct sockaddr_in *)(ARM_NOWARN_ALIGN(&ifr.ifr_netmask)))->sin_addr));
-
-      ifp->int_netmask = *(struct sockaddr_in *)(ARM_NOWARN_ALIGN(&ifr.ifr_netmask));
-
-      if_changes = 1;
-    }
-
     if (!iface->cnf->ipv4_broadcast.v4.s_addr) {
       /* Check broadcast address */
       if (ioctl(olsr_cnf->ioctl_s, SIOCGIFBRDADDR, &ifr) < 0) {
@@ -280,15 +262,15 @@ chk_if_changed(struct olsr_if_config *iface)
       OLSR_DEBUG(LOG_INTERFACE, "\tBroadcast address:%s\n",
                  ip4_to_string(&buf, ((struct sockaddr_in *)(ARM_NOWARN_ALIGN(&ifr.ifr_broadaddr)))->sin_addr));
 
-      if (ifp->int_broadaddr.sin_addr.s_addr != ((struct sockaddr_in *)(ARM_NOWARN_ALIGN(&ifr.ifr_broadaddr)))->sin_addr.s_addr) {
+      if (ifp->int_multicast.v4.sin_addr.s_addr != ((struct sockaddr_in *)(ARM_NOWARN_ALIGN(&ifr.ifr_broadaddr)))->sin_addr.s_addr) {
         /* New address */
         OLSR_DEBUG(LOG_INTERFACE, "IPv4 broadcast changed for %s\n"
                    "\tOld:%s\n\tNew:%s\n",
                    ifr.ifr_name,
-                   ip4_to_string(&buf, ifp->int_broadaddr.sin_addr),
+                   ip4_to_string(&buf, ifp->int_multicast.v4.sin_addr),
                    ip4_to_string(&buf, ((struct sockaddr_in *)(ARM_NOWARN_ALIGN(&ifr.ifr_broadaddr)))->sin_addr));
 
-        ifp->int_broadaddr = *(struct sockaddr_in *)(ARM_NOWARN_ALIGN(&ifr.ifr_broadaddr));
+        ifp->int_multicast.v4 = *(struct sockaddr_in *)(ARM_NOWARN_ALIGN(&ifr.ifr_broadaddr));
         if_changes = 1;
       }
     }
@@ -327,6 +309,7 @@ chk_if_up(struct olsr_if_config *iface)
   struct interface *ifp;
   struct ifreq ifr;
   const char *ifr_basename;
+  int int_flags;
 #if !defined REMOVE_LOG_DEBUG || !defined REMOVE_LOG_INFO
   struct ipaddr_str buf;
 #endif
@@ -353,27 +336,23 @@ chk_if_up(struct olsr_if_config *iface)
     goto cleanup;
   }
 
-  ifp->int_flags = ifr.ifr_flags;
-  if ((ifp->int_flags & IFF_UP) == 0) {
+  int_flags = ifr.ifr_flags;
+  if ((int_flags & IFF_UP) == 0) {
     OLSR_DEBUG(LOG_INTERFACE, "\tInterface not up - skipping it...\n");
     goto cleanup;
   }
 
   /* Check broadcast */
   if (olsr_cnf->ip_version == AF_INET && !iface->cnf->ipv4_broadcast.v4.s_addr &&       /* Skip if fixed bcast */
-      (ifp->int_flags & IFF_BROADCAST) == 0) {
+      (int_flags & IFF_BROADCAST) == 0) {
     OLSR_DEBUG(LOG_INTERFACE, "\tNo broadcast - skipping\n");
     goto cleanup;
   }
 
-  if (ifp->int_flags & IFF_LOOPBACK) {
+  if (int_flags & IFF_LOOPBACK) {
     OLSR_DEBUG(LOG_INTERFACE, "\tThis is a loopback interface - skipping it...\n");
     goto cleanup;
   }
-
-  /* trying to detect if interface is wireless. */
-  ifp->is_wireless = check_wireless_interface(ifr.ifr_name);
-  OLSR_DEBUG(LOG_INTERFACE, ifp->is_wireless ? "\tWireless interface detected\n" : "\tNot a wireless interface\n");
 
   ifr_basename = if_basename(ifr.ifr_name);
 
@@ -382,20 +361,26 @@ chk_if_up(struct olsr_if_config *iface)
     /* Get interface address */
     int result;
 
+    memset(&ifp->int_src, 0, sizeof(ifp->int_multicast));
+    ifp->int_src.v6.sin6_family = AF_INET6;
+    ifp->int_src.v6.sin6_flowinfo = htonl(0);
+    ifp->int_src.v6.sin6_scope_id = if_nametoindex(ifr.ifr_name);
+    ifp->int_src.v6.sin6_port = htons(olsr_cnf->olsr_port);
+
     if (iface->cnf->ipv6_addrtype == OLSR_IP6T_AUTO) {
-      if ((result = get_ipv6_address(ifr.ifr_name, &ifp->int6_addr, OLSR_IP6T_SITELOCAL)) > 0) {
+      if ((result = get_ipv6_address(ifr.ifr_name, &ifp->int_src.v6, OLSR_IP6T_SITELOCAL)) > 0) {
         iface->cnf->ipv6_addrtype = OLSR_IP6T_SITELOCAL;
       } else {
-        if ((result = get_ipv6_address(ifr.ifr_name, &ifp->int6_addr, OLSR_IP6T_UNIQUELOCAL)) > 0) {
+        if ((result = get_ipv6_address(ifr.ifr_name, &ifp->int_src.v6, OLSR_IP6T_UNIQUELOCAL)) > 0) {
           iface->cnf->ipv6_addrtype = OLSR_IP6T_UNIQUELOCAL;
         } else {
-          if ((result = get_ipv6_address(ifr.ifr_name, &ifp->int6_addr, OLSR_IP6T_GLOBAL)) > 0) {
+          if ((result = get_ipv6_address(ifr.ifr_name, &ifp->int_src.v6, OLSR_IP6T_GLOBAL)) > 0) {
             iface->cnf->ipv6_addrtype = OLSR_IP6T_GLOBAL;
           }
         }
       }
     } else {
-      result = get_ipv6_address(ifr.ifr_name, &ifp->int6_addr, iface->cnf->ipv6_addrtype);
+      result = get_ipv6_address(ifr.ifr_name, &ifp->int_src.v6, iface->cnf->ipv6_addrtype);
     }
 
     if (result <= 0) {
@@ -410,26 +395,28 @@ chk_if_up(struct olsr_if_config *iface)
       goto cleanup;
     }
 
-    OLSR_DEBUG(LOG_INTERFACE, "\tAddress: %s\n", ip6_to_string(&buf, &ifp->int6_addr.sin6_addr));
+    OLSR_DEBUG(LOG_INTERFACE, "\tAddress: %s\n", ip6_to_string(&buf, &ifp->int_src.v6.sin6_addr));
 
     /* Multicast */
-    memset(&ifp->int6_multaddr, 0, sizeof(ifp->int6_multaddr));
-    ifp->int6_multaddr.sin6_family = AF_INET6;
-    ifp->int6_multaddr.sin6_flowinfo = htonl(0);
-    ifp->int6_multaddr.sin6_scope_id = if_nametoindex(ifr.ifr_name);
-    ifp->int6_multaddr.sin6_port = htons(olsr_cnf->olsr_port);
-    ifp->int6_multaddr.sin6_addr = iface->cnf->ipv6_addrtype == OLSR_IP6T_SITELOCAL
+    memset(&ifp->int_multicast, 0, sizeof(ifp->int_multicast));
+    ifp->int_multicast.v6.sin6_family = AF_INET6;
+    ifp->int_multicast.v6.sin6_flowinfo = htonl(0);
+    ifp->int_multicast.v6.sin6_scope_id = if_nametoindex(ifr.ifr_name);
+    ifp->int_multicast.v6.sin6_port = htons(olsr_cnf->olsr_port);
+    ifp->int_multicast.v6.sin6_addr = iface->cnf->ipv6_addrtype == OLSR_IP6T_SITELOCAL
       ? iface->cnf->ipv6_multi_site.v6 : iface->cnf->ipv6_multi_glbl.v6;
 
 #ifdef __MacOSX__
     ifp->int6_multaddr.sin6_scope_id = 0;
 #endif
 
-    OLSR_DEBUG(LOG_INTERFACE, "\tMulticast: %s\n", ip6_to_string(&buf, &ifp->int6_multaddr.sin6_addr));
+    OLSR_DEBUG(LOG_INTERFACE, "\tMulticast: %s\n", ip6_to_string(&buf, &ifp->int_multicast.v6.sin6_addr));
 
-    ifp->ip_addr.v6 = ifp->int6_addr.sin6_addr;
+    ifp->ip_addr.v6 = ifp->int_src.v6.sin6_addr;
   } else {
     /* IP version 4 */
+    memset(&ifp->int_src, 0, sizeof(ifp->int_src));
+    memset(&ifp->int_multicast, 0, sizeof(ifp->int_multicast));
 
     /* Get interface address (IPv4) */
     if (ioctl(olsr_cnf->ioctl_s, SIOCGIFADDR, &ifr) < 0) {
@@ -437,19 +424,12 @@ chk_if_up(struct olsr_if_config *iface)
       goto cleanup;
     }
 
-    ifp->int_addr = *(struct sockaddr_in *)(ARM_NOWARN_ALIGN(&ifr.ifr_addr));
-
-    /* Find netmask */
-    if (ioctl(olsr_cnf->ioctl_s, SIOCGIFNETMASK, &ifr) < 0) {
-      OLSR_WARN(LOG_INTERFACE, "%s: ioctl (get netmask) failed", ifr.ifr_name);
-      goto cleanup;
-    }
-    ifp->int_netmask = *(struct sockaddr_in *)(ARM_NOWARN_ALIGN(&ifr.ifr_netmask));
+    ifp->int_src.v4 = *(struct sockaddr_in *)(ARM_NOWARN_ALIGN(&ifr.ifr_addr));
 
     /* Find broadcast address */
     if (iface->cnf->ipv4_broadcast.v4.s_addr) {
       /* Specified broadcast */
-      ifp->int_broadaddr.sin_addr = iface->cnf->ipv4_broadcast.v4;
+      ifp->int_multicast.v4.sin_addr = iface->cnf->ipv4_broadcast.v4;
     } else {
       /* Autodetect */
       if (ioctl(olsr_cnf->ioctl_s, SIOCGIFBRDADDR, &ifr) < 0) {
@@ -457,7 +437,7 @@ chk_if_up(struct olsr_if_config *iface)
         goto cleanup;
       }
 
-      ifp->int_broadaddr = *(struct sockaddr_in *)(ARM_NOWARN_ALIGN(&ifr.ifr_broadaddr));
+      ifp->int_multicast.v4 = *(struct sockaddr_in *)(ARM_NOWARN_ALIGN(&ifr.ifr_broadaddr));
     }
 
     /* Deactivate IP spoof filter */
@@ -466,7 +446,12 @@ chk_if_up(struct olsr_if_config *iface)
     /* Disable ICMP redirects */
     disable_redirects(ifr_basename, ifp, olsr_cnf->ip_version);
 
-    ifp->ip_addr.v4 = ifp->int_addr.sin_addr;
+    ifp->int_src.v4.sin_family = AF_INET;
+    ifp->int_src.v4.sin_port = htons(olsr_cnf->olsr_port);
+    ifp->int_multicast.v4.sin_family = AF_INET;
+    ifp->int_multicast.v4.sin_port = htons(olsr_cnf->olsr_port);
+
+    ifp->ip_addr.v4 = ifp->int_src.v4.sin_addr;
   }
 
   /* check if interface with this IP already exists */
@@ -478,10 +463,6 @@ chk_if_up(struct olsr_if_config *iface)
 
   /* Get interface index */
   ifp->if_index = if_nametoindex(ifr.ifr_name);
-
-  /* Set interface metric */
-  ifp->int_metric = iface->cnf->weight.fixed ? iface->cnf->weight.value : calculate_if_metric(ifr.ifr_name);
-  OLSR_DEBUG(LOG_INTERFACE, "\tMetric: %d\n", ifp->int_metric);
 
   /* Get MTU */
   if (ioctl(olsr_cnf->ioctl_s, SIOCGIFMTU, &ifr) < 0) {
@@ -500,12 +481,11 @@ chk_if_up(struct olsr_if_config *iface)
   OLSR_DEBUG(LOG_INTERFACE, "\tIndex %d\n", ifp->if_index);
 
   if (olsr_cnf->ip_version == AF_INET) {
-    OLSR_DEBUG(LOG_INTERFACE, "\tAddress:%s\n", ip4_to_string(&buf, ifp->int_addr.sin_addr));
-    OLSR_DEBUG(LOG_INTERFACE, "\tNetmask:%s\n", ip4_to_string(&buf, ifp->int_netmask.sin_addr));
-    OLSR_DEBUG(LOG_INTERFACE, "\tBroadcast address:%s\n", ip4_to_string(&buf, ifp->int_broadaddr.sin_addr));
+    OLSR_DEBUG(LOG_INTERFACE, "\tAddress:%s\n", ip4_to_string(&buf, ifp->int_src.v4.sin_addr));
+    OLSR_DEBUG(LOG_INTERFACE, "\tBroadcast address:%s\n", ip4_to_string(&buf, ifp->int_multicast.v4.sin_addr));
   } else {
-    OLSR_DEBUG(LOG_INTERFACE, "\tAddress: %s\n", ip6_to_string(&buf, &ifp->int6_addr.sin6_addr));
-    OLSR_DEBUG(LOG_INTERFACE, "\tMulticast: %s\n", ip6_to_string(&buf, &ifp->int6_multaddr.sin6_addr));
+    OLSR_DEBUG(LOG_INTERFACE, "\tAddress: %s\n", ip6_to_string(&buf, &ifp->int_src.v6.sin6_addr));
+    OLSR_DEBUG(LOG_INTERFACE, "\tMulticast: %s\n", ip6_to_string(&buf, &ifp->int_multicast.v6.sin6_addr));
   }
 
   /*

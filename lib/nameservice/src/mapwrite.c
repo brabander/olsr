@@ -106,17 +106,17 @@ mapwrite_work(FILE * fmap)
   for (ifs = olsr_cnf->if_configs; ifs; ifs = ifs->next) {
     if (0 != ifs->interf) {
       if (olsr_cnf->ip_version == AF_INET) {
-        if (ip4cmp((struct in_addr *)&olsr_cnf->router_id, &ifs->interf->int_addr.sin_addr) != 0) {
+        if (ip4cmp(&olsr_cnf->router_id.v4, &ifs->interf->int_src.v4.sin_addr) != 0) {
           if (0 > fprintf(fmap, "Mid('%s','%s');\n",
                           olsr_ip_to_string(&strbuf1, &olsr_cnf->router_id),
-                          olsr_ip_to_string(&strbuf2, (union olsr_ip_addr *)&ifs->interf->int_addr.sin_addr))) {
+                          olsr_sockaddr_to_string(&strbuf2, &ifs->interf->int_src))) {
             return;
           }
         }
-      } else if (ip6cmp((struct in6_addr *)&olsr_cnf->router_id, &ifs->interf->int6_addr.sin6_addr) != 0) {
+      } else if (ip6cmp(&olsr_cnf->router_id.v6, &ifs->interf->int_src.v6.sin6_addr) != 0) {
         if (0 > fprintf(fmap, "Mid('%s','%s');\n",
                         olsr_ip_to_string(&strbuf1, &olsr_cnf->router_id),
-                        olsr_ip_to_string(&strbuf2, (union olsr_ip_addr *)&ifs->interf->int6_addr.sin6_addr))) {
+                        olsr_sockaddr_to_string(&strbuf2, &ifs->interf->int_src))) {
           return;
         }
       }

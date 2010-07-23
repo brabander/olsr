@@ -107,6 +107,13 @@ struct olsr_interface_id {
   uint32_t if_index;
 };
 
+union olsr_sockaddr {
+  struct sockaddr_in v4;
+  struct sockaddr_in6 v6;
+  struct sockaddr std;
+  struct sockaddr_storage storage;
+};
+
 typedef uint32_t olsr_linkcost;
 
 #endif

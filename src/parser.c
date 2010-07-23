@@ -341,7 +341,7 @@ olsr_input(int fd, void *data __attribute__ ((unused)), unsigned int flags __att
     struct preprocessor_function_entry *entry;
     uint8_t *packet;
     /* sockaddr_in6 is bigger than sockaddr !!!! */
-    struct sockaddr_storage from;
+    union olsr_sockaddr from;
     socklen_t fromlen;
     int size;
     uint8_t inbuf[MAXMESSAGESIZE] __attribute__ ((aligned));
@@ -352,7 +352,7 @@ olsr_input(int fd, void *data __attribute__ ((unused)), unsigned int flags __att
     }
 
     fromlen = sizeof(from);
-    size = olsr_recvfrom(fd, inbuf, sizeof(inbuf), 0, (struct sockaddr *)&from, &fromlen);
+    size = olsr_recvfrom(fd, inbuf, sizeof(inbuf), 0, &from, &fromlen);
 
     if (size <= 0) {
       if (size < 0 && errno != EWOULDBLOCK) {

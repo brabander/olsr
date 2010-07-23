@@ -403,7 +403,7 @@ getsocket(int bufspace, struct interface *ifp)
   sin4.sin_port = htons(olsr_cnf->olsr_port);
 
   if(bufspace <= 0) {
-    sin4.sin_addr.s_addr = ifp->int_addr.sin_addr.s_addr;
+    sin4.sin_addr = ifp->int_src.v4.sin_addr;
   }
   else {
     assert(sin4.sin_addr.s_addr == INADDR_ANY);
@@ -503,7 +503,7 @@ getsocket6(int bufspace, struct interface *ifp)
   sin6.sin6_port = htons(olsr_cnf->olsr_port);
 
   if(bufspace <= 0) {
-    memcpy(&sin6.sin6_addr, &ifp->int6_addr.sin6_addr, sizeof(struct in6_addr));
+    memcpy(&sin6.sin6_addr, &ifp->int_src.v6.sin6_addr, sizeof(struct in6_addr));
   }
   else {
     assert(0 == memcmp(&sin6.sin6_addr, &in6addr_any, sizeof(sin6.sin6_addr)));   /* == IN6ADDR_ANY_INIT */
@@ -527,11 +527,11 @@ join_mcast(struct interface *ifs, int sock)
 #endif
   struct ipv6_mreq mcastreq;
 
-  mcastreq.ipv6mr_multiaddr = ifs->int6_multaddr.sin6_addr;
+  mcastreq.ipv6mr_multiaddr = ifs->int_multicast.v6.sin6_addr;
   mcastreq.ipv6mr_interface = ifs->if_index;
 
   OLSR_INFO(LOG_NETWORKING, "Interface %s joining multicast %s\n", ifs->int_name,
-            ip6_to_string(&buf, &ifs->int6_multaddr.sin6_addr));
+            olsr_sockaddr_to_string(&buf, &ifs->int_multicast));
   /* Send multicast */
   if (setsockopt(sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char *)&mcastreq, sizeof(struct ipv6_mreq))
       < 0) {
@@ -625,9 +625,9 @@ get_ipv6_address(char *ifname, struct sockaddr_in6 *saddr6, int addrtype6)
  * Wrapper for sendto(2)
  */
 ssize_t
-olsr_sendto(int s, const void *buf, size_t len, int flags, const struct sockaddr * to, socklen_t tolen)
+olsr_sendto(int s, const void *buf, size_t len, int flags, const union olsr_sockaddr *sockaddr)
 {
-  return sendto(s, buf, len, flags, to, tolen);
+  return sendto(s, buf, len, flags, &sockaddr->std, sizeof(*sockaddr));
 }
 
 /**
@@ -635,9 +635,10 @@ olsr_sendto(int s, const void *buf, size_t len, int flags, const struct sockaddr
  */
 
 ssize_t
-olsr_recvfrom(int s, void *buf, size_t len, int flags, struct sockaddr * from, socklen_t * fromlen)
+olsr_recvfrom(int s, void *buf, size_t len, int flags,
+    union olsr_sockaddr *sockaddr, socklen_t *socklen)
 {
-  return recvfrom(s, buf, len, flags, from, fromlen);
+  return recvfrom(s, buf, len, flags, &sockaddr->std, socklen);
 }
 
 /**
@@ -649,158 +650,6 @@ olsr_select(int nfds, fd_set * readfds, fd_set * writefds, fd_set * exceptfds, s
 {
   return select(nfds, readfds, writefds, exceptfds, timeout);
 }
-
-int
-check_wireless_interface(char *ifname)
-{
-  struct ifreq ifr;
-
-  memset(&ifr, 0, sizeof(ifr));
-  strscpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
-
-  return (ioctl(olsr_cnf->ioctl_s, SIOCGIWNAME, &ifr) >= 0) ? 1 : 0;
-}
-
-#if 0
-
-#include <linux/sockios.h>
-#include <linux/types.h>
-
-/* This data structure is used for all the MII ioctl's */
-struct mii_data {
-  __u16 phy_id;
-  __u16 reg_num;
-  __u16 val_in;
-  __u16 val_out;
-};
-
-
-/* Basic Mode Control Register */
-#define MII_BMCR		0x00
-#define  MII_BMCR_RESET		0x8000
-#define  MII_BMCR_LOOPBACK	0x4000
-#define  MII_BMCR_100MBIT	0x2000
-#define  MII_BMCR_AN_ENA	0x1000
-#define  MII_BMCR_ISOLATE	0x0400
-#define  MII_BMCR_RESTART	0x0200
-#define  MII_BMCR_DUPLEX	0x0100
-#define  MII_BMCR_COLTEST	0x0080
-
-/* Basic Mode Status Register */
-#define MII_BMSR		0x01
-#define  MII_BMSR_CAP_MASK	0xf800
-#define  MII_BMSR_100BASET4	0x8000
-#define  MII_BMSR_100BASETX_FD	0x4000
-#define  MII_BMSR_100BASETX_HD	0x2000
-#define  MII_BMSR_10BASET_FD	0x1000
-#define  MII_BMSR_10BASET_HD	0x0800
-#define  MII_BMSR_NO_PREAMBLE	0x0040
-#define  MII_BMSR_AN_COMPLETE	0x0020
-#define  MII_BMSR_REMOTE_FAULT	0x0010
-#define  MII_BMSR_AN_ABLE	0x0008
-#define  MII_BMSR_LINK_VALID	0x0004
-#define  MII_BMSR_JABBER	0x0002
-#define  MII_BMSR_EXT_CAP	0x0001
-
-int
-calculate_if_metric(char *ifname)
-{
-  if (check_wireless_interface(ifname)) {
-    struct ifreq ifr;
-    strscpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
-
-    /* Get bit rate */
-    if (ioctl(olsr_cnf->ioctl_s, SIOCGIWRATE, &ifr) < 0) {
-      OLSR_PRINTF(1, "Not able to find rate for WLAN interface %s\n", ifname);
-      return WEIGHT_WLAN_11MB;
-    }
-
-    OLSR_PRINTF(1, "Bitrate %d\n", ifr.ifr_ifru.ifru_ivalue);
-
-    //WEIGHT_WLAN_LOW,          /* <11Mb WLAN     */
-    //WEIGHT_WLAN_11MB,         /* 11Mb 802.11b   */
-    //WEIGHT_WLAN_54MB,         /* 54Mb 802.11g   */
-    return WEIGHT_WLAN_LOW;
-  } else {
-    /* Ethernet */
-    /* Mii wizardry */
-    struct ifreq ifr;
-    struct mii_data *mii = (struct mii_data *)&ifr.ifr_data;
-    int bmcr;
-    memset(&ifr, 0, sizeof(ifr));
-    strscpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
-
-    if (ioctl(olsr_cnf->ioctl_s, SIOCGMIIPHY, &ifr) < 0) {
-      if (errno != ENODEV)
-        OLSR_PRINTF(1, "SIOCGMIIPHY on '%s' failed: %s\n", ifr.ifr_name, strerror(errno));
-      return WEIGHT_ETHERNET_DEFAULT;
-    }
-
-    mii->reg_num = MII_BMCR;
-    if (ioctl(olsr_cnf->ioctl_s, SIOCGMIIREG, &ifr) < 0) {
-      OLSR_PRINTF(1, "SIOCGMIIREG on %s failed: %s\n", ifr.ifr_name, strerror(errno));
-      return WEIGHT_ETHERNET_DEFAULT;
-    }
-    bmcr = mii->val_out;
-
-
-    OLSR_PRINTF(1, "%s: ", ifr.ifr_name);
-    OLSR_PRINTF(1, "%s Mbit, %s duplex\n", (bmcr & MII_BMCR_100MBIT) ? "100" : "10", (bmcr & MII_BMCR_DUPLEX) ? "full" : "half");
-
-    is_if_link_up(ifname);
-
-    if (mii->val_out & MII_BMCR_100MBIT)
-      return WEIGHT_ETHERNET_100MB;
-    else
-      return WEIGHT_ETHERNET_10MB;
-    //WEIGHT_ETHERNET_1GB,      /* Ethernet 1Gb   */
-
-  }
-}
-
-
-bool
-is_if_link_up(char *ifname)
-{
-  if (check_wireless_interface(ifname)) {
-    /* No link checking on wireless devices */
-    return true;
-  } else {
-    /* Mii wizardry */
-    struct ifreq ifr;
-    struct mii_data *mii = (struct mii_data *)&ifr.ifr_data;
-    int bmsr;
-    memset(&ifr, 0, sizeof(ifr));
-    strscpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
-
-    if (ioctl(olsr_cnf->ioctl_s, SIOCGMIIPHY, &ifr) < 0) {
-      if (errno != ENODEV)
-        OLSR_PRINTF(1, "SIOCGMIIPHY on '%s' failed: %s\n", ifr.ifr_name, strerror(errno));
-      return WEIGHT_ETHERNET_DEFAULT;
-    }
-    mii->reg_num = MII_BMSR;
-    if (ioctl(olsr_cnf->ioctl_s, SIOCGMIIREG, &ifr) < 0) {
-      OLSR_PRINTF(1, "SIOCGMIIREG on %s failed: %s\n", ifr.ifr_name, strerror(errno));
-      return WEIGHT_ETHERNET_DEFAULT;
-    }
-    bmsr = mii->val_out;
-
-    OLSR_PRINTF(1, "%s: ", ifr.ifr_name);
-    OLSR_PRINTF(1, "%s\n", (bmsr & MII_BMSR_LINK_VALID) ? "link ok " : "no link ");
-
-    return (bmsr & MII_BMSR_LINK_VALID);
-
-  }
-}
-
-#else
-int
-calculate_if_metric(char *ifname)
-{
-  return check_wireless_interface(ifname);
-}
-#endif
-
 /*
  * Local Variables:
  * c-basic-offset: 2

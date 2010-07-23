@@ -126,22 +126,17 @@ struct interface {
 
   enum interface_mode mode;            /* mode of the interface, default is mesh */
 
-  /* IP version 4 */
-  struct sockaddr_in int_addr;         /* address */
-  struct sockaddr_in int_netmask;      /* netmask */
-  struct sockaddr_in int_broadaddr;    /* broadcast address */
-  /* IP version 6 */
-  struct sockaddr_in6 int6_addr;       /* Address */
-  struct sockaddr_in6 int6_multaddr;   /* Multicast */
-  /* IP independent */
+  /* sockaddr objects for src and (multicast) destination IP of interface */
+  union olsr_sockaddr int_src;
+  union olsr_sockaddr int_multicast;
+
+  /* source IP of interface */
   union olsr_ip_addr ip_addr;
+
   int olsr_socket;                     /* The broadcast socket for this interface */
   int send_socket;                     /* The send socket for this interface */
-  int int_metric;                      /* metric of interface */
   int int_mtu;                         /* MTU of interface */
-  int int_flags;                       /* see below */
   int if_index;                        /* Kernels index of this interface */
-  int is_wireless;                     /* wireless interface or not */
   char *int_name;                      /* from kernel if structure */
   uint16_t olsr_seqnum;                /* Olsr message seqno */
 
