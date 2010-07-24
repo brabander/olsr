@@ -346,7 +346,7 @@ getsocket(int bufspace, struct interface *ifp __attribute__ ((unused)))
   sin4.sin_port = htons(OLSRPORT);
 
   if(bufspace <= 0) {
-    sin4.sin_addr.s_addr = ifp->int_addr.sin_addr.s_addr;
+    sin4.sin_addr.s_addr = ifp->int_src.v4.sin_addr.s_addr;
   }
   else {
     sin4.sin_addr.s_addr = INADDR_ANY;
@@ -417,7 +417,7 @@ getsocket6(int bufspace, struct interface *ifp __attribute__ ((unused)))
   sin6.sin6_port = htons(OLSRPORT);
 
   if(bufspace <= 0) {
-    memcpy(&sin6.sin6_addr, &ifp->int6_addr.sin6_addr, sizeof(struct in6_addr));
+    memcpy(&sin6.sin6_addr, &ifp->int_src.v6.sin6_addr, sizeof(struct in6_addr));
   }
 
   if (bind(sock, (struct sockaddr *)&sin6, sizeof(sin6)) < 0) {
@@ -442,11 +442,11 @@ join_mcast(struct interface *ifs, int sock)
   int on;
 #endif
 
-  mcastreq.ipv6mr_multiaddr = ifs->int6_multaddr.sin6_addr;
+  mcastreq.ipv6mr_multiaddr = ifs->int_multicast.v6.sin6_addr;
   mcastreq.ipv6mr_interface = ifs->if_index;
 
   OLSR_INFO(LOG_NETWORKING, "Interface %s joining multicast %s.\n", ifs->int_name,
-            olsr_ip_to_string(&addrstr, (union olsr_ip_addr *)&ifs->int6_multaddr.sin6_addr));
+            olsr_ip_to_string(&addrstr, (union olsr_ip_addr *)&ifs->int_multicast.v6.sin6_addr));
 
   /* rfc 3493 */
 #ifdef IPV6_JOIN_GROUP
@@ -554,7 +554,7 @@ static u_int16_t ip_id = 0;
 #endif /* SPOOF */
 
 ssize_t
-olsr_sendto(int s, const void *buf, size_t len, int flags __attribute__ ((unused)), const struct sockaddr *to, socklen_t tolen)
+olsr_sendto(int s, const void *buf, size_t len, int flags __attribute__ ((unused)), const union olsr_sockaddr *sock)
 {
 #ifdef SPOOF
   /* IPv4 for now! */
@@ -638,7 +638,7 @@ olsr_sendto(int s, const void *buf, size_t len, int flags __attribute__ ((unused
   return (len);
 
 #else
-  return sendto(s, buf, len, flags, (const struct sockaddr *)to, tolen);
+  return sendto(s, buf, len, flags, &sock->std, sizeof(*sock));
 #endif
 }
 
@@ -648,7 +648,7 @@ olsr_sendto(int s, const void *buf, size_t len, int flags __attribute__ ((unused
  */
 
 ssize_t
-olsr_recvfrom(int s, void *buf, size_t len, int flags __attribute__ ((unused)), struct sockaddr *from, socklen_t * fromlen)
+olsr_recvfrom(int s, void *buf, size_t len, int flags __attribute__ ((unused)), union olsr_sockaddr *from, socklen_t * fromlen)
 {
   struct msghdr mhdr;
   struct iovec iov;
@@ -658,19 +658,19 @@ olsr_recvfrom(int s, void *buf, size_t len, int flags __attribute__ ((unused)), 
   } cmu;
   struct cmsghdr *cm;
   struct sockaddr_dl *sdl;
-  struct sockaddr_in *sin4 = (struct sockaddr_in *)from;
-  struct sockaddr_in6 *sin6;
   struct in6_addr *iaddr6;
   struct in6_pktinfo *pkti;
   struct interface *ifc;
-  char addrstr[INET6_ADDRSTRLEN];
   char iname[IFNAMSIZ];
   int count;
+#ifndef REMOVE_LOG_DEBUG
+  struct ipaddr_str ipbuf;
+#endif
 
   memset(&mhdr, 0, sizeof(mhdr));
   memset(&iov, 0, sizeof(iov));
 
-  mhdr.msg_name = (caddr_t) from;
+  mhdr.msg_name = from;
   mhdr.msg_namelen = *fromlen;
   mhdr.msg_iov = &iov;
   mhdr.msg_iovlen = 1;
@@ -704,13 +704,9 @@ olsr_recvfrom(int s, void *buf, size_t len, int flags __attribute__ ((unused)), 
 
   ifc = if_ifwithsock(s);
 
-  sin6 = (struct sockaddr_in6 *)from;
   OLSR_DEBUG(LOG_NETWORKING,
              "%d bytes from %s, socket associated %s really received on %s\n",
-             count, inet_ntop(olsr_cnf->ip_version,
-                              olsr_cnf->ip_version ==
-                              AF_INET6 ? (char *)&sin6->
-                              sin6_addr : (char *)&sin4->sin_addr, addrstr, sizeof(addrstr)), ifc->int_name, iname);
+             count, olsr_sockaddr_to_string(&ipbuf, from), ifc->int_name, iname);
 
   if (strcmp(ifc->int_name, iname) != 0) {
     return (0);
