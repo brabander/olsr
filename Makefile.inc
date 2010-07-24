@@ -95,10 +95,14 @@ endif
 # OLSRd hardening
 #################
 # -D_FORTIFY_SOURCE=2 need at least -O2
-ifeq ($(HARDENING),1)
-ifeq ($(OPTIMIZE),)
-OPTIMIZE := -O2
+ifeq ($(OS),win32)
+  HARDENING := 0
 endif
+
+ifeq ($(HARDENING),1)
+  ifeq ($(OPTIMIZE),)
+    OPTIMIZE := -O2
+  endif
 endif
 
 ##############

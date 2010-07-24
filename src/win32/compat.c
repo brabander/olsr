@@ -178,7 +178,7 @@ WinSockPError(char *Str)
 // XXX - not thread-safe, which is okay for our purposes
 
 void *
-dlopen(char *Name, int Flags __attribute__ ((unused)))
+dlopen(const char *Name, int Flags __attribute__ ((unused)))
 {
 #if !defined WINCE
   return (void *)LoadLibrary(Name);

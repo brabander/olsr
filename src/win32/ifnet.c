@@ -442,7 +442,6 @@ chk_if_changed(struct olsr_if_config *IntConf)
   struct interface *Int;
   struct InterfaceInfo Info;
   int Res;
-  int IsWlan;
   union olsr_ip_addr OldVal, NewVal;
   struct sockaddr_in *AddrIn;
 
@@ -471,7 +470,7 @@ chk_if_changed(struct olsr_if_config *IntConf)
     Res = 1;
   }
 
-  OldVal.v4 = Int->int_addr.sin_addr;
+  OldVal.v4 = Int->int_src.v4.sin_addr;
   NewVal.v4.s_addr = Info.Addr;
 
   OLSR_INFO(LOG_NETWORKING, "\tAddress: %s\n", olsr_ip_to_string(&buf, &NewVal));
@@ -483,7 +482,7 @@ chk_if_changed(struct olsr_if_config *IntConf)
 
     Int->ip_addr.v4 = NewVal.v4;
 
-    AddrIn = &Int->int_addr;
+    AddrIn = &Int->int_src.v4;
 
     AddrIn->sin_family = AF_INET;
     AddrIn->sin_port = 0;
@@ -495,29 +494,7 @@ chk_if_changed(struct olsr_if_config *IntConf)
   else
     OLSR_DEBUG(LOG_NETWORKING, "\tNo address change.\n");
 
-  OldVal.v4 = ((struct sockaddr_in *)&Int->int_netmask)->sin_addr;
-  NewVal.v4.s_addr = Info.Mask;
-
-  OLSR_INFO(LOG_NETWORKING, "\tNetmask: %s\n", olsr_ip_to_string(&buf, &NewVal));
-
-  if (NewVal.v4.s_addr != OldVal.v4.s_addr) {
-    OLSR_DEBUG(LOG_NETWORKING, "\tNetmask change.\n");
-    OLSR_DEBUG(LOG_NETWORKING, "\tOld: %s\n", olsr_ip_to_string(&buf, &OldVal));
-    OLSR_DEBUG(LOG_NETWORKING, "\tNew: %s\n", olsr_ip_to_string(&buf, &NewVal));
-
-    AddrIn = (struct sockaddr_in *)&Int->int_netmask;
-
-    AddrIn->sin_family = AF_INET;
-    AddrIn->sin_port = 0;
-    AddrIn->sin_addr = NewVal.v4;
-
-    Res = 1;
-  }
-
-  else
-    OLSR_DEBUG(LOG_NETWORKING, "\tNo netmask change.\n");
-
-  OldVal.v4 = Int->int_broadaddr.sin_addr;
+  OldVal.v4 = Int->int_multicast.v4.sin_addr;
   NewVal.v4.s_addr = Info.Broad;
 
   OLSR_INFO(LOG_NETWORKING, "\tBroadcast address: %s\n", olsr_ip_to_string(&buf, &NewVal));
@@ -527,7 +504,7 @@ chk_if_changed(struct olsr_if_config *IntConf)
     OLSR_DEBUG(LOG_NETWORKING, "\tOld: %s\n", olsr_ip_to_string(&buf, &OldVal));
     OLSR_DEBUG(LOG_NETWORKING, "\tNew: %s\n", olsr_ip_to_string(&buf, &NewVal));
 
-    AddrIn = &Int->int_broadaddr;
+    AddrIn = &Int->int_multicast.v4;
 
     AddrIn->sin_family = AF_INET;
     AddrIn->sin_port = 0;
@@ -552,7 +529,6 @@ chk_if_up(struct olsr_if_config *IntConf)
   struct InterfaceInfo Info;
   struct interface *New;
   union olsr_ip_addr NullAddr;
-  int IsWlan;
   struct sockaddr_in *AddrIn;
   size_t name_size;
 
@@ -569,19 +545,13 @@ chk_if_up(struct olsr_if_config *IntConf)
 #if 0
   New->gen_properties = NULL;
 #endif
-  AddrIn = &New->int_addr;
+  AddrIn = &New->int_src.v4;
 
   AddrIn->sin_family = AF_INET;
   AddrIn->sin_port = 0;
   AddrIn->sin_addr.s_addr = Info.Addr;
 
-  AddrIn = (struct sockaddr_in *)&New->int_netmask;
-
-  AddrIn->sin_family = AF_INET;
-  AddrIn->sin_port = 0;
-  AddrIn->sin_addr.s_addr = Info.Mask;
-
-  AddrIn = &New->int_broadaddr;
+  AddrIn = &New->int_multicast.v4;
 
   AddrIn->sin_family = AF_INET;
   AddrIn->sin_port = 0;
@@ -590,38 +560,28 @@ chk_if_up(struct olsr_if_config *IntConf)
   if (IntConf->cnf->ipv4_broadcast.v4.s_addr != 0)
     AddrIn->sin_addr = IntConf->cnf->ipv4_broadcast.v4;
 
-  New->int_flags = 0;
-
   New->int_mtu = Info.Mtu;
 
   name_size = strlen(IntConf->name) + 1;
   New->int_name = olsr_malloc(name_size, "Interface 2");
   strscpy(New->int_name, IntConf->name, name_size);
 
-  IsWlan = IsWireless(IntConf->name);
-
-  if (IsWlan < 0)
-    IsWlan = 1;
-
-  New->is_wireless = IsWlan;
-
   New->olsr_seqnum = rand() & 0xffff;
 
   OLSR_INFO(LOG_NETWORKING, "\tInterface %s set up for use with index %d\n\n", IntConf->name, New->if_index);
 
   OLSR_INFO(LOG_NETWORKING, "\tMTU: %d\n", New->int_mtu);
-  OLSR_INFO(LOG_NETWORKING, "\tAddress: %s\n", ip4_to_string(&buf, New->int_addr.sin_addr));
-  OLSR_INFO(LOG_NETWORKING, "\tNetmask: %s\n", ip4_to_string(&buf, ((struct sockaddr_in *)&New->int_netmask)->sin_addr));
-  OLSR_INFO(LOG_NETWORKING, "\tBroadcast address: %s\n", ip4_to_string(&buf, New->int_broadaddr.sin_addr));
+  OLSR_INFO(LOG_NETWORKING, "\tAddress: %s\n", ip4_to_string(&buf, New->int_src.v4.sin_addr));
+  OLSR_INFO(LOG_NETWORKING, "\tBroadcast address: %s\n", ip4_to_string(&buf, New->int_multicast.v4.sin_addr));
 
-  New->ip_addr.v4 = New->int_addr.sin_addr;
+  New->ip_addr.v4 = New->int_src.v4.sin_addr;
 
   New->if_index = Info.Index;
 
   OLSR_INFO(LOG_NETWORKING, "\tKernel index: %08x\n", New->if_index);
 
-  New->olsr_socket = getsocket(BUFSPACE, New->int_name);
-  New->send_socket = getsocket(0, New->int_name);
+  New->olsr_socket = getsocket(BUFSPACE, New);
+  New->send_socket = getsocket(0, New);
 
   if (New->olsr_socket < 0) {
     OLSR_ERROR(LOG_NETWORKING, "Could not initialize socket... exiting!\n\n");
@@ -631,8 +591,8 @@ chk_if_up(struct olsr_if_config *IntConf)
   add_olsr_socket(New->olsr_socket, &olsr_input, NULL, NULL, SP_PR_READ);
 
   /* Queue */
-  listold_node_init(&New->int_node);
-  listold_add_before(&interface_head, &New->int_node);
+  list_init_node(&New->int_node);
+  list_add_before(&interface_head, &New->int_node);
 
   IntConf->interf = New;
   lock_interface(IntConf->interf);

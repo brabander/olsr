@@ -319,8 +319,8 @@ olsr_expire_tc_entry(void *context)
 #endif
   struct tc_entry *tc = context;
 
-  OLSR_DEBUG(LOG_TC, "TC: expire node entry %s (%zx)\n",
-             olsr_ip_to_string(&buf, &tc->addr), (size_t)context);
+  OLSR_DEBUG(LOG_TC, "TC: expire node entry %s\n",
+             olsr_ip_to_string(&buf, &tc->addr));
 
   olsr_delete_tc_entry(tc);
 

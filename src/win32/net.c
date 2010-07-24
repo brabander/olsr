@@ -109,10 +109,10 @@ getsocket(int BuffSize, struct interface *ifp __attribute__ ((unused)))
 
   memset(&Addr, 0, sizeof(Addr));
   Addr.sin_family = AF_INET;
-  Addr.sin_port = htons(olsr_cnf->olsrport);
+  Addr.sin_port = htons(olsr_cnf->olsr_port);
 
-  if(bufspace <= 0) {
-    Addr.sin_addr.s_addr = ifp->int_addr.sin_addr.s_addr;
+  if(BuffSize <= 0) {
+    Addr.sin_addr.s_addr = ifp->int_src.v4.sin_addr.s_addr;
   }
   else {
     Addr.sin_addr.s_addr = INADDR_ANY;
@@ -168,10 +168,10 @@ getsocket6(int BuffSize, struct interface *ifp __attribute__ ((unused)))
 
   memset(&Addr6, 0, sizeof(Addr6));
   Addr6.sin6_family = AF_INET6;
-  Addr6.sin6_port = htons(olsr_cnf->olsrport);
+  Addr6.sin6_port = htons(olsr_cnf->olsr_port);
 
-  if(bufspace <= 0) {
-    memcpy(&Addr6.sin6_addr, &ifp->int6_addr.sin6_addr, sizeof(struct in6_addr));
+  if(BuffSize <= 0) {
+    memcpy(&Addr6.sin6_addr, &ifp->int_src.v6.sin6_addr, sizeof(struct in6_addr));
   }
 
   if (bind(Sock, (struct sockaddr *)&Addr6, sizeof(Addr6)) < 0) {
@@ -328,11 +328,11 @@ join_mcast(struct interface *Nic, int Sock)
   struct ipaddr_str buf;
   struct ipv6_mreq McastReq;
 
-  McastReq.ipv6mr_multiaddr = Nic->int6_multaddr.sin6_addr;
+  McastReq.ipv6mr_multiaddr = Nic->int_multicast.v6.sin6_addr;
   McastReq.ipv6mr_interface = Nic->if_index;
 
   OLSR_DEBUG(LOG_NETWORKING, "Interface %s joining multicast %s...", Nic->int_name,
-             olsr_ip_to_string(&buf, (union olsr_ip_addr *)&Nic->int6_multaddr.sin6_addr));
+             olsr_ip_to_string(&buf, (union olsr_ip_addr *)&Nic->int_multicast.v6.sin6_addr));
   /* Send multicast */
   if (setsockopt(Sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char *)&McastReq, sizeof(struct ipv6_mreq))
       < 0) {
@@ -371,9 +371,9 @@ join_mcast(struct interface *Nic, int Sock)
  */
 
 ssize_t
-olsr_sendto(int s, const void *buf, size_t len, int flags, const struct sockaddr * to, socklen_t tolen)
+olsr_sendto(int s, const void *buf, size_t len, int flags, const union olsr_sockaddr *sock)
 {
-  return sendto(s, buf, len, flags, to, tolen);
+  return sendto(s, buf, len, flags, &sock->std, sizeof(*sock));
 }
 
 
@@ -382,9 +382,9 @@ olsr_sendto(int s, const void *buf, size_t len, int flags, const struct sockaddr
  */
 
 ssize_t
-olsr_recvfrom(int s, void *buf, size_t len, int flags __attribute__ ((unused)), struct sockaddr * from, socklen_t * fromlen)
+olsr_recvfrom(int s, void *buf, size_t len, int flags __attribute__ ((unused)), union olsr_sockaddr *sock, socklen_t * fromlen)
 {
-  return recvfrom(s, buf, len, 0, from, fromlen);
+  return recvfrom(s, buf, len, 0, &sock->std, fromlen);
 }
 
 /**

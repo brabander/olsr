@@ -45,7 +45,7 @@
 
 #define RTLD_NOW 0
 
-void *dlopen(char *Name, int Flags);
+void *dlopen(const char *Name, int Flags);
 int dlclose(void *Handle);
 void *dlsym(void *Handle, const char *Name);
 char *dlerror(void);
