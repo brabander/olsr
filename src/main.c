@@ -81,7 +81,7 @@ static void olsr_shutdown(int) __attribute__ ((noreturn));
 #endif
 
 #if defined android
-#define DEFAULT_LOCKFILE_PREFIX "/data/local"
+#define DEFAULT_LOCKFILE_PREFIX "/data/local/olsrd"
 #elif defined linux || __FreeBSD__ || defined __NetBSD__ || defined __OpenBSD__
 #define DEFAULT_LOCKFILE_PREFIX "/var/run/olsrd"
 #elif defined WIN32
