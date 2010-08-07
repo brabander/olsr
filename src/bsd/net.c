@@ -294,7 +294,7 @@ restore_settings(int version)
 
 
 int
-getsocket(int bufspace, struct interface *ifp __attribute__ ((unused)))
+getsocket(int bufspace, struct interface *ifp, bool bind_to_unicast, uint16_t port)
 {
   struct sockaddr_in sin4;
   int on;
@@ -343,9 +343,9 @@ getsocket(int bufspace, struct interface *ifp __attribute__ ((unused)))
   }
   memset(&sin4, 0, sizeof(sin4));
   sin4.sin_family = AF_INET;
-  sin4.sin_port = htons(OLSRPORT);
+  sin4.sin_port = htons(port);
 
-  if(bufspace <= 0) {
+  if(bind_to_unicast) {
     sin4.sin_addr.s_addr = ifp->int_src.v4.sin_addr.s_addr;
   }
   else {
@@ -363,7 +363,7 @@ getsocket(int bufspace, struct interface *ifp __attribute__ ((unused)))
 }
 
 int
-getsocket6(int bufspace, struct interface *ifp __attribute__ ((unused)))
+getsocket6(int bufspace, struct interface *ifp, bool bind_to_unicast, uint16_t port)
 {
   struct sockaddr_in6 sin6;
   int on;
@@ -414,9 +414,9 @@ getsocket6(int bufspace, struct interface *ifp __attribute__ ((unused)))
 
   memset(&sin6, 0, sizeof(sin6));
   sin6.sin6_family = AF_INET6;
-  sin6.sin6_port = htons(OLSRPORT);
+  sin6.sin6_port = htons(port);
 
-  if(bufspace <= 0) {
+  if(bind_to_unicast) {
     memcpy(&sin6.sin6_addr, &ifp->int_src.v6.sin6_addr, sizeof(struct in6_addr));
   }
 

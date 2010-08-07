@@ -58,6 +58,8 @@
 #include <unistd.h>
 #include <assert.h>
 
+#define BUFSPACE  (127*1024)    /* max. input buffer size to request */
+
 /* The interface list head */
 struct list_entity interface_head;
 
@@ -193,6 +195,39 @@ add_interface(struct olsr_if_config *iface) {
 
   if ((ifp = os_init_interface(iface)) == NULL) {
     return NULL;
+  }
+
+  if (olsr_cnf->ip_version == AF_INET) {
+    /* IP version 4 */
+    /*
+     * We create one socket for each interface and bind
+     * the socket to it. This to ensure that we can control
+     * on what interface the message is transmitted
+     */
+    ifp->olsr_socket = getsocket(BUFSPACE, ifp, false, olsr_cnf->olsr_port);
+    ifp->send_socket = getsocket(0, ifp, true, olsr_cnf->olsr_port);
+
+    if (ifp->olsr_socket < 0 || ifp->send_socket < 0) {
+      OLSR_ERROR(LOG_INTERFACE, "Could not initialize socket... exiting!\n\n");
+      olsr_exit(EXIT_FAILURE);
+    }
+  } else {
+    /* IP version 6 */
+
+    /*
+     * We create one socket for each interface and bind
+     * the socket to it. This to ensure that we can control
+     * on what interface the message is transmitted
+     */
+    ifp->olsr_socket = getsocket6(BUFSPACE, ifp, false, olsr_cnf->olsr_port);
+    ifp->send_socket = getsocket6(0, ifp, true, olsr_cnf->olsr_port);
+
+    if (ifp->olsr_socket < 0 || ifp->send_socket < 0) {
+      OLSR_ERROR(LOG_INTERFACE, "Could not initialize socket... exiting!\n\n");
+      olsr_exit(EXIT_FAILURE);
+    }
+
+    join_mcast(ifp, ifp->olsr_socket);
   }
 
   set_buffer_timer(ifp);

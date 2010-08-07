@@ -492,40 +492,6 @@ os_init_interface(struct olsr_if_config *iface)
 #if 0
   ifp->gen_properties = NULL;
 #endif
-
-  if (olsr_cnf->ip_version == AF_INET) {
-    /* IP version 4 */
-    /*
-     * We create one socket for each interface and bind
-     * the socket to it. This to ensure that we can control
-     * on what interface the message is transmitted
-     */
-    ifp->olsr_socket = getsocket(BUFSPACE, ifp);
-    ifp->send_socket = getsocket(0, ifp);
-
-    if (ifp->olsr_socket < 0 || ifp->send_socket < 0) {
-      OLSR_ERROR(LOG_INTERFACE, "Could not initialize socket... exiting!\n\n");
-      olsr_exit(EXIT_FAILURE);
-    }
-  } else {
-    /* IP version 6 */
-
-    /*
-     * We create one socket for each interface and bind
-     * the socket to it. This to ensure that we can control
-     * on what interface the message is transmitted
-     */
-    ifp->olsr_socket = getsocket6(BUFSPACE, ifp);
-    ifp->send_socket = getsocket6(0, ifp);
-
-    if (ifp->olsr_socket < 0 || ifp->send_socket < 0) {
-      OLSR_ERROR(LOG_INTERFACE, "Could not initialize socket... exiting!\n\n");
-      olsr_exit(EXIT_FAILURE);
-    }
-
-    join_mcast(ifp, ifp->olsr_socket);
-  }
-
   return ifp;
 
 cleanup:

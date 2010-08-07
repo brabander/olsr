@@ -74,9 +74,9 @@ int restore_settings(int);
 
 int enable_ip_forwarding(int);
 
-int getsocket(int, struct interface *);
+int getsocket(int, struct interface *, bool, uint16_t);
 
-int getsocket6(int, struct interface *);
+int getsocket6(int, struct interface *, bool, uint16_t);
 
 void os_set_olsr_socketoptions(int socket);
 

@@ -64,9 +64,6 @@
 
 #include <arpa/inet.h>
 
-#define BUFSPACE  (127*1024)    /* max. input buffer size to request */
-
-
 struct MibIpInterfaceRow {
   USHORT Family;
   ULONG64 InterfaceLuid;

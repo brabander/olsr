@@ -74,7 +74,7 @@ int disable_ip_forwarding(int Ver);
 
 
 int
-getsocket(int BuffSize, struct interface *ifp __attribute__ ((unused)))
+getsocket(int bufspace, struct interface *ifp, bool bind_to_unicast, uint16_t port)
 {
   struct sockaddr_in Addr;
   int On = 1;
@@ -97,21 +97,21 @@ getsocket(int BuffSize, struct interface *ifp __attribute__ ((unused)))
     olsr_exit(EXIT_FAILURE);
   }
 
-  while (BuffSize > 8192) {
-    if (setsockopt(Sock, SOL_SOCKET, SO_RCVBUF, (char *)&BuffSize, sizeof(BuffSize)) == 0)
+  while (bufspace > 8192) {
+    if (setsockopt(Sock, SOL_SOCKET, SO_RCVBUF, (char *)&bufspace, sizeof(bufspace)) == 0)
       break;
 
-    BuffSize -= 1024;
+    bufspace -= 1024;
   }
 
-  if (BuffSize <= 8192)
+  if (bufspace <= 8192)
     OLSR_WARN(LOG_NETWORKING, "Cannot set IPv4 socket receive buffer.\n");
 
   memset(&Addr, 0, sizeof(Addr));
   Addr.sin_family = AF_INET;
-  Addr.sin_port = htons(olsr_cnf->olsr_port);
+  Addr.sin_port = htons(port);
 
-  if(BuffSize <= 0) {
+  if(bind_to_unicast) {
     Addr.sin_addr.s_addr = ifp->int_src.v4.sin_addr.s_addr;
   }
   else {
@@ -134,7 +134,7 @@ getsocket(int BuffSize, struct interface *ifp __attribute__ ((unused)))
 }
 
 int
-getsocket6(int BuffSize, struct interface *ifp __attribute__ ((unused)))
+getsocket6(int bufspace, struct interface *ifp, bool bind_to_unicast, uint16_t port)
 {
   struct sockaddr_in6 Addr6;
   int On = 1;
@@ -156,21 +156,21 @@ getsocket6(int BuffSize, struct interface *ifp __attribute__ ((unused)))
     olsr_exit(EXIT_FAILURE);
   }
 
-  while (BuffSize > 8192) {
-    if (setsockopt(Sock, SOL_SOCKET, SO_RCVBUF, (char *)&BuffSize, sizeof(BuffSize)) == 0)
+  while (bufspace > 8192) {
+    if (setsockopt(Sock, SOL_SOCKET, SO_RCVBUF, (char *)&bufspace, sizeof(bufspace)) == 0)
       break;
 
-    BuffSize -= 1024;
+    bufspace -= 1024;
   }
 
-  if (BuffSize <= 8192)
+  if (bufspace <= 8192)
     OLSR_WARN(LOG_NETWORKING, "Cannot set IPv6 socket receive buffer.\n");
 
   memset(&Addr6, 0, sizeof(Addr6));
   Addr6.sin6_family = AF_INET6;
-  Addr6.sin6_port = htons(olsr_cnf->olsr_port);
+  Addr6.sin6_port = htons(port);
 
-  if(BuffSize <= 0) {
+  if(bind_to_unicast) {
     memcpy(&Addr6.sin6_addr, &ifp->int_src.v6.sin6_addr, sizeof(struct in6_addr));
   }
 
