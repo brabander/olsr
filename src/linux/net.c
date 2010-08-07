@@ -63,6 +63,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <assert.h>
+#include <netinet/ip.h>
 
 /* Redirect proc entry */
 #define REDIRECT_PROC "/proc/sys/net/ipv4/conf/%s/send_redirects"
@@ -516,6 +517,19 @@ getsocket6(int bufspace, struct interface *ifp)
 
   set_nonblocking(sock);
   return sock;
+}
+
+void
+os_set_olsr_socketoptions(int sock) {
+  /* Set TOS */
+  int data = IPTOS_PREC(olsr_cnf->tos);
+  if (setsockopt(sock, SOL_SOCKET, SO_PRIORITY, (char *)&data, sizeof(data)) < 0) {
+    OLSR_WARN(LOG_INTERFACE, "setsockopt(SO_PRIORITY) error %s", strerror(errno));
+  }
+  data = IPTOS_TOS(olsr_cnf->tos);
+  if (setsockopt(sock, SOL_IP, IP_TOS, (char *)&data, sizeof(data)) < 0) {
+    OLSR_WARN(LOG_INTERFACE, "setsockopt(IP_TOS) error %s", strerror(errno));
+  }
 }
 
 int

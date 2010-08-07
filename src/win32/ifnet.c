@@ -41,8 +41,9 @@
 
 #include <winsock2.h>
 
-#include "interfaces.h"
 #include "olsr.h"
+#include "olsr_cfg.h"
+#include "interfaces.h"
 #include "parser.h"
 #include "defs.h"
 #include "net_os.h"
@@ -522,110 +523,63 @@ chk_if_changed(struct olsr_if_config *IntConf)
   return Res;
 }
 
-int
-chk_if_up(struct olsr_if_config *IntConf)
+struct interface *
+os_init_interface(struct olsr_if_config *IntConf)
 {
   struct ipaddr_str buf;
-  struct InterfaceInfo Info;
-  struct interface *New;
-  union olsr_ip_addr NullAddr;
-  struct sockaddr_in *AddrIn;
+  struct InterfaceInfo if_info;
+  struct interface *ifp;
+  struct sockaddr_in *if_addr;
   size_t name_size;
 
   if (olsr_cnf->ip_version == AF_INET6) {
-    OLSR_WARN(LOG_NETWORKING, "IPv6 not supported by chk_if_up()!\n");
-    return 0;
-  }
-
-  if (GetIntInfo(&Info, IntConf->name) < 0)
-    return 0;
-
-  New = olsr_cookie_malloc(interface_mem_cookie);
-
-#if 0
-  New->gen_properties = NULL;
-#endif
-  AddrIn = &New->int_src.v4;
-
-  AddrIn->sin_family = AF_INET;
-  AddrIn->sin_port = 0;
-  AddrIn->sin_addr.s_addr = Info.Addr;
-
-  AddrIn = &New->int_multicast.v4;
-
-  AddrIn->sin_family = AF_INET;
-  AddrIn->sin_port = 0;
-  AddrIn->sin_addr.s_addr = Info.Broad;
-
-  if (IntConf->cnf->ipv4_broadcast.v4.s_addr != 0)
-    AddrIn->sin_addr = IntConf->cnf->ipv4_broadcast.v4;
-
-  New->int_mtu = Info.Mtu;
-
-  name_size = strlen(IntConf->name) + 1;
-  New->int_name = olsr_malloc(name_size, "Interface 2");
-  strscpy(New->int_name, IntConf->name, name_size);
-
-  New->olsr_seqnum = rand() & 0xffff;
-
-  OLSR_INFO(LOG_NETWORKING, "\tInterface %s set up for use with index %d\n\n", IntConf->name, New->if_index);
-
-  OLSR_INFO(LOG_NETWORKING, "\tMTU: %d\n", New->int_mtu);
-  OLSR_INFO(LOG_NETWORKING, "\tAddress: %s\n", ip4_to_string(&buf, New->int_src.v4.sin_addr));
-  OLSR_INFO(LOG_NETWORKING, "\tBroadcast address: %s\n", ip4_to_string(&buf, New->int_multicast.v4.sin_addr));
-
-  New->ip_addr.v4 = New->int_src.v4.sin_addr;
-
-  New->if_index = Info.Index;
-
-  OLSR_INFO(LOG_NETWORKING, "\tKernel index: %08x\n", New->if_index);
-
-  New->olsr_socket = getsocket(BUFSPACE, New);
-  New->send_socket = getsocket(0, New);
-
-  if (New->olsr_socket < 0) {
-    OLSR_ERROR(LOG_NETWORKING, "Could not initialize socket... exiting!\n\n");
+    OLSR_ERROR(LOG_NETWORKING, "IPv6 not supported by win32!\n");
     olsr_exit(1);
   }
 
-  add_olsr_socket(New->olsr_socket, &olsr_input, NULL, NULL, SP_PR_READ);
+  if (GetIntInfo(&if_info, IntConf->name) < 0)
+    return 0;
 
-  /* Queue */
-  list_init_node(&New->int_node);
-  list_add_before(&interface_head, &New->int_node);
+  ifp = olsr_cookie_malloc(interface_mem_cookie);
 
-  IntConf->interf = New;
-  lock_interface(IntConf->interf);
+#if 0
+  ifp->gen_properties = NULL;
+#endif
+  if_addr = &ifp->int_src.v4;
 
-  memset(&NullAddr, 0, olsr_cnf->ipsize);
+  if_addr->sin_family = AF_INET;
+  if_addr->sin_port = 0;
+  if_addr->sin_addr.s_addr = if_info.Addr;
 
-  if (olsr_ipcmp(&NullAddr, &olsr_cnf->router_id) == 0) {
-    olsr_cnf->router_id = New->ip_addr;
-    OLSR_INFO(LOG_NETWORKING, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->router_id));
-  }
+  if_addr = &ifp->int_multicast.v4;
 
-  net_add_buffer(New);
+  if_addr->sin_family = AF_INET;
+  if_addr->sin_port = 0;
+  if_addr->sin_addr.s_addr = if_info.Broad;
 
-  /*
-   * Register functions for periodic message generation
-   */
-  New->hello_gen_timer =
-    olsr_start_timer(IntConf->cnf->hello_params.emission_interval,
-                     HELLO_JITTER, OLSR_TIMER_PERIODIC, &generate_hello, New, hello_gen_timer_cookie);
+  if (IntConf->cnf->ipv4_broadcast.v4.s_addr != 0)
+    if_addr->sin_addr = IntConf->cnf->ipv4_broadcast.v4;
 
-  New->hello_interval = (uint32_t) (IntConf->cnf->hello_params.emission_interval);
-  New->hello_validity = reltime_to_me(IntConf->cnf->hello_params.validity_time);
+  ifp->int_mtu = if_info.Mtu;
 
-  New->mode = IntConf->cnf->mode;
+  name_size = strlen(IntConf->name) + 1;
+  ifp->int_name = olsr_malloc(name_size, "Interface 2");
+  strscpy(ifp->int_name, IntConf->name, name_size);
 
-  /*
-   * Call possible ifchange functions registered by plugins
-   */
-  run_ifchg_cbs(New, IFCHG_IF_ADD);
+  ifp->olsr_seqnum = rand() & 0xffff;
 
-  lock_interface(New);
+  OLSR_INFO(LOG_NETWORKING, "\tInterface %s set up for use with index %d\n\n", IntConf->name, ifp->if_index);
 
-  return 1;
+  OLSR_INFO(LOG_NETWORKING, "\tMTU: %d\n", ifp->int_mtu);
+  OLSR_INFO(LOG_NETWORKING, "\tAddress: %s\n", ip4_to_string(&buf, ifp->int_src.v4.sin_addr));
+  OLSR_INFO(LOG_NETWORKING, "\tBroadcast address: %s\n", ip4_to_string(&buf, ifp->int_multicast.v4.sin_addr));
+
+  ifp->ip_addr.v4 = ifp->int_src.v4.sin_addr;
+
+  ifp->if_index = if_info.Index;
+
+  OLSR_INFO(LOG_NETWORKING, "\tKernel index: %08x\n", ifp->if_index);
+  return ifp;
 }
 
 /*

@@ -59,9 +59,8 @@ int
   set_flag(char *, short);
 #endif
 
-int chk_if_up(struct olsr_if_config *);
+struct interface *os_init_interface(struct olsr_if_config *);
 int chk_if_changed(struct olsr_if_config *);
-int add_hemu_if(struct olsr_if_config *);
 
 #ifdef WIN32
 void CallSignalHandler(void);

@@ -52,6 +52,7 @@
 #include "common/avl.h"
 #include "olsr_logging.h"
 #include "valgrind/valgrind.h"
+#include "net_os.h"
 
 #include <signal.h>
 #include <unistd.h>
@@ -121,7 +122,7 @@ init_interfaces(void)
 
   /* Run trough all interfaces immediately */
   for (tmp_if = olsr_cnf->if_configs; tmp_if != NULL; tmp_if = tmp_if->next) {
-    chk_if_up(tmp_if);
+    add_interface(tmp_if);
   }
 
   /* Kick a periodic timer for the network interface update function */
@@ -186,6 +187,77 @@ void destroy_interfaces(void) {
   }
 }
 
+struct interface *
+add_interface(struct olsr_if_config *iface) {
+  struct interface *ifp;
+
+  if ((ifp = os_init_interface(iface)) == NULL) {
+    return NULL;
+  }
+
+  set_buffer_timer(ifp);
+
+  /* Register sockets */
+  add_olsr_socket(ifp->olsr_socket, &olsr_input, NULL, NULL, SP_PR_READ);
+  add_olsr_socket(ifp->send_socket, &olsr_input, NULL, NULL, SP_PR_READ);
+
+  os_set_olsr_socketoptions(ifp->olsr_socket);
+  os_set_olsr_socketoptions(ifp->send_socket);
+
+  /*
+   *Initialize packet sequencenumber as a random 16bit value
+   */
+  ifp->olsr_seqnum = random() & 0xFFFF;
+
+  /*
+   * Set main address if it's not set
+   */
+  if (olsr_ipcmp(&all_zero, &olsr_cnf->router_id) == 0) {
+    struct ipaddr_str buf;
+
+    olsr_cnf->router_id = ifp->ip_addr;
+    OLSR_INFO(LOG_INTERFACE, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->router_id));
+
+    /* initialize representation of this node in tc_set */
+    olsr_change_myself_tc();
+  }
+
+  /* Set up buffer */
+  net_add_buffer(ifp);
+
+  /*
+   * Register functions for periodic message generation
+   */
+  ifp->hello_gen_timer =
+    olsr_start_timer(iface->cnf->hello_params.emission_interval,
+                     HELLO_JITTER, OLSR_TIMER_PERIODIC, &generate_hello, ifp, hello_gen_timer_cookie);
+  ifp->hello_interval = iface->cnf->hello_params.emission_interval;
+  ifp->hello_validity = iface->cnf->hello_params.validity_time;
+
+  ifp->mode = iface->cnf->mode;
+
+  /*
+   * Call possible ifchange functions registered by plugins
+   */
+  run_ifchg_cbs(ifp, IFCHG_IF_ADD);
+
+  /*
+   * The interface is ready, lock it.
+   */
+  lock_interface(ifp);
+
+  /*
+   * Link to config.
+   */
+  iface->interf = ifp;
+  lock_interface(iface->interf);
+
+  /* Queue */
+  list_add_before(&interface_head, &ifp->int_node);
+
+  return ifp;
+}
+
 /**
  * Callback function for periodic check of interface parameters.
  */
@@ -209,7 +281,7 @@ check_interface_updates(void *foo __attribute__ ((unused)))
     if (tmp_if->interf) {
       chk_if_changed(tmp_if);
     } else {
-      if (chk_if_up(tmp_if) == 1) {
+      if (add_interface(tmp_if)) {
         lost = get_lost_interface_ip(&tmp_if->interf->ip_addr);
         if (lost) {
           remove_lost_interface_ip(lost);

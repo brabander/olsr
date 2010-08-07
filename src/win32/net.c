@@ -183,6 +183,10 @@ getsocket6(int BuffSize, struct interface *ifp __attribute__ ((unused)))
   return Sock;
 }
 
+void
+os_set_olsr_socketoptions(int sock __attribute__ ((unused))) {
+}
+
 static OVERLAPPED RouterOver;
 
 int

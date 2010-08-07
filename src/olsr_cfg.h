@@ -106,6 +106,9 @@
 #define IPV6_ADDR_SITELOCAL    0x0040U
 #endif
 
+/* prototype declaration to break loop with interface.h */
+struct olsr_if_config;
+
 #include "interfaces.h"
 #include "olsr_ip_acl.h"
 #include "olsr_cfg_data.h"

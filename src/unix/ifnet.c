@@ -62,6 +62,7 @@
 #include "../common/string.h"
 #include "../valgrind/valgrind.h"
 
+#include <assert.h>
 #include <signal.h>
 #include <sys/types.h>
 #include <net/if.h>
@@ -303,8 +304,8 @@ if_basename(const char *name)
  *@param so the socket to use for ioctls
  *
  */
-int
-chk_if_up(struct olsr_if_config *iface)
+struct interface *
+os_init_interface(struct olsr_if_config *iface)
 {
   struct interface *ifp;
   struct ifreq ifr;
@@ -317,9 +318,7 @@ chk_if_up(struct olsr_if_config *iface)
   /*
    * Sanity check.
    */
-  if (iface->interf) {
-    return -1;
-  }
+  assert (iface->interf == NULL);
   ifp = olsr_cookie_malloc(interface_mem_cookie);
 
    /*
@@ -472,9 +471,6 @@ chk_if_up(struct olsr_if_config *iface)
   }
   ifp->int_mtu -= olsr_cnf->ip_version == AF_INET6 ? UDP_IPV6_HDRSIZE : UDP_IPV4_HDRSIZE;
 
-  /* Set up buffer */
-  net_add_buffer(ifp);
-
   OLSR_DEBUG(LOG_INTERFACE, "\tMTU - IPhdr: %d\n", ifp->int_mtu);
 
   OLSR_INFO(LOG_INTERFACE, "Adding interface %s\n", iface->name);
@@ -507,7 +503,7 @@ chk_if_up(struct olsr_if_config *iface)
     ifp->olsr_socket = getsocket(BUFSPACE, ifp);
     ifp->send_socket = getsocket(0, ifp);
 
-    if (ifp->olsr_socket < 0) {
+    if (ifp->olsr_socket < 0 || ifp->send_socket < 0) {
       OLSR_ERROR(LOG_INTERFACE, "Could not initialize socket... exiting!\n\n");
       olsr_exit(EXIT_FAILURE);
     }
@@ -522,79 +518,19 @@ chk_if_up(struct olsr_if_config *iface)
     ifp->olsr_socket = getsocket6(BUFSPACE, ifp);
     ifp->send_socket = getsocket6(0, ifp);
 
+    if (ifp->olsr_socket < 0 || ifp->send_socket < 0) {
+      OLSR_ERROR(LOG_INTERFACE, "Could not initialize socket... exiting!\n\n");
+      olsr_exit(EXIT_FAILURE);
+    }
+
     join_mcast(ifp, ifp->olsr_socket);
   }
 
-  set_buffer_timer(ifp);
-
-  /* Register socket */
-  add_olsr_socket(ifp->olsr_socket, &olsr_input, NULL, NULL, SP_PR_READ);
-
-#ifdef linux
-  {
-    /* Set TOS */
-    int data = IPTOS_PREC(olsr_cnf->tos);
-    if (setsockopt(ifp->olsr_socket, SOL_SOCKET, SO_PRIORITY, (char *)&data, sizeof(data)) < 0) {
-      OLSR_WARN(LOG_INTERFACE, "setsockopt(SO_PRIORITY) error %s", strerror(errno));
-    }
-    data = IPTOS_TOS(olsr_cnf->tos);
-    if (setsockopt(ifp->olsr_socket, SOL_IP, IP_TOS, (char *)&data, sizeof(data)) < 0) {
-      OLSR_WARN(LOG_INTERFACE, "setsockopt(IP_TOS) error %s", strerror(errno));
-    }
-  }
-#endif
-
-  /*
-   *Initialize sequencenumber as a random 16bit value
-   */
-  ifp->olsr_seqnum = random() & 0xFFFF;
-
-  /*
-   * Set main address if it's not set
-   */
-  if (olsr_ipcmp(&all_zero, &olsr_cnf->router_id) == 0) {
-    olsr_cnf->router_id = ifp->ip_addr;
-    OLSR_INFO(LOG_INTERFACE, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->router_id));
-
-    /* initialize representation of this node in tc_set */
-    olsr_change_myself_tc();
-  }
-
-  /*
-   * Register functions for periodic message generation
-   */
-  ifp->hello_gen_timer =
-    olsr_start_timer(iface->cnf->hello_params.emission_interval,
-                     HELLO_JITTER, OLSR_TIMER_PERIODIC, &generate_hello, ifp, hello_gen_timer_cookie);
-  ifp->hello_interval = iface->cnf->hello_params.emission_interval;
-  ifp->hello_validity = iface->cnf->hello_params.validity_time;
-
-  ifp->mode = iface->cnf->mode;
-
-  /*
-   * Call possible ifchange functions registered by plugins
-   */
-  run_ifchg_cbs(ifp, IFCHG_IF_ADD);
-
-  /*
-   * The interface is ready, lock it.
-   */
-  lock_interface(ifp);
-
-  /*
-   * Link to config.
-   */
-  iface->interf = ifp;
-  lock_interface(iface->interf);
-
-  /* Queue */
-  list_add_before(&interface_head, &ifp->int_node);
-
-  return 1;
+  return ifp;
 
 cleanup:
   olsr_cookie_free(interface_mem_cookie, ifp);
-  return 0;
+  return NULL;
 }
 
 /*
