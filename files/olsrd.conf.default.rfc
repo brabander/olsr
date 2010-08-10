@@ -156,6 +156,23 @@ LoadPlugin "olsrd_lq_rfc.so.0.1"
 #   PlParam     "Ping"       "194.25.2.129"
 #}
 
+# TC interval in seconds(float)
+TcInterval		5.0
+
+# TC validity time
+TcValidityTime	30.0
+
+# MID interval in seconds(float)
+MidInterval	5.0
+
+# MID validity time
+MidValidityTime	30.0
+
+# HNA interval in seconds(float)
+HnaInterval		5.0
+
+# HNA validity time
+HnaValidityTime	30.0
 
 
 # Interfaces and their rules
@@ -213,25 +230,6 @@ Interface "XXX" "YYY"
 
     # HELLO validity time
     # HelloValidityTime	6.0
-
-    # TC interval in seconds(float)
-    # TcInterval        5.0
-
-    # TC validity time
-    # TcValidityTime	15.0
-
-    # MID interval in seconds(float)
-    # MidInterval	5.0
-
-    # MID validity time
-    # MidValidityTime	15.0
-
-    # HNA interval in seconds(float)
-    # HnaInterval	5.0
-
-    # HNA validity time
-    # HnaValidityTime 	15.0
-
 
     # When multiple links exist between hosts
     # the weight of interface is used to determine

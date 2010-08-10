@@ -205,6 +205,23 @@ LoadPlugin "olsrd_lq_etx_ff.so.0.1"
 #	PlParam     "Ping"       "194.25.2.129"
 #}
 
+# TC interval in seconds(float)
+TcInterval		5.0
+
+# TC validity time
+TcValidityTime	30.0
+
+# MID interval in seconds(float)
+MidInterval	5.0
+
+# MID validity time
+MidValidityTime	30.0
+
+# HNA interval in seconds(float)
+HnaInterval		5.0
+
+# HNA validity time
+HnaValidityTime	30.0
 
 # Interfaces and their rules
 # Omitted options will be set to the
@@ -261,25 +278,6 @@ Interface "XXX" "YYY"
 
     # HELLO validity time
     HelloValidityTime	150.0
-
-    # TC interval in seconds(float)
-    TcInterval		2.0
-
-    # TC validity time
-    TcValidityTime	500.0
-
-    # MID interval in seconds(float)
-    MidInterval		25.0
-
-    # MID validity time
-    MidValidityTime	500.0
-
-    # HNA interval in seconds(float)
-    HnaInterval		10.0
-
-    # HNA validity time
-    HnaValidityTime	125.0
-
 
     # When multiple links exist between hosts
     # the weight of interface is used to determine
