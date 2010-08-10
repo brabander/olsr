@@ -1623,12 +1623,12 @@ InitOBAMP(void)
 
 
 
-  struct olsr_cookie_info *OBAMP_alive_gen_timer_cookie = NULL;
-  struct olsr_cookie_info *purge_nodes_timer_cookie = NULL;
-  struct olsr_cookie_info *mesh_create_timer_cookie = NULL;
-  struct olsr_cookie_info *tree_create_timer_cookie = NULL;
-  struct olsr_cookie_info *outer_tree_create_timer_cookie = NULL;
-  struct olsr_cookie_info *unsolicited_tree_destroy_timer_cookie = NULL;
+  struct olsr_timer_info *OBAMP_alive_gen_timer_cookie = NULL;
+  struct olsr_timer_info *purge_nodes_timer_cookie = NULL;
+  struct olsr_timer_info *mesh_create_timer_cookie = NULL;
+  struct olsr_timer_info *tree_create_timer_cookie = NULL;
+  struct olsr_timer_info *outer_tree_create_timer_cookie = NULL;
+  struct olsr_timer_info *unsolicited_tree_destroy_timer_cookie = NULL;
 
   if (olsr_cnf->ip_version == AF_INET6) {
     OLSR_ERROR(LOG_PLUGINS, "OBAMP does not support IPv6 at the moment.");
@@ -1655,12 +1655,18 @@ InitOBAMP(void)
   list_init_head(&ListOfObampNodes);
 
 //OLSR cookies stuff for timers
-  OBAMP_alive_gen_timer_cookie = olsr_alloc_cookie("OBAMP Alive Generation", OLSR_COOKIE_TYPE_TIMER);
-  purge_nodes_timer_cookie = olsr_alloc_cookie("purge nodes Generation", OLSR_COOKIE_TYPE_TIMER);
-  mesh_create_timer_cookie = olsr_alloc_cookie("mesh create Generation", OLSR_COOKIE_TYPE_TIMER);
-  tree_create_timer_cookie = olsr_alloc_cookie("tree create Generation", OLSR_COOKIE_TYPE_TIMER);
-  outer_tree_create_timer_cookie = olsr_alloc_cookie("outer tree create Generation", OLSR_COOKIE_TYPE_TIMER);
-  unsolicited_tree_destroy_timer_cookie = olsr_alloc_cookie("tree destroy Generation", OLSR_COOKIE_TYPE_TIMER);
+  OBAMP_alive_gen_timer_cookie =
+      olsr_alloc_timerinfo("OBAMP Alive Generation", &obamp_alive_gen, true);
+  purge_nodes_timer_cookie =
+      olsr_alloc_timerinfo("purge nodes Generation", &purge_nodes, true);
+  mesh_create_timer_cookie =
+      olsr_alloc_timerinfo("mesh create Generation", &mesh_create, true);
+  tree_create_timer_cookie =
+      olsr_alloc_timerinfo("tree create Generation", &tree_create, true);
+  outer_tree_create_timer_cookie =
+      olsr_alloc_timerinfo("outer tree create Generation", &outer_tree_create, true);
+  unsolicited_tree_destroy_timer_cookie =
+      olsr_alloc_timerinfo("tree destroy Generation", &unsolicited_tree_destroy, true);
 
 
 //Tells OLSR to launch olsr_parser when the packets for this plugin arrive
@@ -1668,32 +1674,32 @@ InitOBAMP(void)
 
 // start to send alive messages to appear in other joined lists
   OBAMP_alive_timer =
-    olsr_start_timer(OBAMP_ALIVE_EIVAL * MSEC_PER_SEC, OBAMP_JITTER, OLSR_TIMER_PERIODIC, &obamp_alive_gen, NULL,
+    olsr_start_timer(OBAMP_ALIVE_EIVAL * MSEC_PER_SEC, OBAMP_JITTER, NULL,
                      OBAMP_alive_gen_timer_cookie);
 
 // start timer to purge nodes from list in softstate fashion
   purge_nodes_timer =
-    olsr_start_timer(_Texpire_timer_ * MSEC_PER_SEC, OBAMP_JITTER, OLSR_TIMER_PERIODIC, &purge_nodes, NULL,
+    olsr_start_timer(_Texpire_timer_ * MSEC_PER_SEC, OBAMP_JITTER, NULL,
                      purge_nodes_timer_cookie);
 
 //start timer to create mesh
   mesh_create_timer =
-    olsr_start_timer(OBAMP_MESH_CREATE_IVAL * MSEC_PER_SEC, OBAMP_JITTER, OLSR_TIMER_PERIODIC, &mesh_create, NULL,
+    olsr_start_timer(OBAMP_MESH_CREATE_IVAL * MSEC_PER_SEC, OBAMP_JITTER, NULL,
                      mesh_create_timer_cookie);
 
 //start timer for tree create procedure
   tree_create_timer =
-    olsr_start_timer(OBAMP_TREE_CREATE_IVAL * MSEC_PER_SEC, OBAMP_JITTER, OLSR_TIMER_PERIODIC, &tree_create, NULL,
+    olsr_start_timer(OBAMP_TREE_CREATE_IVAL * MSEC_PER_SEC, OBAMP_JITTER, NULL,
                      tree_create_timer_cookie);
 
 //start timer for tree create procedure
   outer_tree_create_timer =
-    olsr_start_timer(OBAMP_OUTER_TREE_CREATE_IVAL * MSEC_PER_SEC, OBAMP_JITTER, OLSR_TIMER_PERIODIC, &outer_tree_create, NULL,
+    olsr_start_timer(OBAMP_OUTER_TREE_CREATE_IVAL * MSEC_PER_SEC, OBAMP_JITTER, NULL,
                      tree_create_timer_cookie);
 
 //start timer for tree create procedure
   unsolicited_tree_destroy_timer =
-    olsr_start_timer(30 * MSEC_PER_SEC, OBAMP_JITTER, OLSR_TIMER_PERIODIC, &unsolicited_tree_destroy, NULL,
+    olsr_start_timer(30 * MSEC_PER_SEC, OBAMP_JITTER, NULL,
                      unsolicited_tree_destroy_timer_cookie);
 
 //Create udp server socket for OBAMP signalling and register it to the scheduler

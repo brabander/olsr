@@ -76,15 +76,11 @@ static struct ifchgf *ifchgf_list = NULL;
 
 
 /* Some cookies for stats keeping */
-struct olsr_cookie_info *interface_mem_cookie = NULL;
-struct olsr_cookie_info *interface_poll_timer_cookie = NULL;
-struct olsr_cookie_info *interface_lost_mem_cookie = NULL;
+static struct olsr_cookie_info *interface_mem_cookie = NULL;
+static struct olsr_cookie_info *interface_lost_mem_cookie = NULL;
 
-struct olsr_cookie_info *hello_gen_timer_cookie = NULL;
-struct olsr_cookie_info *tc_gen_timer_cookie = NULL;
-struct olsr_cookie_info *mid_gen_timer_cookie = NULL;
-struct olsr_cookie_info *hna_gen_timer_cookie = NULL;
-struct olsr_cookie_info *buffer_hold_timer_cookie = NULL;
+static struct olsr_timer_info *interface_poll_timerinfo = NULL;
+static struct olsr_timer_info *hello_gen_timerinfo = NULL;
 
 static void check_interface_updates(void *);
 
@@ -106,19 +102,12 @@ init_interfaces(void)
   /*
    * Get some cookies for getting stats to ease troubleshooting.
    */
-  interface_mem_cookie = olsr_alloc_cookie("Interface", OLSR_COOKIE_TYPE_MEMORY);
-  olsr_cookie_set_memory_size(interface_mem_cookie, sizeof(struct interface));
+  interface_mem_cookie = olsr_alloc_cookie("Interface", sizeof(struct interface));
 
-  interface_lost_mem_cookie = olsr_alloc_cookie("Interface lost", OLSR_COOKIE_TYPE_MEMORY);
-  olsr_cookie_set_memory_size(interface_lost_mem_cookie, sizeof(struct interface_lost));
+  interface_lost_mem_cookie = olsr_alloc_cookie("Interface lost", sizeof(struct interface_lost));
 
-  interface_poll_timer_cookie = olsr_alloc_cookie("Interface Polling", OLSR_COOKIE_TYPE_TIMER);
-  buffer_hold_timer_cookie = olsr_alloc_cookie("Buffer Hold", OLSR_COOKIE_TYPE_TIMER);
-
-  hello_gen_timer_cookie = olsr_alloc_cookie("Hello Generation", OLSR_COOKIE_TYPE_TIMER);
-  tc_gen_timer_cookie = olsr_alloc_cookie("TC Generation", OLSR_COOKIE_TYPE_TIMER);
-  mid_gen_timer_cookie = olsr_alloc_cookie("MID Generation", OLSR_COOKIE_TYPE_TIMER);
-  hna_gen_timer_cookie = olsr_alloc_cookie("HNA Generation", OLSR_COOKIE_TYPE_TIMER);
+  interface_poll_timerinfo = olsr_alloc_timerinfo("Interface Polling", &check_interface_updates, true);
+  hello_gen_timerinfo = olsr_alloc_timerinfo("Hello Generation", &generate_hello, true);
 
   OLSR_INFO(LOG_INTERFACE, "\n ---- Interface configuration ---- \n\n");
 
@@ -129,7 +118,7 @@ init_interfaces(void)
 
   /* Kick a periodic timer for the network interface update function */
   olsr_start_timer(olsr_cnf->nic_chgs_pollrate, 5,
-                   OLSR_TIMER_PERIODIC, &check_interface_updates, NULL, interface_poll_timer_cookie);
+                   NULL, interface_poll_timerinfo);
 
   return (!list_is_empty(&interface_head));
 }
@@ -193,7 +182,9 @@ struct interface *
 add_interface(struct olsr_if_config *iface) {
   struct interface *ifp;
 
-  if ((ifp = os_init_interface(iface)) == NULL) {
+  ifp = olsr_cookie_malloc(interface_mem_cookie);
+  if ((os_init_interface(ifp, iface))) {
+    olsr_cookie_free(interface_mem_cookie, ifp);
     return NULL;
   }
 
@@ -265,7 +256,7 @@ add_interface(struct olsr_if_config *iface) {
    */
   ifp->hello_gen_timer =
     olsr_start_timer(iface->cnf->hello_params.emission_interval,
-                     HELLO_JITTER, OLSR_TIMER_PERIODIC, &generate_hello, ifp, hello_gen_timer_cookie);
+                     HELLO_JITTER, ifp, hello_gen_timerinfo);
   ifp->hello_interval = iface->cnf->hello_params.emission_interval;
   ifp->hello_validity = iface->cnf->hello_params.validity_time;
 

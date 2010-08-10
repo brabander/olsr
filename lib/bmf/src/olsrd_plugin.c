@@ -60,7 +60,7 @@
 static void __attribute__ ((constructor)) my_init(void);
 static void __attribute__ ((destructor)) my_fini(void);
 
-static struct olsr_cookie_info *prune_packet_history_timer_cookie;
+static struct olsr_timer_info *prune_packet_history_timer_info;
 
 void olsr_plugin_exit(void);
 
@@ -105,10 +105,11 @@ olsrd_plugin_init(void)
   add_ifchgf(&InterfaceChange);
 
   /* create the cookie */
-  prune_packet_history_timer_cookie = olsr_alloc_cookie("BMF: Prune Packet History", OLSR_COOKIE_TYPE_TIMER);
+  prune_packet_history_timer_info =
+      olsr_alloc_timerinfo("BMF: Prune Packet History", &PrunePacketHistory, true);
 
   /* Register the duplicate registration pruning process */
-  olsr_start_timer(3 * MSEC_PER_SEC, 0, OLSR_TIMER_PERIODIC, &PrunePacketHistory, NULL, prune_packet_history_timer_cookie);
+  olsr_start_timer(3 * MSEC_PER_SEC, 0, NULL, prune_packet_history_timer_info);
 
 
   return InitBmf(NULL);

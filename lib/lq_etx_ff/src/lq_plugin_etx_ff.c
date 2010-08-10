@@ -88,7 +88,7 @@ static int lq_etxff_get_linkentry_data(struct link_entry *, int);
 static const char *lq_etxff_print_cost(olsr_linkcost cost, char *buffer, size_t bufsize);
 static const char *lq_etxff_print_link_entry_lq(struct link_entry *entry, int index, char *buffer, size_t bufsize);
 
-static struct olsr_cookie_info *default_lq_ff_timer_cookie = NULL;
+static struct olsr_timer_info *default_lq_ff_timer_info = NULL;
 
 OLSR_PLUGIN6_NP() {
   .descr = PLUGIN_DESCR,
@@ -270,8 +270,8 @@ lq_etxff_initialize(void)
 {
   /* Some cookies for stats keeping */
   olsr_packetparser_add_function(&lq_etxff_packet_parser);
-  default_lq_ff_timer_cookie = olsr_alloc_cookie("Default Freifunk LQ", OLSR_COOKIE_TYPE_TIMER);
-  lq_etxff_timer_struct = olsr_start_timer(1000, 0, OLSR_TIMER_PERIODIC, &lq_etxff_timer, NULL, default_lq_ff_timer_cookie);
+  default_lq_ff_timer_info = olsr_alloc_timerinfo("Default Freifunk LQ",  &lq_etxff_timer, true);
+  lq_etxff_timer_struct = olsr_start_timer(1000, 0, NULL, default_lq_ff_timer_info);
 }
 
 static void

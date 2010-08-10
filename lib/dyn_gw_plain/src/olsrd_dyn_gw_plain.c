@@ -58,7 +58,7 @@
 #define PLUGIN_INTERFACE_VERSION 5
 
 static int has_inet_gateway;
-static struct olsr_cookie_info *event_timer_cookie;
+static struct olsr_timer_info *event_timer_info;
 static union olsr_ip_addr gw_net;
 static union olsr_ip_addr gw_netmask;
 
@@ -102,10 +102,10 @@ olsrd_plugin_init(void)
   }
 
   /* create the cookie */
-  event_timer_cookie = olsr_alloc_cookie("DynGW Plain: Event", OLSR_COOKIE_TYPE_TIMER);
+  event_timer_info = olsr_alloc_timerinfo("DynGW Plain: Event", &olsr_event, true);
 
   /* Register the GW check */
-  olsr_start_timer(3 * MSEC_PER_SEC, 0, OLSR_TIMER_PERIODIC, &olsr_event, NULL, event_timer_cookie);
+  olsr_start_timer(3 * MSEC_PER_SEC, 0, NULL, event_timer_info);
 
   return 1;
 }

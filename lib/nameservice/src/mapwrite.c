@@ -60,6 +60,7 @@
 #include "mapwrite.h"
 
 static char my_latlon_str[48];
+static struct olsr_timer_info *map_poll_timer_info;
 
 /**
  * lookup a nodes position
@@ -232,7 +233,8 @@ mapwrite_init(const char *fifoname)
       OLSR_WARN(LOG_PLUGINS, "mkfifo(%s): %s", fifoname, strerror(errno));
       return false;
     } else {
-      olsr_start_timer(800, 5, OLSR_TIMER_PERIODIC, &mapwrite_poll, NULL, map_poll_timer_cookie);
+      map_poll_timer_info = olsr_alloc_timerinfo("Nameservice: mapwrite", &mapwrite_poll, true);
+      olsr_start_timer(800, 5, NULL, map_poll_timer_info);
     }
   }
   return true;

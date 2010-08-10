@@ -162,7 +162,7 @@ olsr_process_changes(void)
 
   /* calculate the routing table */
   if (changes_neighborhood || changes_topology || changes_hna) {
-    olsr_calculate_routing_table();
+    olsr_calculate_routing_table(false);
   }
 
   olsr_print_link_set();
@@ -206,7 +206,7 @@ void
 olsr_init_tables(void)
 {
   /* Some cookies for stats keeping */
-  static struct olsr_cookie_info *periodic_spf_timer_cookie = NULL;
+  static struct olsr_timer_info *periodic_spf_timer_info = NULL;
 
   changes_topology = false;
   changes_neighborhood = false;
@@ -235,9 +235,9 @@ olsr_init_tables(void)
 
   /* Start periodic SPF and RIB recalculation */
   if (olsr_cnf->lq_dinter > 0) {
-    periodic_spf_timer_cookie = olsr_alloc_cookie("Periodic SPF", OLSR_COOKIE_TYPE_TIMER);
+    periodic_spf_timer_info = olsr_alloc_timerinfo("Periodic SPF", &olsr_trigger_forced_update, true);
     olsr_start_timer(olsr_cnf->lq_dinter, 5,
-                     OLSR_TIMER_PERIODIC, &olsr_trigger_forced_update, NULL, periodic_spf_timer_cookie);
+                     NULL, periodic_spf_timer_info);
   }
 }
 
@@ -362,78 +362,6 @@ olsr_forward_message(struct olsr_message *msg, uint8_t *binary, struct interface
   return 1;
 }
 
-/**
- * Wrapper for the timer callback.
- */
-static void
-olsr_expire_buffer_timer(void *context)
-{
-  struct interface *ifn;
-
-  ifn = (struct interface *)context;
-
-  /*
-   * Clear the pointer to indicate that this timer has
-   * been expired and needs to be restarted in case there
-   * will be another message queued in the future.
-   */
-  ifn->buffer_hold_timer = NULL;
-
-  /*
-   * Do we have something to emit ?
-   */
-  if (!net_output_pending(ifn)) {
-    return;
-  }
-
-  OLSR_DEBUG(LOG_NETWORKING, "Buffer Holdtimer for %s timed out, sending data.\n", ifn->int_name);
-
-  net_output(ifn);
-}
-
-/*
- * set_buffer_timer
- *
- * Kick a hold-down timer which defers building of a message.
- * This has the desired effect that olsr messages get bigger.
- */
-void
-set_buffer_timer(struct interface *ifn)
-{
-
-  /*
-   * Bail if there is already a timer running.
-   */
-  if (ifn->buffer_hold_timer) {
-    return;
-  }
-
-  /*
-   * This is the first message since the last time this interface has
-   * been drained. Flush the buffer in second or so.
-   */
-  ifn->buffer_hold_timer =
-    olsr_start_timer(OLSR_BUFFER_HOLD_TIME, OLSR_BUFFER_HOLD_JITTER,
-                     OLSR_TIMER_ONESHOT, &olsr_expire_buffer_timer, ifn, buffer_hold_timer_cookie);
-}
-
-void
-olsr_init_willingness(void)
-{
-  /* Some cookies for stats keeping */
-  static struct olsr_cookie_info *willingness_timer_cookie = NULL;
-
-  if (olsr_cnf->willingness_auto) {
-    OLSR_INFO(LOG_MAIN, "Initialize automatic willingness...\n");
-    /* Run it first and then periodic. */
-    olsr_update_willingness(NULL);
-
-    willingness_timer_cookie = olsr_alloc_cookie("Update Willingness", OLSR_COOKIE_TYPE_TIMER);
-    olsr_start_timer(olsr_cnf->will_int, 5,
-                     OLSR_TIMER_PERIODIC, &olsr_update_willingness, NULL, willingness_timer_cookie);
-  }
-}
-
 static void
 olsr_update_willingness(void *foo __attribute__ ((unused)))
 {
@@ -447,6 +375,21 @@ olsr_update_willingness(void *foo __attribute__ ((unused)))
   }
 }
 
+void
+olsr_init_willingness(void)
+{
+  /* Some cookies for stats keeping */
+  static struct olsr_timer_info *willingness_timer_info = NULL;
+
+  if (olsr_cnf->willingness_auto) {
+    OLSR_INFO(LOG_MAIN, "Initialize automatic willingness...\n");
+    /* Run it first and then periodic. */
+    olsr_update_willingness(NULL);
+
+    willingness_timer_info = olsr_alloc_timerinfo("Update Willingness", &olsr_update_willingness, true);
+    olsr_start_timer(olsr_cnf->will_int, 5, NULL, willingness_timer_info);
+  }
+}
 
 /**
  *Calculate this nodes willingness to act as a MPR

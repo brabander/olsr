@@ -58,12 +58,16 @@
 
 #include <assert.h>
 
+static void olsr_expire_link_entry(void *context);
+static void olsr_expire_link_loss_timer(void *context);
+static void olsr_expire_link_sym_timer(void *context);
+
 /* head node for all link sets */
 struct list_entity link_entry_head;
 
-static struct olsr_cookie_info *link_dead_timer_cookie = NULL;
-static struct olsr_cookie_info *link_loss_timer_cookie = NULL;
-static struct olsr_cookie_info *link_sym_timer_cookie = NULL;
+static struct olsr_timer_info *link_dead_timer_info = NULL;
+static struct olsr_timer_info *link_loss_timer_info = NULL;
+static struct olsr_timer_info *link_sym_timer_info = NULL;
 
 bool link_changes;                     /* is set if changes occur in MPRS set */
 
@@ -87,9 +91,9 @@ olsr_init_link_set(void)
   /* Init list head */
   list_init_head(&link_entry_head);
 
-  link_dead_timer_cookie = olsr_alloc_cookie("Link dead", OLSR_COOKIE_TYPE_TIMER);
-  link_loss_timer_cookie = olsr_alloc_cookie("Link loss", OLSR_COOKIE_TYPE_TIMER);
-  link_sym_timer_cookie = olsr_alloc_cookie("Link SYM", OLSR_COOKIE_TYPE_TIMER);
+  link_dead_timer_info = olsr_alloc_timerinfo("Link dead", &olsr_expire_link_entry, false);
+  link_loss_timer_info = olsr_alloc_timerinfo("Link loss", &olsr_expire_link_loss_timer, true);
+  link_sym_timer_info = olsr_alloc_timerinfo("Link SYM", &olsr_expire_link_sym_timer, false);
 
 }
 
@@ -284,7 +288,7 @@ olsr_expire_link_loss_timer(void *context)
   olsr_lq_hello_handler(link, true);
 
   /* next timeout in 1.0 x htime */
-  olsr_change_timer(link->link_loss_timer, link->loss_helloint, OLSR_LINK_LOSS_JITTER, OLSR_TIMER_PERIODIC);
+  olsr_change_timer(link->link_loss_timer, link->loss_helloint, OLSR_LINK_LOSS_JITTER);
 }
 
 /**
@@ -342,7 +346,7 @@ static void
 olsr_set_link_timer(struct link_entry *link, unsigned int rel_timer)
 {
   olsr_set_timer(&link->link_timer, rel_timer, OLSR_LINK_JITTER,
-                 OLSR_TIMER_ONESHOT, &olsr_expire_link_entry, link, link_dead_timer_cookie);
+                 link, link_dead_timer_info);
 }
 
 /**
@@ -412,7 +416,7 @@ add_link_entry(const union olsr_ip_addr *local,
   link->loss_helloint = htime;
 
   olsr_set_timer(&link->link_loss_timer, htime + htime / 2,
-                 OLSR_LINK_LOSS_JITTER, OLSR_TIMER_PERIODIC, &olsr_expire_link_loss_timer, link, link_loss_timer_cookie);
+                 OLSR_LINK_LOSS_JITTER, link, link_loss_timer_info);
 
   set_loss_link_multiplier(link);
 
@@ -543,7 +547,7 @@ update_link_entry(const union olsr_ip_addr *local,
 
     /* L_SYM_time = current time + validity time */
     olsr_set_timer(&entry->link_sym_timer, message->comm->vtime,
-                   OLSR_LINK_SYM_JITTER, OLSR_TIMER_ONESHOT, &olsr_expire_link_sym_timer, entry, link_sym_timer_cookie);
+                   OLSR_LINK_SYM_JITTER, entry, link_sym_timer_info);
 
     /* L_time = L_SYM_time + NEIGHB_HOLD_TIME */
     olsr_set_link_timer(entry, message->comm->vtime + NEIGHB_HOLD_TIME);
@@ -725,7 +729,7 @@ olsr_update_packet_loss(struct link_entry *entry)
 
   /* timeout for the first lost packet is 1.5 x htime */
   olsr_set_timer(&entry->link_loss_timer, entry->loss_helloint + entry->loss_helloint / 2,
-                 OLSR_LINK_LOSS_JITTER, OLSR_TIMER_PERIODIC, &olsr_expire_link_loss_timer, entry, link_loss_timer_cookie);
+                 OLSR_LINK_LOSS_JITTER, entry, link_loss_timer_info);
 }
 
 void

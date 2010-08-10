@@ -42,11 +42,13 @@
 #ifndef _OLSR_SPF_H
 #define _OLSR_SPF_H
 
+#include "defs.h"
+
 #define OLSR_SPF_BACKOFF_TIME  (1*1000) /* milliseconds */
 #define OLSR_SPF_BACKOFF_JITTER 5       /* percent */
 
-void olsr_calculate_routing_table(void);
-extern struct timer_entry *spf_backoff_timer;
+void olsr_init_spf(void);
+void olsr_calculate_routing_table(bool);
 
 #endif
 

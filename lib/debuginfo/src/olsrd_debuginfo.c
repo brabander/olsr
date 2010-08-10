@@ -120,9 +120,10 @@ static struct avl_tree stat_msg_tree, stat_pkt_tree;
 static struct debug_msgtraffic_count total_msg_traffic;
 static struct debug_pkttraffic_count total_pkt_traffic;
 
-static struct olsr_cookie_info *statistics_timer = NULL;
 static struct olsr_cookie_info *statistics_msg_mem = NULL;
 static struct olsr_cookie_info *statistics_pkt_mem = NULL;
+
+static struct olsr_timer_info *statistics_timer = NULL;
 
 static union olsr_ip_addr total_ip_addr;
 
@@ -195,15 +196,13 @@ olsrd_plugin_init(void)
     commands[i].cmd->acl = &allowed_nets;
   }
 
-  statistics_timer = olsr_alloc_cookie("debuginfo timer", OLSR_COOKIE_TYPE_TIMER);
-  olsr_start_timer(traffic_interval * 1000, 0, true, &update_statistics_ptr, NULL, statistics_timer);
+  statistics_timer = olsr_alloc_timerinfo("debuginfo timer", &update_statistics_ptr, true);
+  olsr_start_timer(traffic_interval * 1000, 0, NULL, statistics_timer);
 
-  statistics_msg_mem = olsr_alloc_cookie("debuginfo msgstat", OLSR_COOKIE_TYPE_MEMORY);
-  olsr_cookie_set_memory_size(statistics_msg_mem,
+  statistics_msg_mem = olsr_alloc_cookie("debuginfo msgstat",
       sizeof(struct debug_msgtraffic) + sizeof(struct debug_msgtraffic_count) * traffic_slots);
 
-  statistics_pkt_mem = olsr_alloc_cookie("debuginfo pktstat", OLSR_COOKIE_TYPE_MEMORY);
-  olsr_cookie_set_memory_size(statistics_pkt_mem,
+  statistics_pkt_mem = olsr_alloc_cookie("debuginfo pktstat",
       sizeof(struct debug_pkttraffic) + sizeof(struct debug_pkttraffic_count) * traffic_slots);
 
   memset(&total_msg_traffic, 0, sizeof(total_msg_traffic));
@@ -540,33 +539,26 @@ debuginfo_pktstat(struct comport_connection *con,
   return CONTINUE;
 }
 
-static INLINE bool debuginfo_print_cookies_mem(struct autobuf *buf, const char *format) {
+static INLINE bool debuginfo_print_cookies_mem(struct autobuf *buf) {
   struct olsr_cookie_info *c;
   struct list_iterator iterator;
 
   OLSR_FOR_ALL_COOKIES(c, iterator) {
-    if (c == NULL || c->ci_type != OLSR_COOKIE_TYPE_MEMORY) {
-      continue;
-    }
-    if (abuf_appendf(buf, format,
-        c->ci_name == NULL ? "Unknown" : c->ci_name,
-        (unsigned long)c->ci_size, c->ci_usage, c->ci_free_list_usage) < 0) {
+    if (abuf_appendf(buf, "%-25s (MEMORY) size: %lu usage: %u freelist: %u\n",
+        c->ci_name, (unsigned long)c->ci_size, c->ci_usage, c->ci_free_list_usage) < 0) {
       return true;
     }
   }
   return false;
 }
 
-static INLINE bool debuginfo_print_cookies_timer(struct autobuf *buf, const char *format) {
-  struct olsr_cookie_info *c;
+static INLINE bool debuginfo_print_cookies_timer(struct autobuf *buf) {
+  struct olsr_timer_info *t;
   struct list_iterator iterator;
 
-  OLSR_FOR_ALL_COOKIES(c, iterator) {
-    if (c == NULL || c->ci_type != OLSR_COOKIE_TYPE_TIMER) {
-      continue;
-    }
-    if (abuf_appendf(buf, format, c->ci_name == NULL ? "Unknown" : c->ci_name,
-                       c->ci_usage, c->ci_changes) < 0) {
+  OLSR_FOR_ALL_TIMERS(t, iterator) {
+    if (abuf_appendf(buf, "%-25s (TIMER) usage: %u changes: %u\n",
+        t->name, t->usage, t->changes) < 0) {
       return true;
     }
   }
@@ -581,7 +573,7 @@ debuginfo_cookies(struct comport_connection *con,
     return ABUF_ERROR;
   }
 
-  if (debuginfo_print_cookies_mem(&con->out, "%-25s (MEMORY) size: %lu usage: %u freelist: %u\n")) {
+  if (debuginfo_print_cookies_mem(&con->out)) {
     return ABUF_ERROR;
   }
 
@@ -589,7 +581,7 @@ debuginfo_cookies(struct comport_connection *con,
     return ABUF_ERROR;
   }
 
-  if (debuginfo_print_cookies_timer(&con->out, "%-25s (TIMER) usage: %u changes: %u\n")) {
+  if (debuginfo_print_cookies_timer(&con->out)) {
     return ABUF_ERROR;
   }
   return CONTINUE;

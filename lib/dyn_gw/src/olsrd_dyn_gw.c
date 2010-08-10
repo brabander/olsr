@@ -192,7 +192,7 @@ olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *
   *size = ARRAYSIZE(plugin_parameters);
 }
 
-static struct olsr_cookie_info *doing_hna_timer_cookie;
+static struct olsr_timer_info *doing_hna_timer_info;
 
 /**
  *Do initialization here
@@ -223,10 +223,10 @@ olsrd_plugin_init(void)
   pthread_create(&ping_thread, NULL, (void *(*)(void *))looped_checks, NULL);
 
   /* create the cookie */
-  doing_hna_timer_cookie = olsr_alloc_cookie("DynGW: Doing HNS", OLSR_COOKIE_TYPE_TIMER);
+  doing_hna_timer_info = olsr_alloc_timerinfo("DynGW: Doing HNS", &olsr_event_doing_hna, true);
 
   /* Register the GW check */
-  olsr_start_timer(3 * MSEC_PER_SEC, 0, OLSR_TIMER_PERIODIC, &olsr_event_doing_hna, NULL, doing_hna_timer_cookie);
+  olsr_start_timer(3 * MSEC_PER_SEC, 0, NULL, doing_hna_timer_info);
 
   return 1;
 }

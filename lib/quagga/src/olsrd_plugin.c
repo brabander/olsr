@@ -43,7 +43,7 @@ static set_plugin_parameter set_exportroutes;
 static set_plugin_parameter set_distance;
 static set_plugin_parameter set_localpref;
 
-static struct olsr_cookie_info *event_timer_cookie;
+static struct olsr_timer_info *event_timer_info;
 
 int
 olsrd_plugin_interface_version(void)
@@ -138,9 +138,9 @@ olsrd_plugin_init(void)
     return 1;
   }
 
-  event_timer_cookie = olsr_alloc_cookie("Quagga: Event", OLSR_COOKIE_TYPE_TIMER);
+  event_timer_info = olsr_alloc_timerinfo("Quagga: Event", &zebra_parse, true);
 
-  olsr_start_timer(1 * MSEC_PER_SEC, 0, OLSR_TIMER_PERIODIC, &zebra_parse, NULL, event_timer_cookie);
+  olsr_start_timer(1 * MSEC_PER_SEC, 0, NULL, event_timer_info);
 
   return 0;
 }

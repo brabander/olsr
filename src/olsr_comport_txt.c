@@ -63,7 +63,10 @@ struct txt_repeat_data {
 };
 
 static struct avl_tree txt_normal_tree, txt_help_tree;
-static struct olsr_cookie_info *txtcommand_cookie, *txt_repeattimer_cookie;
+static struct olsr_cookie_info *txtcommand_cookie;
+static struct olsr_timer_info *txt_repeat_timerinfo;
+
+static void olsr_txt_repeat_timer(void *data);
 
 static enum olsr_txtcommand_result olsr_txtcmd_quit(
     struct comport_connection *con, const char *cmd, const char *param);
@@ -127,10 +130,9 @@ olsr_com_init_txt(void) {
   avl_init(&txt_normal_tree, &avl_comp_strcasecmp, false, NULL);
   avl_init(&txt_help_tree, &avl_comp_strcasecmp, false, NULL);
 
-  txtcommand_cookie = olsr_alloc_cookie("comport txt commands", OLSR_COOKIE_TYPE_MEMORY);
-  olsr_cookie_set_memory_size(txtcommand_cookie, sizeof(struct olsr_txtcommand));
+  txtcommand_cookie = olsr_alloc_cookie("comport txt commands", sizeof(struct olsr_txtcommand));
 
-  txt_repeattimer_cookie = olsr_alloc_cookie("txt repeat timer", OLSR_COOKIE_TYPE_TIMER);
+  txt_repeat_timerinfo = olsr_alloc_timerinfo("txt repeat timer", olsr_txt_repeat_timer, true);
 
   for (i=0; i < ARRAYSIZE(txt_internal_names); i++) {
     txt_internal_normalcmd[i] = olsr_com_add_normal_txtcommand(txt_internal_names[i], txt_internal_handlers[i]);
@@ -312,7 +314,7 @@ void olsr_com_parse_txt(struct comport_connection *con,
   }
 
   /* reset timeout */
-  olsr_change_timer(con->timeout, con->timeout_value, 0, false);
+  olsr_change_timer(con->timeout, con->timeout_value, 0);
 
   /* print prompt */
   if (processedCommand && con->state == INTERACTIVE && con->show_echo) {
@@ -441,7 +443,7 @@ olsr_txtcmd_repeat(struct comport_connection *con,
 
   interval = atoi(param);
 
-  timer = olsr_start_timer(interval * 1000, 0, true, &olsr_txt_repeat_timer, con, txt_repeattimer_cookie);
+  timer = olsr_start_timer(interval * 1000, 0, con, txt_repeat_timerinfo);
   con->stop_handler = olsr_txt_repeat_stophandler;
   con->stop_data[0] = timer;
   con->stop_data[1] = strdup(ptr);

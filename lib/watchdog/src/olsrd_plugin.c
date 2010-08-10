@@ -61,7 +61,7 @@
 #include <time.h>
 #define PLUGIN_INTERFACE_VERSION 5
 
-static struct olsr_cookie_info *watchdog_timer_cookie;
+static struct olsr_timer_info *watchdog_timer_info;
 
 static char watchdog_filename[FILENAME_MAX + 1] = "/tmp/olsr.watchdog";
 static int watchdog_interval = 5;
@@ -129,11 +129,11 @@ int
 olsrd_plugin_init(void)
 {
   /* create the cookie */
-  watchdog_timer_cookie = olsr_alloc_cookie("Watchdog: write alive-file", OLSR_COOKIE_TYPE_TIMER);
+  watchdog_timer_info = olsr_alloc_timerinfo("Watchdog: write alive-file",
+      &olsr_watchdog_write_alivefile, true);
 
-  /* Register the GW check */
-  olsr_start_timer(watchdog_interval * MSEC_PER_SEC, 0, OLSR_TIMER_PERIODIC,
-                   &olsr_watchdog_write_alivefile, NULL, watchdog_timer_cookie);
+  /* Register the watchdog check */
+  olsr_start_timer(watchdog_interval * MSEC_PER_SEC, 0, NULL, watchdog_timer_info);
 
   return 1;
 }

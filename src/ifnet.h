@@ -59,7 +59,7 @@ int
   set_flag(char *, short);
 #endif
 
-struct interface *os_init_interface(struct olsr_if_config *);
+int os_init_interface(struct interface *, struct olsr_if_config *);
 int chk_if_changed(struct olsr_if_config *);
 
 #ifdef WIN32

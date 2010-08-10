@@ -94,8 +94,7 @@ struct olsr_plugin *olsr_get_plugin(const char *libname) {
 
 void
 olsr_init_pluginsystem(void) {
-  plugin_mem_cookie = olsr_alloc_cookie("Plugin handle", OLSR_COOKIE_TYPE_MEMORY);
-  olsr_cookie_set_memory_size(plugin_mem_cookie, sizeof(struct olsr_plugin));
+  plugin_mem_cookie = olsr_alloc_cookie("Plugin handle", sizeof(struct olsr_plugin));
 
   /* could already be initialized */
   if (!plugin_tree_initialized) {

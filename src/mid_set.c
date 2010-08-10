@@ -56,13 +56,14 @@
 #include <stdlib.h>
 
 static struct mid_entry *olsr_lookup_mid_entry(const union olsr_ip_addr *);
+static void olsr_expire_mid_entries(void *context);
 
 /* Root of the MID tree */
 struct avl_tree mid_tree;
 
-/* Some cookies for stats keeping */
-static struct olsr_cookie_info *mid_validity_timer_cookie = NULL;
+/* validity timer of MID entries */
 static struct olsr_cookie_info *mid_address_mem_cookie = NULL;
+static struct olsr_timer_info *mid_validity_timer_info = NULL;
 
 /**
  * Initialize the MID set
@@ -77,10 +78,9 @@ olsr_init_mid_set(void)
   /*
    * Get some cookies for getting stats to ease troubleshooting.
    */
-  mid_validity_timer_cookie = olsr_alloc_cookie("MID validity", OLSR_COOKIE_TYPE_TIMER);
+  mid_validity_timer_info = olsr_alloc_timerinfo("MID validity", &olsr_expire_mid_entries, false);
 
-  mid_address_mem_cookie = olsr_alloc_cookie("MID address", OLSR_COOKIE_TYPE_MEMORY);
-  olsr_cookie_set_memory_size(mid_address_mem_cookie, sizeof(struct mid_entry));
+  mid_address_mem_cookie = olsr_alloc_cookie("MID address", sizeof(struct mid_entry));
 }
 
 /**
@@ -108,13 +108,7 @@ olsr_expire_mid_entries(void *context)
 static void
 olsr_set_mid_timer(struct mid_entry *mid, uint32_t rel_timer)
 {
-  if (mid->mid_timer) {
-    olsr_change_timer(mid->mid_timer, rel_timer, OLSR_MID_JITTER, OLSR_TIMER_ONESHOT);
-  }
-  else {
-    mid->mid_timer = olsr_start_timer(rel_timer, OLSR_MID_JITTER, OLSR_TIMER_ONESHOT,
-        &olsr_expire_mid_entries, mid, mid_validity_timer_cookie);
-  }
+  olsr_set_timer(&mid->mid_timer, rel_timer, OLSR_MID_JITTER, mid, mid_validity_timer_info);
 }
 
 /**

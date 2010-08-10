@@ -50,16 +50,17 @@
 #include "olsr_logging.h"
 
 static bool delete_outdated_tc_edges(struct tc_entry *);
+static void olsr_expire_tc_entry(void *context);
+static void olsr_expire_tc_edge_gc(void *context);
 
 /* Root of the link state database */
 struct avl_tree tc_tree;
 struct tc_entry *tc_myself = NULL;     /* Shortcut to ourselves */
 
 /* Some cookies for stats keeping */
-static struct olsr_cookie_info *tc_edge_gc_timer_cookie = NULL;
-static struct olsr_cookie_info *tc_validity_timer_cookie = NULL;
-struct olsr_cookie_info *spf_backoff_timer_cookie = NULL;
-struct olsr_cookie_info *tc_mem_cookie = NULL;
+static struct olsr_cookie_info *tc_mem_cookie = NULL;
+static struct olsr_timer_info *tc_edge_gc_timer_info = NULL;
+static struct olsr_timer_info *tc_validity_timer_info = NULL;
 
 static uint32_t relevantTcCount = 0;
 
@@ -138,12 +139,10 @@ olsr_init_tc(void)
   /*
    * Get some cookies for getting stats to ease troubleshooting.
    */
-  tc_edge_gc_timer_cookie = olsr_alloc_cookie("TC edge GC", OLSR_COOKIE_TYPE_TIMER);
-  tc_validity_timer_cookie = olsr_alloc_cookie("TC validity", OLSR_COOKIE_TYPE_TIMER);
-  spf_backoff_timer_cookie = olsr_alloc_cookie("SPF backoff", OLSR_COOKIE_TYPE_TIMER);
+  tc_edge_gc_timer_info = olsr_alloc_timerinfo("TC edge GC", olsr_expire_tc_edge_gc, false);
+  tc_validity_timer_info = olsr_alloc_timerinfo("TC validity", &olsr_expire_tc_entry, false);
 
-  tc_mem_cookie = olsr_alloc_cookie("tc_entry", OLSR_COOKIE_TYPE_MEMORY);
-  olsr_cookie_set_memory_size(tc_mem_cookie, sizeof(struct tc_entry));
+  tc_mem_cookie = olsr_alloc_cookie("tc_entry", sizeof(struct tc_entry));
 }
 
 /**
@@ -486,7 +485,7 @@ olsr_delete_tc_edge_entry(struct tc_edge_entry *tc_edge)
 
   if (was_real && tc_inv != tc_myself && tc_inv->virtual) {
     /* mark tc_entry to be gone in one ms */
-    olsr_set_timer(&tc_inv->validity_timer, 1, 0, false, &olsr_expire_tc_entry, tc, tc_validity_timer_cookie);
+    olsr_set_timer(&tc_inv->validity_timer, 1, 0, tc, tc_validity_timer_info);
   }
 }
 
@@ -839,7 +838,7 @@ olsr_input_tc(struct olsr_message * msg,
    */
   assert(msg);
   olsr_set_timer(&tc->validity_timer, msg->vtime,
-                 OLSR_TC_VTIME_JITTER, OLSR_TIMER_ONESHOT, &olsr_expire_tc_entry, tc, tc_validity_timer_cookie);
+                 OLSR_TC_VTIME_JITTER, tc, tc_validity_timer_info);
 
   if (borderSet) {
 
@@ -854,7 +853,7 @@ olsr_input_tc(struct olsr_message * msg,
      * all edges belonging to a multipart neighbor set will arrive.
      */
     olsr_set_timer(&tc->edge_gc_timer, OLSR_TC_EDGE_GC_TIME,
-                   OLSR_TC_EDGE_GC_JITTER, OLSR_TIMER_ONESHOT, &olsr_expire_tc_edge_gc, tc, tc_edge_gc_timer_cookie);
+                   OLSR_TC_EDGE_GC_JITTER, tc, tc_edge_gc_timer_info);
   }
 }
 

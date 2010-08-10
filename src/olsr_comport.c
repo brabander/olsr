@@ -77,7 +77,7 @@ static int comsocket_http = 0;
 static int comsocket_txt = 0;
 
 static struct olsr_cookie_info *connection_cookie;
-static struct olsr_cookie_info *connection_timeout;
+static struct olsr_timer_info *connection_timeout;
 
 /* counter for open connections */
 static int connection_http_count;
@@ -92,13 +92,11 @@ static void olsr_com_cleanup_session(struct comport_connection *con);
 static void olsr_com_timeout_handler(void *);
 
 void olsr_com_init(bool failfast) {
-  connection_cookie = olsr_alloc_cookie("comport connections",
-      OLSR_COOKIE_TYPE_MEMORY);
-  olsr_cookie_set_memory_size(connection_cookie,
-      sizeof(struct comport_connection));
+  connection_cookie =
+      olsr_alloc_cookie("comport connections", sizeof(struct comport_connection));
 
-  connection_timeout = olsr_alloc_cookie("comport timout",
-      OLSR_COOKIE_TYPE_TIMER);
+  connection_timeout = olsr_alloc_timerinfo("comport timout",
+      &olsr_com_timeout_handler, false);
 
   connection_http_count = 0;
   connection_txt_count = 0;
@@ -266,8 +264,7 @@ static void olsr_com_parse_request(int fd, void *data __attribute__ ((unused)), 
   OLSR_DEBUG(LOG_COMPORT, "Got connection through socket %d from %s.\n",
       sock, olsr_ip_to_string(&buf, &con->addr));
 
-  con->timeout = olsr_start_timer(con->timeout_value, 0, false,
-      &olsr_com_timeout_handler, con, connection_timeout);
+  con->timeout = olsr_start_timer(con->timeout_value, 0, con, connection_timeout);
 
   add_olsr_socket(sock, &olsr_com_parse_connection, NULL, con, SP_PR_READ
       | SP_PR_WRITE);

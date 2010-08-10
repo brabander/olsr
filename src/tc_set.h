@@ -113,8 +113,6 @@ struct tc_entry {
 
 extern struct avl_tree EXPORT(tc_tree);
 extern struct tc_entry *tc_myself;
-extern struct olsr_cookie_info *tc_mem_cookie;
-extern struct olsr_cookie_info *spf_backoff_timer_cookie;
 
 void olsr_init_tc(void);
 void olsr_change_myself_tc(void);

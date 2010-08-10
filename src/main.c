@@ -122,7 +122,10 @@ int
 main(int argc, char *argv[])
 {
   /* Some cookies for stats keeping */
-  static struct olsr_cookie_info *pulse_timer_cookie = NULL;
+  static struct olsr_timer_info *pulse_timer_info = NULL;
+  static struct olsr_timer_info *tc_gen_timer_info = NULL;
+  static struct olsr_timer_info *mid_gen_timer_info = NULL;
+  static struct olsr_timer_info *hna_gen_timer_info = NULL;
 
   char conf_file_name[FILENAME_MAX];
   char parse_msg[FILENAME_MAX + 256];
@@ -235,6 +238,11 @@ main(int argc, char *argv[])
   /* Initialize timers and scheduler part */
   olsr_init_timers();
 
+  pulse_timer_info = olsr_alloc_timerinfo("Stdout pulse", &generate_stdout_pulse, true);
+  tc_gen_timer_info = olsr_alloc_timerinfo("TC generation", &olsr_output_lq_tc, true);
+  mid_gen_timer_info = olsr_alloc_timerinfo("MID generation", &generate_mid, true);
+  hna_gen_timer_info = olsr_alloc_timerinfo("HNA generation", &generate_hna, true);
+
   /* initialize plugin system */
   olsr_init_pluginsystem();
   olsr_plugins_init(true);
@@ -250,6 +258,9 @@ main(int argc, char *argv[])
 
   /* Initialize net */
   init_net();
+
+  /* Initialize SPF */
+  olsr_init_spf();
 
 #ifndef WIN32
   /* Disable redirects globally */
@@ -354,8 +365,7 @@ main(int argc, char *argv[])
 
 #if !defined WINCE
   if (olsr_cnf->log_target_stderr > 0 && isatty(STDOUT_FILENO)) {
-    pulse_timer_cookie = olsr_alloc_cookie("Pulse", OLSR_COOKIE_TYPE_TIMER);
-    olsr_start_timer(STDOUT_PULSE_INT, 0, OLSR_TIMER_PERIODIC, &generate_stdout_pulse, NULL, pulse_timer_cookie);
+    olsr_start_timer(STDOUT_PULSE_INT, 0, NULL, pulse_timer_info);
   }
 #endif
 
@@ -412,14 +422,11 @@ main(int argc, char *argv[])
   link_changes = false;
 
   tc_gen_timer =
-    olsr_start_timer(olsr_cnf->tc_params.emission_interval,
-                     TC_JITTER, OLSR_TIMER_PERIODIC, &olsr_output_lq_tc, NULL, tc_gen_timer_cookie);
+    olsr_start_timer(olsr_cnf->tc_params.emission_interval, TC_JITTER, NULL, tc_gen_timer_info);
   mid_gen_timer =
-    olsr_start_timer(olsr_cnf->mid_params.emission_interval,
-                     MID_JITTER, OLSR_TIMER_PERIODIC, &generate_mid, NULL, mid_gen_timer_cookie);
+    olsr_start_timer(olsr_cnf->mid_params.emission_interval, MID_JITTER, NULL, mid_gen_timer_info);
   hna_gen_timer =
-    olsr_start_timer(olsr_cnf->hna_params.emission_interval,
-                     HNA_JITTER, OLSR_TIMER_PERIODIC, &generate_hna, NULL, hna_gen_timer_cookie);
+    olsr_start_timer(olsr_cnf->hna_params.emission_interval, HNA_JITTER, NULL, hna_gen_timer_info);
 
   /* enable default plugins */
   olsr_plugins_enable(PLUGIN_TYPE_DEFAULT, true);
@@ -604,7 +611,7 @@ olsr_shutdown(void)
   olsr_log_cleanup();
 
   /* Free cookies and memory pools attached. */
-  olsr_delete_all_cookies();
+  olsr_cookie_cleanup();
 
   /* Flush config */
   olsr_free_cfg(olsr_cnf);

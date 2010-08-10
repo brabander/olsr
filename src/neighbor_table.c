@@ -56,12 +56,13 @@
 struct avl_tree nbr_tree;
 struct avl_tree nbr2_tree;
 
-/* Some cookies for stats keeping */
+/* memory management */
 static struct olsr_cookie_info *nbr2_mem_cookie = NULL;
 static struct olsr_cookie_info *nbr_mem_cookie = NULL;
-
 static struct olsr_cookie_info *nbr_connector_mem_cookie = NULL;
-static struct olsr_cookie_info *nbr_connector_timer_cookie = NULL;
+
+/* neighbor connection validity timer */
+static struct olsr_timer_info *nbr_connector_timer_info = NULL;
 
 static void olsr_expire_nbr_con(void *);
 static void internal_delete_nbr_con(struct nbr_con *connector);
@@ -76,15 +77,12 @@ olsr_init_neighbor_table(void)
   avl_init(&nbr_tree, avl_comp_default, false, NULL);
   avl_init(&nbr2_tree, avl_comp_default, false, NULL);
 
-  nbr_connector_timer_cookie = olsr_alloc_cookie("Neighbor connector", OLSR_COOKIE_TYPE_TIMER);
-  nbr_connector_mem_cookie = olsr_alloc_cookie("Neighbor connector", OLSR_COOKIE_TYPE_MEMORY);
-  olsr_cookie_set_memory_size(nbr_connector_mem_cookie, sizeof(struct nbr_con));
+  nbr_connector_timer_info = olsr_alloc_timerinfo("Neighbor connector", &olsr_expire_nbr_con, false);
+  nbr_connector_mem_cookie = olsr_alloc_cookie("Neighbor connector", sizeof(struct nbr_con));
 
-  nbr_mem_cookie = olsr_alloc_cookie("1-Hop Neighbor", OLSR_COOKIE_TYPE_MEMORY);
-  olsr_cookie_set_memory_size(nbr_mem_cookie, sizeof(struct nbr_entry));
+  nbr_mem_cookie = olsr_alloc_cookie("1-Hop Neighbor", sizeof(struct nbr_entry));
 
-  nbr2_mem_cookie = olsr_alloc_cookie("2-Hop Neighbor", OLSR_COOKIE_TYPE_MEMORY);
-  olsr_cookie_set_memory_size(nbr2_mem_cookie, sizeof(struct nbr2_entry));
+  nbr2_mem_cookie = olsr_alloc_cookie("2-Hop Neighbor", sizeof(struct nbr2_entry));
 }
 
 /**
@@ -361,7 +359,7 @@ olsr_link_nbr_nbr2(struct nbr_entry *nbr, const union olsr_ip_addr *nbr2_addr, u
    */
   connector = olsr_lookup_nbr_con_entry(nbr, nbr2_addr);
   if (connector) {
-    olsr_change_timer(connector->nbr2_con_timer, vtime, OLSR_NBR2_LIST_JITTER, OLSR_TIMER_ONESHOT);
+    olsr_change_timer(connector->nbr2_con_timer, vtime, OLSR_NBR2_LIST_JITTER);
     return connector;
   }
 
@@ -383,7 +381,7 @@ olsr_link_nbr_nbr2(struct nbr_entry *nbr, const union olsr_ip_addr *nbr2_addr, u
   connector->path_linkcost = LINK_COST_BROKEN;
 
   connector->nbr2_con_timer = olsr_start_timer(vtime, OLSR_NBR2_LIST_JITTER,
-      OLSR_TIMER_ONESHOT, &olsr_expire_nbr_con, connector, nbr_connector_timer_cookie);
+      connector, nbr_connector_timer_info);
 
   return connector;
 }

@@ -45,6 +45,7 @@
 
 #include "olsr_time.h"
 #include "common/list.h"
+#include "common/avl.h"
 
 #include "olsr_types.h"
 
@@ -54,6 +55,28 @@
 #define TIMER_WHEEL_MASK (TIMER_WHEEL_SLOTS - 1)
 
 typedef void (*timer_cb_func) (void *); /* callback function */
+
+struct olsr_timer_info {
+  /* node of timerinfo tree */
+  struct avl_node node;
+
+  /* name of this timer class */
+  char *name;
+
+  /* callback function */
+  timer_cb_func callback;
+
+  /* true if this is a class of periodic timers */
+  bool periodic;
+
+  /* Stats, resource usage */
+  uint32_t usage;
+
+  /* Stats, resource churn */
+  uint32_t changes;
+};
+
+#define OLSR_FOR_ALL_TIMERS(ti, iterator) avl_for_each_element_safe(&timerinfo_tree, ti, node, iterator.loop, iterator.safe)
 
 /*
  * Our timer implementation is a based on individual timers arranged in
@@ -66,27 +89,46 @@ typedef void (*timer_cb_func) (void *); /* callback function */
  * which causes the timer to run forever until manually stopped.
  */
 struct timer_entry {
-  struct list_entity timer_list;         /* Wheel membership */
-  uint32_t timer_clock;                /* when timer shall fire (absolute time) */
-  unsigned int timer_period;           /* set for periodical timers (relative time) */
-  struct olsr_cookie_info *timer_cookie;       /* used for diag stuff */
-  uint8_t timer_jitter_pct;            /* the jitter expressed in percent */
-  bool timer_running;                  /* misc flags */
-  bool timer_in_callback;              /* true if callback is active */
-  unsigned int timer_random;           /* cache random() result for performance reasons */
-  timer_cb_func timer_cb;              /* callback function */
-  void *timer_cb_context;              /* context pointer */
+  /* Wheel membership */
+  struct list_entity timer_list;
+
+  /* backpointer to timer info */
+  struct olsr_timer_info *timer_info;
+
+  /* when timer shall fire (absolute internal timerstamp) */
+  uint32_t timer_clock;
+
+  /* timeperiod between two timer events for periodical timers */
+  uint32_t timer_period;           /* set for periodical timers (relative time) */
+
+  /* the jitter expressed in percent */
+  uint8_t timer_jitter_pct;
+
+  /* true if timer is running at the moment */
+  bool timer_running;
+
+  /* true if timer is in callback at the moment */
+  bool timer_in_callback;
+
+  /* cache random() result for performance reasons */
+  unsigned int timer_random;
+
+  /* context pointer */
+  void *timer_cb_context;
 };
 
-#define OLSR_TIMER_ONESHOT    0 /* One shot timer */
-#define OLSR_TIMER_PERIODIC   1 /* Periodic timer */
-
 /* Timers */
+extern struct avl_tree EXPORT(timerinfo_tree);
+
 void olsr_init_timers(void);
 void olsr_flush_timers(void);
-void EXPORT(olsr_set_timer) (struct timer_entry **, unsigned int, uint8_t, bool, timer_cb_func, void *, struct olsr_cookie_info *);
-struct timer_entry *EXPORT(olsr_start_timer) (unsigned int, uint8_t, bool, timer_cb_func, void *, struct olsr_cookie_info *);
-void olsr_change_timer(struct timer_entry *, unsigned int, uint8_t, bool);
+struct olsr_timer_info *olsr_alloc_timerinfo(const char *name, timer_cb_func callback, bool periodic);
+
+void EXPORT(olsr_set_timer) (struct timer_entry **, uint32_t, uint8_t,
+    void *, struct olsr_timer_info *);
+struct timer_entry *EXPORT(olsr_start_timer) (uint32_t, uint8_t,
+    void *, struct olsr_timer_info *);
+void olsr_change_timer(struct timer_entry *, uint32_t, uint8_t);
 void EXPORT(olsr_stop_timer) (struct timer_entry *);
 
 /* Printing timestamps */

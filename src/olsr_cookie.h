@@ -39,6 +39,8 @@
  *
  */
 
+#include <stdint.h>
+
 #include "olsr_types.h"
 #include "common/list.h"
 #include "common/avl.h"
@@ -46,14 +48,7 @@
 #ifndef _OLSR_COOKIE_H
 #define _OLSR_COOKIE_H
 
-extern struct avl_tree olsr_cookie_tree;
-
-enum olsr_cookie_type {
-  OLSR_COOKIE_TYPE_MIN,
-  OLSR_COOKIE_TYPE_MEMORY,
-  OLSR_COOKIE_TYPE_TIMER,
-  OLSR_COOKIE_TYPE_MAX
-};
+extern struct avl_tree EXPORT(olsr_cookie_tree);
 
 /*
  * This is a cookie. A cookie is a tool aimed for olsrd developers.
@@ -61,52 +56,54 @@ enum olsr_cookie_type {
  * for locating memory corruption.
  */
 struct olsr_cookie_info {
-  struct avl_node node;
-  char *ci_name;                       /* Name */
-  enum olsr_cookie_type ci_type;       /* Type of cookie */
-  unsigned int ci_flags;               /* Misc. flags */
-  unsigned int ci_usage;               /* Stats, resource usage */
-  unsigned int ci_changes;             /* Stats, resource churn */
+  struct avl_node ci_node;
+  /* Name */
+  char *ci_name;
 
-  /* only for memory cookies */
-  size_t ci_size;                      /* Fixed size for block allocations */
-  struct list_entity ci_free_list;       /* List head for recyclable blocks */
-  unsigned int ci_free_list_usage;     /* Length of free list */
-  uint16_t ci_membrand;
+  /* Size of memory blocks */
+  size_t ci_size;
+
+  /* flags */
+  bool ci_poison;
+  bool ci_no_memclear;
+
+  /*
+   * minimum number of chunks the allocator will keep
+   * in the free list before starting to deallocate one
+   */
+  uint32_t ci_min_free_count;
+
+  /* Stats, resource usage */
+  uint32_t ci_usage;
+
+  /* Stats, resource churn */
+  uint32_t ci_changes;
+
+  /* List head for recyclable blocks */
+  struct list_entity ci_free_list;
+
+  /* Length of free list */
+  uint32_t ci_free_list_usage;
 };
 
-#define OLSR_FOR_ALL_COOKIES(ci, iterator) avl_for_each_element_safe(&olsr_cookie_tree, ci, node, iterator.loop, iterator.safe)
-
-/* Cookie flags */
-#define COOKIE_NO_MEMCLEAR  ( 1 << 0)   /* Do not clear memory */
-#define COOKIE_MEMPOISON    ( 2 << 0)   /* Poison memory pattern */
+#define OLSR_FOR_ALL_COOKIES(ci, iterator) avl_for_each_element_safe(&olsr_cookie_tree, ci, ci_node, iterator.loop, iterator.safe)
 
 #define COOKIE_MEMPOISON_PATTERN  0xa6  /* Pattern to spoil memory */
 #define COOKIE_FREE_LIST_THRESHOLD 10   /* Blocks / Percent  */
 
-/*
- * Small brand which gets appended on the end of every block allocation.
- * Helps to detect memory corruption, like overruns, double frees.
- */
-struct olsr_cookie_mem_brand {
-  char cmb_sig[6];
-  uint16_t id;
-};
-
 /* Externals. */
 void olsr_cookie_init(void);
-struct olsr_cookie_info *EXPORT(olsr_alloc_cookie) (const char *, enum olsr_cookie_type);
-void olsr_delete_all_cookies(void);
-void EXPORT(olsr_cookie_set_memory_size) (struct olsr_cookie_info *, size_t);
+void olsr_cookie_cleanup(void);
+
+struct olsr_cookie_info *EXPORT(olsr_alloc_cookie) (const char *, size_t size);
+void EXPORT(olsr_free_cookie)(struct olsr_cookie_info *);
+
 void EXPORT(olsr_cookie_set_memory_clear) (struct olsr_cookie_info *, bool);
 void EXPORT(olsr_cookie_set_memory_poison) (struct olsr_cookie_info *, bool);
-void EXPORT(olsr_cookie_usage_incr) (struct olsr_cookie_info *);
-void EXPORT(olsr_cookie_usage_decr) (struct olsr_cookie_info *);
+void EXPORT(olsr_cookie_set_min_free)(struct olsr_cookie_info *, uint32_t);
 
 void *EXPORT(olsr_cookie_malloc) (struct olsr_cookie_info *);
 void EXPORT(olsr_cookie_free) (struct olsr_cookie_info *, void *);
-
-struct olsr_cookie_info *EXPORT(olsr_cookie_get) (int i);
 
 #endif /* _OLSR_COOKIE_H */
 

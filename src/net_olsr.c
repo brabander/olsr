@@ -54,6 +54,7 @@
 #include <errno.h>
 
 static void olsr_add_invalid_address(const union olsr_ip_addr *);
+static void olsr_expire_buffer_timer(void *context);
 
 #if 0                           // WIN32
 #define perror(x) WinSockPError(x)
@@ -87,6 +88,9 @@ static const char *const deny_ipv6_defaults[] = {
   NULL
 };
 
+/* buffer writeback timer */
+struct olsr_timer_info *buffer_hold_timer_info;
+
 /*
  * Converts each invalid IP-address from string to network byte order
  * and adds it to the invalid list.
@@ -111,6 +115,63 @@ init_net(void)
     }
     olsr_add_invalid_address(&addr);
   }
+
+  buffer_hold_timer_info = olsr_alloc_timerinfo("Buffer writeback", olsr_expire_buffer_timer, false);
+}
+
+/**
+ * Wrapper for the timer callback.
+ */
+static void
+olsr_expire_buffer_timer(void *context)
+{
+  struct interface *ifn;
+
+  ifn = (struct interface *)context;
+
+  /*
+   * Clear the pointer to indicate that this timer has
+   * been expired and needs to be restarted in case there
+   * will be another message queued in the future.
+   */
+  ifn->buffer_hold_timer = NULL;
+
+  /*
+   * Do we have something to emit ?
+   */
+  if (!net_output_pending(ifn)) {
+    return;
+  }
+
+  OLSR_DEBUG(LOG_NETWORKING, "Buffer Holdtimer for %s timed out, sending data.\n", ifn->int_name);
+
+  net_output(ifn);
+}
+
+/*
+ * set_buffer_timer
+ *
+ * Kick a hold-down timer which defers building of a message.
+ * This has the desired effect that olsr messages get bigger.
+ */
+void
+set_buffer_timer(struct interface *ifn)
+{
+
+  /*
+   * Bail if there is already a timer running.
+   */
+  if (ifn->buffer_hold_timer) {
+    return;
+  }
+
+  /*
+   * This is the first message since the last time this interface has
+   * been drained. Flush the buffer in second or so.
+   */
+  ifn->buffer_hold_timer =
+    olsr_start_timer(OLSR_BUFFER_HOLD_TIME, OLSR_BUFFER_HOLD_JITTER,
+                     ifn, buffer_hold_timer_info);
 }
 
 void

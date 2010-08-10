@@ -162,7 +162,7 @@ static int check_timestamp(struct interface *olsr_if_config, const union olsr_ip
 static struct stamp *lookup_timestamp_entry(const union olsr_ip_addr *);
 static int read_key_from_file(const char *);
 
-static struct olsr_cookie_info *timeout_timestamps_timer_cookie;
+static struct olsr_timer_info *timeout_timestamps_timer_info;
 
 /**
  *Do initialization here
@@ -203,10 +203,10 @@ secure_plugin_init(void)
   olsr_preprocessor_add_function(&secure_preprocessor);
 
   /* create the cookie */
-  timeout_timestamps_timer_cookie = olsr_alloc_cookie("Secure: Timeout Timestamps", OLSR_COOKIE_TYPE_TIMER);
+  timeout_timestamps_timer_info = olsr_alloc_timerinfo("Secure: Timeout Timestamps", &timeout_timestamps, true);
 
   /* Register timeout - poll every 2 seconds */
-  olsr_start_timer(2 * MSEC_PER_SEC, 0, OLSR_TIMER_PERIODIC, &timeout_timestamps, NULL, timeout_timestamps_timer_cookie);
+  olsr_start_timer(2 * MSEC_PER_SEC, 0, NULL, timeout_timestamps_timer_info);
 
   return 1;
 }

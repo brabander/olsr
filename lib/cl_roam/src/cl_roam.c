@@ -74,9 +74,12 @@
 #define PLUGIN_INTERFACE_VERSION 5
 
 static int has_inet_gateway;
-static struct olsr_cookie_info *event_timer_cookie1;
-static struct olsr_cookie_info *event_timer_cookie2;
+static struct olsr_timer_info *event_timer_info1;
+static struct olsr_timer_info *event_timer_info2;
+static struct olsr_timer_info *arping_timer_info;
 static union olsr_ip_addr gw_netmask;
+
+static void check_ping_result(void *foo);
 
 /**
  * Plugin interface version
@@ -143,13 +146,8 @@ void update_routes_now(void) {
 
   OLSR_INFO(LOG_PLUGINS, "Forcing recalculation of routing-table\n");
 
-  //sets timer to zero
-
-
-  spf_backoff_timer = NULL;
-  ///printf("timer stopped\n");
   //actual calculation
-  olsr_calculate_routing_table();
+  olsr_calculate_routing_table(true);
   //printf("updated\n");
 }
 
@@ -316,12 +314,13 @@ int olsrd_plugin_init(void) {
   has_inet_gateway = 0;
 
   /* create the cookie */
-  event_timer_cookie1 = olsr_alloc_cookie("cl roam: Event1", OLSR_COOKIE_TYPE_TIMER);
-  event_timer_cookie2 = olsr_alloc_cookie("cl roam: Event2", OLSR_COOKIE_TYPE_TIMER);
+  event_timer_info1 = olsr_alloc_timerinfo("cl roam: Event1", &olsr_event1, true);
+  event_timer_info2 = olsr_alloc_timerinfo("cl roam: Event2", &olsr_event2, true);
+  arping_timer_info = olsr_alloc_timerinfo("cl roam: Maybe add something", &check_ping_result, true);
 
   /* Register the GW check */
-  olsr_start_timer(1 * MSEC_PER_SEC, 0, OLSR_TIMER_PERIODIC, &olsr_event1, NULL, event_timer_cookie1);
-  olsr_start_timer(20 * MSEC_PER_SEC, 0, OLSR_TIMER_PERIODIC, &olsr_event2, NULL, event_timer_cookie2);
+  olsr_start_timer(1 * MSEC_PER_SEC, 0, NULL, event_timer_info1);
+  olsr_start_timer(20 * MSEC_PER_SEC, 0, NULL, event_timer_info2);
 
   /* register functions with olsrd */
   // somehow my cool new message.....
@@ -422,10 +421,8 @@ static void check_for_route(struct guest_client * host) {
 
     //printf("maybe add something\n");
     if (host->arping_timer_cookie == NULL)
-      host->arping_timer_cookie = olsr_alloc_cookie("cl roam: Maybe add something", OLSR_COOKIE_TYPE_TIMER);
     //printf("timer started\n");
-    host->arping_timer = olsr_start_timer(250, 5, OLSR_TIMER_PERIODIC, &check_ping_result, host,
-        host->arping_timer_cookie);
+    host->arping_timer = olsr_start_timer(250, 5, host, arping_timer_info);
     rc = pthread_create(&(host->ping_thread_add), NULL, ping_thread, (void *) host);
   } else if ((host->last_seen > 60.0) && host->is_announced) {
     char route_command[50];

@@ -51,8 +51,10 @@
 #include "olsr_logging.h"
 
 /* Some cookies for stats keeping */
-static struct olsr_cookie_info *hna_net_timer_cookie = NULL;
+static struct olsr_timer_info *hna_net_timer_info = NULL;
 static struct olsr_cookie_info *hna_net_mem_cookie = NULL;
+
+static void olsr_expire_hna_net_entry(void *context);
 
 /**
  * Initialize the HNA set
@@ -62,10 +64,9 @@ olsr_init_hna_set(void)
 {
   OLSR_INFO(LOG_HNA, "Initialize HNA set...\n");
 
-  hna_net_timer_cookie = olsr_alloc_cookie("HNA Network", OLSR_COOKIE_TYPE_TIMER);
+  hna_net_timer_info = olsr_alloc_timerinfo("HNA Network", &olsr_expire_hna_net_entry, false);
 
-  hna_net_mem_cookie = olsr_alloc_cookie("hna_net", OLSR_COOKIE_TYPE_MEMORY);
-  olsr_cookie_set_memory_size(hna_net_mem_cookie, sizeof(struct hna_net));
+  hna_net_mem_cookie = olsr_alloc_cookie("hna_net", sizeof(struct hna_net));
 }
 
 /**
@@ -223,7 +224,7 @@ olsr_update_hna_entry(const union olsr_ip_addr *gw, const struct olsr_ip_prefix 
    * Start, or refresh the timer, whatever is appropriate.
    */
   olsr_set_timer(&net_entry->hna_net_timer, vtime,
-                 OLSR_HNA_NET_JITTER, OLSR_TIMER_ONESHOT, &olsr_expire_hna_net_entry, net_entry, hna_net_timer_cookie);
+                 OLSR_HNA_NET_JITTER, net_entry, hna_net_timer_info);
 }
 
 /**

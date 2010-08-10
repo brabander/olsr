@@ -49,6 +49,7 @@
 #include "process_routes.h"
 #include "olsr_logging.h"
 
+struct olsr_timer_info *spf_backoff_timer_info = NULL;
 struct timer_entry *spf_backoff_timer = NULL;
 
 /*
@@ -275,7 +276,12 @@ olsr_expire_spf_backoff(void *context __attribute__ ((unused)))
 }
 
 void
-olsr_calculate_routing_table(void)
+olsr_init_spf(void) {
+  spf_backoff_timer_info = olsr_alloc_timerinfo("SPF backoff", olsr_expire_spf_backoff, false);
+}
+
+void
+olsr_calculate_routing_table(bool force)
 {
 #ifdef SPF_PROFILING
   struct timeval t1, t2, t3, t4, t5, spf_init, spf_run, route, kernel, total;
@@ -291,12 +297,12 @@ olsr_calculate_routing_table(void)
   struct list_iterator iterator;
 
   /* We are done if our backoff timer is running */
-  if (spf_backoff_timer) {
+  if (!force && spf_backoff_timer != NULL) {
     return;
   }
-  spf_backoff_timer =
-    olsr_start_timer(OLSR_SPF_BACKOFF_TIME, OLSR_SPF_BACKOFF_JITTER,
-                     OLSR_TIMER_ONESHOT, &olsr_expire_spf_backoff, NULL, spf_backoff_timer_cookie);
+
+  olsr_set_timer(&spf_backoff_timer, OLSR_SPF_BACKOFF_TIME, OLSR_SPF_BACKOFF_JITTER,
+      NULL, spf_backoff_timer_info);
 
 #ifdef SPF_PROFILING
   gettimeofday(&t1, NULL);

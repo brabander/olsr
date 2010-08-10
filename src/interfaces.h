@@ -215,14 +215,6 @@ int del_ifchgf(ifchg_cb_func f);
 void lock_interface(struct interface *);
 void unlock_interface(struct interface *);
 
-extern struct olsr_cookie_info *interface_mem_cookie;
-extern struct olsr_cookie_info *interface_poll_timer_cookie;    /* Maybe static */
-extern struct olsr_cookie_info *hello_gen_timer_cookie;
-extern struct olsr_cookie_info *tc_gen_timer_cookie;
-extern struct olsr_cookie_info *mid_gen_timer_cookie;
-extern struct olsr_cookie_info *hna_gen_timer_cookie;
-extern struct olsr_cookie_info *buffer_hold_timer_cookie;
-
 #endif
 
 /*

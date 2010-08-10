@@ -65,6 +65,8 @@ struct filter_entry {
 
 void init_net(void);
 
+void set_buffer_timer(struct interface *ifn);
+
 void deinit_netfilters(void);
 
 int net_add_buffer(struct interface *);

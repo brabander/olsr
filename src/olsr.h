@@ -69,9 +69,6 @@ int
   olsr_forward_message(struct olsr_message *, uint8_t *binary, struct interface *, union olsr_ip_addr *);
 
 void
-  set_buffer_timer(struct interface *);
-
-void
   olsr_init_tables(void);
 
 void

@@ -304,10 +304,9 @@ if_basename(const char *name)
  *@param so the socket to use for ioctls
  *
  */
-struct interface *
-os_init_interface(struct olsr_if_config *iface)
+int
+os_init_interface(struct interface *ifp, struct olsr_if_config *iface)
 {
-  struct interface *ifp;
   struct ifreq ifr;
   const char *ifr_basename;
   int int_flags;
@@ -319,7 +318,7 @@ os_init_interface(struct olsr_if_config *iface)
    * Sanity check.
    */
   assert (iface->interf == NULL);
-  ifp = olsr_cookie_malloc(interface_mem_cookie);
+  assert (ifp);
 
    /*
    * Setup query block.
@@ -332,25 +331,25 @@ os_init_interface(struct olsr_if_config *iface)
   /* Get flags (and check if interface exists) */
   if (ioctl(olsr_cnf->ioctl_s, SIOCGIFFLAGS, &ifr) < 0) {
     OLSR_DEBUG(LOG_INTERFACE, "\tNo such interface!\n");
-    goto cleanup;
+    return -1;
   }
 
   int_flags = ifr.ifr_flags;
   if ((int_flags & IFF_UP) == 0) {
     OLSR_DEBUG(LOG_INTERFACE, "\tInterface not up - skipping it...\n");
-    goto cleanup;
+    return -1;
   }
 
   /* Check broadcast */
   if (olsr_cnf->ip_version == AF_INET && !iface->cnf->ipv4_broadcast.v4.s_addr &&       /* Skip if fixed bcast */
       (int_flags & IFF_BROADCAST) == 0) {
     OLSR_DEBUG(LOG_INTERFACE, "\tNo broadcast - skipping\n");
-    goto cleanup;
+    return -1;
   }
 
   if (int_flags & IFF_LOOPBACK) {
     OLSR_DEBUG(LOG_INTERFACE, "\tThis is a loopback interface - skipping it...\n");
-    goto cleanup;
+    return -1;
   }
 
   ifr_basename = if_basename(ifr.ifr_name);
@@ -391,7 +390,7 @@ os_init_interface(struct olsr_if_config *iface)
         OLSR_DEBUG(LOG_INTERFACE, "\tCould not find global IPv6 address for %s\n", ifr.ifr_name);
       else
         OLSR_DEBUG(LOG_INTERFACE, "\tCould not find an IPv6 address for %s\n", ifr.ifr_name);
-      goto cleanup;
+      return -1;
     }
 
     OLSR_DEBUG(LOG_INTERFACE, "\tAddress: %s\n", ip6_to_string(&buf, &ifp->int_src.v6.sin6_addr));
@@ -420,7 +419,7 @@ os_init_interface(struct olsr_if_config *iface)
     /* Get interface address (IPv4) */
     if (ioctl(olsr_cnf->ioctl_s, SIOCGIFADDR, &ifr) < 0) {
       OLSR_WARN(LOG_INTERFACE, "\tCould not get address of interface - skipping it\n");
-      goto cleanup;
+      return -1;
     }
 
     ifp->int_src.v4 = *(struct sockaddr_in *)(ARM_NOWARN_ALIGN(&ifr.ifr_addr));
@@ -433,7 +432,7 @@ os_init_interface(struct olsr_if_config *iface)
       /* Autodetect */
       if (ioctl(olsr_cnf->ioctl_s, SIOCGIFBRDADDR, &ifr) < 0) {
         OLSR_WARN(LOG_INTERFACE, "%s: ioctl (get broadaddr) failed", ifr.ifr_name);
-        goto cleanup;
+        return -1;
       }
 
       ifp->int_multicast.v4 = *(struct sockaddr_in *)(ARM_NOWARN_ALIGN(&ifr.ifr_broadaddr));
@@ -492,11 +491,7 @@ os_init_interface(struct olsr_if_config *iface)
 #if 0
   ifp->gen_properties = NULL;
 #endif
-  return ifp;
-
-cleanup:
-  olsr_cookie_free(interface_mem_cookie, ifp);
-  return NULL;
+  return 0;
 }
 
 /*

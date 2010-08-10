@@ -54,7 +54,7 @@
 struct avl_tree forward_set, processing_set;
 
 /* Some cookies for stats keeping */
-static struct olsr_cookie_info *duplicate_timer_cookie = NULL;
+static struct olsr_timer_info *duplicate_timer_info = NULL;
 static struct olsr_cookie_info *duplicate_mem_cookie = NULL;
 
 int
@@ -71,23 +71,6 @@ olsr_seqno_diff(uint16_t reference, uint16_t other)
     diff += (1 << 16);
   }
   return diff;
-}
-
-void
-olsr_init_duplicate_set(void)
-{
-  OLSR_INFO(LOG_DUPLICATE_SET, "Initialize duplicate set...\n");
-
-  avl_init(&forward_set, avl_comp_default, false, NULL);
-  avl_init(&processing_set, avl_comp_default, false, NULL);
-
-  /*
-   * Get some cookies for getting stats to ease troubleshooting.
-   */
-  duplicate_timer_cookie = olsr_alloc_cookie("Duplicate Set", OLSR_COOKIE_TYPE_TIMER);
-
-  duplicate_mem_cookie = olsr_alloc_cookie("dup_entry", OLSR_COOKIE_TYPE_MEMORY);
-  olsr_cookie_set_memory_size(duplicate_mem_cookie, sizeof(struct dup_entry));
 }
 
 static struct dup_entry *
@@ -124,6 +107,23 @@ olsr_expire_duplicate_entry(void *context)
 
   olsr_delete_duplicate_entry(entry);
 }
+
+void
+olsr_init_duplicate_set(void)
+{
+  OLSR_INFO(LOG_DUPLICATE_SET, "Initialize duplicate set...\n");
+
+  avl_init(&forward_set, avl_comp_default, false, NULL);
+  avl_init(&processing_set, avl_comp_default, false, NULL);
+
+  /*
+   * Get some cookies for getting stats to ease troubleshooting.
+   */
+  duplicate_timer_info = olsr_alloc_timerinfo("Duplicate Set", &olsr_expire_duplicate_entry, false);
+
+  duplicate_mem_cookie = olsr_alloc_cookie("dup_entry", sizeof(struct dup_entry));
+}
+
 
 /**
  * Clean up the house. Called during shutdown.
@@ -171,7 +171,7 @@ olsr_is_duplicate_message(struct olsr_message *m, bool forwarding, enum duplicat
       avl_insert(tree, &entry->avl);
       entry->tree = tree;
       entry->validity_timer = olsr_start_timer(DUPLICATE_CLEANUP_INTERVAL, DUPLICATE_CLEANUP_JITTER,
-                                               OLSR_TIMER_ONESHOT, &olsr_expire_duplicate_entry, entry, duplicate_timer_cookie);
+                                               entry, duplicate_timer_info);
     }
 
     *status = NEW_OLSR_MESSAGE;
@@ -181,7 +181,7 @@ olsr_is_duplicate_message(struct olsr_message *m, bool forwarding, enum duplicat
   /*
    * Refresh timer.
    */
-  olsr_change_timer(entry->validity_timer, DUPLICATE_CLEANUP_INTERVAL, DUPLICATE_CLEANUP_JITTER, OLSR_TIMER_ONESHOT);
+  olsr_change_timer(entry->validity_timer, DUPLICATE_CLEANUP_INTERVAL, DUPLICATE_CLEANUP_JITTER);
 
   diff = olsr_seqno_diff(m->seqno, entry->seqnr);
 
