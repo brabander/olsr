@@ -98,6 +98,9 @@ endif
 ifeq ($(OS),win32)
   HARDENING := 0
 endif
+ifeq ($(DEBUG),1)
+  HARDENING := 0
+endif
 
 ifeq ($(HARDENING),1)
   ifeq ($(OPTIMIZE),)
