@@ -276,7 +276,7 @@ olsr_cookie_free(struct olsr_cookie_info *ci, void *ptr)
    * point. Keep at least ten percent of the active used blocks or at least
    * ten blocks on the free list.
    */
-  if (0 && mem->is_inline && ((ci->ci_free_list_usage < ci->ci_min_free_count)
+  if (mem->is_inline && ((ci->ci_free_list_usage < ci->ci_min_free_count)
       || (ci->ci_free_list_usage < ci->ci_usage / COOKIE_FREE_LIST_THRESHOLD))) {
 
     list_add_tail(&ci->ci_free_list, &mem->node);
