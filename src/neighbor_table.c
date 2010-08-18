@@ -78,11 +78,11 @@ olsr_init_neighbor_table(void)
   avl_init(&nbr2_tree, avl_comp_default, false, NULL);
 
   nbr_connector_timer_info = olsr_alloc_timerinfo("Neighbor connector", &olsr_expire_nbr_con, false);
-  nbr_connector_mem_cookie = olsr_alloc_cookie("Neighbor connector", sizeof(struct nbr_con));
+  nbr_connector_mem_cookie = olsr_create_memcookie("Neighbor connector", sizeof(struct nbr_con));
 
-  nbr_mem_cookie = olsr_alloc_cookie("1-Hop Neighbor", sizeof(struct nbr_entry));
+  nbr_mem_cookie = olsr_create_memcookie("1-Hop Neighbor", sizeof(struct nbr_entry));
 
-  nbr2_mem_cookie = olsr_alloc_cookie("2-Hop Neighbor", sizeof(struct nbr2_entry));
+  nbr2_mem_cookie = olsr_create_memcookie("2-Hop Neighbor", sizeof(struct nbr2_entry));
 }
 
 /**

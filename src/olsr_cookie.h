@@ -63,9 +63,11 @@ struct olsr_cookie_info {
   /* Size of memory blocks */
   size_t ci_size;
 
-  /* flags */
-  bool ci_poison;
-  bool ci_no_memclear;
+  /* size including prefix and custom data */
+  size_t ci_total_size;
+
+  /* offset from the inline custom data block */
+  size_t ci_custom_offset;
 
   /*
    * minimum number of chunks the allocator will keep
@@ -79,6 +81,12 @@ struct olsr_cookie_info {
   /* Stats, resource churn */
   uint32_t ci_changes;
 
+  /* list of custom additions of this memory cookie */
+  struct list_entity ci_custom_list;
+
+  /* List head for used memory blocks */
+  struct list_entity ci_used_list;
+
   /* List head for recyclable blocks */
   struct list_entity ci_free_list;
 
@@ -86,24 +94,75 @@ struct olsr_cookie_info {
   uint32_t ci_free_list_usage;
 };
 
-#define OLSR_FOR_ALL_COOKIES(ci, iterator) avl_for_each_element_safe(&olsr_cookie_tree, ci, ci_node, iterator.loop, iterator.safe)
+/* Custom addition to existing cookie */
+struct olsr_cookie_custom {
+  struct list_entity node;
 
-#define COOKIE_MEMPOISON_PATTERN  0xa6  /* Pattern to spoil memory */
+  char *name;
+
+  size_t size;
+  size_t offset;
+
+  void (*init)(struct olsr_cookie_info *, void *);
+  void (*cleanup)(struct olsr_cookie_info *, void *);
+};
+
+/* should have a length of 2*memory_alignment */
+struct olsr_memory_prefix {
+  struct list_entity node;
+  uint8_t *custom;
+  uint8_t is_inline;
+  uint8_t padding[sizeof(size_t) - sizeof(uint8_t)];
+};
+
+#define OLSR_FOR_ALL_COOKIES(ci, iterator) avl_for_each_element_safe(&olsr_cookie_tree, ci, ci_node, iterator.loop, iterator.safe)
+#define OLSR_FOR_ALL_USED_MEM(ci, mem, iterator) list_for_each_element_safe(&ci->ci_used_list, mem, node, iterator.loop, iterator.safe)
+#define OLSR_FOR_ALL_FREE_MEM(ci, mem, iterator) list_for_each_element_safe(&ci->ci_free_list, mem, node, iterator.loop, iterator.safe)
+#define OLSR_FOR_ALL_CUSTOM_MEM(ci, custom, iterator) list_for_each_element_safe(&ci->ci_custom_list, custom, node, iterator.loop, iterator.safe)
+
 #define COOKIE_FREE_LIST_THRESHOLD 10   /* Blocks / Percent  */
 
 /* Externals. */
 void olsr_cookie_init(void);
 void olsr_cookie_cleanup(void);
 
-struct olsr_cookie_info *EXPORT(olsr_alloc_cookie) (const char *, size_t size);
-void EXPORT(olsr_free_cookie)(struct olsr_cookie_info *);
+struct olsr_cookie_info *EXPORT(olsr_create_memcookie) (const char *, size_t size);
+void EXPORT(olsr_cleanup_memcookie)(struct olsr_cookie_info *);
 
-void EXPORT(olsr_cookie_set_memory_clear) (struct olsr_cookie_info *, bool);
-void EXPORT(olsr_cookie_set_memory_poison) (struct olsr_cookie_info *, bool);
 void EXPORT(olsr_cookie_set_min_free)(struct olsr_cookie_info *, uint32_t);
 
 void *EXPORT(olsr_cookie_malloc) (struct olsr_cookie_info *);
 void EXPORT(olsr_cookie_free) (struct olsr_cookie_info *, void *);
+
+struct olsr_cookie_custom *EXPORT(olsr_alloc_cookie_custom)(
+    struct olsr_cookie_info *ci, size_t size, const char *name,
+    void (*init)(struct olsr_cookie_info *, void *),
+    void (*cleanup)(struct olsr_cookie_info *, void *));
+
+void EXPORT(olsr_free_cookie_custom)(
+    struct olsr_cookie_info *ci, struct olsr_cookie_custom *custom);
+
+/* inline function to access memory of custom data */
+static inline void *EXPORT(olsr_cookie_get_custom)(
+    struct olsr_cookie_info *ci,
+    struct olsr_cookie_custom *custom,
+    void *ptr) {
+  struct olsr_memory_prefix *mem;
+  uint8_t *c_ptr;
+
+  /* get to the prefix memory structure */
+  mem = ptr;
+  mem--;
+
+  if (mem->custom) {
+    c_ptr = mem->custom;
+  }
+  else {
+    c_ptr = (uint8_t *)mem;
+    c_ptr += ci->ci_custom_offset;
+  }
+  return c_ptr + custom->offset;
+}
 
 #endif /* _OLSR_COOKIE_H */
 

@@ -121,7 +121,7 @@ olsr_init_duplicate_set(void)
    */
   duplicate_timer_info = olsr_alloc_timerinfo("Duplicate Set", &olsr_expire_duplicate_entry, false);
 
-  duplicate_mem_cookie = olsr_alloc_cookie("dup_entry", sizeof(struct dup_entry));
+  duplicate_mem_cookie = olsr_create_memcookie("dup_entry", sizeof(struct dup_entry));
 }
 
 

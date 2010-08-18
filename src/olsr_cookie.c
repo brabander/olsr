@@ -44,8 +44,6 @@
 #include "olsr_cookie.h"
 #include "log.h"
 #include "common/list.h"
-#include "valgrind/valgrind.h"
-#include "valgrind/memcheck.h"
 
 #include <assert.h>
 #include <errno.h>
@@ -53,7 +51,18 @@
 
 struct avl_tree olsr_cookie_tree;
 
+static inline size_t calc_aligned_size(size_t size) {
+  static const size_t add = sizeof(size_t) * 2 - 1;
+  static const size_t mask = ~(sizeof(size_t)*2 - 1);
+
+  return (size + add) & mask;
+}
+
 void olsr_cookie_init(void) {
+  /* check size of memory prefix */
+  assert (sizeof(struct olsr_memory_prefix)
+      == calc_aligned_size(sizeof(struct olsr_memory_prefix)));
+
   avl_init(&olsr_cookie_tree, &avl_comp_strcasecmp, false, NULL);
 }
 
@@ -61,23 +70,29 @@ void olsr_cookie_init(void) {
  * Allocate a cookie for the next available cookie id.
  */
 struct olsr_cookie_info *
-olsr_alloc_cookie(const char *cookie_name, size_t size)
+olsr_create_memcookie(const char *cookie_name, size_t size)
 {
   struct olsr_cookie_info *ci;
 
   assert (cookie_name);
+  assert (size > 9);
 
-  ci = olsr_malloc(sizeof(struct olsr_cookie_info), "new cookie");
+  ci = olsr_malloc(sizeof(struct olsr_cookie_info), "memory cookie");
 
   /* Now populate the cookie info */
   ci->ci_name = olsr_strdup(cookie_name);
   ci->ci_node.key = ci->ci_name;
   ci->ci_size = size;
+  ci->ci_custom_offset = sizeof(struct olsr_memory_prefix) + calc_aligned_size(size);
   ci->ci_min_free_count = COOKIE_FREE_LIST_THRESHOLD;
+
+  /* no custom data at this point */
+  ci->ci_total_size = ci->ci_custom_offset;
 
   /* Init the free list */
   list_init_head(&ci->ci_free_list);
-  VALGRIND_CREATE_MEMPOOL(ci, 0, 1);
+  list_init_head(&ci->ci_used_list);
+  list_init_head(&ci->ci_custom_list);
 
   avl_insert(&olsr_cookie_tree, &ci->ci_node);
   return ci;
@@ -87,12 +102,10 @@ olsr_alloc_cookie(const char *cookie_name, size_t size)
  * Free a cookie that is no longer being used.
  */
 void
-olsr_free_cookie(struct olsr_cookie_info *ci)
+olsr_cleanup_memcookie(struct olsr_cookie_info *ci)
 {
-  struct list_entity *memory_list;
-
-  /* can only be called if not in use anymore */
-  assert(ci->ci_usage == 0);
+  struct olsr_memory_prefix *memory_entity;
+  struct list_iterator iterator;
 
   /* remove from tree */
   avl_delete(&olsr_cookie_tree, &ci->ci_node);
@@ -105,18 +118,17 @@ olsr_free_cookie(struct olsr_cookie_info *ci)
    * First make all items accessible,
    * such that valgrind does not complain at shutdown.
    */
-  if (!list_is_empty(&ci->ci_free_list)) {
-    for (memory_list = ci->ci_free_list.next; memory_list != &ci->ci_free_list; memory_list = memory_list->next) {
-      VALGRIND_MAKE_MEM_DEFINED(memory_list, ci->ci_size);
-    }
+
+  /* remove all free memory blocks */
+  OLSR_FOR_ALL_FREE_MEM(ci, memory_entity, iterator) {
+    free(memory_entity);
   }
 
-  while (!list_is_empty(&ci->ci_free_list)) {
-    memory_list = ci->ci_free_list.next;
-    list_remove(memory_list);
-    free(memory_list);
+  /* free all used memory blocks */
+  OLSR_FOR_ALL_USED_MEM(ci, memory_entity, iterator) {
+    free(memory_entity->custom);
+    free(memory_entity);
   }
-  VALGRIND_DESTROY_MEMPOOL(ci);
 
   free(ci);
 }
@@ -134,35 +146,8 @@ olsr_cookie_cleanup(void)
    * Walk the full index range and kill 'em all.
    */
   OLSR_FOR_ALL_COOKIES(info, iterator) {
-    if (info->ci_usage > 0) {
-      OLSR_WARN(LOG_COOKIE, "Free cookie %s: %d chunks still in use !\n", info->ci_name, info->ci_usage);
-
-      /* set usage to 0 */
-      info->ci_usage = 0;
-    }
-    olsr_free_cookie(info);
+    olsr_cleanup_memcookie(info);
   }
-}
-
-/*
- * Set if a returned memory block shall be cleared after returning to
- * the free pool. This is only allowed for memory cookies.
- */
-void
-olsr_cookie_set_memory_clear(struct olsr_cookie_info *ci, bool clear)
-{
-  ci->ci_no_memclear = !clear;
-}
-
-/*
- * Set if a returned memory block shall be initialized to an all zero or
- * to a poison memory pattern after returning to the free pool.
- * This is only allowed for memory cookies.
- */
-void
-olsr_cookie_set_memory_poison(struct olsr_cookie_info *ci, bool poison)
-{
-  ci->ci_poison = poison;
 }
 
 /*
@@ -202,8 +187,10 @@ olsr_cookie_usage_decr(struct olsr_cookie_info *ci)
 void *
 olsr_cookie_malloc(struct olsr_cookie_info *ci)
 {
-  void *ptr;
-  struct list_entity *free_list_node;
+  struct olsr_memory_prefix *mem;
+  struct olsr_cookie_custom *custom;
+  struct list_iterator iterator;
+
 #if !defined REMOVE_LOG_DEBUG
   bool reuse = false;
 #endif
@@ -211,63 +198,21 @@ olsr_cookie_malloc(struct olsr_cookie_info *ci)
   /*
    * Check first if we have reusable memory.
    */
-  if (!ci->ci_free_list_usage) {
-
+  if (list_is_empty(&ci->ci_free_list)) {
     /*
      * No reusable memory block on the free_list.
      * Allocate a fresh one.
      */
-    ptr = olsr_malloc(ci->ci_size, ci->ci_name);
-
-    /*
-     * Poison the memory for debug purposes ?
-     */
-    if (ci->ci_poison) {
-      memset(ptr, COOKIE_MEMPOISON_PATTERN, ci->ci_size);
-    }
-
+    mem = olsr_malloc(ci->ci_total_size, ci->ci_name);
   } else {
-
     /*
      * There is a memory block on the free list.
      * Carve it out of the list, and clean.
      */
-    free_list_node = ci->ci_free_list.next;
-    ptr = (void *)free_list_node;
-    VALGRIND_MAKE_MEM_DEFINED(ptr, ci->ci_size);
+    mem = list_first_element(&ci->ci_free_list, mem, node);
+    list_remove(&mem->node);
 
-    /*
-     * Before dequeuing the node from the free list,
-     * make the list pointers of the node ahead of
-     * us accessible, such that valgrind does not
-     * log a false positive.
-     */
-    if (free_list_node->next == &ci->ci_free_list) {
-      list_remove(free_list_node);
-    } else {
-
-      /*
-       * Make next item accessible, remove it and make next item inaccessible.
-       */
-      VALGRIND_MAKE_MEM_DEFINED(free_list_node->next, ci->ci_size);
-      list_remove(free_list_node);
-      VALGRIND_MAKE_MEM_NOACCESS(free_list_node->next, ci->ci_size);
-    }
-
-    /*
-     * Reset the memory unless the caller has told us so.
-     */
-    if (!ci->ci_no_memclear) {
-
-      /*
-       * Poison the memory for debug purposes ?
-       */
-      if (ci->ci_poison) {
-        memset(ptr, COOKIE_MEMPOISON_PATTERN, ci->ci_size);
-      } else {
-        memset(ptr, 0, ci->ci_size);
-      }
-    }
+    memset(mem, 0, ci->ci_total_size);
 
     ci->ci_free_list_usage--;
 #if !defined REMOVE_LOG_DEBUG
@@ -275,14 +220,27 @@ olsr_cookie_malloc(struct olsr_cookie_info *ci)
 #endif
   }
 
+  /* add to used list */
+  list_add_tail(&ci->ci_used_list, &mem->node);
+
+  /* handle custom initialization */
+  if (!list_is_empty(&ci->ci_custom_list)) {
+    mem->custom = ((uint8_t *)mem) + ci->ci_custom_offset;
+
+    /* call up custom init functions */
+    OLSR_FOR_ALL_CUSTOM_MEM(ci, custom, iterator) {
+      if (custom->init) {
+        custom->init(ci, mem->custom + custom->offset);
+      }
+    }
+  }
+
   /* Stats keeping */
   olsr_cookie_usage_incr(ci);
 
   OLSR_DEBUG(LOG_COOKIE, "MEMORY: alloc %s, %p, %lu bytes%s\n",
-             ci->ci_name, ptr, (unsigned long)ci->ci_size, reuse ? ", reuse" : "");
-
-  VALGRIND_MEMPOOL_ALLOC(ci, ptr, ci->ci_size);
-  return ptr;
+             ci->ci_name, mem + 1, (unsigned long)ci->ci_size, reuse ? ", reuse" : "");
+  return mem + 1;
 }
 
 /*
@@ -292,61 +250,153 @@ olsr_cookie_malloc(struct olsr_cookie_info *ci)
 void
 olsr_cookie_free(struct olsr_cookie_info *ci, void *ptr)
 {
-  struct list_entity *free_list_node;
+  struct olsr_memory_prefix *mem;
+  struct olsr_cookie_custom *custom;
+  struct list_iterator iterator;
 #if !defined REMOVE_LOG_DEBUG
   bool reuse = false;
 #endif
+
+  /* calculate pointer to memory prefix */
+  mem = ptr;
+  mem--;
+
+  /* call up custom cleanup */
+  OLSR_FOR_ALL_CUSTOM_MEM(ci, custom, iterator) {
+    if (custom->cleanup) {
+      custom->cleanup(ci, mem->custom + custom->offset);
+    }
+  }
+
+  /* remove from used_memory list */
+  list_remove(&mem->node);
 
   /*
    * Rather than freeing the memory right away, try to reuse at a later
    * point. Keep at least ten percent of the active used blocks or at least
    * ten blocks on the free list.
    */
-  if ((ci->ci_free_list_usage < ci->ci_min_free_count)
-      || (ci->ci_free_list_usage < ci->ci_usage / COOKIE_FREE_LIST_THRESHOLD)) {
+  if (0 && mem->is_inline && ((ci->ci_free_list_usage < ci->ci_min_free_count)
+      || (ci->ci_free_list_usage < ci->ci_usage / COOKIE_FREE_LIST_THRESHOLD))) {
 
-    free_list_node = (struct list_entity *)ptr;
-    list_init_node(free_list_node);
-
-    /*
-     * Before enqueuing the node to the free list,
-     * make the list pointers of the node ahead of
-     * us accessible, such that valgrind does not
-     * log a false positive.
-     */
-    if (list_is_empty(&ci->ci_free_list)) {
-      list_add_tail(&ci->ci_free_list, free_list_node);
-    } else {
-
-      /*
-       * Make next item accessible, add it and make next item inaccessible.
-       */
-      VALGRIND_MAKE_MEM_DEFINED(ci->ci_free_list.prev, ci->ci_size);
-      list_add_tail(&ci->ci_free_list, free_list_node);
-      VALGRIND_MAKE_MEM_NOACCESS(ci->ci_free_list.prev, ci->ci_size);
-    }
+    list_add_tail(&ci->ci_free_list, &mem->node);
 
     ci->ci_free_list_usage++;
 #if !defined REMOVE_LOG_DEBUG
     reuse = true;
 #endif
-
   } else {
 
-    /*
-     * No interest in reusing memory.
-     */
-    free(ptr);
+    /* No interest in reusing memory. */
+    if (!mem->is_inline) {
+      free (mem->custom);
+    }
+    free(mem);
   }
 
   /* Stats keeping */
   olsr_cookie_usage_decr(ci);
 
   OLSR_DEBUG(LOG_COOKIE, "MEMORY: free %s, %p, %lu bytes%s\n",
-             ci->ci_name, ptr, (unsigned long)ci->ci_size, reuse ? ", reuse" : "");
+             ci->ci_name, ptr, (unsigned long)ci->ci_total_size, reuse ? ", reuse" : "");
+}
 
-  VALGRIND_MEMPOOL_FREE(ci, ptr);
-  VALGRIND_MAKE_MEM_NOACCESS(ptr, ci->ci_size);
+struct olsr_cookie_custom *
+olsr_alloc_cookie_custom(struct olsr_cookie_info *ci, size_t size, const char *name,
+    void (*init)(struct olsr_cookie_info *, void *),
+    void (*cleanup)(struct olsr_cookie_info *, void *)) {
+  struct olsr_cookie_custom *custom;
+  struct olsr_memory_prefix *mem;
+  struct list_iterator iterator;
+  size_t old_total_size, new_total_size;
+
+  custom = olsr_malloc(sizeof(struct olsr_cookie_custom), name);
+  custom->name = strdup(name);
+  custom->size = calc_aligned_size(size);
+  custom->init = init;
+  custom->cleanup = cleanup;
+
+  /* recalculate custom data block size */
+  old_total_size = ci->ci_total_size - ci->ci_custom_offset;
+  new_total_size = old_total_size + custom->size;
+
+  custom->offset = old_total_size;
+  ci->ci_total_size += custom->size;
+
+  /* reallocate custom data blocks on used memory blocks*/
+  OLSR_FOR_ALL_USED_MEM(ci, mem, iterator) {
+    uint8_t *custom_ptr;
+
+    custom_ptr = olsr_malloc(new_total_size, ci->ci_name);
+
+    /* copy old data */
+    if (old_total_size > 0) {
+      memcpy(custom_ptr, mem->custom, old_total_size);
+    }
+    mem->is_inline = false;
+
+    /* call up necessary initialization */
+    init(ci, custom_ptr + old_total_size);
+  }
+
+  /* remove all free data blocks, they have the wrong size */
+  OLSR_FOR_ALL_FREE_MEM(ci, mem, iterator) {
+    list_remove(&mem->node);
+    free(mem);
+  }
+  ci->ci_free_list_usage = 0;
+
+  /* add the custom data object to the list */
+  list_add_tail(&ci->ci_custom_list, &custom->node);
+  return custom;
+}
+
+void
+olsr_free_cookie_custom(struct olsr_cookie_info *ci, struct olsr_cookie_custom *custom) {
+  struct olsr_memory_prefix *mem;
+  struct olsr_cookie_custom *c_ptr;
+  struct list_iterator iterator;
+  size_t prefix_block, suffix_block;
+  bool match;
+
+  prefix_block = 0;
+  suffix_block = 0;
+  match = false;
+
+  OLSR_FOR_ALL_CUSTOM_MEM(ci, c_ptr, iterator) {
+    if (c_ptr == custom) {
+      match = true;
+      continue;
+    }
+
+    if (match) {
+      suffix_block += c_ptr->size;
+      c_ptr->offset -= custom->size;
+    }
+    else {
+      prefix_block += c_ptr->size;
+    }
+  }
+
+  /* move the custom memory back into a continous block */
+  if (suffix_block > 0) {
+    OLSR_FOR_ALL_USED_MEM(ci, mem, iterator) {
+      memmove(mem->custom + prefix_block, mem->custom + prefix_block + custom->size, suffix_block);
+    }
+  }
+  ci->ci_total_size -= custom->size;
+
+  /* remove all free data blocks, they have the wrong size */
+  OLSR_FOR_ALL_FREE_MEM(ci, mem, iterator) {
+    list_remove(&mem->node);
+    free(mem);
+  }
+  ci->ci_free_list_usage = 0;
+
+  /* remove the custom data object from the list */
+  list_remove(&custom->node);
+  free (custom->name);
+  free (custom);
 }
 
 /*

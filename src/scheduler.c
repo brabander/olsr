@@ -66,7 +66,7 @@ static uint32_t timer_last_run;        /* remember the last timeslot walk */
 /* Memory cookie for the timer manager */
 struct avl_tree timerinfo_tree;
 static struct olsr_cookie_info *timer_mem_cookie = NULL;
-static struct olsr_cookie_info *timerinfo_coookie = NULL;
+static struct olsr_cookie_info *timerinfo_cookie = NULL;
 
 /* Head of all OLSR used sockets */
 static struct list_entity socket_head;
@@ -167,7 +167,7 @@ struct olsr_timer_info *
 olsr_alloc_timerinfo(const char *name, timer_cb_func callback, bool periodic) {
   struct olsr_timer_info *ti;
 
-  ti = olsr_cookie_malloc(timerinfo_coookie);
+  ti = olsr_cookie_malloc(timerinfo_cookie);
   ti->name = strdup(name);
   ti->node.key = ti->name;
   ti->callback = callback;
@@ -176,7 +176,6 @@ olsr_alloc_timerinfo(const char *name, timer_cb_func callback, bool periodic) {
   avl_insert(&timerinfo_tree, &ti->node);
   return ti;
 }
-
 
 /**
  * Add a socket and handler to the socketset
@@ -568,11 +567,10 @@ olsr_init_timers(void)
   timer_last_run = now_times;
 
   /* Allocate a cookie for the block based memory manager. */
-  timer_mem_cookie = olsr_alloc_cookie("timer_entry", sizeof(struct timer_entry));
-  olsr_cookie_set_memory_clear(timer_mem_cookie, false);
+  timer_mem_cookie = olsr_create_memcookie("timer_entry", sizeof(struct timer_entry));
 
   avl_init(&timerinfo_tree, avl_comp_strcasecmp, false, NULL);
-  timerinfo_coookie = olsr_alloc_cookie("timerinfo", sizeof(struct olsr_timer_info));
+  timerinfo_cookie = olsr_create_memcookie("timerinfo", sizeof(struct olsr_timer_info));
 }
 
 /**
@@ -687,6 +685,9 @@ walk_timers(uint32_t * last_run)
 void
 olsr_flush_timers(void)
 {
+  struct olsr_timer_info *ti;
+  struct list_iterator iterator;
+
   struct list_entity *timer_head_node;
   unsigned int wheel_slot = 0;
 
@@ -701,6 +702,16 @@ olsr_flush_timers(void)
       olsr_stop_timer(timer);
     }
   }
+
+  /* free all timerinfos */
+  OLSR_FOR_ALL_TIMERS(ti, iterator) {
+    avl_delete(&timerinfo_tree, &ti->node);
+    free(ti->name);
+    olsr_cookie_free(timerinfo_cookie, ti);
+  }
+
+  /* release memory cookie for timers */
+  olsr_cleanup_memcookie(timerinfo_cookie);
 }
 
 /**

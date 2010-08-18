@@ -80,7 +80,7 @@ olsr_init_mid_set(void)
    */
   mid_validity_timer_info = olsr_alloc_timerinfo("MID validity", &olsr_expire_mid_entries, false);
 
-  mid_address_mem_cookie = olsr_alloc_cookie("MID address", sizeof(struct mid_entry));
+  mid_address_mem_cookie = olsr_create_memcookie("MID address", sizeof(struct mid_entry));
 }
 
 /**

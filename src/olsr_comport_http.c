@@ -146,7 +146,7 @@ void
 olsr_com_init_http(void) {
   avl_init(&http_handler_tree, &avl_comp_strcasecmp, false, NULL);
 
-  htmlsite_cookie = olsr_alloc_cookie("comport http sites", sizeof(struct olsr_html_site));
+  htmlsite_cookie = olsr_create_memcookie("comport http sites", sizeof(struct olsr_html_site));
 
   /* activate telnet gateway */
   olsr_com_add_htmlhandler(olsr_com_html2telnet_gate, TELNET_PATH);

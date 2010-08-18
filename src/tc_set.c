@@ -142,7 +142,7 @@ olsr_init_tc(void)
   tc_edge_gc_timer_info = olsr_alloc_timerinfo("TC edge GC", olsr_expire_tc_edge_gc, false);
   tc_validity_timer_info = olsr_alloc_timerinfo("TC validity", &olsr_expire_tc_entry, false);
 
-  tc_mem_cookie = olsr_alloc_cookie("tc_entry", sizeof(struct tc_entry));
+  tc_mem_cookie = olsr_create_memcookie("tc_entry", sizeof(struct tc_entry));
 }
 
 /**

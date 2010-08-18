@@ -66,7 +66,7 @@ olsr_init_hna_set(void)
 
   hna_net_timer_info = olsr_alloc_timerinfo("HNA Network", &olsr_expire_hna_net_entry, false);
 
-  hna_net_mem_cookie = olsr_alloc_cookie("hna_net", sizeof(struct hna_net));
+  hna_net_mem_cookie = olsr_create_memcookie("hna_net", sizeof(struct hna_net));
 }
 
 /**

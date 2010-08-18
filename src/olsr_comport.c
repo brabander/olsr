@@ -93,7 +93,7 @@ static void olsr_com_timeout_handler(void *);
 
 void olsr_com_init(bool failfast) {
   connection_cookie =
-      olsr_alloc_cookie("comport connections", sizeof(struct comport_connection));
+      olsr_create_memcookie("comport connections", sizeof(struct comport_connection));
 
   connection_timeout = olsr_alloc_timerinfo("comport timout",
       &olsr_com_timeout_handler, false);

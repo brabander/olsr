@@ -199,10 +199,10 @@ olsrd_plugin_init(void)
   statistics_timer = olsr_alloc_timerinfo("debuginfo timer", &update_statistics_ptr, true);
   olsr_start_timer(traffic_interval * 1000, 0, NULL, statistics_timer);
 
-  statistics_msg_mem = olsr_alloc_cookie("debuginfo msgstat",
+  statistics_msg_mem = olsr_create_memcookie("debuginfo msgstat",
       sizeof(struct debug_msgtraffic) + sizeof(struct debug_msgtraffic_count) * traffic_slots);
 
-  statistics_pkt_mem = olsr_alloc_cookie("debuginfo pktstat",
+  statistics_pkt_mem = olsr_create_memcookie("debuginfo pktstat",
       sizeof(struct debug_pkttraffic) + sizeof(struct debug_pkttraffic_count) * traffic_slots);
 
   memset(&total_msg_traffic, 0, sizeof(total_msg_traffic));

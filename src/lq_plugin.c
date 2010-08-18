@@ -69,13 +69,13 @@ init_lq_handler(void)
 
   OLSR_INFO(LOG_LQ_PLUGINS, "Initializing LQ handler %s...\n", active_lq_handler->name);
 
-  tc_edge_mem_cookie = olsr_alloc_cookie("tc_edge", active_lq_handler->size_tc_edge);
+  tc_edge_mem_cookie = olsr_create_memcookie("tc_edge", active_lq_handler->size_tc_edge);
 
   lq_hello_neighbor_mem_cookie =
-      olsr_alloc_cookie("lq_hello_neighbor", active_lq_handler->size_lq_hello_neighbor);
+      olsr_create_memcookie("lq_hello_neighbor", active_lq_handler->size_lq_hello_neighbor);
 
   link_entry_mem_cookie =
-      olsr_alloc_cookie("link_entry", active_lq_handler->size_link_entry);
+      olsr_create_memcookie("link_entry", active_lq_handler->size_link_entry);
 
   if (active_lq_handler->initialize) {
     active_lq_handler->initialize();

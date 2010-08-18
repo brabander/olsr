@@ -102,9 +102,9 @@ init_interfaces(void)
   /*
    * Get some cookies for getting stats to ease troubleshooting.
    */
-  interface_mem_cookie = olsr_alloc_cookie("Interface", sizeof(struct interface));
+  interface_mem_cookie = olsr_create_memcookie("Interface", sizeof(struct interface));
 
-  interface_lost_mem_cookie = olsr_alloc_cookie("Interface lost", sizeof(struct interface_lost));
+  interface_lost_mem_cookie = olsr_create_memcookie("Interface lost", sizeof(struct interface_lost));
 
   interface_poll_timerinfo = olsr_alloc_timerinfo("Interface Polling", &check_interface_updates, true);
   hello_gen_timerinfo = olsr_alloc_timerinfo("Hello Generation", &generate_hello, true);

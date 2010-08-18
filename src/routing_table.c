@@ -92,8 +92,8 @@ olsr_init_routing_table(void)
   /*
    * Get some cookies for memory stats and memory recycling.
    */
-  rt_mem_cookie = olsr_alloc_cookie("rt_entry", sizeof(struct rt_entry));
-  rtp_mem_cookie = olsr_alloc_cookie("rt_path", sizeof(struct rt_path));
+  rt_mem_cookie = olsr_create_memcookie("rt_entry", sizeof(struct rt_entry));
+  rtp_mem_cookie = olsr_create_memcookie("rt_path", sizeof(struct rt_path));
 }
 
 /**

@@ -130,7 +130,7 @@ olsr_com_init_txt(void) {
   avl_init(&txt_normal_tree, &avl_comp_strcasecmp, false, NULL);
   avl_init(&txt_help_tree, &avl_comp_strcasecmp, false, NULL);
 
-  txtcommand_cookie = olsr_alloc_cookie("comport txt commands", sizeof(struct olsr_txtcommand));
+  txtcommand_cookie = olsr_create_memcookie("comport txt commands", sizeof(struct olsr_txtcommand));
 
   txt_repeat_timerinfo = olsr_alloc_timerinfo("txt repeat timer", olsr_txt_repeat_timer, true);
 
