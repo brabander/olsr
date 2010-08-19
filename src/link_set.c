@@ -389,12 +389,10 @@ add_link_entry(const union olsr_ip_addr *local,
 
   /* copy if_name, if it is defined */
   if (local_if->int_name) {
-    size_t name_size = strlen(local_if->int_name) + 1;
-    link->if_name = olsr_malloc(name_size, "target of if_name in new link entry");
-    strscpy(link->if_name, local_if->int_name, name_size);
-  } else
+    link->if_name = strdup(local_if->int_name);
+  } else {
     link->if_name = NULL;
-
+  }
   /* shortcut to interface. */
   link->inter = local_if;
   lock_interface(local_if);
@@ -639,7 +637,7 @@ olsr_print_link_set(void)
   /* The whole function makes no sense without it. */
   struct link_entry *walker;
   struct list_iterator iterator;
-  char totaltxt[256];
+  char totaltxt[256] = { 0 };
   const char *txt;
   int addrsize;
   size_t i, j, length, max, totaltxt_len;

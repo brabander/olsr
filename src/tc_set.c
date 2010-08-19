@@ -58,7 +58,7 @@ struct avl_tree tc_tree;
 struct tc_entry *tc_myself = NULL;     /* Shortcut to ourselves */
 
 /* Some cookies for stats keeping */
-static struct olsr_cookie_info *tc_mem_cookie = NULL;
+struct olsr_cookie_info *tc_mem_cookie = NULL;
 static struct olsr_timer_info *tc_edge_gc_timer_info = NULL;
 static struct olsr_timer_info *tc_validity_timer_info = NULL;
 
@@ -321,9 +321,8 @@ olsr_expire_tc_entry(void *context)
   OLSR_DEBUG(LOG_TC, "TC: expire node entry %s\n",
              olsr_ip_to_string(&buf, &tc->addr));
 
-  olsr_delete_tc_entry(tc);
-
   tc->validity_timer = NULL;
+  olsr_delete_tc_entry(tc);
   changes_topology = true;
 }
 

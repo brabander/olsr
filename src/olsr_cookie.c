@@ -230,7 +230,7 @@ olsr_cookie_malloc(struct olsr_cookie_info *ci)
     /* call up custom init functions */
     OLSR_FOR_ALL_CUSTOM_MEM(ci, custom, iterator) {
       if (custom->init) {
-        custom->init(ci, mem->custom + custom->offset);
+        custom->init(ci, mem + 1, mem->custom + custom->offset);
       }
     }
   }
@@ -264,7 +264,7 @@ olsr_cookie_free(struct olsr_cookie_info *ci, void *ptr)
   /* call up custom cleanup */
   OLSR_FOR_ALL_CUSTOM_MEM(ci, custom, iterator) {
     if (custom->cleanup) {
-      custom->cleanup(ci, mem->custom + custom->offset);
+      custom->cleanup(ci, ptr, mem->custom + custom->offset);
     }
   }
 
@@ -303,8 +303,8 @@ olsr_cookie_free(struct olsr_cookie_info *ci, void *ptr)
 
 struct olsr_cookie_custom *
 olsr_alloc_cookie_custom(struct olsr_cookie_info *ci, size_t size, const char *name,
-    void (*init)(struct olsr_cookie_info *, void *),
-    void (*cleanup)(struct olsr_cookie_info *, void *)) {
+    void (*init)(struct olsr_cookie_info *, void *, void *),
+    void (*cleanup)(struct olsr_cookie_info *, void *, void *)) {
   struct olsr_cookie_custom *custom;
   struct olsr_memory_prefix *mem;
   struct list_iterator iterator;
@@ -333,10 +333,12 @@ olsr_alloc_cookie_custom(struct olsr_cookie_info *ci, size_t size, const char *n
     if (old_total_size > 0) {
       memcpy(custom_ptr, mem->custom, old_total_size);
     }
+
     mem->is_inline = false;
+    mem->custom = custom_ptr;
 
     /* call up necessary initialization */
-    init(ci, custom_ptr + old_total_size);
+    init(ci, mem + 1, custom_ptr + old_total_size);
   }
 
   /* remove all free data blocks, they have the wrong size */

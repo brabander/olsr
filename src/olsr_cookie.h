@@ -103,8 +103,8 @@ struct olsr_cookie_custom {
   size_t size;
   size_t offset;
 
-  void (*init)(struct olsr_cookie_info *, void *);
-  void (*cleanup)(struct olsr_cookie_info *, void *);
+  void (*init)(struct olsr_cookie_info *, void *, void *);
+  void (*cleanup)(struct olsr_cookie_info *, void *, void *);
 };
 
 /* should have a length of 2*memory_alignment */
@@ -136,32 +136,23 @@ void EXPORT(olsr_cookie_free) (struct olsr_cookie_info *, void *);
 
 struct olsr_cookie_custom *EXPORT(olsr_alloc_cookie_custom)(
     struct olsr_cookie_info *ci, size_t size, const char *name,
-    void (*init)(struct olsr_cookie_info *, void *),
-    void (*cleanup)(struct olsr_cookie_info *, void *));
+    void (*init)(struct olsr_cookie_info *, void *, void *),
+    void (*cleanup)(struct olsr_cookie_info *, void *, void *));
 
 void EXPORT(olsr_free_cookie_custom)(
     struct olsr_cookie_info *ci, struct olsr_cookie_custom *custom);
 
 /* inline function to access memory of custom data */
 static inline void *EXPORT(olsr_cookie_get_custom)(
-    struct olsr_cookie_info *ci,
     struct olsr_cookie_custom *custom,
     void *ptr) {
   struct olsr_memory_prefix *mem;
-  uint8_t *c_ptr;
 
   /* get to the prefix memory structure */
   mem = ptr;
   mem--;
 
-  if (mem->custom) {
-    c_ptr = mem->custom;
-  }
-  else {
-    c_ptr = (uint8_t *)mem;
-    c_ptr += ci->ci_custom_offset;
-  }
-  return c_ptr + custom->offset;
+  return mem->custom + custom->offset;
 }
 
 #endif /* _OLSR_COOKIE_H */
