@@ -38,6 +38,7 @@
  * the copyright holders.
  *
  */
+#include <assert.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -103,10 +104,10 @@ static const char *txt_internal_help[] = {
   "display the online help text\n",
   "switchs the prompt on/off\n",
   "repeat <interval> <command>: repeats a command every <interval> seconds\n",
-  "timeout <interval>: set the timeout interval to <interval> seconds, 0 means no timeout\n"
-  "displays the version of the olsrd\n"
+  "timeout <interval>: set the timeout interval to <interval> seconds, 0 means no timeout\n",
+  "displays the version of the olsrd\n",
   "control olsr plugins dynamically, parameters are 'list', 'activate <plugin>', 'deactivate <plugin>', "
-    "'load <plugin>' and 'unload <plugin>'"
+    "'load <plugin>' and 'unload <plugin>'\n"
 };
 
 static olsr_txthandler txt_internal_handlers[] = {
@@ -126,6 +127,9 @@ static struct olsr_txtcommand *txt_internal_helpcmd[ARRAYSIZE(txt_internal_names
 void
 olsr_com_init_txt(void) {
   size_t i;
+
+  /* sanity check */
+  assert (ARRAYSIZE(txt_internal_names) == ARRAYSIZE(txt_internal_help));
 
   avl_init(&txt_normal_tree, &avl_comp_strcasecmp, false, NULL);
   avl_init(&txt_help_tree, &avl_comp_strcasecmp, false, NULL);
@@ -349,11 +353,12 @@ olsr_txtcmd_help(struct comport_connection *con,
   struct list_iterator iterator;
 
   if (param != NULL) {
-    ptr = avl_find_element(&txt_help_tree, cmd, ptr, node);
+    ptr = avl_find_element(&txt_help_tree, param, ptr, node);
     if (ptr != NULL) {
       return ptr->handler(con, param, NULL);
     }
-    return UNKNOWN;
+    abuf_appendf(&con->out, "No help text found for command: %s\n", param);
+    return CONTINUE;
   }
 
   if (abuf_puts(&con->out, "Known commands:\n") < 0) {
