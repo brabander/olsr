@@ -1095,13 +1095,13 @@ write_hosts_file(void)
 
     list_for_each_element(list_head, entry, db_list, loop) {
       for (name = entry->names; name != NULL; name = name->next) {
-        struct ipaddr_str strbuf;
+        struct ipaddr_str strbuf1, strbuf2;
         OLSR_DEBUG(LOG_PLUGINS, "%s\t%s%s\t#%s\n",
-                   olsr_ip_to_string(&strbuf, &name->ip), name->name, my_suffix, olsr_ip_to_string(&strbuf, &entry->originator)
+                   olsr_ip_to_string(&strbuf1, &name->ip), name->name, my_suffix, olsr_ip_to_string(&strbuf2, &entry->originator)
           );
 
         fprintf(hosts, "%s\t%s%s\t# %s\n",
-                olsr_ip_to_string(&strbuf, &name->ip), name->name, my_suffix, olsr_ip_to_string(&strbuf, &entry->originator)
+                olsr_ip_to_string(&strbuf1, &name->ip), name->name, my_suffix, olsr_ip_to_string(&strbuf2, &entry->originator)
           );
 
 #ifdef MID_ENTRIES
@@ -1111,18 +1111,16 @@ write_hosts_file(void)
           char mid_prefix[MID_MAXLEN];
 
           OLSR_FOR_ALL_TC_MID_ENTRIES(tc, alias, iterator) {
-            struct ipaddr_str midbuf;
-
             // generate mid prefix
             sprintf(mid_prefix, MID_PREFIX, mid_num);
 
             OLSR_DEBUG(LOG_PLUGINS, "%s\t%s%s%s\t# %s (mid #%i)\n",
-                       olsr_ip_to_string(&midbuf, &alias->mid_alias_addr),
-                       mid_prefix, name->name, my_suffix, olsr_ip_to_string(&strbuf, &entry->originator), mid_num);
+                       olsr_ip_to_string(&strbuf1, &alias->mid_alias_addr),
+                       mid_prefix, name->name, my_suffix, olsr_ip_to_string(&strbuf2, &entry->originator), mid_num);
 
             fprintf(hosts, "%s\t%s%s%s\t# %s (mid #%i)\n",
-                    olsr_ip_to_string(&midbuf, &alias->mid_alias_addr),
-                    mid_prefix, name->name, my_suffix, olsr_ip_to_string(&strbuf, &entry->originator), mid_num);
+                    olsr_ip_to_string(&strbuf1, &alias->mid_alias_addr),
+                    mid_prefix, name->name, my_suffix, olsr_ip_to_string(&strbuf2, &entry->originator), mid_num);
 
             mid_num++;
           }
