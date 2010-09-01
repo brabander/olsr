@@ -1346,6 +1346,7 @@ amain_ip: TOK_MAIN_IP TOK_IPV4_ADDR
     fprintf(stderr, "Bad main IP: %s\n", $2->string);
     YYABORT;
   }
+  else olsr_cnf->unicast_src_ip = olsr_cnf->main_addr;
   free($2);
 }
         |       TOK_MAIN_IP TOK_IPV6_ADDR
