@@ -91,7 +91,10 @@
 static char orig_fwd_state;
 static char orig_global_redirect_state;
 static char orig_global_rp_filter;
-static char orig_tunnel_rp_filter, orig_tunnel6_rp_filter;
+static char orig_tunnel_rp_filter;
+#if 0 // should not be necessary for IPv6 */
+static char orig_tunnel6_rp_filter;
+#endif
 
 /**
  *Bind a socket to a device
@@ -181,14 +184,17 @@ net_os_set_global_ifoptions(void) {
     char procfile[FILENAME_MAX];
 
     /* Generate the procfile name */
-    snprintf(procfile, sizeof(procfile), PROC_IF_SPOOF, TUNNEL_ENDPOINT_IF);
-    if (writeToProc(procfile, &orig_tunnel_rp_filter, '0')) {
-      OLSR_PRINTF(0, "WARNING! Could not disable the IP spoof filter for tunnel!\n"
-          "you should mannually ensure that IP spoof filtering is disabled!\n\n");
+    if (olsr_cnf->ip_version == AF_INET || olsr_cnf->use_niit) {
+      snprintf(procfile, sizeof(procfile), PROC_IF_SPOOF, TUNNEL_ENDPOINT_IF);
+      if (writeToProc(procfile, &orig_tunnel_rp_filter, '0')) {
+        OLSR_PRINTF(0, "WARNING! Could not disable the IP spoof filter for tunnel!\n"
+            "you should mannually ensure that IP spoof filtering is disabled!\n\n");
 
-      olsr_startup_sleep(3);
+        olsr_startup_sleep(3);
+      }
     }
 
+#if 0 // should not be necessary for IPv6
     if (olsr_cnf->ip_version == AF_INET6) {
       snprintf(procfile, sizeof(procfile), PROC_IF_SPOOF, TUNNEL_ENDPOINT_IF6);
       if (writeToProc(procfile, &orig_tunnel6_rp_filter, '0')) {
@@ -198,6 +204,7 @@ net_os_set_global_ifoptions(void) {
         olsr_startup_sleep(3);
       }
     }
+#endif
   }
 
   if (olsr_cnf->ip_version == AF_INET) {
@@ -271,19 +278,21 @@ net_os_restore_ifoptions(void)
     OLSR_PRINTF(1, "Error, could not restore ip_forward settings\n");
   }
 
-  if (olsr_cnf->smart_gw_active) {
+  if (olsr_cnf->smart_gw_active && (olsr_cnf->ip_version == AF_INET || olsr_cnf->use_niit)) {
     /* Generate the procfile name */
     snprintf(procfile, sizeof(procfile), PROC_IF_SPOOF, TUNNEL_ENDPOINT_IF);
     if (writeToProc(procfile, NULL, orig_tunnel_rp_filter)) {
       OLSR_PRINTF(0, "WARNING! Could not restore the IP spoof filter for tunnel!\n");
     }
 
+#if 0 // should not be necessary for IPv6
     if (olsr_cnf->ip_version == AF_INET6) {
       snprintf(procfile, sizeof(procfile), PROC_IF_SPOOF, TUNNEL_ENDPOINT_IF6);
       if (writeToProc(procfile, NULL, orig_tunnel6_rp_filter)) {
         OLSR_PRINTF(0, "WARNING! Could not restore the IP spoof filter for tunnel6!\n");
       }
     }
+#endif
   }
 
   if (olsr_cnf->ip_version == AF_INET) {
