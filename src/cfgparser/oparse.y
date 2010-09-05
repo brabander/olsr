@@ -1332,7 +1332,11 @@ ismart_gw_prefix: TOK_SMART_GW_PREFIX TOK_IPV6_ADDR TOK_INTEGER
 bsrc_ip_routes: TOK_SRC_IP_ROUTES TOK_BOOLEAN
 {
 	PARSER_DEBUG_PRINTF("Use originator for routes src-ip: %s\n", $2->boolean ? "yes" : "no");
-	olsr_cnf->use_src_ip_routes = $2->boolean;
+	if (olsr_cnf->ip_version != AF_INET) {
+          fprintf(stderr, "Source ip routes not possible with IPV6\n");
+          YYABORT;
+	}
+	else olsr_cnf->use_src_ip_routes = $2->boolean;
 	free($2);
 }
 ;
