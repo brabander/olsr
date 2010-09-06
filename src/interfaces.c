@@ -195,8 +195,8 @@ add_interface(struct olsr_if_config *iface) {
      * the socket to it. This to ensure that we can control
      * on what interface the message is transmitted
      */
-    ifp->olsr_socket = getsocket(BUFSPACE, ifp, false, olsr_cnf->olsr_port);
-    ifp->send_socket = getsocket(0, ifp, true, olsr_cnf->olsr_port);
+    ifp->olsr_socket = getsocket4(BUFSPACE, ifp, false, olsr_cnf->olsr_port);
+    ifp->send_socket = getsocket4(0, ifp, true, olsr_cnf->olsr_port);
 
     if (ifp->olsr_socket < 0 || ifp->send_socket < 0) {
       OLSR_ERROR(LOG_INTERFACE, "Could not initialize socket... exiting!\n\n");

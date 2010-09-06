@@ -74,7 +74,7 @@ int disable_ip_forwarding(int Ver);
 
 
 int
-getsocket(int bufspace, struct interface *ifp, bool bind_to_unicast, uint16_t port)
+getsocket4(int bufspace, struct interface *ifp, bool bind_to_unicast, uint16_t port)
 {
   struct sockaddr_in Addr;
   int On = 1;

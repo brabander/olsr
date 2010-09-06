@@ -294,7 +294,7 @@ restore_settings(int version)
 
 
 int
-getsocket(int bufspace, struct interface *ifp, bool bind_to_unicast, uint16_t port)
+getsocket4(int bufspace, struct interface *ifp, bool bind_to_unicast, uint16_t port)
 {
   struct sockaddr_in sin4;
   int on;

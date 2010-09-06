@@ -51,9 +51,11 @@
 #ifndef _OLSR_NET_OS_H
 #define _OLSR_NET_OS_H
 
+#include <assert.h>
+#include <sys/time.h>
+
 #include "olsr_types.h"
 #include "interfaces.h"
-#include <sys/time.h>
 
 /* OS dependent functions */
 ssize_t olsr_sendto(int, const void *, size_t, int, const union olsr_sockaddr *);
@@ -74,7 +76,7 @@ int restore_settings(int);
 
 int enable_ip_forwarding(int);
 
-int getsocket(int, struct interface *, bool, uint16_t);
+int getsocket4(int, struct interface *, bool, uint16_t);
 
 int getsocket6(int, struct interface *, bool, uint16_t);
 
@@ -86,6 +88,19 @@ bool is_if_link_up(char *);
 
 int join_mcast(struct interface *, int);
 
+/* helper function for getting a socket */
+static inline int
+getsocket46(int family, int bufferSize, struct interface *interf,
+    bool bind_to_unicast, uint16_t port) {
+  assert (family == AF_INET || family == AF_INET6);
+
+  if (family == AF_INET) {
+    return getsocket4(bufferSize, interf, bind_to_unicast, port);
+  }
+  else {
+    return getsocket6(bufferSize, interf, bind_to_unicast, port);
+  }
+}
 #endif
 
 /*
