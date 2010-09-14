@@ -606,7 +606,7 @@ get_ipv6_address(char *ifname, struct sockaddr_in6 *saddr6, struct olsr_ip_prefi
 
   if ((f = fopen(PATH_PROCNET_IFINET6, "r")) != NULL) {
     while (fscanf
-           (f, "%4s%4s%4s%4s%4s%4s%4s%4s %02x %02x %02x %02x %20s\n", addr6p[0], addr6p[1], addr6p[2], addr6p[3], addr6p[4],
+           (f, "%4s%4s%4s%4s%4s%4s%4s%4s %x %02x %02x %02x %20s\n", addr6p[0], addr6p[1], addr6p[2], addr6p[3], addr6p[4],
             addr6p[5], addr6p[6], addr6p[7], &if_idx, &plen, &scope, &dad_status, devname) != EOF) {
       if (!strcmp(devname, ifname)) {
         bool isNetWide = false;
