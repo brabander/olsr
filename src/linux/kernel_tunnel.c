@@ -122,7 +122,7 @@ static int os_ip4_tunnel(const char *name, in_addr_t *target)
   int err;
   struct ip_tunnel_parm p;
 
-  /* only IPIP tunnel if OLSR runs with IPv6 */
+  /* only IPIP tunnel if OLSR runs with IPv4 */
   assert (olsr_cnf->ip_version == AF_INET);
   memset(&p, 0, sizeof(p));
   p.iph.version = 4;
