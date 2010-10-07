@@ -1,7 +1,7 @@
 
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
+ * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,30 +39,28 @@
  *
  */
 
-#include "defs.h"
-#include "net_os.h"
-#include "ipcalc.h"
-#include "parser.h"             /* dnc: needed for call to packet_parser() */
-#include "olsr_protocol.h"
-#include "common/string.h"
-#include "misc.h"
-#include "olsr_logging.h"
-#include "olsr.h"
+#if defined __FreeBSD_kernel__
+#define _GNU_SOURCE 1
+#endif
+
+#include "../defs.h"
+#include "../net_os.h"
+#include "../ipcalc.h"
+#include "../parser.h"          /* dnc: needed for call to packet_parser() */
+#include "../olsr_protocol.h"
+#include "../olsr_cfg.h"
+#include "../olsr.h"
 
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <sys/ioctl.h>
-
-#include <netinet/in.h>
-
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <net/if.h>
+#include <sys/ioctl.h>
 #include <fcntl.h>
 #include <syslog.h>
-#include <errno.h>
-#include <unistd.h>
-
+#include <netinet/in.h>
 #include <net/if.h>
 
 #ifdef _WRS_KERNEL
@@ -73,14 +71,16 @@
 #include "wrn/coreip/net/ifaddrs.h"
 #include <selectLib.h>
 #include <logLib.h>
-// #define syslog(a, b) fdprintf(a, b);
+#define syslog(a, b) fdprintf(a, b);
 #else
 #include <sys/param.h>
 #endif
 
-
 #ifdef __NetBSD__
 #include <net/if_ether.h>
+#include <netinet6/in6_var.h>   /* For struct in6_ifreq */
+#include <net80211/ieee80211_ioctl.h>
+#include <ifaddrs.h>
 #endif
 
 #ifdef __OpenBSD__
@@ -97,11 +97,11 @@
 #include <net80211/ieee80211_ioctl.h>
 #endif
 
-#ifdef __FreeBSD__
-#include <ifaddrs.h>
+#if defined __FreeBSD__ || __FreeBSD_kernel__
 #include <net/if_var.h>
 #include <net/ethernet.h>
 #include <netinet/in_var.h>
+#include <ifaddrs.h>
 #ifndef FBSD_NO_80211
 #include <net80211/ieee80211.h>
 #include <net80211/ieee80211_ioctl.h>
@@ -126,7 +126,6 @@
 #endif
 
 #include <sys/sysctl.h>
-#include <sys/sockio.h>
 
 static int ignore_redir;
 static int send_redir;
@@ -136,7 +135,7 @@ static int
 set_sysctl_int(const char *name, int new)
 {
   int old;
-#if __MacOSX__ || __OpenBSD__
+#if defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || defined(__MacOSX__) || defined(__OpenBSD__) || defined(__NetBSD__)
   size_t len = sizeof(old);
 #else
   unsigned int len = sizeof(old);
@@ -179,36 +178,27 @@ set_sysctl_int(const char *name, int new)
   return old;
 }
 
-int
-enable_ip_forwarding(int version)
-{
-  const char *name = version == AF_INET ? "net.inet.ip.forwarding" : "net.inet6.ip6.forwarding";
+void
+os_init_global_ifoptions(void) {
+  const char *name = olsr_cnf->ip_version == AF_INET ? "net.inet.ip.forwarding" : "net.inet6.ip6.forwarding";
 
   gateway = set_sysctl_int(name, 1);
   if (gateway < 0) {
-    OLSR_WARN(LOG_NETWORKING, "Cannot enable IP forwarding. Please enable IP forwarding manually." " Continuing in 3 seconds...\n");
-    sleep(3);
+    fprintf(stderr, "Cannot enable IP forwarding. Please enable IP forwarding manually." " Continuing in 3 seconds...\n");
+    olsr_startup_sleep(3);
   }
-
-  return 1;
-}
-
-int
-disable_redirects_global(int version)
-{
-  const char *name;
 
   /* do not accept ICMP redirects */
 
-#ifdef __OpenBSD__
-  if (version == AF_INET)
+#if defined(__OpenBSD__) || defined(__NetBSD__)
+  if (olsr_cnf->ip_version == AF_INET)
     name = "net.inet.icmp.rediraccept";
   else
     name = "net.inet6.icmp6.rediraccept";
 
   ignore_redir = set_sysctl_int(name, 0);
-#elif defined __FreeBSD__ || defined __MacOSX__
-  if (version == AF_INET) {
+#elif defined __FreeBSD__ || defined __FreeBSD_kernel__ || defined __MacOSX__
+  if (olsr_cnf->ip_version == AF_INET) {
     name = "net.inet.icmp.drop_redirect";
     ignore_redir = set_sysctl_int(name, 1);
   } else {
@@ -216,7 +206,7 @@ disable_redirects_global(int version)
     ignore_redir = set_sysctl_int(name, 0);
   }
 #else
-  if (version == AF_INET)
+  if (olsr_cnf->ip_version == AF_INET)
     name = "net.inet.icmp.drop_redirect";
   else
     name = "net.inet6.icmp6.drop_redirect";
@@ -225,213 +215,238 @@ disable_redirects_global(int version)
 #endif
 
   if (ignore_redir < 0) {
-    OLSR_WARN(LOG_NETWORKING,
-              "Cannot disable incoming ICMP redirect messages. " "Please disable them manually. Continuing in 3 seconds...\n");
-    sleep(3);
+    fprintf(stderr,
+            "Cannot disable incoming ICMP redirect messages. " "Please disable them manually. Continuing in 3 seconds...\n");
+    olsr_startup_sleep(3);
   }
 
   /* do not send ICMP redirects */
 
-  if (version == AF_INET)
+  if (olsr_cnf->ip_version == AF_INET)
     name = "net.inet.ip.redirect";
   else
     name = "net.inet6.ip6.redirect";
 
   send_redir = set_sysctl_int(name, 0);
   if (send_redir < 0) {
-    OLSR_WARN(LOG_NETWORKING,
-              "Cannot disable outgoing ICMP redirect messages. " "Please disable them manually. Continuing in 3 seconds...\n");
-    sleep(3);
+    fprintf(stderr,
+            "Cannot disable outgoing ICMP redirect messages. " "Please disable them manually. Continuing in 3 seconds...\n");
+    olsr_startup_sleep(3);
   }
-
-  return 1;
 }
 
 int
-disable_redirects(const char *if_name
-                  __attribute__ ((unused)), struct interface *iface __attribute__ ((unused)), int version __attribute__ ((unused)))
-{
-  /*
-   *  this function gets called for each interface olsrd uses; however,
-   * FreeBSD can only globally control ICMP redirects, and not on a
-   * per-interface basis; hence, only disable ICMP redirects in the "global"
-   * function
-   */
-  return 1;
-}
-
-int
-deactivate_spoof(const char *if_name
-                 __attribute__ ((unused)), struct interface *iface __attribute__ ((unused)), int version __attribute__ ((unused)))
-{
-  return 1;
-}
-
-int
-restore_settings(int version)
-{
+os_cleanup_global_ifoptions(void) {
   /* reset IP forwarding */
-  const char *name = version == AF_INET ? "net.inet.ip.forwarding" : "net.inet6.ip6.forwarding";
+  const char *name = olsr_cnf->ip_version == AF_INET ? "net.inet.ip.forwarding" : "net.inet6.ip6.forwarding";
 
   set_sysctl_int(name, gateway);
 
   /* reset incoming ICMP redirects */
 
 #ifdef __OpenBSD__
-  name = version == AF_INET ? "net.inet.icmp.rediraccept" : "net.inet6.icmp6.rediraccept";
-#elif defined __FreeBSD__ || defined __MacOSX__
-  name = version == AF_INET ? "net.inet.icmp.drop_redirect" : "net.inet6.icmp6.rediraccept";
+  name = olsr_cnf->ip_version == AF_INET ? "net.inet.icmp.rediraccept" : "net.inet6.icmp6.rediraccept";
+#elif defined __FreeBSD__ || defined __FreeBSD_kernel__ || defined __MacOSX__
+  name = olsr_cnf->ip_version == AF_INET ? "net.inet.icmp.drop_redirect" : "net.inet6.icmp6.rediraccept";
 #else
-  name = version == AF_INET ? "net.inet.icmp.drop_redirect" : "net.inet6.icmp6.drop_redirect";
+  name = olsr_cnf->ip_version == AF_INET ? "net.inet.icmp.drop_redirect" : "net.inet6.icmp6.drop_redirect";
 #endif
   set_sysctl_int(name, ignore_redir);
 
   /* reset outgoing ICMP redirects */
-  name = version == AF_INET ? "net.inet.ip.redirect" : "net.inet6.ip6.redirect";
+  name = olsr_cnf->ip_version == AF_INET ? "net.inet.ip.redirect" : "net.inet6.ip6.redirect";
   set_sysctl_int(name, send_redir);
   return 1;
 }
 
-
+/**
+ *Creates a nonblocking broadcast socket.
+ *@param sa sockaddr struct. Used for bind(2).
+ *@return the FD of the socket or -1 on error.
+ */
 int
-getsocket4(int bufspace, struct interface *ifp, bool bind_to_unicast, uint16_t port)
+gethemusocket(struct sockaddr_in *pin)
 {
-  struct sockaddr_in sin4;
-  int on;
-  int sock = socket(AF_INET, SOCK_DGRAM, 0);
-  if (sock < 0) {
-    OLSR_ERROR(LOG_NETWORKING, "Cannot open socket for OLSR PDUs (%s)\n", strerror(errno));
-    olsr_exit(EXIT_FAILURE);
-  }
+  int sock, on = 1;
 
-  on = 1;
-  if (setsockopt(sock, SOL_SOCKET, SO_BROADCAST, (char *)&on, sizeof(on)) < 0) {
-    OLSR_ERROR(LOG_NETWORKING, "Cannot set socket for OLSR PDUs to broadcast mode (%s)\n", strerror(errno));
-    close(sock);
-    olsr_exit(EXIT_FAILURE);
+  OLSR_PRINTF(1, "       Connecting to switch daemon port 10150...");
+
+  if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+    perror("hcsocket");
+    syslog(LOG_ERR, "hcsocket: %m");
+    return (-1);
   }
 
   if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on)) < 0) {
-    OLSR_ERROR(LOG_NETWORKING, "Cannot reuse address for OLSR PDUs (%s)\n", strerror(errno));
+    perror("SO_REUSEADDR failed");
     close(sock);
-    olsr_exit(EXIT_FAILURE);
+    return (-1);
   }
-
-  if (setsockopt(sock, SOL_SOCKET, SO_REUSEPORT, (char *)&on, sizeof(on)) < 0) {
-    OLSR_ERROR(LOG_NETWORKING, "Cannot reuse port for OLSR PDUs (%s)\n", strerror(errno));
+  /* connect to PORT on HOST */
+  if (connect(sock, (struct sockaddr *)pin, sizeof(*pin)) < 0) {
+    printf("FAILED\n");
+    fprintf(stderr, "Error connecting %d - %s\n", errno, strerror(errno));
+    printf("connection refused\n");
     close(sock);
-    olsr_exit(EXIT_FAILURE);
+    return (-1);
   }
 
-  if (setsockopt(sock, IPPROTO_IP, IP_RECVIF, (char *)&on, sizeof(on)) < 0) {
-    OLSR_ERROR(LOG_NETWORKING, "Cannot set protocol option REECVIF for OLSR PDUs (%s)\n", strerror(errno));
-    close(sock);
-    olsr_exit(EXIT_FAILURE);
-  }
+  printf("OK\n");
 
-  if (bufspace > 0) {
-    for (on = bufspace;; on -= 1024) {
-      if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, (char *)&on, sizeof(on)) == 0) {
-        OLSR_DEBUG(LOG_NETWORKING, "Set socket buffer space to %d\n", on);
-        break;
-      }
-      if (on <= 8 * 1024) {
-        OLSR_WARN(LOG_NETWORKING, "Could not set a socket buffer space for OLSR PDUs (%s)\n", strerror(errno));
-        break;
-      }
-    }
-  }
-  memset(&sin4, 0, sizeof(sin4));
-  sin4.sin_family = AF_INET;
-  sin4.sin_port = htons(port);
-
-  if(bind_to_unicast) {
-    sin4.sin_addr.s_addr = ifp->int_src.v4.sin_addr.s_addr;
-  }
-  else {
-    sin4.sin_addr.s_addr = INADDR_ANY;
-  }
-
-  if (bind(sock, (struct sockaddr *)&sin4, sizeof(sin4)) < 0) {
-    OLSR_ERROR(LOG_NETWORKING, "Coult not bind socket for OLSR PDUs to port (%s)\n", strerror(errno));
-    close(sock);
-    olsr_exit(EXIT_FAILURE);
-  }
-
-  set_nonblocking(sock);
+  /* Keep TCP socket blocking */
   return (sock);
 }
 
 int
-getsocket6(int bufspace, struct interface *ifp, bool bind_to_unicast, uint16_t port)
+getsocket(int bufspace, struct interface *ifp __attribute__ ((unused)))
 {
-  struct sockaddr_in6 sin6;
+  struct sockaddr_in sin;
+  int on;
+  int sock = socket(AF_INET, SOCK_DGRAM, 0);
+  if (sock < 0) {
+    perror("socket");
+    syslog(LOG_ERR, "socket: %m");
+    return -1;
+  }
+
+  on = 1;
+  if (setsockopt(sock, SOL_SOCKET, SO_BROADCAST, (char *)&on, sizeof(on)) < 0) {
+    perror("setsockopt");
+    syslog(LOG_ERR, "setsockopt SO_BROADCAST: %m");
+    close(sock);
+    return -1;
+  }
+
+  if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on)) < 0) {
+    perror("SO_REUSEADDR failed");
+    close(sock);
+    return -1;
+  }
+
+  if (setsockopt(sock, SOL_SOCKET, SO_REUSEPORT, (char *)&on, sizeof(on)) < 0) {
+    perror("SO_REUSEPORT failed");
+    close(sock);
+    return -1;
+  }
+
+  if (setsockopt(sock, IPPROTO_IP, IP_RECVIF, (char *)&on, sizeof(on)) < 0) {
+    perror("IP_RECVIF failed");
+    close(sock);
+    return -1;
+  }
+
+  if(bufspace > 0) {
+    for (on = bufspace;; on -= 1024) {
+      if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, (char *)&on, sizeof(on)) == 0)
+        break;
+      if (on <= 8 * 1024) {
+        perror("setsockopt");
+        syslog(LOG_ERR, "setsockopt SO_RCVBUF: %m");
+        break;
+      }
+    }
+  }
+
+  memset(&sin, 0, sizeof(sin));
+  sin.sin_family = AF_INET;
+  sin.sin_port = htons(olsr_cnf->olsrport);
+
+  if(bufspace <= 0) {
+    sin.sin_addr.s_addr = ifp->int_addr.sin_addr.s_addr;
+  }
+
+  if (bind(sock, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
+    perror("bind");
+    syslog(LOG_ERR, "bind: %m");
+    close(sock);
+    return -1;
+  }
+
+  on = fcntl(sock, F_GETFL);
+  if (on == -1) {
+    syslog(LOG_ERR, "fcntl (F_GETFL): %m\n");
+  } else {
+    if (fcntl(sock, F_SETFL, on | O_NONBLOCK) == -1) {
+      syslog(LOG_ERR, "fcntl O_NONBLOCK: %m\n");
+    }
+  }
+  return (sock);
+}
+
+int
+getsocket6(int bufspace, struct interface *ifp __attribute__ ((unused)))
+{
+  struct sockaddr_in6 sin;
   int on;
   int sock = socket(AF_INET6, SOCK_DGRAM, 0);
 
   if (sock < 0) {
-    OLSR_ERROR(LOG_NETWORKING, "Cannot open socket for OLSR PDUs (%s)\n", strerror(errno));
-    olsr_exit(EXIT_FAILURE);
+    perror("socket");
+    syslog(LOG_ERR, "socket: %m");
+    return -1;
   }
 
-  if (bufspace > 0) {
+  if(bufspace > 0) {
     for (on = bufspace;; on -= 1024) {
-      if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, (char *)&on, sizeof(on)) == 0) {
-        OLSR_DEBUG(LOG_NETWORKING, "Set socket buffer space to %d\n", on);
+      if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, (char *)&on, sizeof(on)) == 0)
         break;
-      }
       if (on <= 8 * 1024) {
-        OLSR_WARN(LOG_NETWORKING, "Could not set a socket buffer space for OLSR PDUs (%s)\n", strerror(errno));
+        perror("setsockopt");
+        syslog(LOG_ERR, "setsockopt SO_RCVBUF: %m");
         break;
       }
     }
   }
 
   if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on)) < 0) {
-    OLSR_ERROR(LOG_NETWORKING, "Cannot reuse address for OLSR PDUs (%s)\n", strerror(errno));
+    perror("SO_REUSEADDR failed");
     close(sock);
-    olsr_exit(EXIT_FAILURE);
+    return -1;
   }
 
   if (setsockopt(sock, SOL_SOCKET, SO_REUSEPORT, (char *)&on, sizeof(on)) < 0) {
-    perror("SO_REUSEADDR failed");
+    perror("SO_REUSEPORT failed");
     close(sock);
     return -1;
   }
 #ifdef IPV6_RECVPKTINFO
   if (setsockopt(sock, IPPROTO_IPV6, IPV6_RECVPKTINFO, (char *)&on, sizeof(on)) < 0) {
-    OLSR_ERROR(LOG_NETWORKING, "Cannot set protocol options RECVPKTINFO for OLSR PDUs (%s)\n", strerror(errno));
+    perror("IPV6_RECVPKTINFO failed");
     close(sock);
-    olsr_exit(EXIT_FAILURE);
+    return -1;
   }
 #elif defined IPV6_PKTINFO
   if (setsockopt(sock, IPPROTO_IPV6, IPV6_PKTINFO, (char *)&on, sizeof(on)) < 0) {
-    OLSR_ERROR(LOG_NETWORKING, "Cannot set protocol options PKTINFO for OLSR PDUs (%s)\n", strerror(errno));
+    perror("IPV6_PKTINFO failed");
     close(sock);
-    olsr_exit(EXIT_FAILURE);
+    return -1;
   }
 #endif
 
-  memset(&sin6, 0, sizeof(sin6));
-  sin6.sin6_family = AF_INET6;
-  sin6.sin6_port = htons(port);
+  memset(&sin, 0, sizeof(sin));
+  sin.sin6_family = AF_INET6;
+  sin.sin6_port = htons(olsr_cnf->olsrport);
 
-  if(bind_to_unicast) {
-    memcpy(&sin6.sin6_addr, &ifp->int_src.v6.sin6_addr, sizeof(struct in6_addr));
+  if(bufspace <= 0) {
+    memcpy(&sin.sin6_addr, &ifp->int6_addr.sin6_addr, sizeof(struct in6_addr));
   }
 
-  if (bind(sock, (struct sockaddr *)&sin6, sizeof(sin6)) < 0) {
-    OLSR_ERROR(LOG_NETWORKING, "Coult not bind socket for OLSR PDUs to port (%s)\n", strerror(errno));
+  if (bind(sock, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
+    perror("bind");
+    syslog(LOG_ERR, "bind: %m");
     close(sock);
-    olsr_exit(EXIT_FAILURE);
+    return -1;
   }
 
-  set_nonblocking(sock);
+  on = fcntl(sock, F_GETFL);
+  if (on == -1) {
+    syslog(LOG_ERR, "fcntl (F_GETFL): %m\n");
+  } else {
+    if (fcntl(sock, F_SETFL, on | O_NONBLOCK) == -1) {
+      syslog(LOG_ERR, "fcntl O_NONBLOCK: %m\n");
+    }
+  }
   return sock;
-}
-
-void
-os_set_olsr_socketoptions(int sock __attribute__ ((unused))) {
 }
 
 int
@@ -444,31 +459,30 @@ join_mcast(struct interface *ifs, int sock)
   int on;
 #endif
 
-  mcastreq.ipv6mr_multiaddr = ifs->int_multicast.v6.sin6_addr;
+  mcastreq.ipv6mr_multiaddr = ifs->int6_multaddr.sin6_addr;
   mcastreq.ipv6mr_interface = ifs->if_index;
 
-  OLSR_INFO(LOG_NETWORKING, "Interface %s joining multicast %s.\n", ifs->int_name,
-            olsr_ip_to_string(&addrstr, (union olsr_ip_addr *)&ifs->int_multicast.v6.sin6_addr));
+  OLSR_PRINTF(3, "Interface %s joining multicast %s...", ifs->int_name,
+              olsr_ip_to_string(&addrstr, (union olsr_ip_addr *)&ifs->int6_multaddr.sin6_addr));
 
   /* rfc 3493 */
 #ifdef IPV6_JOIN_GROUP
   /* Join reciever group */
-  if (setsockopt(sock, IPPROTO_IPV6, IPV6_JOIN_GROUP, (char *)&mcastreq, sizeof(struct ipv6_mreq))
-      < 0)
+  if (setsockopt(sock, IPPROTO_IPV6, IPV6_JOIN_GROUP, (char *)&mcastreq, sizeof(struct ipv6_mreq)) < 0)
 #else /* rfc 2133, obsoleted */
   /* Join receiver group */
   if (setsockopt(sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char *)&mcastreq, sizeof(struct ipv6_mreq)) < 0)
 #endif
   {
-    OLSR_WARN(LOG_NETWORKING, "Cannot join multicast group (%s)\n", strerror(errno));
+    perror("Join multicast send");
     return -1;
   }
-
 
   if (setsockopt(sock, IPPROTO_IPV6, IPV6_MULTICAST_IF, (char *)&mcastreq.ipv6mr_interface, sizeof(mcastreq.ipv6mr_interface)) < 0) {
-    OLSR_WARN(LOG_NETWORKING, "Cannot set multicast interface (%s)\n", strerror(errno));
+    perror("Set multicast if");
     return -1;
   }
+
 #ifdef IPV6_USE_MIN_MTU
   /*
    * This allow multicast packets to use the full interface MTU and not
@@ -481,24 +495,24 @@ join_mcast(struct interface *ifs, int sock)
     return -1;
   }
 #endif
+
+  OLSR_PRINTF(3, "OK\n");
   return 0;
 }
 
-
-
-
 int
-get_ipv6_address(char *ifname, struct sockaddr_in6 *saddr6, int addrtype6)
+get_ipv6_address(char *ifname, struct sockaddr_in6 *saddr6, struct olsr_ip_prefix *prefix)
 {
   struct ifaddrs *ifap, *ifa;
   const struct sockaddr_in6 *sin6 = NULL;
+  const union olsr_ip_addr *tmp_ip;
   struct in6_ifreq ifr6;
   int found = 0;
   int s6;
   u_int32_t flags6;
 
   if (getifaddrs(&ifap) != 0) {
-    OLSR_WARN(LOG_NETWORKING, "getifaddrs() failed (%s).\n", strerror(errno));
+    OLSR_PRINTF(3, "get_ipv6_address: getifaddrs() failed.\n");
     return 0;
   }
 
@@ -509,12 +523,12 @@ get_ipv6_address(char *ifname, struct sockaddr_in6 *saddr6, int addrtype6)
         continue;
       strscpy(ifr6.ifr_name, ifname, sizeof(ifr6.ifr_name));
       if ((s6 = socket(AF_INET6, SOCK_DGRAM, 0)) < 0) {
-        OLSR_WARN(LOG_NETWORKING, "Cannot open datagram socket (%s)\n", strerror(errno));
+        OLSR_PRINTF(3, "socket(AF_INET6,SOCK_DGRAM)");
         break;
       }
       ifr6.ifr_addr = *sin6;
       if (ioctl(s6, SIOCGIFAFLAG_IN6, &ifr6) < 0) {
-        OLSR_WARN(LOG_NETWORKING, "ioctl(SIOCGIFAFLAG_IN6) failed (%s)", strerror(errno));
+        OLSR_PRINTF(3, "ioctl(SIOCGIFAFLAG_IN6)");
         close(s6);
         break;
       }
@@ -522,17 +536,12 @@ get_ipv6_address(char *ifname, struct sockaddr_in6 *saddr6, int addrtype6)
       flags6 = ifr6.ifr_ifru.ifru_flags6;
       if ((flags6 & IN6_IFF_ANYCAST) != 0)
         continue;
-      if (IN6_IS_ADDR_SITELOCAL(&sin6->sin6_addr)) {
-        if (addrtype6 == OLSR_IP6T_SITELOCAL)
-          found = 1;
-      } else {
-        if (addrtype6 == OLSR_IP6T_GLOBAL && (sin6->sin6_addr.s6_addr[0] != 0xfc && sin6->sin6_addr.s6_addr[0] != 0xfd))
-          found = 1;
-        else if (addrtype6 == OLSR_IP6T_UNIQUELOCAL && (sin6->sin6_addr.s6_addr[0] == 0xfc || sin6->sin6_addr.s6_addr[0] == 0xfd))
-          found = 1;
-      }
-      if (found) {
+
+      tmp_ip = (const union olsr_ip_addr *) &sin6->sin6_addr;
+      if ((prefix == NULL && !IN6_IS_ADDR_LINKLOCAL(&sin6->sin6_addr))
+          || (prefix != NULL && ip_in_net(tmp_ip, prefix))) {
         memcpy(&saddr6->sin6_addr, &sin6->sin6_addr, sizeof(struct in6_addr));
+        found = 1;
         break;
       }
     }
@@ -544,9 +553,6 @@ get_ipv6_address(char *ifname, struct sockaddr_in6 *saddr6, int addrtype6)
   return 0;
 }
 
-
-
-
 /**
  * Wrapper for sendto(2)
  */
@@ -556,7 +562,7 @@ static u_int16_t ip_id = 0;
 #endif /* SPOOF */
 
 ssize_t
-olsr_sendto(int s, const void *buf, size_t len, int flags __attribute__ ((unused)), const union olsr_sockaddr *sock)
+olsr_sendto(int s, const void *buf, size_t len, int flags __attribute__ ((unused)), const struct sockaddr *to, socklen_t tolen)
 {
 #ifdef SPOOF
   /* IPv4 for now! */
@@ -577,7 +583,7 @@ olsr_sendto(int s, const void *buf, size_t len, int flags __attribute__ ((unused
   /* initialize libnet */
   context = libnet_init(LIBNET_LINK, iface->int_name, errbuf);
   if (context == NULL) {
-    OLSR_WARN(LOG_NETWORKING, "libnet init: %s\n", libnet_geterror(context));
+    OLSR_PRINTF(1, "libnet init: %s\n", libnet_geterror(context));
     return (0);
   }
 
@@ -586,16 +592,16 @@ olsr_sendto(int s, const void *buf, size_t len, int flags __attribute__ ((unused
     ip_id = (u_int16_t) (arc4random() & 0xffff);
   }
 
-  udp_tag = libnet_build_udp(olsr_cnf->olsr_port,       /* src port */
-                             olsr_cnf->olsr_port,       /* dest port */
+  udp_tag = libnet_build_udp(olsr_cnf->olsrport,        /* src port */
+                             olsr_cnf->olsrport,        /* dest port */
                              LIBNET_UDP_H + len,        /* length */
-                             0, /* checksum */
+                             0,         /* checksum */
                              buf,       /* payload */
                              len,       /* payload size */
                              context,   /* context */
                              udp_tag);  /* pblock */
   if (udp_tag == -1) {
-    OLSR_WARN(LOG_NETWORKING, "libnet UDP header: %s\n", libnet_geterror(context));
+    OLSR_PRINTF(1, "libnet UDP header: %s\n", libnet_geterror(context));
     return (0);
   }
 
@@ -613,7 +619,7 @@ olsr_sendto(int s, const void *buf, size_t len, int flags __attribute__ ((unused
                              context,   /* context */
                              ip_tag);   /* pblock */
   if (ip_tag == -1) {
-    OLSR_WARN(LOG_NETWORKING, "libnet IP header: %s\n", libnet_geterror(context));
+    OLSR_PRINTF(1, "libnet IP header: %s\n", libnet_geterror(context));
     return (0);
   }
 
@@ -625,13 +631,13 @@ olsr_sendto(int s, const void *buf, size_t len, int flags __attribute__ ((unused
                                     context,    /* libnet handle */
                                     ether_tag); /* pblock tag */
   if (ether_tag == -1) {
-    OLSR_WARN(LOG_NETWORKING, "libnet ethernet header: %s\n", libnet_geterror(context));
+    OLSR_PRINTF(1, "libnet ethernet header: %s\n", libnet_geterror(context));
     return (0);
   }
 
   status = libnet_write(context);
   if (status == -1) {
-    OLSR_WARN(LOG_NETWORKING, "libnet packet write: %s\n", libnet_geterror(context));
+    OLSR_PRINTF(1, "libnet packet write: %s\n", libnet_geterror(context));
     return (0);
   }
 
@@ -640,17 +646,16 @@ olsr_sendto(int s, const void *buf, size_t len, int flags __attribute__ ((unused
   return (len);
 
 #else
-  return sendto(s, buf, len, flags, &sock->std, sizeof(*sock));
+  return sendto(s, buf, len, flags, (const struct sockaddr *)to, tolen);
 #endif
 }
-
 
 /**
  * Wrapper for recvfrom(2)
  */
 
 ssize_t
-olsr_recvfrom(int s, void *buf, size_t len, int flags __attribute__ ((unused)), union olsr_sockaddr *from, socklen_t * fromlen)
+olsr_recvfrom(int s, void *buf, size_t len, int flags __attribute__ ((unused)), struct sockaddr *from, socklen_t * fromlen)
 {
   struct msghdr mhdr;
   struct iovec iov;
@@ -660,19 +665,19 @@ olsr_recvfrom(int s, void *buf, size_t len, int flags __attribute__ ((unused)), 
   } cmu;
   struct cmsghdr *cm;
   struct sockaddr_dl *sdl;
+  struct sockaddr_in *sin = (struct sockaddr_in *)from;
+  struct sockaddr_in6 *sin6;
   struct in6_addr *iaddr6;
   struct in6_pktinfo *pkti;
   struct interface *ifc;
+  char addrstr[INET6_ADDRSTRLEN];
   char iname[IFNAMSIZ];
   int count;
-#ifndef REMOVE_LOG_DEBUG
-  struct ipaddr_str ipbuf;
-#endif
 
   memset(&mhdr, 0, sizeof(mhdr));
   memset(&iov, 0, sizeof(iov));
 
-  mhdr.msg_name = from;
+  mhdr.msg_name = (caddr_t) from;
   mhdr.msg_namelen = *fromlen;
   mhdr.msg_iov = &iov;
   mhdr.msg_iovlen = 1;
@@ -706,13 +711,16 @@ olsr_recvfrom(int s, void *buf, size_t len, int flags __attribute__ ((unused)), 
 
   ifc = if_ifwithsock(s);
 
-  OLSR_DEBUG(LOG_NETWORKING,
-             "%d bytes from %s, socket associated %s really received on %s\n",
-             count, olsr_sockaddr_to_string(&ipbuf, from), ifc->int_name, iname);
+  sin6 = (struct sockaddr_in6 *)from;
+  OLSR_PRINTF(4, "%d bytes from %s, socket associated %s really received on %s\n", count,
+              inet_ntop(olsr_cnf->ip_version, olsr_cnf->ip_version == AF_INET6 ? (char *)&sin6->sin6_addr : (char *)&sin->sin_addr,
+                        addrstr, sizeof(addrstr)), ifc->int_name, iname);
 
+#ifndef __NetBSD__
   if (strcmp(ifc->int_name, iname) != 0) {
     return (0);
   }
+#endif
 
   return (count);
 }
@@ -725,6 +733,72 @@ int
 olsr_select(int nfds, fd_set * readfds, fd_set * writefds, fd_set * exceptfds, struct timeval *timeout)
 {
   return select(nfds, readfds, writefds, exceptfds, timeout);
+}
+
+int
+check_wireless_interface(char *ifname)
+{
+#if (defined __FreeBSD__ || defined __FreeBSD_kernel__ ) &&  !defined FBSD_NO_80211
+
+/* From FreeBSD ifconfig/ifieee80211.c ieee80211_status() */
+  struct ieee80211req ireq;
+  u_int8_t data[32];
+
+  memset(&ireq, 0, sizeof(ireq));
+  strscpy(ireq.i_name, ifname, sizeof(ireq.i_name));
+  ireq.i_data = &data;
+  ireq.i_type = IEEE80211_IOC_SSID;
+  ireq.i_val = -1;
+  return (ioctl(olsr_cnf->ioctl_s, SIOCG80211, &ireq) >= 0) ? 1 : 0;
+#elif defined __OpenBSD__
+  struct ieee80211_nodereq nr;
+  bzero(&nr, sizeof(nr));
+  strscpy(nr.nr_ifname, ifname, sizeof(nr.nr_ifname));
+  return (ioctl(olsr_cnf->ioctl_s, SIOCG80211FLAGS, &nr) >= 0) ? 1 : 0;
+#elif defined __NetBSD__
+  struct ifreq ireq;
+  struct ieee80211_nwid data;
+  int ret;
+
+  memset(&ireq, 0, sizeof(ireq));
+  strscpy(ireq.ifr_name, ifname, sizeof(ireq.ifr_name));
+  ireq.ifr_data = &data;
+  ret = ioctl(olsr_cnf->ioctl_s, SIOCG80211NWID, &ireq);
+  if(ret == 0)
+	  return 1;
+  return 0;
+#else
+  ifname = NULL;                /* squelsh compiler warning */
+  return 0;
+#endif
+}
+
+#include <sys/sockio.h>
+
+int
+calculate_if_metric(char *ifname)
+{
+  if (check_wireless_interface(ifname)) {
+    /* Wireless */
+    return 1;
+  } else {
+    /* Ethernet */
+#if 0
+    /* Andreas: Perhaps SIOCGIFMEDIA is the way to do this? */
+    struct ifmediareq ifm;
+
+    memset(&ifm, 0, sizeof(ifm));
+    strscpy(ifm.ifm_name, ifname, sizeof(ifm.ifm_name));
+
+    if (ioctl(olsr_cnf->ioctl_s, SIOCGIFMEDIA, &ifm) < 0) {
+      OLSR_PRINTF(1, "Error SIOCGIFMEDIA(%s)\n", ifm.ifm_name);
+      return WEIGHT_ETHERNET_DEFAULT;
+    }
+
+    OLSR_PRINTF(1, "%s: STATUS 0x%08x\n", ifm.ifm_name, ifm.ifm_status);
+#endif
+    return WEIGHT_ETHERNET_DEFAULT;
+  }
 }
 
 /*

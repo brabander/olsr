@@ -70,6 +70,9 @@ enum log_source {
   LOG_DUPLICATE_SET,                   //!< LOG_DUPLICATE_SET
   LOG_COOKIE,                          //!< LOG_COOKIE
   LOG_COMPORT,                         //!< LOG_COMPORT
+  LOG_APM,                             //!< LOG_APM
+  LOG_RTNETLINK,                       //!< LOG_RTNETLINK
+  LOG_TUNNEL,                          //!< LOG_TUNNEL
 
   /* this one must be the last of the enums ! */
   LOG_SOURCE_COUNT                     //!< LOG_SOURCE_COUNT

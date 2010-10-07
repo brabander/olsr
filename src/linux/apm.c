@@ -1,7 +1,7 @@
 
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
+ * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,7 +46,6 @@
 
 #include "apm.h"
 #include "defs.h"
-#include "olsr_cfg.h"
 #include "olsr_logging.h"
 
 #include <stdio.h>
@@ -70,7 +69,6 @@ struct linux_apm_info {
   int using_minutes;
 };
 
-
 /* ACPI related stuff */
 static const char *const acpi_info[] = {
   "/proc/acpi/battery/0/info",
@@ -88,9 +86,7 @@ static const char *const acpi_state[] = {
   "/proc/acpi/battery/BAT1/state"
 };
 
-
 #define ACPI_BT_CNT  ARRAYSIZE(acpi_state)
-
 
 static const char *const acpi_ac[] = {
   "/proc/acpi/ac_adapter/0/status",
@@ -99,7 +95,6 @@ static const char *const acpi_ac[] = {
 };
 
 #define ACPI_AC_CNT  ARRAYSIZE(acpi_ac)
-
 
 #define USE_APM    1
 #define USE_ACPI   2
@@ -112,15 +107,11 @@ static int ac_power_on;
 
 /* Prototypes */
 
-static int
-  apm_read_apm(struct olsr_apm_info *);
+static int apm_read_apm(struct olsr_apm_info *);
 
-static int
-  apm_read_acpi(struct olsr_apm_info *);
+static int apm_read_acpi(struct olsr_apm_info *);
 
-static int
-  acpi_probe(void);
-
+static int acpi_probe(void);
 
 int
 apm_init(void)
@@ -128,7 +119,7 @@ apm_init(void)
   struct olsr_apm_info ainfo;
 
   method = -1;
-  OLSR_INFO(LOG_MAIN, "Initializing APM\n");
+  OLSR_INFO(LOG_APM, "Initializing APM\n");
 
   if ((((fd_index = acpi_probe()) >= 0) || ac_power_on) && apm_read_acpi(&ainfo))
     method = USE_ACPI;
@@ -141,16 +132,14 @@ apm_init(void)
   return method;
 }
 
-
 void
 apm_printinfo(struct olsr_apm_info *ainfo)
 {
-  OLSR_INFO(LOG_MAIN, "APM info:\n\tAC status %d\n\tBattery percentage %d%%\n\tBattery time left %d mins\n\n",
-            ainfo->ac_line_status, ainfo->battery_percentage, ainfo->battery_time_left);
+  OLSR_DEBUG(LOG_APM, "APM info:\n\tAC status %d\n\tBattery percentage %d%%\n\tBattery time left %d mins\n\n", ainfo->ac_line_status,
+              ainfo->battery_percentage, ainfo->battery_time_left);
 
   ainfo = NULL;                 /* squelch compiler warnings */
 }
-
 
 int
 apm_read(struct olsr_apm_info *ainfo)
@@ -165,7 +154,6 @@ apm_read(struct olsr_apm_info *ainfo)
   }
   return 0;
 }
-
 
 static int
 apm_read_apm(struct olsr_apm_info *ainfo)
@@ -187,24 +175,19 @@ apm_read_apm(struct olsr_apm_info *ainfo)
 
     if (fgets(buffer, sizeof(buffer), apm_procfile) == NULL) {
       /* Giving up */
-      OLSR_WARN(LOG_MAIN, "OLSRD: Could not read APM info - setting willingness to default\n");
+      OLSR_WARN(LOG_APM, "OLSRD: Could not read APM info - setting willingness to default");
       fclose(apm_procfile);
       return 0;
     }
   }
   fclose(apm_procfile);
 
-
   //printf("READ: %s\n", buffer);
 
   /* Get the info */
-  sscanf(buffer, "%s %d.%d %x %x %x %x %d%% %d %s\n",
-         lainfo.driver_version,
-         &lainfo.apm_version_major,
-         &lainfo.apm_version_minor,
-         &lainfo.apm_flags,
-         &lainfo.ac_line_status,
-         &lainfo.battery_status, &lainfo.battery_flags, &lainfo.battery_percentage, &lainfo.battery_time, units);
+  sscanf(buffer, "%s %d.%d %x %x %x %x %d%% %d %s\n", lainfo.driver_version, &lainfo.apm_version_major, &lainfo.apm_version_minor,
+         &lainfo.apm_flags, &lainfo.ac_line_status, &lainfo.battery_status, &lainfo.battery_flags, &lainfo.battery_percentage,
+         &lainfo.battery_time, units);
 
   lainfo.using_minutes = strncmp(units, "min", 3) ? 0 : 1;
 
@@ -230,7 +213,6 @@ apm_read_apm(struct olsr_apm_info *ainfo)
 
   return 1;
 }
-
 
 static int
 apm_read_acpi(struct olsr_apm_info *ainfo)
@@ -273,7 +255,6 @@ apm_read_acpi(struct olsr_apm_info *ainfo)
   }
   fclose(fd);
 
-
   if ((fd = fopen(acpi_state[fd_index], "r")) == NULL)
     return 0;
 
@@ -298,7 +279,6 @@ apm_read_acpi(struct olsr_apm_info *ainfo)
 
   return 1;
 }
-
 
 static int
 acpi_probe(void)

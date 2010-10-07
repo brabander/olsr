@@ -53,13 +53,13 @@
 #include "olsr_spf.h"
 #include "scheduler.h"
 #include "apm.h"
-#include "os_misc.h"
 #include "neighbor_table.h"
 #include "lq_packet.h"
 #include "common/avl.h"
 #include "net_olsr.h"
 #include "lq_plugin.h"
 #include "olsr_logging.h"
+#include "os_log.h"
 
 #include <assert.h>
 #include <stdarg.h>

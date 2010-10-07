@@ -59,6 +59,10 @@
 #include "hna_set.h"
 #include "common/string.h"
 
+#ifdef linux
+#include "linux/linux_net.h"
+#endif
+
 #include <assert.h>
 #include <signal.h>
 #include <sys/types.h>
@@ -70,36 +74,9 @@
 #include <netdb.h>
 #include <unistd.h>
 #include <errno.h>
+#include <fcntl.h>
 
 #define BUFSPACE  (127*1024)    /* max. input buffer size to request */
-
-#if 0
-int
-set_flag(char *ifname, short flag __attribute__ ((unused)))
-{
-  struct ifreq ifr;
-
-  /* Get flags */
-  strscpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
-  if (ioctl(olsr_cnf->ioctl_s, SIOCGIFFLAGS, &ifr) < 0) {
-    fprintf(stderr, "ioctl (get interface flags)");
-    return -1;
-  }
-
-  strscpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
-  //printf("Setting flags for if \"%s\"\n", ifr.ifr_name);
-  if ((ifr.ifr_flags & (IFF_UP | IFF_RUNNING)) == 0) {
-    /* Add UP */
-    ifr.ifr_flags |= (IFF_UP | IFF_RUNNING);
-    /* Set flags + UP */
-    if (ioctl(olsr_cnf->ioctl_s, SIOCSIFFLAGS, &ifr) < 0) {
-      fprintf(stderr, "ERROR(%s): %s\n", ifr.ifr_name, strerror(errno));
-      return -1;
-    }
-  }
-  return 1;
-}
-#endif
 
 /**
  * Checks if an initialized interface is changed
@@ -131,7 +108,7 @@ chk_if_changed(struct olsr_if_config *iface)
   /* Get flags (and check if interface exists) */
   if (ioctl(olsr_cnf->ioctl_s, SIOCGIFFLAGS, &ifr) < 0) {
     OLSR_WARN(LOG_INTERFACE, "No such interface: %s\n", iface->name);
-    remove_interface(&iface->interf);
+    remove_interface(iface->interf);
     return 0;
   }
   int_flags = ifr.ifr_flags;
@@ -141,7 +118,7 @@ chk_if_changed(struct olsr_if_config *iface)
    */
   if ((int_flags & IFF_UP) == 0) {
     OLSR_DEBUG(LOG_INTERFACE, "\tInterface %s not up - removing it...\n", iface->name);
-    remove_interface(&iface->interf);
+    remove_interface(iface->interf);
     return 0;
   }
 
@@ -155,13 +132,13 @@ chk_if_changed(struct olsr_if_config *iface)
   if (olsr_cnf->ip_version == AF_INET && !iface->cnf->ipv4_broadcast.v4.s_addr &&       /* Skip if fixed bcast */
       ((int_flags & IFF_BROADCAST)) == 0) {
     OLSR_DEBUG(LOG_INTERFACE, "\tNo broadcast - removing\n");
-    remove_interface(&iface->interf);
+    remove_interface(iface->interf);
     return 0;
   }
 
   if (int_flags & IFF_LOOPBACK) {
     OLSR_DEBUG(LOG_INTERFACE, "\tThis is a loopback interface - removing it...\n");
-    remove_interface(&iface->interf);
+    remove_interface(iface->interf);
     return 0;
   }
 
@@ -199,7 +176,7 @@ chk_if_changed(struct olsr_if_config *iface)
         OLSR_WARN(LOG_INTERFACE, "\tCould not find global IPv6 address for %s\n", ifr.ifr_name);
       else
         OLSR_WARN(LOG_INTERFACE, "\tCould not find an IPv6 address for %s\n", ifr.ifr_name);
-      remove_interface(&iface->interf);
+      remove_interface(iface->interf);
       return 0;
     }
 
@@ -223,7 +200,7 @@ chk_if_changed(struct olsr_if_config *iface)
     /* Check interface address (IPv4) */
     if (ioctl(olsr_cnf->ioctl_s, SIOCGIFADDR, &ifr) < 0) {
       OLSR_DEBUG(LOG_INTERFACE, "\tCould not get address of interface - removing it\n");
-      remove_interface(&iface->interf);
+      remove_interface(iface->interf);
       return 0;
     }
 
@@ -244,7 +221,7 @@ chk_if_changed(struct olsr_if_config *iface)
     /* Check netmask */
     if (ioctl(olsr_cnf->ioctl_s, SIOCGIFNETMASK, &ifr) < 0) {
       OLSR_WARN(LOG_INTERFACE, "%s: ioctl (get broadaddr) failed", ifr.ifr_name);
-      remove_interface(&iface->interf);
+      remove_interface(iface->interf);
       return 0;
     }
 
@@ -435,12 +412,6 @@ os_init_interface(struct interface *ifp, struct olsr_if_config *iface)
       ifp->int_multicast.v4 = *(struct sockaddr_in *)(ARM_NOWARN_ALIGN(&ifr.ifr_broadaddr));
     }
 
-    /* Deactivate IP spoof filter */
-    deactivate_spoof(ifr_basename, ifp, olsr_cnf->ip_version);
-
-    /* Disable ICMP redirects */
-    disable_redirects(ifr_basename, ifp, olsr_cnf->ip_version);
-
     ifp->int_src.v4.sin_family = AF_INET;
     ifp->int_src.v4.sin_port = htons(olsr_cnf->olsr_port);
     ifp->int_multicast.v4.sin_family = AF_INET;
@@ -485,11 +456,41 @@ os_init_interface(struct interface *ifp, struct olsr_if_config *iface)
    */
   ifp->int_name = olsr_strdup(ifr_basename);
 
-#if 0
-  ifp->gen_properties = NULL;
+  if (olsr_cnf->ip_version == AF_INET6) {
+    join_mcast(ifp, ifp->olsr_socket);
+    join_mcast(ifp, ifp->send_socket);
+  }
+  /* Set interface options */
+#ifdef linux
+  net_os_set_ifoptions(ifr_basename, ifp);
 #endif
+
   return 0;
 }
+
+void
+os_cleanup_interface(struct interface *ifp) {
+#ifdef linux
+  net_os_restore_ifoption(ifp);
+#endif
+}
+
+int
+set_nonblocking(int fd)
+{
+  /* make the fd non-blocking */
+  int socket_flags = fcntl(fd, F_GETFL);
+  if (socket_flags < 0) {
+    OLSR_WARN(LOG_NETWORKING, "Cannot get the socket flags: %s", strerror(errno));
+    return -1;
+  }
+  if (fcntl(fd, F_SETFL, socket_flags | O_NONBLOCK) < 0) {
+    OLSR_WARN(LOG_NETWORKING, "Cannot set the socket flags: %s", strerror(errno));
+    return -1;
+  }
+  return 0;
+}
+
 
 /*
  * Local Variables:

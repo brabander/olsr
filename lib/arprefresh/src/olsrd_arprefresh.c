@@ -63,7 +63,7 @@
 
 #include "olsrd_arprefresh.h"
 #include "scheduler.h"
-#include "os_misc.h"
+#include "os_net.h"
 #include "olsr_logging.h"
 #include "olsr_cfg.h"
 

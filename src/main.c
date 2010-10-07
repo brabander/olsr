@@ -55,7 +55,6 @@
 #include "plugin_loader.h"
 #include "apm.h"
 #include "net_olsr.h"
-#include "os_misc.h"
 #include "olsr_cfg_gen.h"
 #include "common/string.h"
 #include "mid_set.h"
@@ -261,10 +260,8 @@ main(int argc, char *argv[])
   /* Initialize SPF */
   olsr_init_spf();
 
-#ifndef WIN32
-  /* Disable redirects globally */
-  disable_redirects_global(olsr_cnf->ip_version);
-#endif
+  /* set global interface options */
+  os_init_global_ifoptions();
 
   /*
    * socket for ioctl calls
@@ -299,11 +296,6 @@ main(int argc, char *argv[])
     olsr_exit(EXIT_FAILURE);
   }
 #endif
-
-  /*
-   *enable ip forwarding on host
-   */
-  enable_ip_forwarding(olsr_cnf->ip_version);
 
   /* Initialize parser */
   olsr_init_parser();
@@ -575,7 +567,7 @@ olsr_shutdown(void)
 #endif
 
   /* Reset network settings */
-  restore_settings(olsr_cnf->ip_version);
+  os_cleanup_global_ifoptions();
 
   /* ioctl socket */
   CLOSESOCKET(olsr_cnf->ioctl_s);

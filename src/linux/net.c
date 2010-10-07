@@ -1,7 +1,7 @@
 
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
+ * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,37 +39,50 @@
  *
  */
 
-
 /*
  * Linux spesific code
  */
 
-#include "os_net.h"
-#include "os_misc.h"
 #include "ipcalc.h"
 #include "common/string.h"
 #include "olsr_protocol.h"
 #include "olsr_logging.h"
 #include "olsr.h"
+#include "os_kernel_tunnel.h"
+#include "os_net.h"
+#include "linux/linux_net.h"
 
 #include <net/if.h>
+#include <netinet/ip.h>
 
 #include <sys/ioctl.h>
+#include <sys/utsname.h>
 
 #include <fcntl.h>
 #include <string.h>
 #include <stdio.h>
 #include <syslog.h>
-#include <errno.h>
 #include <unistd.h>
-#include <assert.h>
-#include <netinet/ip.h>
+
+#define IPV6_ADDR_LOOPBACK      0x0010U
+#define IPV6_ADDR_LINKLOCAL     0x0020U
+#define IPV6_ADDR_SITELOCAL     0x0040U
+
+/* ip forwarding */
+#define PROC_IPFORWARD_V4 "/proc/sys/net/ipv4/ip_forward"
+#define PROC_IPFORWARD_V6 "/proc/sys/net/ipv6/conf/all/forwarding"
 
 /* Redirect proc entry */
-#define REDIRECT_PROC "/proc/sys/net/ipv4/conf/%s/send_redirects"
+#define PROC_IF_REDIRECT "/proc/sys/net/ipv4/conf/%s/send_redirects"
+#define PROC_ALL_REDIRECT "/proc/sys/net/ipv4/conf/all/send_redirects"
 
 /* IP spoof proc entry */
-#define SPOOF_PROC "/proc/sys/net/ipv4/conf/%s/rp_filter"
+#define PROC_IF_SPOOF "/proc/sys/net/ipv4/conf/%s/rp_filter"
+#define PROC_ALL_SPOOF "/proc/sys/net/ipv4/conf/all/rp_filter"
+
+
+/* list of IPv6 interfaces */
+#define PATH_PROCNET_IFINET6           "/proc/net/if_inet6"
 
 /*
  *Wireless definitions for ioctl calls
@@ -81,6 +94,199 @@
 /* The original state of the IP forwarding proc entry */
 static char orig_fwd_state;
 static char orig_global_redirect_state;
+static char orig_global_rp_filter;
+static char orig_tunnel_rp_filter;
+#if 0 // should not be necessary for IPv6 */
+static char orig_tunnel6_rp_filter;
+#endif
+
+static int writeToProc(const char *file, char *old, char value) {
+  int fd;
+  char rv;
+
+  if ((fd = open(file, O_RDWR)) < 0) {
+    OLSR_WARN(LOG_INTERFACE, "Cannot open proc entry %s: %s (%d)\n", file, strerror(errno), errno);
+    return -1;
+  }
+
+  if (read(fd, &rv, 1) != 1) {
+    OLSR_WARN(LOG_INTERFACE, "Cannot read proc entry %s: %s (%d)\n", file, strerror(errno), errno);
+    return -1;
+  }
+
+  if (rv != value) {
+    if (lseek(fd, SEEK_SET, 0) == -1) {
+      OLSR_WARN(LOG_INTERFACE, "Cannot rewind proc entry %s: %s (%d)\n", file, strerror(errno), errno);
+      return -1;
+    }
+
+    if (write(fd, &value, 1) != 1) {
+      OLSR_WARN(LOG_INTERFACE, "Cannot write proc entry %s: %s (%d)\n", file, strerror(errno), errno);
+      return -1;
+    }
+  }
+
+  if (close(fd) != 0) {
+    OLSR_WARN(LOG_INTERFACE, "Cannot close proc entry %s: %s (%d)\n", file, strerror(errno), errno);
+    return -1;
+  }
+
+  if (old) {
+    *old = rv;
+  }
+  OLSR_DEBUG(LOG_INTERFACE, "Writing '%c' (was %c) to %s", value, rv, file);
+  return 0;
+}
+
+static bool is_at_least_linuxkernel_2_6_31(void) {
+  struct utsname uts;
+
+  memset(&uts, 0, sizeof(uts));
+  if (uname(&uts)) {
+    OLSR_WARN(LOG_NETWORKING, "Cannot not read kernel version: %s (%d)\n", strerror(errno), errno);
+    return false;
+  }
+
+  if (strncmp(uts.release, "2.6.",4) != 0) {
+    return false;
+  }
+  return atoi(&uts.release[4]) >= 31;
+}
+
+/**
+ * Setup global interface options (icmp redirect, ip forwarding, rp_filter)
+ * @return 1 on success 0 on failure
+ */
+void
+os_init_global_ifoptions(void) {
+  if (writeToProc(olsr_cnf->ip_version == AF_INET ? PROC_IPFORWARD_V4 : PROC_IPFORWARD_V6, &orig_fwd_state, '1')) {
+    OLSR_WARN(LOG_INTERFACE, "Warning, could not enable IP forwarding!\n"
+        "you should manually ensure that IP forwarding is enabled!\n\n");
+    // TODO olsr_startup_sleep(3);
+  }
+
+  if (olsr_cnf->smart_gw_active) {
+    char procfile[FILENAME_MAX];
+
+    /* Generate the procfile name */
+    if (olsr_cnf->ip_version == AF_INET || olsr_cnf->use_niit) {
+      snprintf(procfile, sizeof(procfile), PROC_IF_SPOOF, TUNNEL_ENDPOINT_IF);
+      if (writeToProc(procfile, &orig_tunnel_rp_filter, '0')) {
+        OLSR_WARN(LOG_INTERFACE, "WARNING! Could not disable the IP spoof filter for tunnel!\n"
+            "you should mannually ensure that IP spoof filtering is disabled!\n\n");
+
+        // TODO olsr_startup_sleep(3);
+      }
+    }
+  }
+
+  if (olsr_cnf->ip_version == AF_INET) {
+    if (writeToProc(PROC_ALL_REDIRECT, &orig_global_redirect_state, '0')) {
+      OLSR_WARN(LOG_INTERFACE, "WARNING! Could not disable ICMP redirects!\n"
+          "you should manually ensure that ICMP redirects are disabled!\n\n");
+
+      // TODO olsr_startup_sleep(3);
+    }
+
+    /* check kernel version and disable global rp_filter */
+    if (is_at_least_linuxkernel_2_6_31()) {
+      if (writeToProc(PROC_ALL_SPOOF, &orig_global_rp_filter, '0')) {
+        OLSR_WARN(LOG_INTERFACE, "WARNING! Could not disable global rp_filter (necessary for kernel 2.6.31 and higher!\n"
+            "you should manually ensure that rp_filter is disabled!\n\n");
+
+        // TODO olsr_startup_sleep(3);
+      }
+    }
+  }
+  return;
+}
+
+/**
+ *
+ *@return 1 on sucess 0 on failiure
+ */
+int
+net_os_set_ifoptions(const char *if_name, struct interface *iface)
+{
+  char procfile[FILENAME_MAX];
+  if (olsr_cnf->ip_version == AF_INET6)
+    return -1;
+
+  /* Generate the procfile name */
+  snprintf(procfile, sizeof(procfile), PROC_IF_REDIRECT, if_name);
+
+  if (writeToProc(procfile, &iface->nic_state.redirect, '0')) {
+    OLSR_WARN(LOG_INTERFACE, "WARNING! Could not disable ICMP redirects!\n"
+        "you should mannually ensure that ICMP redirects are disabled!\n\n");
+    // TODO olsr_startup_sleep(3);
+    return 0;
+  }
+
+  /* Generate the procfile name */
+  snprintf(procfile, sizeof(procfile), PROC_IF_SPOOF, if_name);
+
+  if (writeToProc(procfile, &iface->nic_state.spoof, '0')) {
+    OLSR_WARN(LOG_INTERFACE, "WARNING! Could not disable the IP spoof filter!\n"
+        "you should mannually ensure that IP spoof filtering is disabled!\n\n");
+
+    // TODO olsr_startup_sleep(3);
+    return 0;
+  }
+  return 1;
+}
+
+void net_os_restore_ifoption(struct interface *ifs) {
+  char procfile[FILENAME_MAX];
+
+  /* ICMP redirects */
+  snprintf(procfile, sizeof(procfile), PROC_IF_REDIRECT, ifs->int_name);
+  if (writeToProc(procfile, NULL, ifs->nic_state.redirect)) {
+    OLSR_WARN(LOG_INTERFACE, "Could not restore icmp_redirect for interface %s\n", ifs->int_name);
+  }
+
+  /* Spoof filter */
+  sprintf(procfile, PROC_IF_SPOOF, ifs->int_name);
+  if (writeToProc(procfile, NULL, ifs->nic_state.spoof)) {
+    OLSR_WARN(LOG_INTERFACE, "Could not restore rp_filter for interface %s\n", ifs->int_name);
+  }
+}
+/**
+ *Resets the spoof filter and ICMP redirect settings
+ */
+int
+os_cleanup_global_ifoptions(void)
+{
+  char procfile[FILENAME_MAX];
+  OLSR_DEBUG(LOG_INTERFACE, "Restoring network state\n");
+
+  /* Restore IP forwarding to "off" */
+  if (writeToProc(olsr_cnf->ip_version == AF_INET ? PROC_IPFORWARD_V4 : PROC_IPFORWARD_V6, NULL, orig_fwd_state)) {
+    OLSR_WARN(LOG_INTERFACE, "Could not restore ip_forward settings\n");
+  }
+
+  if (olsr_cnf->smart_gw_active && (olsr_cnf->ip_version == AF_INET || olsr_cnf->use_niit)) {
+    /* Generate the procfile name */
+    snprintf(procfile, sizeof(procfile), PROC_IF_SPOOF, TUNNEL_ENDPOINT_IF);
+    if (writeToProc(procfile, NULL, orig_tunnel_rp_filter)) {
+      OLSR_WARN(LOG_INTERFACE, "WARNING! Could not restore the IP spoof filter for tunnel!\n");
+    }
+  }
+
+  if (olsr_cnf->ip_version == AF_INET) {
+    /* Restore global ICMP redirect setting */
+    if (writeToProc(PROC_ALL_REDIRECT, NULL, orig_global_redirect_state)) {
+      OLSR_WARN(LOG_INTERFACE, "Could not restore global icmp_redirect setting\n");
+    }
+
+    /* Restore global rp_filter setting for linux 2.6.31+ */
+    if (is_at_least_linuxkernel_2_6_31()) {
+      if (writeToProc(PROC_ALL_SPOOF, NULL, orig_global_rp_filter)) {
+        OLSR_WARN(LOG_INTERFACE, "Could not restore global rp_filter setting\n");
+      }
+    }
+  }
+  return 1;
+}
 
 /**
  *Bind a socket to a device
@@ -101,247 +307,6 @@ bind_socket_to_device(int sock, char *dev_name)
   return setsockopt(sock, SOL_SOCKET, SO_BINDTODEVICE, dev_name, strlen(dev_name) + 1);
 }
 
-
-/**
- *Enable IP forwarding.
- *Just writing "1" to the /proc/sys/net/ipv4/ip_forward
- *if using IPv4 or /proc/sys/net/ipv6/conf/all/forwarding
- *if using IPv6.
- *Could probably drop the check for
- *"0" here and write "1" anyways.
- *
- *@param version IP version.
- *
- *@return 1 on sucess 0 on failiure
- */
-int
-enable_ip_forwarding(int version)
-{
-  const char *const procfile = version == AF_INET ? "/proc/sys/net/ipv4/ip_forward" : "/proc/sys/net/ipv6/conf/all/forwarding";
-  FILE *proc_fwd = fopen(procfile, "r");
-
-  if (proc_fwd == NULL) {
-    OLSR_WARN(LOG_NETWORKING,
-              "WARNING! Could not open the %s file to check/enable IP forwarding!\n"
-              "Are you using the procfile filesystem?\nDoes your system support IPv%d?\n"
-              "I will continue(in 3 sec) - but you should manually ensure that IP forwarding is enabled!\n\n",
-              procfile, version == AF_INET ? 4 : 6);
-    sleep(3);
-    return 0;
-  }
-  orig_fwd_state = fgetc(proc_fwd);
-  fclose(proc_fwd);
-
-  if (orig_fwd_state == '1') {
-    OLSR_INFO(LOG_NETWORKING, "\nIP forwarding is enabled on this system\n");
-  } else {
-    proc_fwd = fopen(procfile, "w");
-    if (proc_fwd == NULL) {
-      OLSR_WARN(LOG_NETWORKING, "Could not open %s for writing!\n"
-                "I will continue(in 3 sec) - but you should manually ensure that IP forwarding is enabeled!\n\n", procfile);
-      sleep(3);
-      return 0;
-    }
-    fputs("1", proc_fwd);
-    fclose(proc_fwd);
-  }
-  return 1;
-}
-
-int
-disable_redirects_global(int version)
-{
-  FILE *proc_redirect;
-  const char *const procfile = "/proc/sys/net/ipv4/conf/all/send_redirects";
-
-  if (version == AF_INET6) {
-    return -1;
-  }
-  proc_redirect = fopen(procfile, "r");
-  if (proc_redirect == NULL) {
-    OLSR_WARN(LOG_NETWORKING,
-              "WARNING! Could not open the %s file to check/disable ICMP redirects!\n"
-              "Are you using the procfile filesystem?\n"
-              "Does your system support IPv4?\n"
-              "I will continue(in 3 sec) - but you should manually ensure that ICMP redirects are disabled!\n\n", procfile);
-    sleep(3);
-    return -1;
-  }
-  orig_global_redirect_state = fgetc(proc_redirect);
-  fclose(proc_redirect);
-
-  if (orig_global_redirect_state == '0') {
-    return 0;
-  }
-  proc_redirect = fopen(procfile, "w");
-  if (proc_redirect == NULL) {
-    OLSR_WARN(LOG_NETWORKING, "Could not open %s for writing!\n"
-              "I will continue(in 3 sec) - but you should manually ensure that ICMP redirect is disabled!\n\n", procfile);
-    sleep(3);
-    return 0;
-  }
-  fputs("0", proc_redirect);
-  fclose(proc_redirect);
-  return 1;
-}
-
-/**
- *
- *@return 1 on sucess 0 on failiure
- */
-int
-disable_redirects(const char *if_name, struct interface *iface, int version)
-{
-  FILE *proc_redirect;
-  char procfile[FILENAME_MAX];
-
-  if (version == AF_INET6) {
-    return -1;
-  }
-
-  /* Generate the procfile name */
-  snprintf(procfile, sizeof(procfile), REDIRECT_PROC, if_name);
-
-  proc_redirect = fopen(procfile, "r");
-  if (proc_redirect == NULL) {
-    OLSR_WARN(LOG_NETWORKING,
-              "WARNING! Could not open the %s file to check/disable ICMP redirects!\n"
-              "Are you using the procfile filesystem?\n"
-              "Does your system support IPv4?\n"
-              "I will continue(in 3 sec) - but you should manually ensure that ICMP redirects are disabled!\n\n", procfile);
-    sleep(3);
-    return 0;
-  }
-  iface->nic_state.redirect = fgetc(proc_redirect);
-  fclose(proc_redirect);
-
-  proc_redirect = fopen(procfile, "w");
-  if (proc_redirect == NULL) {
-    OLSR_WARN(LOG_NETWORKING, "Could not open %s for writing!\n"
-              "I will continue(in 3 sec) - but you should manually ensure that ICMP redirect is disabled!\n\n", procfile);
-    sleep(3);
-    return 0;
-  }
-  fputs("0", proc_redirect);
-  fclose(proc_redirect);
-  return 1;
-}
-
-/**
- *
- *@return 1 on sucess 0 on failiure
- */
-int
-deactivate_spoof(const char *if_name, struct interface *iface, int version)
-{
-  FILE *proc_spoof;
-  char procfile[FILENAME_MAX];
-
-  if (version == AF_INET6) {
-    return -1;
-  }
-
-  /* Generate the procfile name */
-  sprintf(procfile, SPOOF_PROC, if_name);
-
-  proc_spoof = fopen(procfile, "r");
-  if (proc_spoof == NULL) {
-    OLSR_WARN(LOG_NETWORKING,
-              "WARNING! Could not open the %s file to check/disable the IP spoof filter!\n"
-              "Are you using the procfile filesystem?\n"
-              "Does your system support IPv4?\n"
-              "I will continue(in 3 sec) - but you should manually ensure that IP spoof filtering is disabled!\n\n", procfile);
-    sleep(3);
-    return 0;
-  }
-  iface->nic_state.spoof = fgetc(proc_spoof);
-  fclose(proc_spoof);
-
-  proc_spoof = fopen(procfile, "w");
-  if (proc_spoof == NULL) {
-    OLSR_WARN(LOG_NETWORKING, "Could not open %s for writing!\n"
-              "I will continue(in 3 sec) - but you should manually ensure that IP spoof filtering is disabled!\n\n", procfile);
-    sleep(3);
-    return 0;
-  }
-  fputs("0", proc_spoof);
-  fclose(proc_spoof);
-  return 1;
-}
-
-/**
- *Resets the spoof filter and ICMP redirect settings
- */
-int
-restore_settings(int version)
-{
-  struct interface *ifs;
-  struct list_iterator iterator;
-
-  OLSR_INFO(LOG_NETWORKING, "Restoring network state\n");
-
-  /* Restore IP forwarding to "off" */
-  if (orig_fwd_state == '0') {
-    const char *const procfile = version == AF_INET ? "/proc/sys/net/ipv4/ip_forward" : "/proc/sys/net/ipv6/conf/all/forwarding";
-    FILE *proc_fd = fopen(procfile, "w");
-
-    if (proc_fd == NULL) {
-      OLSR_WARN(LOG_NETWORKING, "Could not open %s for writing!\nSettings not restored!\n", procfile);
-    } else {
-      fputc(orig_fwd_state, proc_fd);
-      fclose(proc_fd);
-    }
-  }
-
-  /* Restore global ICMP redirect setting */
-  if (orig_global_redirect_state != '0') {
-    if (version == AF_INET) {
-      const char *const procfile = "/proc/sys/net/ipv4/conf/all/send_redirects";
-      FILE *proc_fd = fopen(procfile, "w");
-
-      if (proc_fd == NULL) {
-        OLSR_WARN(LOG_NETWORKING, "Could not open %s for writing!\nSettings not restored!\n", procfile);
-      } else {
-        fputc(orig_global_redirect_state, proc_fd);
-        fclose(proc_fd);
-      }
-    }
-  }
-
-  if (version == AF_INET6) {
-    return 0;
-  }
-
-  OLSR_FOR_ALL_INTERFACES(ifs, iterator) {
-    char procfile[FILENAME_MAX];
-    FILE *proc_fd;
-    /* ICMP redirects */
-
-    /* Generate the procfile name */
-    snprintf(procfile, sizeof(procfile), REDIRECT_PROC, ifs->int_name);
-    proc_fd = fopen(procfile, "w");
-    if (proc_fd == NULL) {
-      OLSR_WARN(LOG_NETWORKING, "Could not open %s for writing!\nSettings not restored!\n", procfile);
-    } else {
-      fputc(ifs->nic_state.redirect, proc_fd);
-      fclose(proc_fd);
-    }
-
-    /* Spoof filter */
-
-    /* Generate the procfile name */
-    sprintf(procfile, SPOOF_PROC, ifs->int_name);
-    proc_fd = fopen(procfile, "w");
-    if (proc_fd == NULL) {
-      OLSR_WARN(LOG_NETWORKING, "Could not open %s for writing!\nSettings not restored!\n", procfile);
-    } else {
-      fputc(ifs->nic_state.spoof, proc_fd);
-      fclose(proc_fd);
-    }
-  }
-
-  return 1;
-}
 
 /**
  *Creates a nonblocking broadcast socket.
@@ -664,6 +629,56 @@ olsr_select(int nfds, fd_set * readfds, fd_set * writefds, fd_set * exceptfds, s
 {
   return select(nfds, readfds, writefds, exceptfds, timeout);
 }
+
+bool olsr_if_isup(const char * dev)
+{
+  struct ifreq ifr;
+
+  memset(&ifr, 0, sizeof(ifr));
+  strscpy(ifr.ifr_name, dev, IFNAMSIZ);
+
+  if (ioctl(olsr_cnf->ioctl_s, SIOCGIFFLAGS, &ifr) < 0) {
+    OLSR_WARN(LOG_INTERFACE, "ioctl SIOCGIFFLAGS (get flags) error on device %s: %s (%d)\n",
+        dev, strerror(errno), errno);
+    return 1;
+  }
+  return (ifr.ifr_flags & IFF_UP) != 0;
+}
+
+int olsr_if_set_state(const char *dev, bool up) {
+  int oldflags;
+  struct ifreq ifr;
+
+  memset(&ifr, 0, sizeof(ifr));
+  strscpy(ifr.ifr_name, dev, IFNAMSIZ);
+
+  if (ioctl(olsr_cnf->ioctl_s, SIOCGIFFLAGS, &ifr) < 0) {
+    OLSR_WARN(LOG_INTERFACE, "ioctl SIOCGIFFLAGS (get flags) error on device %s: %s (%d)\n",
+        dev, strerror(errno), errno);
+    return 1;
+  }
+
+  oldflags = ifr.ifr_flags;
+  if (up) {
+    ifr.ifr_flags |= IFF_UP;
+  }
+  else {
+    ifr.ifr_flags &= ~IFF_UP;
+  }
+
+  if (oldflags == ifr.ifr_flags) {
+    /* interface is already up/down */
+    return 0;
+  }
+
+  if (ioctl(olsr_cnf->ioctl_s, SIOCSIFFLAGS, &ifr) < 0) {
+    OLSR_WARN(LOG_INTERFACE, "ioctl SIOCSIFFLAGS (set flags %s) error on device %s: %s (%d)\n",
+        up ? "up" : "down", dev, strerror(errno), errno);
+    return 1;
+  }
+  return 0;
+}
+
 /*
  * Local Variables:
  * c-basic-offset: 2

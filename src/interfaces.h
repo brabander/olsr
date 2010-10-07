@@ -201,7 +201,7 @@ bool init_interfaces(void);
 bool EXPORT(is_lost_interface_ip)(union olsr_ip_addr *ip);
 void destroy_interfaces(void);
 struct interface *add_interface(struct olsr_if_config *iface);
-void remove_interface(struct interface **);
+void remove_interface(struct interface *);
 void run_ifchg_cbs(struct interface *, int);
 struct interface *if_ifwithsock(int);
 struct interface *EXPORT(if_ifwithaddr) (const union olsr_ip_addr *);

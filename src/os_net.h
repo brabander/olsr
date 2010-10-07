@@ -62,37 +62,31 @@ ssize_t olsr_sendto(int, const void *, size_t, int, const union olsr_sockaddr *)
 ssize_t olsr_recvfrom(int, void *, size_t, int, union olsr_sockaddr *, socklen_t *);
 int olsr_select(int, fd_set *, fd_set *, fd_set *, struct timeval *);
 
-int getsocket4(int, struct interface *, bool, uint16_t);
-int getsocket6(int, struct interface *, bool, uint16_t);
+int EXPORT(getsocket4)(int, struct interface *, bool, uint16_t);
+int EXPORT(getsocket6)(int, struct interface *, bool, uint16_t);
+
+int EXPORT(set_nonblocking) (int fd);
 
 /* OS dependent interface functions */
+void os_init_global_ifoptions(void);
+int os_cleanup_global_ifoptions(void);
+
 int os_init_interface(struct interface *, struct olsr_if_config *);
+void os_cleanup_interface(struct interface *);
 
 int chk_if_changed(struct olsr_if_config *);
+
+bool EXPORT(olsr_if_isup)(const char * dev);
+int EXPORT(olsr_if_set_state)(const char *dev, bool up);
 
 #ifdef WIN32
 void CallSignalHandler(void);
 void ListInterfaces(void);
 #endif
 
-int disable_redirects(const char *, struct interface *, int);
-
-int disable_redirects_global(int);
-
-int deactivate_spoof(const char *, struct interface *, int);
-
-int restore_settings(int);
-
-int enable_ip_forwarding(int);
-
-
 void os_set_olsr_socketoptions(int socket);
 
 int get_ipv6_address(char *, struct sockaddr_in6 *, int);
-
-bool is_if_link_up(char *);
-
-int join_mcast(struct interface *, int);
 
 /* helper function for getting a socket */
 static inline int

@@ -50,6 +50,8 @@
 
 #include "defs.h"
 
+void clear_console(void);
+
 void olsr_open_syslog(const char *ident);
 
 void EXPORT(olsr_print_syslog) (int level, const char *format, ...) __attribute__ ((format(printf, 2, 3)));

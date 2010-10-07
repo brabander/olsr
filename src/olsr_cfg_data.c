@@ -71,7 +71,10 @@ const char *LOG_SOURCE_NAMES[] = {
   "mid",
   "duplicate-set",
   "cookie",
-  "comport"
+  "comport",
+  "apm",
+  "rtnetlink",
+  "tunnel"
 };
 
 const char *LOG_SEVERITY_NAMES[] = {

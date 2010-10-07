@@ -233,7 +233,7 @@ olsr_netlink_send(struct nlmsghdr *nl_hdr)
   iov.iov_len = nl_hdr->nlmsg_len;
   ret = sendmsg(olsr_cnf->rtnl_s, &msg, 0);
   if (ret <= 0) {
-    OLSR_ERROR(LOG_ROUTING, "Cannot send data to netlink socket (%d: %s)", errno, strerror(errno));
+    OLSR_WARN(LOG_ROUTING, "Cannot send data to netlink socket (%d: %s)", errno, strerror(errno));
     return -1;
   }
 
@@ -241,13 +241,13 @@ olsr_netlink_send(struct nlmsghdr *nl_hdr)
   iov.iov_len = sizeof(rcvbuf);
   ret = recvmsg(olsr_cnf->rtnl_s, &msg, 0);
   if (ret <= 0) {
-    OLSR_ERROR(LOG_ROUTING, "Error while reading answer to netlink message (%d: %s)", errno, strerror(errno));
+    OLSR_WARN(LOG_ROUTING, "Error while reading answer to netlink message (%d: %s)", errno, strerror(errno));
     return -1;
   }
 
   h = (struct nlmsghdr *)ARM_NOWARN_ALIGN(rcvbuf);
   if (!NLMSG_OK(h, (unsigned int)ret)) {
-    OLSR_ERROR(LOG_ROUTING, "Received netlink message was malformed (ret=%d, %u)", ret, h->nlmsg_len);
+    OLSR_WARN(LOG_ROUTING, "Received netlink message was malformed (ret=%d, %u)", ret, h->nlmsg_len);
     return -1;
   }
 

@@ -166,8 +166,7 @@ void destroy_interfaces(void) {
   struct list_iterator iterator;
 
   OLSR_FOR_ALL_INTERFACES(iface, iterator) {
-    struct interface **ptr = &iface;
-    remove_interface(ptr);
+    remove_interface(iface);
   }
 
   OLSR_FOR_ALL_LOSTIF_ENTRIES(lost, iterator) {
@@ -180,42 +179,19 @@ add_interface(struct olsr_if_config *iface) {
   struct interface *ifp;
 
   ifp = olsr_cookie_malloc(interface_mem_cookie);
-  if ((os_init_interface(ifp, iface))) {
-    olsr_cookie_free(interface_mem_cookie, ifp);
-    return NULL;
+
+  ifp->olsr_socket = getsocket46(olsr_cnf->ip_version, BUFSPACE, ifp, false, olsr_cnf->olsr_port);
+  ifp->send_socket = getsocket46(olsr_cnf->ip_version, 0, ifp, true, olsr_cnf->olsr_port);
+  if (ifp->olsr_socket < 0 || ifp->send_socket < 0) {
+    OLSR_ERROR(LOG_INTERFACE, "Could not initialize socket... exiting!\n\n");
+    olsr_exit(EXIT_FAILURE);
   }
 
-  if (olsr_cnf->ip_version == AF_INET) {
-    /* IP version 4 */
-    /*
-     * We create one socket for each interface and bind
-     * the socket to it. This to ensure that we can control
-     * on what interface the message is transmitted
-     */
-    ifp->olsr_socket = getsocket4(BUFSPACE, ifp, false, olsr_cnf->olsr_port);
-    ifp->send_socket = getsocket4(0, ifp, true, olsr_cnf->olsr_port);
-
-    if (ifp->olsr_socket < 0 || ifp->send_socket < 0) {
-      OLSR_ERROR(LOG_INTERFACE, "Could not initialize socket... exiting!\n\n");
-      olsr_exit(EXIT_FAILURE);
-    }
-  } else {
-    /* IP version 6 */
-
-    /*
-     * We create one socket for each interface and bind
-     * the socket to it. This to ensure that we can control
-     * on what interface the message is transmitted
-     */
-    ifp->olsr_socket = getsocket6(BUFSPACE, ifp, false, olsr_cnf->olsr_port);
-    ifp->send_socket = getsocket6(0, ifp, true, olsr_cnf->olsr_port);
-
-    if (ifp->olsr_socket < 0 || ifp->send_socket < 0) {
-      OLSR_ERROR(LOG_INTERFACE, "Could not initialize socket... exiting!\n\n");
-      olsr_exit(EXIT_FAILURE);
-    }
-
-    join_mcast(ifp, ifp->olsr_socket);
+  if ((os_init_interface(ifp, iface))) {
+    CLOSESOCKET(ifp->olsr_socket);
+    CLOSESOCKET(ifp->send_socket);
+    olsr_cookie_free(interface_mem_cookie, ifp);
+    return NULL;
   }
 
   set_buffer_timer(ifp);
@@ -325,15 +301,15 @@ check_interface_updates(void *foo __attribute__ ((unused)))
  * Remove and cleanup a physical interface.
  */
 void
-remove_interface(struct interface **pinterf)
+remove_interface(struct interface *ifp)
 {
-  struct interface *ifp = *pinterf;
-
   if (!ifp) {
     return;
   }
 
   OLSR_INFO(LOG_INTERFACE, "Removing interface %s\n", ifp->int_name);
+
+  os_cleanup_interface(ifp);
 
   olsr_delete_link_entry_by_if(ifp);
 
@@ -368,8 +344,7 @@ remove_interface(struct interface **pinterf)
   /*
    * Unlink from config.
    */
-  unlock_interface(*pinterf);
-  *pinterf = NULL;
+  unlock_interface(ifp);
 
   /* Close olsr socket */
   remove_olsr_socket(ifp->olsr_socket, &olsr_input, NULL);
@@ -377,7 +352,7 @@ remove_interface(struct interface **pinterf)
   CLOSESOCKET(ifp->send_socket);
   ifp->olsr_socket = -1;
 
-//  free(ifp->int_name);
+  free(ifp->int_name);
   unlock_interface(ifp);
 
   if (list_is_empty(&interface_head) && !olsr_cnf->allow_no_interfaces) {

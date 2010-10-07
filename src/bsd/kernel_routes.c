@@ -1,7 +1,7 @@
 
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
+ * Copyright (c) 2004, Thomas Lopatic (thomas@lopatic.de)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,7 +45,6 @@
 #include "process_routes.h"
 #include "net_olsr.h"
 #include "ipcalc.h"
-#include "olsr_logging.h"
 
 #include <errno.h>
 #include <unistd.h>
@@ -60,32 +59,6 @@
 #include <ifaddrs.h>
 #define OLSR_PID getpid ()
 #endif
-
-/**
- *
- * Calculate the kernel route flags.
- * Called before enqueuing a change/delete operation
- *
- */
-static uint8_t
-olsr_rt_flags(const struct rt_entry *rt)
-{
-  const struct rt_nexthop *nh;
-  uint8_t flags = RTF_UP;
-
-  /* destination is host */
-  if (rt->rt_dst.prefix_len == 8 * olsr_cnf->ipsize) {
-    flags |= RTF_HOST;
-  }
-
-  nh = olsr_get_nh(rt);
-
-  if (olsr_ipcmp(&rt->rt_dst.prefix, &nh->gateway) != 0) {
-    flags |= RTF_GATEWAY;
-  }
-
-  return flags;
-}
 
 static unsigned int seq = 0;
 
@@ -111,9 +84,9 @@ add_del_route(const struct rt_entry *rt, int add)
   int len;                             /* message size written to routing socket */
 
   if (add) {
-    OLSR_DEBUG(LOG_ROUTING, "KERN: Adding %s\n", olsr_rtp_to_string(rt->rt_best));
+    OLSR_PRINTF(2, "KERN: Adding %s\n", olsr_rtp_to_string(rt->rt_best));
   } else {
-    OLSR_DEBUG(LOG_ROUTING, "KERN: Deleting %s\n", olsr_rt_to_string(rt));
+    OLSR_PRINTF(2, "KERN: Deleting %s\n", olsr_rt_to_string(rt));
   }
 
   memset(buff, 0, sizeof(buff));
@@ -122,8 +95,8 @@ add_del_route(const struct rt_entry *rt, int add)
   sin4.sin_len = sizeof(sin4);
   sin4.sin_family = AF_INET;
 
-  sin_size = 1 + ((sizeof(struct sockaddr_in) - 1) | 3);
-  sdl_size = 1 + ((sizeof(struct sockaddr_dl) - 1) | 3);
+  sin_size = 1 + ((sizeof(struct sockaddr_in) - 1) | (sizeof(long) - 1));
+  sdl_size = 1 + ((sizeof(struct sockaddr_dl) - 1) | (sizeof(long) - 1));
 
   /**********************************************************************
    *                  FILL THE ROUTING MESSAGE HEADER
@@ -150,9 +123,9 @@ add_del_route(const struct rt_entry *rt, int add)
   /*
    * vxWorks: change proto or tos
    */
-  OLSR_DEBUG(LOG_ROUTING, "\t- Setting Protocol: 0\n");
+  OLSR_PRINTF(8, "\t- Setting Protocol: 0\n");
   ((struct sockaddr_rt *)(&sin4))->srt_proto = 0;
-  OLSR_DEBUG(LOG_ROUTING, "\t- Setting TOS: 0\n");
+  OLSR_PRINTF(8, "\t- Setting TOS: 0\n");
   ((struct sockaddr_rt *)(&sin4))->srt_tos = 0;
 #endif
 
@@ -177,22 +150,23 @@ add_del_route(const struct rt_entry *rt, int add)
       memcpy(walker, &sin4, sizeof(sin4));
       walker += sin_size;
       rtm->rtm_addrs |= RTA_GATEWAY;
-    } else {
+    }
+    else {
       /*
        * Host is directly reachable, so add
        * the output interface MAC address.
        */
       if (getifaddrs(&addrs)) {
-        OLSR_WARN(LOG_ROUTING, "\ngetifaddrs() failed\n");
+        fprintf(stderr, "\ngetifaddrs() failed\n");
         return -1;
       }
 
       for (awalker = addrs; awalker != NULL; awalker = awalker->ifa_next)
-        if (awalker->ifa_addr->sa_family == AF_LINK && strcmp(awalker->ifa_name, nexthop->interface->int_name) == 0)
+        if (awalker->ifa_addr->sa_family == AF_LINK && strcmp(awalker->ifa_name, if_ifwithindex_name(nexthop->iif_index)) == 0)
           break;
 
       if (awalker == NULL) {
-        OLSR_WARN(LOG_ROUTING, "\nInterface %s not found\n", nexthop->interface->int_name);
+        fprintf(stderr, "\nInterface %s not found\n", if_ifwithindex_name(nexthop->iif_index));
         freeifaddrs(addrs);
         return -1;
       }
@@ -231,12 +205,24 @@ add_del_route(const struct rt_entry *rt, int add)
    **********************************************************************/
 
   rtm->rtm_msglen = (unsigned short)(walker - buff);
-  len = write(olsr_cnf->rts_bsd, buff, rtm->rtm_msglen);
+  len = write(olsr_cnf->rts, buff, rtm->rtm_msglen);
   if (0 != rtm->rtm_errno || len < rtm->rtm_msglen) {
-    OLSR_WARN(LOG_ROUTING, "\nCannot write to routing socket: (rtm_errno= 0x%x) (last error message: %s)\n", rtm->rtm_errno,
-              strerror(errno));
+    fprintf(stderr, "\nCannot write to routing socket: (rtm_errno= 0x%x) (last error message: %s)\n", rtm->rtm_errno,
+            strerror(errno));
   }
   return 0;
+}
+
+int
+olsr_ioctl_add_route(const struct rt_entry *rt)
+{
+  return add_del_route(rt, 1);
+}
+
+int
+olsr_ioctl_del_route(const struct rt_entry *rt)
+{
+  return add_del_route(rt, 0);
 }
 
 static int
@@ -252,9 +238,9 @@ add_del_route6(const struct rt_entry *rt, int add)
   int len;
 
   if (add) {
-    OLSR_DEBUG(LOG_ROUTING, "KERN: Adding %s\n", olsr_rtp_to_string(rt->rt_best));
+    OLSR_PRINTF(2, "KERN: Adding %s\n", olsr_rtp_to_string(rt->rt_best));
   } else {
-    OLSR_DEBUG(LOG_ROUTING, "KERN: Deleting %s\n", olsr_rt_to_string(rt));
+    OLSR_PRINTF(2, "KERN: Deleting %s\n", olsr_rt_to_string(rt));
   }
 
   memset(buff, 0, sizeof(buff));
@@ -266,8 +252,8 @@ add_del_route6(const struct rt_entry *rt, int add)
   sdl.sdl_len = sizeof(sdl);
   sdl.sdl_family = AF_LINK;
 
-  sin_size = 1 + ((sizeof(struct sockaddr_in6) - 1) | 3);
-  sdl_size = 1 + ((sizeof(struct sockaddr_dl) - 1) | 3);
+  sin_size = 1 + ((sizeof(struct sockaddr_in6) - 1) | (sizeof(long) - 1));
+  sdl_size = 1 + ((sizeof(struct sockaddr_dl) - 1) | (sizeof(long) - 1));
 
   /**********************************************************************
    *                  FILL THE ROUTING MESSAGE HEADER
@@ -304,7 +290,7 @@ add_del_route6(const struct rt_entry *rt, int add)
     memset(&sin6.sin6_addr.s6_addr, 0, 8);
     sin6.sin6_addr.s6_addr[0] = 0xfe;
     sin6.sin6_addr.s6_addr[1] = 0x80;
-    sin6.sin6_scope_id = nexthop->interface->if_index;
+    sin6.sin6_scope_id = nexthop->iif_index;
 #ifdef __KAME__
     *(u_int16_t *) & sin6.sin6_addr.s6_addr[2] = htons(sin6.sin6_scope_id);
     sin6.sin6_scope_id = 0;
@@ -312,7 +298,8 @@ add_del_route6(const struct rt_entry *rt, int add)
     memcpy(walker, &sin6, sizeof(sin6));
     walker += sin_size;
     rtm->rtm_addrs |= RTA_GATEWAY;
-  } else {
+  }
+  else {
     /*
      * Host is directly reachable, so add
      * the output interface MAC address.
@@ -321,7 +308,7 @@ add_del_route6(const struct rt_entry *rt, int add)
     memset(&sin6.sin6_addr.s6_addr, 0, 8);
     sin6.sin6_addr.s6_addr[0] = 0xfe;
     sin6.sin6_addr.s6_addr[1] = 0x80;
-    sin6.sin6_scope_id = nexthop->interface->if_index;
+    sin6.sin6_scope_id = nexthop->iif_index;
 #ifdef __KAME__
     *(u_int16_t *) & sin6.sin6_addr.s6_addr[2] = htons(sin6.sin6_scope_id);
     sin6.sin6_scope_id = 0;
@@ -348,9 +335,9 @@ add_del_route6(const struct rt_entry *rt, int add)
    **********************************************************************/
 
   rtm->rtm_msglen = (unsigned short)(walker - buff);
-  len = write(olsr_cnf->rts_bsd, buff, rtm->rtm_msglen);
+  len = write(olsr_cnf->rts, buff, rtm->rtm_msglen);
   if (len < 0 && !(errno == EEXIST || errno == ESRCH)) {
-    OLSR_WARN(LOG_ROUTING, "cannot write to routing socket: %s\n", strerror(errno));
+    fprintf(stderr, "cannot write to routing socket: %s\n", strerror(errno));
   }
 
   /*
@@ -374,29 +361,29 @@ add_del_route6(const struct rt_entry *rt, int add)
     walker += sin_size;
     drtm->rtm_addrs = RTA_DST;
     drtm->rtm_msglen = (unsigned short)(walker - dbuff);
-    len = write(olsr_cnf->rts_bsd, dbuff, drtm->rtm_msglen);
+    len = write(olsr_cnf->rts, dbuff, drtm->rtm_msglen);
     if (len < 0) {
-      OLSR_WARN(LOG_ROUTING, "cannot delete route: %s\n", strerror(errno));
+      fprintf(stderr, "cannot delete route: %s\n", strerror(errno));
     }
     rtm->rtm_seq = ++seq;
-    len = write(olsr_cnf->rts_bsd, buff, rtm->rtm_msglen);
+    len = write(olsr_cnf->rts, buff, rtm->rtm_msglen);
     if (len < 0) {
-      OLSR_WARN(LOG_ROUTING, "still cannot add route: %s\n", strerror(errno));
+      fprintf(stderr, "still cannot add route: %s\n", strerror(errno));
     }
   }
   return 0;
 }
 
 int
-olsr_kernel_add_route(const struct rt_entry *rt, int ip_version)
+olsr_ioctl_add_route6(const struct rt_entry *rt)
 {
-  return AF_INET == ip_version ? add_del_route(rt, 1) : add_del_route6(rt, 1);
+  return add_del_route6(rt, 1);
 }
 
 int
-olsr_kernel_del_route(const struct rt_entry *rt, int ip_version)
+olsr_ioctl_del_route6(const struct rt_entry *rt)
 {
-  return AF_INET == ip_version ? add_del_route(rt, 0) : add_del_route6(rt, 0);
+  return add_del_route6(rt, 0);
 }
 
 /*

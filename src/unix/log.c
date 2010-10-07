@@ -43,7 +43,9 @@
  * System logging interface for GNU/Linux systems
  */
 
+#include "olsr_logging.h"
 #include "os_log.h"
+
 #include <syslog.h>
 #include <stdarg.h>
 
@@ -88,6 +90,36 @@ olsr_print_syslog(int level, const char *format, ...)
   va_end(arglist);
 
   return;
+}
+
+void
+clear_console(void)
+{
+  static int len = -1;
+  static char clear_buff[100];
+  int i;
+
+  if (len < 0) {
+    FILE *pip = popen("clear", "r");
+    if (pip == NULL) {
+      OLSR_WARN(LOG_MAIN, "Warning, cannot access 'clear' command.\n");
+      return;
+    }
+    for (len = 0; len < (int)sizeof(clear_buff); len++) {
+      int c = fgetc(pip);
+      if (c == EOF) {
+        break;
+      }
+      clear_buff[len] = c;
+    }
+
+    pclose(pip);
+  }
+
+  for (i = 0; i < len; i++) {
+    fputc(clear_buff[i], stdout);
+  }
+  fflush(stdout);
 }
 
 /*
