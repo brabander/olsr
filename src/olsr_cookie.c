@@ -42,7 +42,7 @@
 #include "olsr.h"
 #include "defs.h"
 #include "olsr_cookie.h"
-#include "log.h"
+#include "olsr_logging.h"
 #include "common/list.h"
 
 #include <assert.h>

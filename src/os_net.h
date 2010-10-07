@@ -57,14 +57,23 @@
 #include "olsr_types.h"
 #include "interfaces.h"
 
-/* OS dependent functions */
+/* OS dependent functions socket functions */
 ssize_t olsr_sendto(int, const void *, size_t, int, const union olsr_sockaddr *);
-
 ssize_t olsr_recvfrom(int, void *, size_t, int, union olsr_sockaddr *, socklen_t *);
-
 int olsr_select(int, fd_set *, fd_set *, fd_set *, struct timeval *);
 
-int convert_ip_to_mac(union olsr_ip_addr *, struct sockaddr *, char *);
+int getsocket4(int, struct interface *, bool, uint16_t);
+int getsocket6(int, struct interface *, bool, uint16_t);
+
+/* OS dependent interface functions */
+int os_init_interface(struct interface *, struct olsr_if_config *);
+
+int chk_if_changed(struct olsr_if_config *);
+
+#ifdef WIN32
+void CallSignalHandler(void);
+void ListInterfaces(void);
+#endif
 
 int disable_redirects(const char *, struct interface *, int);
 
@@ -76,9 +85,6 @@ int restore_settings(int);
 
 int enable_ip_forwarding(int);
 
-int getsocket4(int, struct interface *, bool, uint16_t);
-
-int getsocket6(int, struct interface *, bool, uint16_t);
 
 void os_set_olsr_socketoptions(int socket);
 

@@ -39,8 +39,8 @@
  *
  */
 
-#include "misc.h"
-#include "log.h"
+#include "os_misc.h"
+#include "olsr_logging.h"
 
 #include <stdio.h>
 #include <string.h>

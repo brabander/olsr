@@ -62,10 +62,10 @@
 #include <unistd.h>
 
 #include "olsrd_arprefresh.h"
-#include "kernel_routes.h"
 #include "scheduler.h"
-#include "misc.h"
+#include "os_misc.h"
 #include "olsr_logging.h"
+#include "olsr_cfg.h"
 
 #define PLUGIN_INTERFACE_VERSION 5
 

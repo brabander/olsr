@@ -40,11 +40,6 @@
  */
 
 
-/*
- * Example plugin for olsrd.org OLSR daemon
- * Only the bare minimum
- */
-
 #ifndef _PLUGIN_H
 #define _PLUGIN_H
 
@@ -57,9 +52,9 @@ struct olsrd_plugin_parameters;
 #define LAST_SUPPORTED_PLUGIN_INTERFACE_VERSION		5
 
 
-/****************************************************************************
- *                Functions that the plugin MUST provide                    *
- ****************************************************************************/
+/*************************************************************************
+ * This are the necessary functions for the outdated v5 plugin interface *
+ *************************************************************************/
 #if OLSR_PLUGIN
 
 /* We hide them from the compiler here to allow the plugins itself to declare them
@@ -80,9 +75,6 @@ int olsrd_plugin_interface_version(void);
  * Called after all parameters are passed
  */
 int olsrd_plugin_init(void);
-
-
-/* Interface version 4 */
 
 /**
  * Register parameters from config file

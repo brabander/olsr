@@ -49,17 +49,10 @@
 #define _OLSR_SYSLOG_H
 
 #include "defs.h"
-#include "olsr_logging.h"
 
-#define OLSR_LOG_INFO            SEVERITY_INFO
-#define OLSR_LOG_WARN            SEVERITY_WARN
-#define OLSR_LOG_ERR             SEVERITY_ERR
+void olsr_open_syslog(const char *ident);
 
-void
-  olsr_open_syslog(const char *ident);
-
-void
-  EXPORT(olsr_print_syslog) (int level, const char *format, ...) __attribute__ ((format(printf, 2, 3)));
+void EXPORT(olsr_print_syslog) (int level, const char *format, ...) __attribute__ ((format(printf, 2, 3)));
 
 
 #endif

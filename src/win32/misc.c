@@ -43,7 +43,7 @@
 #undef interface
 
 #include "misc.h"
-#include "log.h"
+#include "olsr_logging.h"
 
 void
 clear_console(void)

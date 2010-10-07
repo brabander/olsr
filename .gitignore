@@ -27,6 +27,7 @@ lib/*/*so.*.*
 *.lib
 *.dll
 olsrd.exe
+olsrd.exe.exports
 olsr-setup.exe
 olsrd.exports
 *.opt

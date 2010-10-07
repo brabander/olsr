@@ -47,11 +47,10 @@
 #include "common/avl.h"
 #include "common/avl_olsr_comp.h"
 #include "scheduler.h"
-#include "log.h"
 #include "link_set.h"
 #include "olsr.h"
 #include "olsr_cookie.h"
-#include "net_os.h"
+#include "os_net.h"
 #include "olsr_logging.h"
 
 /* Timer data, global. Externed in scheduler.h */

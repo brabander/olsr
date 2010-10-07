@@ -41,9 +41,8 @@
 
 #include "net_olsr.h"
 #include "ipcalc.h"
-#include "log.h"
 #include "olsr.h"
-#include "net_os.h"
+#include "os_net.h"
 #include "link_set.h"
 #include "lq_packet.h"
 #include "olsr_logging.h"

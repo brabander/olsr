@@ -47,8 +47,8 @@
 #include "duplicate_set.h"
 #include "mid_set.h"
 #include "olsr.h"
-#include "net_os.h"
-#include "log.h"
+#include "os_net.h"
+#include "olsr_logging.h"
 #include "net_olsr.h"
 
 #include <assert.h>

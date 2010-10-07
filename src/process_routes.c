@@ -40,9 +40,8 @@
  */
 
 #include "process_routes.h"
-#include "log.h"
-#include "kernel_routes.h"
 #include "olsr_logging.h"
+#include "os_kernel_routes.h"
 
 #include <errno.h>
 

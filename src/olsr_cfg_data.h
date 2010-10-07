@@ -76,19 +76,6 @@ enum log_source {
 };
 
 /**
- * defines the severity of a logging event
- */
-enum log_severity {
-  SEVERITY_DEBUG,                      //!< SEVERITY_DEBUG
-  SEVERITY_INFO,                       //!< SEVERITY_INFO
-  SEVERITY_WARN,                       //!< SEVERITY_WARN
-  SEVERITY_ERR,                        //!< SEVERITY_ERR
-
-  /* this one must be the last of the enums ! */
-  LOG_SEVERITY_COUNT                   //!< LOG_SEVERITY_COUNT
-};
-
-/**
  * defines the mode of the interface.
  *
  * - Mesh: default behavior

@@ -44,23 +44,20 @@
 #define ifr_netmask ifr_addr
 #endif
 
-#include "ifnet.h"
 #include "ipcalc.h"
 #include "interfaces.h"
 #include "defs.h"
 #include "olsr.h"
-#include "net_os.h"
+#include "os_net.h"
 #include "net_olsr.h"
 #include "parser.h"
 #include "scheduler.h"
 #include "olsr_time.h"
 #include "lq_packet.h"
-#include "log.h"
 #include "link_set.h"
 #include "mid_set.h"
 #include "hna_set.h"
-#include "../common/string.h"
-#include "../valgrind/valgrind.h"
+#include "common/string.h"
 
 #include <assert.h>
 #include <signal.h>

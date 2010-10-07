@@ -39,7 +39,7 @@
  *
  */
 
-#include "../log.h"
+#include "os_log.h"
 
 void
 olsr_open_syslog(const char *Id __attribute__ ((unused)))

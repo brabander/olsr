@@ -39,11 +39,10 @@
  *
  */
 
-#include "kernel_routes.h"
 #include "interfaces.h"
-#include "log.h"
-#include "net_os.h"
-#include "ifnet.h"
+#include "olsr_logging.h"
+#include "os_net.h"
+#include "os_kernel_routes.h"
 
 #include <assert.h>
 #include <linux/types.h>

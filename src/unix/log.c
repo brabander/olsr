@@ -43,7 +43,7 @@
  * System logging interface for GNU/Linux systems
  */
 
-#include "../log.h"
+#include "os_log.h"
 #include <syslog.h>
 #include <stdarg.h>
 

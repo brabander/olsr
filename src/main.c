@@ -49,28 +49,27 @@
 #include "common/avl.h"
 #include "common/avl_olsr_comp.h"
 #include "olsr.h"
-#include "log.h"
 #include "ipcalc.h"
 #include "scheduler.h"
 #include "parser.h"
 #include "plugin_loader.h"
 #include "apm.h"
-#include "net_os.h"
 #include "net_olsr.h"
-#include "misc.h"
+#include "os_misc.h"
 #include "olsr_cfg_gen.h"
 #include "common/string.h"
 #include "mid_set.h"
 #include "duplicate_set.h"
-#include "kernel_routes.h"
 #include "olsr_comport.h"
 #include "neighbor_table.h"
+#include "olsr_logging.h"
+#include "os_net.h"
+#include "os_kernel_routes.h"
 
 #if defined linux
 #include <linux/types.h>
 #include <linux/rtnetlink.h>
 #include <fcntl.h>
-#include "kernel_routes.h"
 #endif
 
 #define STDOUT_PULSE_INT 600    /* msec */

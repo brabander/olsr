@@ -49,8 +49,6 @@
 #include "hna_set.h"
 #include "mid_set.h"
 #include "routing_table.h"
-#include "log.h"
-#include "misc.h"
 #include "olsr_ip_prefix_list.h"
 #include "parser.h"
 #include "olsr_comport_txt.h"

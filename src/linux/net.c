@@ -44,13 +44,13 @@
  * Linux spesific code
  */
 
-#include "../net_os.h"
-#include "../ipcalc.h"
-#include "../common/string.h"
-#include "../olsr_protocol.h"
-#include "../misc.h"
-#include "../olsr_logging.h"
-#include "../olsr.h"
+#include "os_net.h"
+#include "os_misc.h"
+#include "ipcalc.h"
+#include "common/string.h"
+#include "olsr_protocol.h"
+#include "olsr_logging.h"
+#include "olsr.h"
 
 #include <net/if.h>
 

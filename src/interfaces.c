@@ -41,18 +41,15 @@
 
 #include "defs.h"
 #include "interfaces.h"
-#include "ifnet.h"
 #include "scheduler.h"
 #include "olsr.h"
-#include "log.h"
 #include "parser.h"
 #include "net_olsr.h"
 #include "ipcalc.h"
 #include "common/string.h"
 #include "common/avl.h"
 #include "olsr_logging.h"
-#include "valgrind/valgrind.h"
-#include "net_os.h"
+#include "os_net.h"
 
 #include <signal.h>
 #include <unistd.h>

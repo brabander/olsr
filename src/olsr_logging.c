@@ -49,7 +49,7 @@
 #include "olsr_cfg.h"
 #include "olsr_cfg_data.h"
 #include "olsr_logging.h"
-#include "log.h"
+#include "os_log.h"
 
 struct log_handler_entry {
   void (*handler)

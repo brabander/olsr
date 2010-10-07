@@ -45,8 +45,6 @@
 #include "olsr.h"
 #include "parser.h"
 #include "net_olsr.h"
-#include "ifnet.h"
-#include "log.h"
 #include "olsr_ip_prefix_list.h"
 #include "olsr_protocol.h"
 #include "common/string.h"
