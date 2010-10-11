@@ -613,7 +613,7 @@ static int olsr_os_process_rt_entry(int af_family, const struct rt_entry *rt, bo
  * @return negative on error
  */
 int
-olsr_kernel_add_route(const struct rt_entry *rt, int ip_version)
+os_route_add_rtentry(const struct rt_entry *rt, int ip_version)
 {
   OLSR_INFO(LOG_ROUTING, "KERN: Adding %s\n", olsr_rtp_to_string(rt->rt_best));
   return olsr_os_process_rt_entry(ip_version, rt, true);
@@ -627,7 +627,7 @@ olsr_kernel_add_route(const struct rt_entry *rt, int ip_version)
  *@return negative on error
  */
 int
-olsr_kernel_del_route(const struct rt_entry *rt, int ip_version)
+os_route_del_rtentry(const struct rt_entry *rt, int ip_version)
 {
   OLSR_INFO(LOG_ROUTING, "KERN: Deleting %s\n", olsr_rt_to_string(rt));
   return olsr_os_process_rt_entry(ip_version, rt, false);

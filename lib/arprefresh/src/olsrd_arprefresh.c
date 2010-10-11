@@ -194,7 +194,7 @@ olsrd_plugin_init(void)
     filter.len = ARRAYSIZE(BPF_code);
     filter.filter = BPF_code;
     if (0 <= (arprefresh_sockfd = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_IP))) &&
-        0 <= set_nonblocking(arprefresh_sockfd) &&
+        0 <= os_socket_set_nonblocking(arprefresh_sockfd) &&
         0 <= setsockopt(arprefresh_sockfd, SOL_SOCKET, SO_ATTACH_FILTER, &filter, sizeof(filter))) {
       /* Register the ARP refresh event */
       olsr_start_timer(2 * MSEC_PER_SEC, 0, NULL, arp_event_timer_info);

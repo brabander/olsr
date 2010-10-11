@@ -58,14 +58,14 @@
 #include "interfaces.h"
 
 /* OS dependent functions socket functions */
-ssize_t olsr_sendto(int, const void *, size_t, int, const union olsr_sockaddr *);
-ssize_t olsr_recvfrom(int, void *, size_t, int, union olsr_sockaddr *, socklen_t *);
-int olsr_select(int, fd_set *, fd_set *, fd_set *, struct timeval *);
+ssize_t EXPORT(os_sendto)(int, const void *, size_t, int, const union olsr_sockaddr *);
+ssize_t EXPORT(os_recvfrom)(int, void *, size_t, int, union olsr_sockaddr *, socklen_t *);
+int os_select(int, fd_set *, fd_set *, fd_set *, struct timeval *);
 
-int EXPORT(getsocket4)(int, struct interface *, bool, uint16_t);
-int EXPORT(getsocket6)(int, struct interface *, bool, uint16_t);
+int EXPORT(os_getsocket4)(int, struct interface *, bool, uint16_t);
+int EXPORT(os_getsocket6)(int, struct interface *, bool, uint16_t);
 
-int EXPORT(set_nonblocking) (int fd);
+int EXPORT(os_socket_set_nonblocking) (int fd);
 
 /* OS dependent interface functions */
 void os_init_global_ifoptions(void);
@@ -76,29 +76,28 @@ void os_cleanup_interface(struct interface *);
 
 int chk_if_changed(struct olsr_if_config *);
 
-bool EXPORT(olsr_if_isup)(const char * dev);
-int EXPORT(olsr_if_set_state)(const char *dev, bool up);
+bool EXPORT(os_is_interface_up)(const char * dev);
+int EXPORT(os_interface_set_state)(const char *dev, bool up);
 
 #ifdef WIN32
-void CallSignalHandler(void);
 void ListInterfaces(void);
 #endif
 
-void os_set_olsr_socketoptions(int socket);
+void os_socket_set_olsr_options(int socket);
 
 int get_ipv6_address(char *, struct sockaddr_in6 *, int);
 
 /* helper function for getting a socket */
 static inline int
-getsocket46(int family, int bufferSize, struct interface *interf,
+os_getsocket46(int family, int bufferSize, struct interface *interf,
     bool bind_to_unicast, uint16_t port) {
   assert (family == AF_INET || family == AF_INET6);
 
   if (family == AF_INET) {
-    return getsocket4(bufferSize, interf, bind_to_unicast, port);
+    return os_getsocket4(bufferSize, interf, bind_to_unicast, port);
   }
   else {
-    return getsocket6(bufferSize, interf, bind_to_unicast, port);
+    return os_getsocket6(bufferSize, interf, bind_to_unicast, port);
   }
 }
 #endif

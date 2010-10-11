@@ -65,8 +65,8 @@ olsr_init_export_route(void)
   list_init_head(&chg_kernel_list);
   list_init_head(&del_kernel_list);
 
-  olsr_add_route_function = olsr_kernel_add_route;
-  olsr_del_route_function = olsr_kernel_del_route;
+  olsr_add_route_function = os_route_add_rtentry;
+  olsr_del_route_function = os_route_del_rtentry;
 }
 
 /**

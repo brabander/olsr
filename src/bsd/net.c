@@ -374,7 +374,7 @@ getsocket(int bufspace, struct interface *ifp __attribute__ ((unused)))
 }
 
 int
-getsocket6(int bufspace, struct interface *ifp __attribute__ ((unused)))
+os_getsocket6(int bufspace, struct interface *ifp __attribute__ ((unused)))
 {
   struct sockaddr_in6 sin;
   int on;
@@ -562,7 +562,7 @@ static u_int16_t ip_id = 0;
 #endif /* SPOOF */
 
 ssize_t
-olsr_sendto(int s, const void *buf, size_t len, int flags __attribute__ ((unused)), const struct sockaddr *to, socklen_t tolen)
+os_sendto(int s, const void *buf, size_t len, int flags __attribute__ ((unused)), const struct sockaddr *to, socklen_t tolen)
 {
 #ifdef SPOOF
   /* IPv4 for now! */
@@ -655,7 +655,7 @@ olsr_sendto(int s, const void *buf, size_t len, int flags __attribute__ ((unused
  */
 
 ssize_t
-olsr_recvfrom(int s, void *buf, size_t len, int flags __attribute__ ((unused)), struct sockaddr *from, socklen_t * fromlen)
+os_recvfrom(int s, void *buf, size_t len, int flags __attribute__ ((unused)), struct sockaddr *from, socklen_t * fromlen)
 {
   struct msghdr mhdr;
   struct iovec iov;
@@ -730,7 +730,7 @@ olsr_recvfrom(int s, void *buf, size_t len, int flags __attribute__ ((unused)), 
  */
 
 int
-olsr_select(int nfds, fd_set * readfds, fd_set * writefds, fd_set * exceptfds, struct timeval *timeout)
+os_select(int nfds, fd_set * readfds, fd_set * writefds, fd_set * exceptfds, struct timeval *timeout)
 {
   return select(nfds, readfds, writefds, exceptfds, timeout);
 }

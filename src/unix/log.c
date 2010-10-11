@@ -50,7 +50,7 @@
 #include <stdarg.h>
 
 void
-olsr_open_syslog(const char *ident)
+os_syslog_init(const char *ident)
 {
   openlog(ident, LOG_PID | LOG_ODELAY, LOG_DAEMON);
   setlogmask(LOG_UPTO(LOG_INFO));
@@ -58,9 +58,13 @@ olsr_open_syslog(const char *ident)
   return;
 }
 
+void
+os_syslog_cleanup(void) {
+  closelog();
+}
 
 void
-olsr_print_syslog(int level, const char *format, ...)
+os_printf_syslog(int level, const char *format, ...)
 {
 
   int linux_level;
@@ -93,7 +97,7 @@ olsr_print_syslog(int level, const char *format, ...)
 }
 
 void
-clear_console(void)
+os_clear_console(void)
 {
   static int len = -1;
   static char clear_buff[100];

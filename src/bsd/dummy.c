@@ -15,23 +15,23 @@ int olsr_if_setip(const char *dev __attribute__ ((unused)), union olsr_ip_addr *
 
 
 
-int olsr_os_init_iptunnel(void) {
+int os_iptunnel_init(void) {
   return -1;
 }
 
-void olsr_os_cleanup_iptunnel(void) {
+void os_iptunnel_cleanup(void) {
 }
 
-struct olsr_iptunnel_entry *olsr_os_add_ipip_tunnel(union olsr_ip_addr *target __attribute__ ((unused)),
+struct olsr_iptunnel_entry *os_iptunnel_add_ipip(union olsr_ip_addr *target __attribute__ ((unused)),
     bool transportV4 __attribute__ ((unused))) {
   return NULL;
 }
 
-void olsr_os_del_ipip_tunnel(struct olsr_iptunnel_entry *t __attribute__ ((unused))) {
+void os_iptunnel_del_ipip(struct olsr_iptunnel_entry *t __attribute__ ((unused))) {
   return;
 }
 
-bool olsr_if_isup(const char * dev __attribute__ ((unused))) {
+bool os_is_interface_up(const char * dev __attribute__ ((unused))) {
   return false;
 }
 

@@ -399,7 +399,7 @@ net_output(struct interface *ifp)
     tmp_ptf->function(ifp->netbuf.buff, &ifp->netbuf.pending);
   }
 
-  if (olsr_sendto(ifp->send_socket, ifp->netbuf.buff, ifp->netbuf.pending,
+  if (os_sendto(ifp->send_socket, ifp->netbuf.buff, ifp->netbuf.pending,
       MSG_DONTROUTE, &ifp->int_multicast) < 0) {
 #if !defined REMOVE_LOG_WARN
     const int save_errno = errno;

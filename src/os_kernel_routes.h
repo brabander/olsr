@@ -45,11 +45,9 @@
 #include "defs.h"
 #include "routing_table.h"
 
-int olsr_kernel_add_route(const struct rt_entry *, int);
+int os_route_add_rtentry(const struct rt_entry *, int);
 
-int olsr_kernel_del_route(const struct rt_entry *, int);
-
-#endif
+int os_route_del_rtentry(const struct rt_entry *, int);
 
 #if defined linux
  int rtnetlink_register_socket(int);
@@ -61,6 +59,7 @@ int olsr_kernel_del_route(const struct rt_entry *, int);
  int olsr_os_policy_rule(int family, int rttable, uint32_t priority, const char *if_name, bool set);
  int olsr_os_localhost_if(union olsr_ip_addr *ip, bool create);
  int olsr_os_ifip(int ifindex, union olsr_ip_addr *ip, bool create);
+#endif
 #endif
 
 /*

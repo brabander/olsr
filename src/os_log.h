@@ -50,11 +50,11 @@
 
 #include "defs.h"
 
-void clear_console(void);
+void os_syslog_init(const char *ident);
+void os_syslog_cleanup(void);
 
-void olsr_open_syslog(const char *ident);
-
-void EXPORT(olsr_print_syslog) (int level, const char *format, ...) __attribute__ ((format(printf, 2, 3)));
+void os_clear_console(void);
+void os_printf_syslog (int level, const char *format, ...) __attribute__ ((format(printf, 2, 3)));
 
 
 #endif

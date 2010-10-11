@@ -32,10 +32,10 @@ struct olsr_iptunnel_entry {
   int usage;
 };
 
-int olsr_os_init_iptunnel(void);
-void olsr_os_cleanup_iptunnel(void);
+int os_iptunnel_init(void);
+void os_iptunnel_cleanup(void);
 
-struct olsr_iptunnel_entry *olsr_os_add_ipip_tunnel(union olsr_ip_addr *target, bool transportV4);
-void olsr_os_del_ipip_tunnel(struct olsr_iptunnel_entry *);
+struct olsr_iptunnel_entry *os_iptunnel_add_ipip(union olsr_ip_addr *target, bool transportV4);
+void os_iptunnel_del_ipip(struct olsr_iptunnel_entry *);
 
 #endif /* KERNEL_TUNNEL_H_ */

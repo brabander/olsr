@@ -314,7 +314,7 @@ bind_socket_to_device(int sock, char *dev_name)
  *@return the FD of the socket or -1 on error.
  */
 int
-getsocket4(int bufspace, struct interface *ifp, bool bind_to_unicast, uint16_t port)
+os_getsocket4(int bufspace, struct interface *ifp, bool bind_to_unicast, uint16_t port)
 {
   struct sockaddr_in sin4;
   int on;
@@ -380,7 +380,7 @@ getsocket4(int bufspace, struct interface *ifp, bool bind_to_unicast, uint16_t p
     olsr_exit(EXIT_FAILURE);
   }
 
-  set_nonblocking(sock);
+  os_socket_set_nonblocking(sock);
   return sock;
 }
 
@@ -391,7 +391,7 @@ getsocket4(int bufspace, struct interface *ifp, bool bind_to_unicast, uint16_t p
  *@return the FD of the socket or -1 on error.
  */
 int
-getsocket6(int bufspace, struct interface *ifp, bool bind_to_unicast, uint16_t port)
+os_getsocket6(int bufspace, struct interface *ifp, bool bind_to_unicast, uint16_t port)
 {
   struct sockaddr_in6 sin6;
   int on;
@@ -480,12 +480,12 @@ getsocket6(int bufspace, struct interface *ifp, bool bind_to_unicast, uint16_t p
     olsr_exit(EXIT_FAILURE);
   }
 
-  set_nonblocking(sock);
+  os_socket_set_nonblocking(sock);
   return sock;
 }
 
 void
-os_set_olsr_socketoptions(int sock) {
+os_socket_set_olsr_options(int sock) {
   /* Set TOS */
   int data = IPTOS_PREC(olsr_cnf->tos);
   if (setsockopt(sock, SOL_SOCKET, SO_PRIORITY, (char *)&data, sizeof(data)) < 0) {
@@ -604,7 +604,7 @@ get_ipv6_address(char *ifname, struct sockaddr_in6 *saddr6, int addrtype6)
  * Wrapper for sendto(2)
  */
 ssize_t
-olsr_sendto(int s, const void *buf, size_t len, int flags, const union olsr_sockaddr *sockaddr)
+os_sendto(int s, const void *buf, size_t len, int flags, const union olsr_sockaddr *sockaddr)
 {
   return sendto(s, buf, len, flags, &sockaddr->std, sizeof(*sockaddr));
 }
@@ -614,7 +614,7 @@ olsr_sendto(int s, const void *buf, size_t len, int flags, const union olsr_sock
  */
 
 ssize_t
-olsr_recvfrom(int s, void *buf, size_t len, int flags,
+os_recvfrom(int s, void *buf, size_t len, int flags,
     union olsr_sockaddr *sockaddr, socklen_t *socklen)
 {
   return recvfrom(s, buf, len, flags, &sockaddr->std, socklen);
@@ -625,12 +625,12 @@ olsr_recvfrom(int s, void *buf, size_t len, int flags,
  */
 
 int
-olsr_select(int nfds, fd_set * readfds, fd_set * writefds, fd_set * exceptfds, struct timeval *timeout)
+os_select(int nfds, fd_set * readfds, fd_set * writefds, fd_set * exceptfds, struct timeval *timeout)
 {
   return select(nfds, readfds, writefds, exceptfds, timeout);
 }
 
-bool olsr_if_isup(const char * dev)
+bool os_is_interface_up(const char * dev)
 {
   struct ifreq ifr;
 
@@ -645,7 +645,7 @@ bool olsr_if_isup(const char * dev)
   return (ifr.ifr_flags & IFF_UP) != 0;
 }
 
-int olsr_if_set_state(const char *dev, bool up) {
+int os_interface_set_state(const char *dev, bool up) {
   int oldflags;
   struct ifreq ifr;
 

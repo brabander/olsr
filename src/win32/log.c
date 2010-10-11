@@ -42,13 +42,44 @@
 #include "os_log.h"
 
 void
-olsr_open_syslog(const char *Id __attribute__ ((unused)))
+os_syslog_init(const char *Id __attribute__ ((unused)))
 {
 }
 
 void
-olsr_print_syslog(int Level __attribute__ ((unused)), const char *Format __attribute__ ((unused)),...)
+os_syslog_cleanup(void) {
+}
+
+void
+os_printf_syslog(int Level __attribute__ ((unused)), const char *Format __attribute__ ((unused)),...)
 {
+}
+
+void
+os_clear_console(void)
+{
+#if !defined WINCE
+  HANDLE Hand;
+  CONSOLE_SCREEN_BUFFER_INFO Info;
+  unsigned long Written;
+  static COORD Home = { 0, 0 };
+
+  Hand = GetStdHandle(STD_OUTPUT_HANDLE);
+
+  if (Hand == INVALID_HANDLE_VALUE)
+    return;
+
+  if (!GetConsoleScreenBufferInfo(Hand, &Info))
+    return;
+
+  if (!FillConsoleOutputCharacter(Hand, ' ', Info.dwSize.X * Info.dwSize.Y, Home, &Written))
+    return;
+
+  if (!FillConsoleOutputAttribute(Hand, Info.wAttributes, Info.dwSize.X * Info.dwSize.Y, Home, &Written))
+    return;
+
+  SetConsoleCursorPosition(Hand, Home);
+#endif
 }
 
 /*

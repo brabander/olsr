@@ -320,7 +320,7 @@ poll_sockets(void)
 
   /* Running select on the FD set */
   do {
-    n = olsr_select(hfd, fdsets & SP_PR_READ ? &ibits : NULL, fdsets & SP_PR_WRITE ? &obits : NULL, NULL, &tvp);
+    n = os_select(hfd, fdsets & SP_PR_READ ? &ibits : NULL, fdsets & SP_PR_WRITE ? &obits : NULL, NULL, &tvp);
   } while (n == -1 && errno == EINTR);
 
   if (n == 0) {
@@ -408,7 +408,7 @@ handle_fds(uint32_t next_interval)
     }
 
     do {
-      n = olsr_select(hfd, fdsets & SP_IMM_READ ? &ibits : NULL, fdsets & SP_IMM_WRITE ? &obits : NULL, NULL, &tvp);
+      n = os_select(hfd, fdsets & SP_IMM_READ ? &ibits : NULL, fdsets & SP_IMM_WRITE ? &obits : NULL, NULL, &tvp);
     } while (n == -1 && errno == EINTR);
 
     if (n == 0) {               /* timeout! */

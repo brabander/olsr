@@ -42,7 +42,7 @@
 #include <stdio.h>
 #include "net/route.h"
 
-#include "kernel_routes.h"
+#include "os_kernel_routes.h"
 #include "net_olsr.h"
 #include "ipcalc.h"
 #include "routing_table.h"
@@ -62,7 +62,7 @@ char *StrError(unsigned int ErrNo);
  * @return negative on error
  */
 int
-olsr_kernel_add_route(const struct rt_entry *rt, int ip_version)
+os_route_add_rtentry(const struct rt_entry *rt, int ip_version)
 {
   MIB_IPFORWARDROW Row;
   union olsr_ip_addr mask;
@@ -132,7 +132,7 @@ olsr_kernel_add_route(const struct rt_entry *rt, int ip_version)
  * @return negative on error
  */
 int
-olsr_kernel_del_route(const struct rt_entry *rt, int ip_version)
+os_route_del_rtentry(const struct rt_entry *rt, int ip_version)
 {
   MIB_IPFORWARDROW Row;
   union olsr_ip_addr mask;

@@ -55,11 +55,11 @@
 #include <errno.h>
 
 #include "defs.h"
-#include "net_os.h"
+#include "os_net.h"
 #include "net_olsr.h"
 #include "ipcalc.h"
 #include "olsr_logging.h"
-
+#include "win32/compat.h"
 #if defined WINCE
 #define WIDE_STRING(s) L##s
 #else
@@ -69,12 +69,22 @@
 void WinSockPError(const char *Str);
 void PError(const char *);
 
-void DisableIcmpRedirects(void);
-int disable_ip_forwarding(int Ver);
-
+static void DisableIcmpRedirects(void);
 
 int
-getsocket4(int bufspace, struct interface *ifp, bool bind_to_unicast, uint16_t port)
+os_socket_set_nonblocking(int fd)
+{
+  /* make the fd non-blocking */
+  unsigned long flags = 1;
+  if (ioctlsocket(fd, FIONBIO, &flags) != 0) {
+    OLSR_WARN(LOG_NETWORKING, "Cannot set the socket flags: %s", StrError(WSAGetLastError()));
+    return -1;
+  }
+  return 0;
+}
+
+int
+os_getsocket4(int bufspace, struct interface *ifp, bool bind_to_unicast, uint16_t port)
 {
   struct sockaddr_in Addr;
   int On = 1;
@@ -134,7 +144,7 @@ getsocket4(int bufspace, struct interface *ifp, bool bind_to_unicast, uint16_t p
 }
 
 int
-getsocket6(int bufspace, struct interface *ifp, bool bind_to_unicast, uint16_t port)
+os_getsocket6(int bufspace, struct interface *ifp, bool bind_to_unicast, uint16_t port)
 {
   struct sockaddr_in6 Addr6;
   int On = 1;
@@ -184,86 +194,7 @@ getsocket6(int bufspace, struct interface *ifp, bool bind_to_unicast, uint16_t p
 }
 
 void
-os_set_olsr_socketoptions(int sock __attribute__ ((unused))) {
-}
-
-static OVERLAPPED RouterOver;
-
-int
-enable_ip_forwarding(int Ver)
-{
-  HMODULE Lib;
-  unsigned int __stdcall(*EnableRouterFunc) (HANDLE * Hand, OVERLAPPED * Over);
-  HANDLE Hand;
-
-  Ver = Ver;
-
-  Lib = LoadLibrary(WIDE_STRING("iphlpapi.dll"));
-
-  if (Lib == NULL)
-    return 0;
-
-  EnableRouterFunc = (unsigned int __stdcall(*)(HANDLE *, OVERLAPPED *))
-    GetProcAddress(Lib, WIDE_STRING("EnableRouter"));
-
-  if (EnableRouterFunc == NULL)
-    return 0;
-
-  memset(&RouterOver, 0, sizeof(OVERLAPPED));
-
-  RouterOver.hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
-
-  if (RouterOver.hEvent == NULL) {
-    OLSR_WARN(LOG_NETWORKING, "CreateEvent()");
-    return -1;
-  }
-
-  if (EnableRouterFunc(&Hand, &RouterOver) != ERROR_IO_PENDING) {
-    OLSR_WARN(LOG_NETWORKING, "EnableRouter()");
-    return -1;
-  }
-
-  OLSR_DEBUG(LOG_NETWORKING, "Routing enabled.\n");
-
-  return 0;
-}
-
-int
-disable_ip_forwarding(int Ver)
-{
-  HMODULE Lib;
-  unsigned int __stdcall(*UnenableRouterFunc) (OVERLAPPED * Over, unsigned int *Count);
-  unsigned int Count;
-
-  Ver = Ver;
-
-  Lib = LoadLibrary(WIDE_STRING("iphlpapi.dll"));
-
-  if (Lib == NULL)
-    return 0;
-
-  UnenableRouterFunc = (unsigned int __stdcall(*)(OVERLAPPED *, unsigned int *))
-    GetProcAddress(Lib, WIDE_STRING("UnenableRouter"));
-
-  if (UnenableRouterFunc == NULL)
-    return 0;
-
-  if (UnenableRouterFunc(&RouterOver, &Count) != NO_ERROR) {
-    OLSR_WARN(LOG_NETWORKING, "UnenableRouter()");
-    return -1;
-  }
-
-  OLSR_DEBUG(LOG_NETWORKING, "Routing disabled, count = %u.\n", Count);
-
-  return 0;
-}
-
-int
-restore_settings(int Ver)
-{
-  disable_ip_forwarding(Ver);
-
-  return 0;
+os_socket_set_olsr_options(int sock __attribute__ ((unused))) {
 }
 
 static int
@@ -296,7 +227,7 @@ SetEnableRedirKey(unsigned long New)
 #endif
 }
 
-void
+static void
 DisableIcmpRedirects(void)
 {
   int Res;
@@ -324,58 +255,86 @@ DisableIcmpRedirects(void)
   exit(0);
 }
 
+static OVERLAPPED RouterOver;
 
-int
-join_mcast(struct interface *Nic, int Sock)
+void os_init_global_ifoptions(void)
 {
-  /* See linux/in6.h */
-  struct ipaddr_str buf;
-  struct ipv6_mreq McastReq;
+  HMODULE Lib;
+  unsigned int __stdcall(*EnableRouterFunc) (HANDLE * Hand, OVERLAPPED * Over);
+  HANDLE Hand;
 
-  McastReq.ipv6mr_multiaddr = Nic->int_multicast.v6.sin6_addr;
-  McastReq.ipv6mr_interface = Nic->if_index;
+  Lib = LoadLibrary(WIDE_STRING("iphlpapi.dll"));
 
-  OLSR_DEBUG(LOG_NETWORKING, "Interface %s joining multicast %s...", Nic->int_name,
-             olsr_ip_to_string(&buf, (union olsr_ip_addr *)&Nic->int_multicast.v6.sin6_addr));
-  /* Send multicast */
-  if (setsockopt(Sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char *)&McastReq, sizeof(struct ipv6_mreq))
-      < 0) {
-    OLSR_WARN(LOG_NETWORKING, "Join multicast: %s\n", strerror(errno));
+  if (Lib == NULL)
+    return;
+
+  EnableRouterFunc = (unsigned int __stdcall(*)(HANDLE *, OVERLAPPED *))
+    GetProcAddress(Lib, WIDE_STRING("EnableRouter"));
+
+  if (EnableRouterFunc == NULL)
+    return;
+
+  memset(&RouterOver, 0, sizeof(OVERLAPPED));
+
+  RouterOver.hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+
+  if (RouterOver.hEvent == NULL) {
+    OLSR_WARN(LOG_NETWORKING, "CreateEvent()");
+    return;
+  }
+
+  if (EnableRouterFunc(&Hand, &RouterOver) != ERROR_IO_PENDING) {
+    OLSR_WARN(LOG_NETWORKING, "EnableRouter()");
+    return;
+  }
+
+  OLSR_DEBUG(LOG_NETWORKING, "Routing enabled.\n");
+
+  DisableIcmpRedirects();
+
+  return;
+}
+
+static int
+disable_ip_forwarding(void)
+{
+  HMODULE Lib;
+  unsigned int __stdcall(*UnenableRouterFunc) (OVERLAPPED * Over, unsigned int *Count);
+  unsigned int Count;
+
+  Lib = LoadLibrary(WIDE_STRING("iphlpapi.dll"));
+
+  if (Lib == NULL)
+    return 0;
+
+  UnenableRouterFunc = (unsigned int __stdcall(*)(OVERLAPPED *, unsigned int *))
+    GetProcAddress(Lib, WIDE_STRING("UnenableRouter"));
+
+  if (UnenableRouterFunc == NULL)
+    return 0;
+
+  if (UnenableRouterFunc(&RouterOver, &Count) != NO_ERROR) {
+    OLSR_WARN(LOG_NETWORKING, "UnenableRouter()");
     return -1;
   }
 
-  /* Old libc fix */
-#ifdef IPV6_JOIN_GROUP
-  /* Join reciever group */
-  if (setsockopt(Sock, IPPROTO_IPV6, IPV6_JOIN_GROUP, (char *)&McastReq, sizeof(struct ipv6_mreq))
-      < 0)
-#else
-  /* Join reciever group */
-  if (setsockopt(Sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char *)&McastReq, sizeof(struct ipv6_mreq))
-      < 0)
-#endif
-  {
-    OLSR_WARN(LOG_NETWORKING, "Join multicast send: %s\n", strerror(errno));
-    return -1;
-  }
-
-
-  if (setsockopt(Sock, IPPROTO_IPV6, IPV6_MULTICAST_IF, (char *)&McastReq.ipv6mr_interface, sizeof(McastReq.ipv6mr_interface))
-      < 0) {
-    OLSR_WARN(LOG_NETWORKING, "Join multicast if: %s\n", strerror(errno));
-    return -1;
-  }
+  OLSR_DEBUG(LOG_NETWORKING, "Routing disabled, count = %u.\n", Count);
 
   return 0;
 }
 
+int os_cleanup_global_ifoptions(void) {
+  disable_ip_forwarding();
+
+  return 0;
+}
 
 /**
  * Wrapper for sendto(2)
  */
 
 ssize_t
-olsr_sendto(int s, const void *buf, size_t len, int flags, const union olsr_sockaddr *sock)
+os_sendto(int s, const void *buf, size_t len, int flags, const union olsr_sockaddr *sock)
 {
   return sendto(s, buf, len, flags, &sock->std, sizeof(*sock));
 }
@@ -386,7 +345,7 @@ olsr_sendto(int s, const void *buf, size_t len, int flags, const union olsr_sock
  */
 
 ssize_t
-olsr_recvfrom(int s, void *buf, size_t len, int flags __attribute__ ((unused)), union olsr_sockaddr *sock, socklen_t * fromlen)
+os_recvfrom(int s, void *buf, size_t len, int flags __attribute__ ((unused)), union olsr_sockaddr *sock, socklen_t * fromlen)
 {
   return recvfrom(s, buf, len, 0, &sock->std, fromlen);
 }
@@ -396,7 +355,7 @@ olsr_recvfrom(int s, void *buf, size_t len, int flags __attribute__ ((unused)), 
  */
 
 int
-olsr_select(int nfds, fd_set * readfds, fd_set * writefds, fd_set * exceptfds, struct timeval *timeout)
+os_select(int nfds, fd_set * readfds, fd_set * writefds, fd_set * exceptfds, struct timeval *timeout)
 {
   return select(nfds, readfds, writefds, exceptfds, timeout);
 }

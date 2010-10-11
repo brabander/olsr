@@ -352,7 +352,7 @@ olsr_input(int fd, void *data __attribute__ ((unused)), unsigned int flags __att
     }
 
     fromlen = sizeof(from);
-    size = olsr_recvfrom(fd, inbuf, sizeof(inbuf), 0, &from, &fromlen);
+    size = os_recvfrom(fd, inbuf, sizeof(inbuf), 0, &from, &fromlen);
 
     if (size <= 0) {
       if (size < 0 && errno != EWOULDBLOCK) {

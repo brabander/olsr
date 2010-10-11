@@ -256,11 +256,10 @@ chk_if_changed(struct olsr_if_config *iface)
   return if_changes;
 }
 
-static char basenamestr[32];
-static const char *if_basename(const char *name);
 static const char *
 if_basename(const char *name)
 {
+  static char basenamestr[32];
   const char *p = strchr(name, ':');
   if (NULL == p || p - name >= (int)(ARRAYSIZE(basenamestr) - 1)) {
     return name;
@@ -476,7 +475,7 @@ os_cleanup_interface(struct interface *ifp) {
 }
 
 int
-set_nonblocking(int fd)
+os_socket_set_nonblocking(int fd)
 {
   /* make the fd non-blocking */
   int socket_flags = fcntl(fd, F_GETFL);

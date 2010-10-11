@@ -46,8 +46,7 @@
 #include "interfaces.h"
 #include "parser.h"
 #include "defs.h"
-#include "net_os.h"
-#include "ifnet.h"
+#include "os_net.h"
 #include "scheduler.h"
 #include "olsr_time.h"
 #include "lq_packet.h"
@@ -123,23 +122,6 @@ char *StrError(unsigned int ErrNo);
 int GetIntInfo(struct InterfaceInfo *Info, char *Name);
 
 #define MAX_INTERFACES 100
-
-int __stdcall SignalHandler(unsigned long Signal);
-
-static unsigned long __stdcall
-SignalHandlerWrapper(void *Dummy __attribute__ ((unused)))
-{
-  SignalHandler(0);
-  return 0;
-}
-
-void
-CallSignalHandler(void)
-{
-  unsigned long ThreadId;              /* Win9x compat */
-
-  CreateThread(NULL, 0, SignalHandlerWrapper, NULL, 0, &ThreadId);
-}
 
 static void
 MiniIndexToIntName(char *String, int MiniIndex)
@@ -434,7 +416,7 @@ ListInterfaces(void)
 }
 
 int
-chk_if_changed(struct olsr_if_config *IntConf)
+chk_if_changed(struct olsr_if_config *olsr_if)
 {
   struct ipaddr_str buf;
   struct interface *Int;
@@ -448,10 +430,10 @@ chk_if_changed(struct olsr_if_config *IntConf)
     return 0;
   }
 
-  Int = IntConf->interf;
+  Int = olsr_if->interf;
 
-  if (GetIntInfo(&Info, IntConf->name) < 0) {
-    remove_interface(&IntConf->interf);
+  if (GetIntInfo(&Info, olsr_if->name) < 0) {
+    remove_interface(olsr_if->interf);
     return 1;
   }
 
@@ -520,12 +502,55 @@ chk_if_changed(struct olsr_if_config *IntConf)
   return Res;
 }
 
-struct interface *
-os_init_interface(struct olsr_if_config *IntConf)
+static int
+join_mcast(struct interface *Nic, int Sock)
+{
+  /* See linux/in6.h */
+  struct ipaddr_str buf;
+  struct ipv6_mreq McastReq;
+
+  McastReq.ipv6mr_multiaddr = Nic->int_multicast.v6.sin6_addr;
+  McastReq.ipv6mr_interface = Nic->if_index;
+
+  OLSR_DEBUG(LOG_NETWORKING, "Interface %s joining multicast %s...", Nic->int_name,
+             olsr_ip_to_string(&buf, (union olsr_ip_addr *)&Nic->int_multicast.v6.sin6_addr));
+  /* Send multicast */
+  if (setsockopt(Sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char *)&McastReq, sizeof(struct ipv6_mreq))
+      < 0) {
+    OLSR_WARN(LOG_NETWORKING, "Join multicast: %s\n", strerror(errno));
+    return -1;
+  }
+
+  /* Old libc fix */
+#ifdef IPV6_JOIN_GROUP
+  /* Join reciever group */
+  if (setsockopt(Sock, IPPROTO_IPV6, IPV6_JOIN_GROUP, (char *)&McastReq, sizeof(struct ipv6_mreq))
+      < 0)
+#else
+  /* Join reciever group */
+  if (setsockopt(Sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char *)&McastReq, sizeof(struct ipv6_mreq))
+      < 0)
+#endif
+  {
+    OLSR_WARN(LOG_NETWORKING, "Join multicast send: %s\n", strerror(errno));
+    return -1;
+  }
+
+
+  if (setsockopt(Sock, IPPROTO_IPV6, IPV6_MULTICAST_IF, (char *)&McastReq.ipv6mr_interface, sizeof(McastReq.ipv6mr_interface))
+      < 0) {
+    OLSR_WARN(LOG_NETWORKING, "Join multicast if: %s\n", strerror(errno));
+    return -1;
+  }
+
+  return 0;
+}
+
+int
+os_init_interface(struct interface *ifp, struct olsr_if_config *IntConf)
 {
   struct ipaddr_str buf;
   struct InterfaceInfo if_info;
-  struct interface *ifp;
   struct sockaddr_in *if_addr;
   size_t name_size;
 
@@ -536,8 +561,6 @@ os_init_interface(struct olsr_if_config *IntConf)
 
   if (GetIntInfo(&if_info, IntConf->name) < 0)
     return 0;
-
-  ifp = olsr_cookie_malloc(interface_mem_cookie);
 
 #if 0
   ifp->gen_properties = NULL;
@@ -575,8 +598,17 @@ os_init_interface(struct olsr_if_config *IntConf)
 
   ifp->if_index = if_info.Index;
 
+  if (olsr_cnf->ip_version == AF_INET6) {
+    join_mcast(ifp, ifp->olsr_socket);
+    join_mcast(ifp, ifp->send_socket);
+  }
+
   OLSR_INFO(LOG_NETWORKING, "\tKernel index: %08x\n", ifp->if_index);
-  return ifp;
+  return 0;
+}
+
+void
+os_cleanup_interface(struct interface *ifp  __attribute__ ((unused))) {
 }
 
 /*

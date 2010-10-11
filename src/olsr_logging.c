@@ -86,6 +86,9 @@ olsr_log_init(void)
   bool printError = false;
   int i, j;
 
+  /* open syslog */
+  os_syslog_init("olsrd");
+
   /* clear global mask */
   for (j = 0; j < LOG_SEVERITY_COUNT; j++) {
     for (i = 0; i < LOG_SOURCE_COUNT; i++) {
@@ -113,7 +116,6 @@ olsr_log_init(void)
     }
   }
   if (olsr_cnf->log_target_syslog) {
-    olsr_open_syslog("olsrd");
     olsr_log_addhandler(&olsr_log_syslog, NULL);
   }
   if (olsr_cnf->log_target_stderr) {
@@ -138,6 +140,8 @@ olsr_log_cleanup(void)
     fflush(log_fileoutput);
     fclose(log_fileoutput);
   }
+
+  os_syslog_cleanup();
 }
 
 /**
@@ -305,6 +309,6 @@ olsr_log_syslog(enum log_severity severity, enum log_source source,
                 int prefixLength __attribute__ ((unused)))
 {
   if (olsr_cnf->log_event[severity][source]) {
-    olsr_print_syslog(severity, "%s\n", &buffer[timeLength]);
+    os_printf_syslog(severity, "%s\n", &buffer[timeLength]);
   }
 }

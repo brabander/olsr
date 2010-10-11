@@ -75,24 +75,24 @@ static bool store_iptunnel_state;
 static struct olsr_cookie_info *tunnel_cookie;
 static struct avl_tree tunnel_tree;
 
-int olsr_os_init_iptunnel(void) {
+int os_iptunnel_init(void) {
   const char *dev = olsr_cnf->ip_version == AF_INET ? DEV_IPV4_TUNNEL : DEV_IPV6_TUNNEL;
 
   tunnel_cookie = olsr_create_memcookie("iptunnel", sizeof(struct olsr_iptunnel_entry));
   avl_init(&tunnel_tree, avl_comp_default, false, NULL);
 
-  store_iptunnel_state = olsr_if_isup(dev);
+  store_iptunnel_state = os_is_interface_up(dev);
   if (store_iptunnel_state) {
     return 0;
   }
-  if (olsr_if_set_state(dev, true)) {
+  if (os_interface_set_state(dev, true)) {
     return -1;
   }
 
   return olsr_os_ifip(if_nametoindex(dev), &olsr_cnf->main_addr, true);
 }
 
-void olsr_os_cleanup_iptunnel(void) {
+void os_iptunnel_cleanup(void) {
   while (tunnel_tree.count > 0) {
     struct olsr_iptunnel_entry *t;
 
@@ -100,10 +100,10 @@ void olsr_os_cleanup_iptunnel(void) {
     t = avl_first_element(&tunnel_tree, t, node);
     t->usage = 1;
 
-    olsr_os_del_ipip_tunnel(t);
+    os_iptunnel_del_ipip(t);
   }
   if (!store_iptunnel_state) {
-    olsr_if_set_state(olsr_cnf->ip_version == AF_INET ? DEV_IPV4_TUNNEL : DEV_IPV6_TUNNEL, false);
+    os_interface_set_state(olsr_cnf->ip_version == AF_INET ? DEV_IPV4_TUNNEL : DEV_IPV6_TUNNEL, false);
   }
 
   olsr_cleanup_memcookie(tunnel_cookie);
@@ -209,7 +209,7 @@ static void generate_iptunnel_name(union olsr_ip_addr *target, char *name) {
  * @param transportV4 true if IPv4 traffic is used, false for IPv6 traffic
  * @return NULL if an error happened, pointer to olsr_iptunnel_entry otherwise
  */
-struct olsr_iptunnel_entry *olsr_os_add_ipip_tunnel(union olsr_ip_addr *target, bool transportV4 __attribute__ ((unused))) {
+struct olsr_iptunnel_entry *os_iptunnel_add_ipip(union olsr_ip_addr *target, bool transportV4 __attribute__ ((unused))) {
   struct olsr_iptunnel_entry *t;
 
   assert(olsr_cnf->ip_version == AF_INET6 || transportV4);
@@ -239,7 +239,7 @@ struct olsr_iptunnel_entry *olsr_os_add_ipip_tunnel(union olsr_ip_addr *target, 
       return NULL;
     }
 
-    if (olsr_if_set_state(name, true)) {
+    if (os_interface_set_state(name, true)) {
       if (olsr_cnf->ip_version == AF_INET) {
         os_ip4_tunnel(name, NULL);
       }
@@ -285,7 +285,7 @@ static void internal_olsr_os_del_ipip_tunnel(struct olsr_iptunnel_entry *t, bool
     }
   }
 
-  olsr_if_set_state(t->if_name, false);
+  os_interface_set_state(t->if_name, false);
   if (olsr_cnf->ip_version == AF_INET) {
     os_ip4_tunnel(t->if_name, NULL);
   }
@@ -301,6 +301,6 @@ static void internal_olsr_os_del_ipip_tunnel(struct olsr_iptunnel_entry *t, bool
   }
 }
 
-void olsr_os_del_ipip_tunnel(struct olsr_iptunnel_entry *t) {
+void os_iptunnel_del_ipip(struct olsr_iptunnel_entry *t) {
   internal_olsr_os_del_ipip_tunnel(t, false);
 }

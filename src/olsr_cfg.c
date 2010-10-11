@@ -49,6 +49,7 @@
 #include "olsr_protocol.h"
 #include "common/string.h"
 #include "olsr_time.h"
+#include "os_net.h"
 
 #include <unistd.h>
 #include <string.h>

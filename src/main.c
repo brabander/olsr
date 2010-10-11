@@ -75,7 +75,6 @@
 
 #ifdef WIN32
 int __stdcall SignalHandler(unsigned long signo);
-void DisableIcmpRedirects(void);
 #else
 static void signal_shutdown(int);
 #endif
@@ -199,6 +198,10 @@ main(int argc, char *argv[])
   if (olsr_sanity_check_cfg(olsr_cnf) < 0) {
     olsr_exit(EXIT_FAILURE);
   }
+
+  /* set global interface options */
+  os_init_global_ifoptions();
+
 #ifndef WIN32
   /* Check if user is root */
   if (geteuid()) {
@@ -206,8 +209,6 @@ main(int argc, char *argv[])
     exit(EXIT_FAILURE);
   }
 #else
-  DisableIcmpRedirects();
-
   if (WSAStartup(0x0202, &WsaData)) {
     fprintf(stderr, "Could not initialize WinSock.\n");
     olsr_exit(EXIT_FAILURE);
@@ -260,9 +261,6 @@ main(int argc, char *argv[])
   /* Initialize SPF */
   olsr_init_spf();
 
-  /* set global interface options */
-  os_init_global_ifoptions();
-
   /*
    * socket for ioctl calls
    */
@@ -277,7 +275,7 @@ main(int argc, char *argv[])
     OLSR_ERROR(LOG_MAIN, "rtnetlink socket: %s\n", strerror(errno));
     olsr_exit(EXIT_FAILURE);
   }
-  set_nonblocking(olsr_cnf->rtnl_s);
+  os_socket_set_nonblocking(olsr_cnf->rtnl_s);
 
   /* Create rule for RtTable to resolve route insertion problems*/
   if ( ( olsr_cnf->rt_table < 253) & ( olsr_cnf->rt_table > 0 ) ) {
