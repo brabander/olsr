@@ -118,7 +118,7 @@ struct InterfaceInfo {
 };
 
 void WinSockPError(char *);
-char *StrError(unsigned int ErrNo);
+char *win32_strerror(unsigned int ErrNo);
 int GetIntInfo(struct InterfaceInfo *Info, char *Name);
 
 #define MAX_INTERFACES 100
@@ -260,7 +260,7 @@ GetIntInfo(struct InterfaceInfo *Info, char *Name)
   Res = GetIfTable(IfTable, &BuffLen, FALSE);
 
   if (Res != NO_ERROR) {
-    OLSR_WARN(LOG_NETWORKING, "GetIfTable() = %08lx, %s", Res, StrError(Res));
+    OLSR_WARN(LOG_NETWORKING, "GetIfTable() = %08lx, %s", Res, win32_strerror(Res));
     return -1;
   }
 
@@ -322,7 +322,7 @@ GetIntInfo(struct InterfaceInfo *Info, char *Name)
   Res = GetAdaptersInfo(AdInfo, &BuffLen);
 
   if (Res != NO_ERROR) {
-    OLSR_WARN(LOG_NETWORKING, "GetAdaptersInfo() = %08lx, %s", GetLastError(), StrError(Res));
+    OLSR_WARN(LOG_NETWORKING, "GetAdaptersInfo() = %08lx, %s", GetLastError(), win32_strerror(Res));
     return -1;
   }
 
@@ -385,7 +385,7 @@ ListInterfaces(void)
   }
 
   if (Res != NO_ERROR) {
-    OLSR_WARN(LOG_NETWORKING, "GetAdaptersInfo() = %08lx, %s", Res, StrError(Res));
+    OLSR_WARN(LOG_NETWORKING, "GetAdaptersInfo() = %08lx, %s", Res, win32_strerror(Res));
     return;
   }
   // TODO: change to new logging API ?

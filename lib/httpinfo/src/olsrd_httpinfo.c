@@ -59,6 +59,7 @@
 #include "common/string.h"
 #include "olsr_ip_prefix_list.h"
 #include "olsr_logging.h"
+#include "os_time.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -319,7 +320,7 @@ int
 olsrd_plugin_init(void)
 {
   /* Get start time */
-  gettimeofday(&start_time, NULL);
+  os_gettimeofday(&start_time, NULL);
 
   curr_clients = 0;
   /* set up HTTP socket */
@@ -804,7 +805,7 @@ build_config_body(struct autobuf *abuf)
   {
     struct timeval now, uptime;
     int hours, mins, days;
-    gettimeofday(&now, NULL);
+    os_gettimeofday(&now, NULL);
     timersub(&now, &start_time, &uptime);
 
     days = uptime.tv_sec / 86400;

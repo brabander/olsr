@@ -56,25 +56,10 @@ struct millitxt_buf {
   char buf[16];
 };
 
-/**
- * Macro for converting a mantissa/exponent 8bit value back
- * to an integer (measured in microseconds) as described in RFC3626:
- *
- * value = C*(1+a/16)*2^b [in seconds]
- *
- *  where a is the integer represented by the four highest bits of the
- *  field and b the integer represented by the four lowest bits of the
- *  field.
- *
- * me is the 8 bit mantissa/exponent value
- *
- */
 uint32_t EXPORT(me_to_reltime) (const uint8_t);
-
 uint8_t EXPORT(reltime_to_me) (const uint32_t);
 
 char *EXPORT(olsr_milli_to_txt)(struct millitxt_buf *buffer, uint32_t t);
-
 uint32_t EXPORT(olsr_txt_to_milli)(char *txt);
 
 

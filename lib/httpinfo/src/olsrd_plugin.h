@@ -50,10 +50,7 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
-#include <sys/times.h>
 #include <arpa/inet.h>
-#include <sys/time.h>
-#include <time.h>
 
 #include "olsr_types.h"
 #include "plugin.h"

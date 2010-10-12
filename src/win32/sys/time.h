@@ -87,10 +87,6 @@ struct timespec {
 #include <time.h>
 #endif
 
-int nanosleep(struct timespec *Req, struct timespec *Rem);
-
-int gettimeofday(struct timeval *TVal, void *TZone);
-
 #endif
 
 /*

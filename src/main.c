@@ -64,6 +64,7 @@
 #include "olsr_logging.h"
 #include "os_net.h"
 #include "os_kernel_routes.h"
+#include "os_time.h"
 
 #if defined linux
 #include <linux/types.h>
@@ -343,7 +344,7 @@ main(int argc, char *argv[])
     if (olsr_cnf->allow_no_interfaces) {
       OLSR_INFO(LOG_MAIN,
                 "No interfaces detected! This might be intentional, but it also might mean that your configuration is fubar.\nI will continue after 5 seconds...\n");
-      sleep(5);
+      os_sleep(5);
     } else {
       OLSR_ERROR(LOG_MAIN, "No interfaces detected!\nBailing out!\n");
       olsr_exit(EXIT_FAILURE);
@@ -455,7 +456,7 @@ main(int argc, char *argv[])
       for (i = sysconf(_SC_OPEN_MAX); --i > STDERR_FILENO;) {
         close(i);
       }
-      sleep(1);
+      os_sleep(1);
       OLSR_INFO(LOG_MAIN, "Restarting %s\n", argv[0]);
       execv(argv[0], argv);
       /* if we reach this, the exev() failed */

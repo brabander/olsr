@@ -47,7 +47,6 @@
 #ifndef _NAMESERVICE_PLUGIN
 #define _NAMESERVICE_PLUGIN
 
-#include <sys/time.h>
 #include <regex.h>
 
 #include "olsr_types.h"

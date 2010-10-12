@@ -77,7 +77,7 @@ os_socket_set_nonblocking(int fd)
   /* make the fd non-blocking */
   unsigned long flags = 1;
   if (ioctlsocket(fd, FIONBIO, &flags) != 0) {
-    OLSR_WARN(LOG_NETWORKING, "Cannot set the socket flags: %s", StrError(WSAGetLastError()));
+    OLSR_WARN(LOG_NETWORKING, "Cannot set the socket flags: %s", win32_strerror(WSAGetLastError()));
     return -1;
   }
   return 0;

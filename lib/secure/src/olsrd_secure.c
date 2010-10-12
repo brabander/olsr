@@ -64,6 +64,7 @@
 #include "net_olsr.h"
 #include "common/string.h"
 #include "olsr_logging.h"
+#include "os_time.h"
 
 #ifdef USE_OPENSSL
 
@@ -1108,7 +1109,7 @@ timeout_timestamps(void *foo __attribute__ ((unused)))
   int idx;
 
   /* Update our local timestamp */
-  gettimeofday(&now, NULL);
+  os_gettimeofday(&now, NULL);
 
   for (idx = 0; idx < HASHSIZE; idx++) {
     tmp_list = timestamps[idx].next;

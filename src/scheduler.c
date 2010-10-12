@@ -39,7 +39,6 @@
  *
  */
 
-#include <sys/times.h>
 #include <unistd.h>
 #include <assert.h>
 #include <stdlib.h>
@@ -51,6 +50,7 @@
 #include "olsr.h"
 #include "olsr_cookie.h"
 #include "os_net.h"
+#include "os_time.h"
 #include "olsr_logging.h"
 
 /* Timer data, global. Externed in scheduler.h */
@@ -88,7 +88,7 @@ olsr_times(void)
   struct timeval tv;
   uint32_t t;
 
-  if (gettimeofday(&tv, NULL) != 0) {
+  if (os_gettimeofday(&tv, NULL) != 0) {
     OLSR_ERROR(LOG_SCHEDULER, "OS clock is not working, have to shut down OLSR (%s)\n", strerror(errno));
     olsr_exit(1);
   }
@@ -547,7 +547,7 @@ olsr_init_timers(void)
   OLSR_INFO(LOG_SCHEDULER, "Initializing scheduler.\n");
 
   /* Grab initial timestamp */
-  if (gettimeofday(&first_tv, NULL)) {
+  if (os_gettimeofday(&first_tv, NULL)) {
     OLSR_ERROR(LOG_SCHEDULER, "OS clock is not working, have to shut down OLSR (%s)\n", strerror(errno));
     olsr_exit(1);
   }
@@ -761,7 +761,7 @@ olsr_wallclock_string(void)
   struct timeval now;
   int sec, usec;
 
-  gettimeofday(&now, NULL);
+  os_gettimeofday(&now, NULL);
 
   sec = (int)now.tv_sec + olsr_get_timezone();
   usec = (int)now.tv_usec;

@@ -58,7 +58,6 @@
 
 #include <unistd.h>
 #include <sys/time.h>
-#include <sys/times.h>
 #include <ctype.h>
 #include <dlfcn.h>
 #include <io.h>
@@ -66,15 +65,7 @@
 
 #include "defs.h"
 #include "common/string.h"
-
-void PError(char *Str);
-void WinSockPError(char *Str);
-
-void
-sleep(unsigned int Sec)
-{
-  Sleep(Sec * 1000);
-}
+#include "os_time.h"
 
 static unsigned int RandState;
 
@@ -99,52 +90,8 @@ getpid(void)
   return (int)h;
 }
 
-int
-nanosleep(struct timespec *Req, struct timespec *Rem)
-{
-  Sleep(Req->tv_sec * 1000 + Req->tv_nsec / 1000000);
-
-  Rem->tv_sec = 0;
-  Rem->tv_nsec = 0;
-
-  return 0;
-}
-
-int
-gettimeofday(struct timeval *TVal, void *TZone __attribute__ ((unused)))
-{
-  SYSTEMTIME SysTime;
-  FILETIME FileTime;
-  unsigned __int64 Ticks;
-
-  GetSystemTime(&SysTime);
-  SystemTimeToFileTime(&SysTime, &FileTime);
-
-  Ticks = ((__int64) FileTime.dwHighDateTime << 32) | (__int64) FileTime.dwLowDateTime;
-
-  Ticks -= 116444736000000000LL;
-
-  TVal->tv_sec = (unsigned int)(Ticks / 10000000);
-  TVal->tv_usec = (unsigned int)(Ticks % 10000000) / 10;
-  return 0;
-}
-
-long
-times(struct tms *Dummy __attribute__ ((unused)))
-{
-  return (long)GetTickCount();
-}
-
-int
-inet_aton(const char *AddrStr, struct in_addr *Addr)
-{
-  Addr->s_addr = inet_addr(AddrStr);
-
-  return 1;
-}
-
 char *
-StrError(unsigned int ErrNo)
+win32_strerror(unsigned int ErrNo)
 {
   static char Msg[1000];
 
@@ -163,20 +110,7 @@ StrError(unsigned int ErrNo)
   return Msg;
 }
 
-void
-PError(char *Str)
-{
-  fprintf(stderr, "ERROR - %s: %s", Str, StrError(GetLastError()));
-}
-
-void
-WinSockPError(char *Str)
-{
-  fprintf(stderr, "ERROR - %s: %s", Str, StrError(WSAGetLastError()));
-}
-
 // XXX - not thread-safe, which is okay for our purposes
-
 void *
 dlopen(const char *Name, int Flags __attribute__ ((unused)))
 {
@@ -213,7 +147,7 @@ dlsym(void *Handle, const char *Name)
 char *
 dlerror(void)
 {
-  return StrError(GetLastError());
+  return win32_strerror(GetLastError());
 }
 
 #define NS_INADDRSZ 4

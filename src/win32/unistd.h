@@ -45,12 +45,10 @@
 
 #define TL_UNISTD_H_INCLUDED
 
-void sleep(unsigned int Sec);
-
 void srandom(unsigned int Seed);
 unsigned int random(void);
 
-char *StrError(unsigned int ErrNo);
+char *win32_strerror(unsigned int ErrNo);
 
 int getpid(void);
 

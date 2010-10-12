@@ -44,12 +44,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
-#include <sys/time.h>
 
 #include "olsr_cfg.h"
 #include "olsr_cfg_data.h"
 #include "olsr_logging.h"
 #include "os_log.h"
+#include "os_time.h"
 
 struct log_handler_entry {
   void (*handler)
@@ -236,7 +236,7 @@ olsr_log(enum log_severity severity, enum log_source source, bool no_header, con
   va_start(ap, format);
 
   /* calculate local time */
-  gettimeofday(&timeval, NULL);
+  os_gettimeofday(&timeval, NULL);
 
   /* there is no localtime_r in win32 */
   tm_ptr = localtime((time_t *) & timeval.tv_sec);

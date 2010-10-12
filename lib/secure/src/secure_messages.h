@@ -52,8 +52,6 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <sys/time.h>
-#include <time.h>
 #include <stdio.h>
 
 #include "olsr_types.h"

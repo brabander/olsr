@@ -8,6 +8,6 @@
 #ifndef WIN32_IFNET_H_
 #define WIN32_IFNET_H_
 
-char *StrError(unsigned int ErrNo);
+char *win32_strerror(unsigned int ErrNo);
 
 #endif /* WIN32_IFNET_H_ */

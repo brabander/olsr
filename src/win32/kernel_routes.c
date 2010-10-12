@@ -54,7 +54,7 @@
 
 #include <errno.h>
 
-char *StrError(unsigned int ErrNo);
+char *win32_strerror(unsigned int ErrNo);
 
 /*
  * Insert a route in the kernel routing table
@@ -107,13 +107,13 @@ os_route_add_rtentry(const struct rt_entry *rt, int ip_version)
 
   if (Res != NO_ERROR) {
     if (Res != ERROR_NOT_FOUND)
-      OLSR_WARN(LOG_ROUTING, "SetIpForwardEntry() = %08lx, %s", Res, StrError(Res));
+      OLSR_WARN(LOG_ROUTING, "SetIpForwardEntry() = %08lx, %s", Res, win32_strerror(Res));
 
     Res = CreateIpForwardEntry(&Row);
   }
 
   if (Res != NO_ERROR) {
-    OLSR_WARN(LOG_ROUTING, "CreateIpForwardEntry() = %08lx, %s", Res, StrError(Res));
+    OLSR_WARN(LOG_ROUTING, "CreateIpForwardEntry() = %08lx, %s", Res, win32_strerror(Res));
 
     // XXX - report error in a different way
 
@@ -173,7 +173,7 @@ os_route_del_rtentry(const struct rt_entry *rt, int ip_version)
   Res = DeleteIpForwardEntry(&Row);
 
   if (Res != NO_ERROR) {
-    OLSR_WARN(LOG_NETWORKING, "DeleteIpForwardEntry() = %08lx, %s", Res, StrError(Res));
+    OLSR_WARN(LOG_NETWORKING, "DeleteIpForwardEntry() = %08lx, %s", Res, win32_strerror(Res));
 
     // XXX - report error in a different way
 
