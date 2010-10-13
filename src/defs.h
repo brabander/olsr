@@ -99,12 +99,6 @@ extern FILE *EXPORT(debug_handle);
 
 #define ROUND_UP_TO_POWER_OF_2(val, pow2) (((val) + (pow2) - 1) & ~((pow2) - 1))
 
-#ifdef WIN32
-#define CLOSESOCKET(fd)  do { closesocket(fd); (fd) = -1; } while (0)
-#else
-#define CLOSESOCKET(fd)  do { close(fd); (fd) = -1; } while (0)
-#endif
-
 enum app_state {
   STATE_INIT,
   STATE_RUNNING,

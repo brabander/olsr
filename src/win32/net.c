@@ -71,6 +71,17 @@ void PError(const char *);
 
 static void DisableIcmpRedirects(void);
 
+/**
+ * Wrapper for closing sockets
+ * @param
+ * @param sock
+ * @return
+ */
+int
+os_close(, int sock) {
+  return closesocket(sock);
+}
+
 int
 os_socket_set_nonblocking(int fd)
 {

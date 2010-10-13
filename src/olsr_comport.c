@@ -62,6 +62,7 @@
 #include "olsr_comport_http.h"
 #include "olsr_comport_txt.h"
 #include "olsr_comport.h"
+#include "os_net.h"
 
 #define HTTP_TIMEOUT  30000
 #define TXT_TIMEOUT 60000
@@ -91,7 +92,8 @@ static void olsr_com_cleanup_session(struct comport_connection *con);
 
 static void olsr_com_timeout_handler(void *);
 
-void olsr_com_init(bool failfast) {
+void
+olsr_com_init(bool failfast) {
   connection_cookie =
       olsr_create_memcookie("comport connections", sizeof(struct comport_connection));
 
@@ -130,7 +132,8 @@ void olsr_com_init(bool failfast) {
   }
 }
 
-void olsr_com_destroy(void) {
+void
+olsr_com_destroy(void) {
   struct comport_connection *con;
   struct list_iterator iterator;
   OLSR_FOR_ALL_COMPORT_ENTRIES(con, iterator) {
@@ -141,11 +144,13 @@ void olsr_com_destroy(void) {
   olsr_com_destroy_txt();
 }
 
-void olsr_com_activate_output(struct comport_connection *con) {
+void
+olsr_com_activate_output(struct comport_connection *con) {
   enable_olsr_socket(con->fd, &olsr_com_parse_connection, NULL, SP_PR_WRITE);
 }
 
-static int olsr_com_openport(int port) {
+static int
+olsr_com_openport(int port) {
   struct sockaddr_storage sst;
   uint32_t yes = 1;
   socklen_t addrlen;
@@ -163,7 +168,7 @@ static int olsr_com_openport(int port) {
 
   if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char *) &yes, sizeof(yes)) < 0) {
     OLSR_WARN(LOG_COMPORT, "Com-port %d SO_REUSEADDR for IPv%c failed: %s\n", port, ipchar, strerror(errno));
-    CLOSESOCKET(s);
+    os_close(s);
     return -1;
   }
 
@@ -194,21 +199,22 @@ static int olsr_com_openport(int port) {
   /* bind the socket to the port number */
   if (bind(s, (struct sockaddr *) &sst, addrlen) == -1) {
     OLSR_WARN(LOG_COMPORT, "Com-port %d bind failed for IPv%c: %s\n", port, ipchar, strerror(errno));
-    CLOSESOCKET(s);
+    os_close(s);
     return -1;
   }
 
   /* show that we are willing to listen */
   if (listen(s, 1) == -1) {
     OLSR_WARN(LOG_COMPORT, "Com-port %d listen for IPv%c failed %s\n", port, ipchar, strerror(errno));
-    CLOSESOCKET(s);
+    os_close(s);
     return -1;
   }
 
   return s;
 }
 
-static void olsr_com_parse_request(int fd, void *data __attribute__ ((unused)), unsigned int flags __attribute__ ((unused))) {
+static void
+olsr_com_parse_request(int fd, void *data __attribute__ ((unused)), unsigned int flags __attribute__ ((unused))) {
   struct comport_connection *con;
   struct sockaddr_storage addr;
   socklen_t addrlen;
@@ -272,7 +278,8 @@ static void olsr_com_parse_request(int fd, void *data __attribute__ ((unused)), 
   list_add_after(&olsr_comport_head, &con->node);
 }
 
-static void olsr_com_cleanup_session(struct comport_connection *con) {
+static void
+olsr_com_cleanup_session(struct comport_connection *con) {
   if (con->is_http) {
     connection_http_count--;
   } else {
@@ -285,7 +292,7 @@ static void olsr_com_cleanup_session(struct comport_connection *con) {
     con->stop_handler(con);
   }
   remove_olsr_socket(con->fd, &olsr_com_parse_connection, NULL);
-  CLOSESOCKET(con->fd);
+  os_close(con->fd);
 
   abuf_free(&con->in);
   abuf_free(&con->out);
@@ -293,12 +300,14 @@ static void olsr_com_cleanup_session(struct comport_connection *con) {
   olsr_cookie_free(connection_cookie, con);
 }
 
-static void olsr_com_timeout_handler(void *data) {
+static void
+olsr_com_timeout_handler(void *data) {
   struct comport_connection *con = data;
   olsr_com_cleanup_session(con);
 }
 
-static void olsr_com_parse_connection(int fd, void *data, unsigned int flags) {
+static void
+olsr_com_parse_connection(int fd, void *data, unsigned int flags) {
   struct comport_connection *con = data;
 #if !defined(REMOVE_LOG_WARN)
   struct ipaddr_str buf;

@@ -79,6 +79,17 @@
 #define BUFSPACE  (127*1024)    /* max. input buffer size to request */
 
 /**
+ * Wrapper for closing sockets
+ * @param
+ * @param sock
+ * @return
+ */
+int
+os_close(int sock) {
+  return close(sock);
+}
+
+/**
  * Checks if an initialized interface is changed
  * that is if it has been set down or the address
  * has been changed.

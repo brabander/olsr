@@ -274,7 +274,7 @@ olsr_flush_sockets(void)
   struct list_iterator iterator;
 
   OLSR_FOR_ALL_SOCKETS(entry, iterator) {
-    CLOSESOCKET(entry->fd);
+    os_close(entry->fd);
     list_remove(&entry->socket_node);
     free(entry);
   }

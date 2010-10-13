@@ -188,8 +188,8 @@ add_interface(struct olsr_if_config *iface) {
   }
 
   if ((os_init_interface(ifp, iface))) {
-    CLOSESOCKET(ifp->olsr_socket);
-    CLOSESOCKET(ifp->send_socket);
+    os_close(ifp->olsr_socket);
+    os_close(ifp->send_socket);
     olsr_cookie_free(interface_mem_cookie, ifp);
     return NULL;
   }
@@ -348,8 +348,8 @@ remove_interface(struct interface *ifp)
 
   /* Close olsr socket */
   remove_olsr_socket(ifp->olsr_socket, &olsr_input, NULL);
-  CLOSESOCKET(ifp->olsr_socket);
-  CLOSESOCKET(ifp->send_socket);
+  os_close(ifp->olsr_socket);
+  os_close(ifp->send_socket);
   ifp->olsr_socket = -1;
 
   free(ifp->int_name);

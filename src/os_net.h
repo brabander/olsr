@@ -61,6 +61,7 @@
 ssize_t EXPORT(os_sendto)(int, const void *, size_t, int, const union olsr_sockaddr *);
 ssize_t EXPORT(os_recvfrom)(int, void *, size_t, int, union olsr_sockaddr *, socklen_t *);
 int os_select(int, fd_set *, fd_set *, fd_set *, struct timeval *);
+int EXPORT(os_close)(int);
 
 int EXPORT(os_getsocket4)(int, struct interface *, bool, uint16_t);
 int EXPORT(os_getsocket6)(int, struct interface *, bool, uint16_t);
