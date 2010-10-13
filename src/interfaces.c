@@ -200,8 +200,8 @@ add_interface(struct olsr_if_config *iface) {
   add_olsr_socket(ifp->olsr_socket, &olsr_input, NULL, NULL, SP_PR_READ);
   add_olsr_socket(ifp->send_socket, &olsr_input, NULL, NULL, SP_PR_READ);
 
-  os_socket_set_olsr_options(ifp->olsr_socket);
-  os_socket_set_olsr_options(ifp->send_socket);
+  os_socket_set_olsr_options(ifp, ifp->olsr_socket);
+  os_socket_set_olsr_options(ifp, ifp->send_socket);
 
   /*
    *Initialize packet sequencenumber as a random 16bit value

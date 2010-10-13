@@ -484,20 +484,8 @@ os_getsocket6(int bufspace, struct interface *ifp, bool bind_to_unicast, uint16_
   return sock;
 }
 
-void
-os_socket_set_olsr_options(int sock) {
-  /* Set TOS */
-  int data = IPTOS_PREC(olsr_cnf->tos);
-  if (setsockopt(sock, SOL_SOCKET, SO_PRIORITY, (char *)&data, sizeof(data)) < 0) {
-    OLSR_WARN(LOG_INTERFACE, "setsockopt(SO_PRIORITY) error %s", strerror(errno));
-  }
-  data = IPTOS_TOS(olsr_cnf->tos);
-  if (setsockopt(sock, SOL_IP, IP_TOS, (char *)&data, sizeof(data)) < 0) {
-    OLSR_WARN(LOG_INTERFACE, "setsockopt(IP_TOS) error %s", strerror(errno));
-  }
-}
 
-int
+static int
 join_mcast(struct interface *ifs, int sock)
 {
   /* See linux/in6.h */
@@ -540,6 +528,21 @@ join_mcast(struct interface *ifs, int sock)
   }
 
   return 0;
+}
+
+void
+os_socket_set_olsr_options(struct interface * ifs, int sock) {
+  /* Set TOS */
+  int data = IPTOS_PREC(olsr_cnf->tos);
+  if (setsockopt(sock, SOL_SOCKET, SO_PRIORITY, (char *)&data, sizeof(data)) < 0) {
+    OLSR_WARN(LOG_INTERFACE, "setsockopt(SO_PRIORITY) error %s", strerror(errno));
+  }
+  data = IPTOS_TOS(olsr_cnf->tos);
+  if (setsockopt(sock, SOL_IP, IP_TOS, (char *)&data, sizeof(data)) < 0) {
+    OLSR_WARN(LOG_INTERFACE, "setsockopt(IP_TOS) error %s", strerror(errno));
+  }
+
+  join_mcast(ifs, sock);
 }
 
 /*

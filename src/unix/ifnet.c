@@ -455,10 +455,6 @@ os_init_interface(struct interface *ifp, struct olsr_if_config *iface)
    */
   ifp->int_name = olsr_strdup(ifr_basename);
 
-  if (olsr_cnf->ip_version == AF_INET6) {
-    join_mcast(ifp, ifp->olsr_socket);
-    join_mcast(ifp, ifp->send_socket);
-  }
   /* Set interface options */
 #ifdef linux
   net_os_set_ifoptions(ifr_basename, ifp);

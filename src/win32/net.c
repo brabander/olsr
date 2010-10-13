@@ -193,8 +193,53 @@ os_getsocket6(int bufspace, struct interface *ifp, bool bind_to_unicast, uint16_
   return Sock;
 }
 
+static int
+join_mcast(struct interface *Nic, int Sock)
+{
+  /* See linux/in6.h */
+  struct ipaddr_str buf;
+  struct ipv6_mreq McastReq;
+
+  McastReq.ipv6mr_multiaddr = Nic->int_multicast.v6.sin6_addr;
+  McastReq.ipv6mr_interface = Nic->if_index;
+
+  OLSR_DEBUG(LOG_NETWORKING, "Interface %s joining multicast %s...", Nic->int_name,
+             olsr_ip_to_string(&buf, (union olsr_ip_addr *)&Nic->int_multicast.v6.sin6_addr));
+  /* Send multicast */
+  if (setsockopt(Sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char *)&McastReq, sizeof(struct ipv6_mreq))
+      < 0) {
+    OLSR_WARN(LOG_NETWORKING, "Join multicast: %s\n", strerror(errno));
+    return -1;
+  }
+
+  /* Old libc fix */
+#ifdef IPV6_JOIN_GROUP
+  /* Join reciever group */
+  if (setsockopt(Sock, IPPROTO_IPV6, IPV6_JOIN_GROUP, (char *)&McastReq, sizeof(struct ipv6_mreq))
+      < 0)
+#else
+  /* Join reciever group */
+  if (setsockopt(Sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char *)&McastReq, sizeof(struct ipv6_mreq))
+      < 0)
+#endif
+  {
+    OLSR_WARN(LOG_NETWORKING, "Join multicast send: %s\n", strerror(errno));
+    return -1;
+  }
+
+
+  if (setsockopt(Sock, IPPROTO_IPV6, IPV6_MULTICAST_IF, (char *)&McastReq.ipv6mr_interface, sizeof(McastReq.ipv6mr_interface))
+      < 0) {
+    OLSR_WARN(LOG_NETWORKING, "Join multicast if: %s\n", strerror(errno));
+    return -1;
+  }
+
+  return 0;
+}
+
 void
-os_socket_set_olsr_options(int sock __attribute__ ((unused))) {
+os_socket_set_olsr_options(struct interface *ifp, int sock) {
+  join_mcast(ifp, sock);
 }
 
 static int

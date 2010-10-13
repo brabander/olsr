@@ -18,6 +18,4 @@
 void net_os_restore_ifoption(struct interface *ifs);
 int net_os_set_ifoptions(const char *if_name, struct interface *iface);
 
-int join_mcast(struct interface *, int);
-
 #endif /* LINUX_NET_H_ */

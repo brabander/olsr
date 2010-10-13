@@ -502,50 +502,6 @@ chk_if_changed(struct olsr_if_config *olsr_if)
   return Res;
 }
 
-static int
-join_mcast(struct interface *Nic, int Sock)
-{
-  /* See linux/in6.h */
-  struct ipaddr_str buf;
-  struct ipv6_mreq McastReq;
-
-  McastReq.ipv6mr_multiaddr = Nic->int_multicast.v6.sin6_addr;
-  McastReq.ipv6mr_interface = Nic->if_index;
-
-  OLSR_DEBUG(LOG_NETWORKING, "Interface %s joining multicast %s...", Nic->int_name,
-             olsr_ip_to_string(&buf, (union olsr_ip_addr *)&Nic->int_multicast.v6.sin6_addr));
-  /* Send multicast */
-  if (setsockopt(Sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char *)&McastReq, sizeof(struct ipv6_mreq))
-      < 0) {
-    OLSR_WARN(LOG_NETWORKING, "Join multicast: %s\n", strerror(errno));
-    return -1;
-  }
-
-  /* Old libc fix */
-#ifdef IPV6_JOIN_GROUP
-  /* Join reciever group */
-  if (setsockopt(Sock, IPPROTO_IPV6, IPV6_JOIN_GROUP, (char *)&McastReq, sizeof(struct ipv6_mreq))
-      < 0)
-#else
-  /* Join reciever group */
-  if (setsockopt(Sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char *)&McastReq, sizeof(struct ipv6_mreq))
-      < 0)
-#endif
-  {
-    OLSR_WARN(LOG_NETWORKING, "Join multicast send: %s\n", strerror(errno));
-    return -1;
-  }
-
-
-  if (setsockopt(Sock, IPPROTO_IPV6, IPV6_MULTICAST_IF, (char *)&McastReq.ipv6mr_interface, sizeof(McastReq.ipv6mr_interface))
-      < 0) {
-    OLSR_WARN(LOG_NETWORKING, "Join multicast if: %s\n", strerror(errno));
-    return -1;
-  }
-
-  return 0;
-}
-
 int
 os_init_interface(struct interface *ifp, struct olsr_if_config *IntConf)
 {
@@ -597,11 +553,6 @@ os_init_interface(struct interface *ifp, struct olsr_if_config *IntConf)
   ifp->ip_addr.v4 = ifp->int_src.v4.sin_addr;
 
   ifp->if_index = if_info.Index;
-
-  if (olsr_cnf->ip_version == AF_INET6) {
-    join_mcast(ifp, ifp->olsr_socket);
-    join_mcast(ifp, ifp->send_socket);
-  }
 
   OLSR_INFO(LOG_NETWORKING, "\tKernel index: %08x\n", ifp->if_index);
   return 0;
