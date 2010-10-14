@@ -762,6 +762,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__ ((unused)))
     }
 
     join_mcast(&ifs, ifs.olsr_socket);
+    join_mcast(&ifs, ifs.send_socket);
   }
 
   ifp = olsr_malloc(sizeof(struct interface), "Interface update 2");
