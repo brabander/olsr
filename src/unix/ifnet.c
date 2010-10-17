@@ -268,6 +268,8 @@ chk_if_changed(struct olsr_if *iface)
 
       olsr_trigger_ifchange(ifp->if_index, ifp, IFCHG_IF_UPDATE);
 
+      /*the interface sockets should be recreated (to use new source adress) !?*/
+
       return 1;
     }
     return 0;
@@ -304,7 +306,10 @@ chk_if_changed(struct olsr_if *iface)
 #endif
       memcpy(&ifp->ip_addr, &((struct sockaddr_in *)ARM_NOWARN_ALIGN(&ifr.ifr_addr))->sin_addr.s_addr, olsr_cnf->ipsize);
 
-      if_changes = 1;
+      /* we have to make sure that olsrd uses the new source address */
+        olsr_remove_interface(iface); /* so we remove the interface completely */
+        chk_if_up(iface,3); /* and create it again to get new sockets,..*/
+        return 0;
     }
 
     /* Check netmask */

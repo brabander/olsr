@@ -124,6 +124,7 @@ olsr_trigger_ifchange(int if_index, struct interface *ifp, enum olsr_ifchg_flag 
   struct ifchgf *tmp_ifchgf_list = ifchgf_list;
 
   while (tmp_ifchgf_list != NULL) {
+printf("trigger ifchange");
     tmp_ifchgf_list->function(if_index, ifp, flag);
     tmp_ifchgf_list = tmp_ifchgf_list->next;
   }
