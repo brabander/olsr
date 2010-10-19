@@ -52,6 +52,7 @@
 #include "link_set.h"
 #include "olsr_ip_prefix_list.h"
 #include "olsr_logging.h"
+#include "os_net.h"
 
 #ifdef _WRS_KERNEL
 #include <vxWorks.h>
@@ -135,7 +136,7 @@ olsr_plugin_exit(void)
 #endif
 {
   if (ipc_socket != -1) {
-    CLOSESOCKET(ipc_socket);
+    os_close(ipc_socket);
   }
 }
 
@@ -177,7 +178,7 @@ plugin_ipc_init(void)
   uint32_t yes = 1;
 
   if (ipc_socket != -1) {
-    CLOSESOCKET(ipc_socket);
+    os_close(ipc_socket);
   }
 
   /* Init ipc socket */
@@ -189,7 +190,7 @@ plugin_ipc_init(void)
 
   if (setsockopt(ipc_socket, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes)) < 0) {
     OLSR_WARN(LOG_PLUGINS, "SO_REUSEADDR failed %s\n", strerror(errno));
-    CLOSESOCKET(ipc_socket);
+    os_close(ipc_socket);
     return 0;
   }
 #if defined __FreeBSD__ && defined SO_NOSIGPIPE
@@ -211,14 +212,14 @@ plugin_ipc_init(void)
   /* bind the socket to the port number */
   if (bind(ipc_socket, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
     OLSR_WARN(LOG_PLUGINS, "(DOT DRAW)IPC bind %s\n", strerror(errno));
-    CLOSESOCKET(ipc_socket);
+    os_close(ipc_socket);
     return 0;
   }
 
   /* show that we are willing to listen */
   if (listen(ipc_socket, 1) == -1) {
     OLSR_WARN(LOG_PLUGINS, "(DOT DRAW)IPC listen %s\n", strerror(errno));
-    CLOSESOCKET(ipc_socket);
+    os_close(ipc_socket);
     return 0;
   }
 
@@ -242,13 +243,13 @@ ipc_action(int fd __attribute__ ((unused)), void *data __attribute__ ((unused)),
 #ifndef _WRS_KERNEL
   if (ip4cmp(&pin.sin_addr, &ipc_accept_ip.v4) != 0) {
     OLSR_WARN(LOG_PLUGINS, "Front end-connection from foreign host (%s) not allowed!\n", inet_ntoa(pin.sin_addr));
-    CLOSESOCKET(ipc_connection);
+    os_close(ipc_connection);
     return;
   }
 #endif
   OLSR_DEBUG(LOG_PLUGINS, "(DOT DRAW)IPC: Connection from %s\n", inet_ntoa(pin.sin_addr));
   pcf_event(ipc_connection, 1, 1, 1);
-  CLOSESOCKET(ipc_connection);  /* close connection after one output */
+  os_close(ipc_connection);  /* close connection after one output */
 }
 
 
@@ -345,7 +346,7 @@ defined _WRS_KERNEL
 #endif
     if (send(ipc_connection, data, size, FLAGS) == -1) {
       OLSR_WARN(LOG_PLUGINS, "(DOT DRAW)IPC connection lost!\n");
-      CLOSESOCKET(ipc_connection);
+      os_close(ipc_connection);
     }
   }
 }

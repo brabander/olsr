@@ -60,6 +60,7 @@
 #include "olsr_ip_prefix_list.h"
 #include "olsr_logging.h"
 #include "os_time.h"
+#include "os_net.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -265,7 +266,7 @@ get_http_socket(int port)
 
   if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes)) < 0) {
     OLSR_WARN(LOG_PLUGINS, "(HTTPINFO)SO_REUSEADDR failed %s\n", strerror(errno));
-    CLOSESOCKET(s);
+    os_close(s);
     return -1;
   }
 
@@ -296,14 +297,14 @@ get_http_socket(int port)
   /* bind the socket to the port number */
   if (bind(s, (struct sockaddr *)&sst, addrlen) == -1) {
     OLSR_WARN(LOG_PLUGINS, "(HTTPINFO) bind failed %s\n", strerror(errno));
-    CLOSESOCKET(s);
+    os_close(s);
     return -1;
   }
 
   /* show that we are willing to listen */
   if (listen(s, 1) == -1) {
     OLSR_WARN(LOG_PLUGINS, "(HTTPINFO) listen failed %s\n", strerror(errno));
-    CLOSESOCKET(s);
+    os_close(s);
     return -1;
   }
 
@@ -581,7 +582,7 @@ send_http_data:
 close_connection:
   abuf_free(&body);
   abuf_free(&header);
-  CLOSESOCKET(client_sockets[curr_clients]);
+  os_close(client_sockets[curr_clients]);
   curr_clients--;
 }
 
@@ -668,7 +669,7 @@ olsr_plugin_exit(void)
   ip_acl_flush(&allowed_nets);
 
   if (http_socket >= 0) {
-    CLOSESOCKET(http_socket);
+    os_close(http_socket);
   }
 }
 
