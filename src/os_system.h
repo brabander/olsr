@@ -39,36 +39,25 @@
  *
  */
 
-#ifndef _APM_H
-#define _APM_H
-
 /*
- * Interface to OS dependent power management information
+ * System logging interface
+ * Platform independent - the implementations
+ * reside in <OS>/log.c(e.g. linux/log.c)
  */
 
-#define OLSR_BATTERY_POWERED  0
-#define OLSR_AC_POWERED       1
+#ifndef _OLSR_SYSLOG_H
+#define _OLSR_SYSLOG_H
 
-struct olsr_apm_info {
-  int ac_line_status;
-  int battery_percentage;
-  int battery_time_left;               /* Time left in minutes */
-};
+#include "defs.h"
 
-int apm_init(void);
+void os_init(void);
+void os_cleanup(void);
 
-void apm_printinfo(struct olsr_apm_info *);
+void os_clear_console(void);
+void os_printf_syslog (int level, const char *format, ...) __attribute__ ((format(printf, 2, 3)));
 
-/*
- * This function should return 0 if no powerinfo
- * is available. If returning 1 the function must
- * fill the provided olsr_apm_info struct with
- * the current power status.
- */
 
-int apm_read(struct olsr_apm_info *);
-
-#endif /* _APM_H */
+#endif
 
 /*
  * Local Variables:

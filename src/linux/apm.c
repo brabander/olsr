@@ -44,9 +44,10 @@
  * Acpi-Power Enlightenment epplet
  */
 
-#include "apm.h"
+#include "os_apm.h"
 #include "defs.h"
 #include "olsr_logging.h"
+#include "linux/linux_apm.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -113,8 +114,8 @@ static int apm_read_acpi(struct olsr_apm_info *);
 
 static int acpi_probe(void);
 
-int
-apm_init(void)
+void
+os_apm_init(void)
 {
   struct olsr_apm_info ainfo;
 
@@ -127,22 +128,18 @@ apm_init(void)
     method = USE_APM;
 
   if (method != -1)
-    apm_printinfo(&ainfo);
-
-  return method;
+    os_apm_printinfo(&ainfo);
 }
 
 void
-apm_printinfo(struct olsr_apm_info *ainfo)
+os_apm_printinfo(struct olsr_apm_info *ainfo __attribute__ ((unused)))
 {
   OLSR_DEBUG(LOG_APM, "APM info:\n\tAC status %d\n\tBattery percentage %d%%\n\tBattery time left %d mins\n\n", ainfo->ac_line_status,
               ainfo->battery_percentage, ainfo->battery_time_left);
-
-  ainfo = NULL;                 /* squelch compiler warnings */
 }
 
 int
-apm_read(struct olsr_apm_info *ainfo)
+os_apm_read(struct olsr_apm_info *ainfo)
 {
   switch (method) {
   case USE_APM:

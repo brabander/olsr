@@ -60,6 +60,7 @@
 #include "ipcalc.h"
 #include "olsr_logging.h"
 #include "win32/compat.h"
+#include "os_system.h"
 #if defined WINCE
 #define WIDE_STRING(s) L##s
 #else
@@ -78,8 +79,8 @@ static void DisableIcmpRedirects(void);
  * @return
  */
 int
-os_close(, int sock) {
-  return closesocket(sock);
+os_close(int sock) {
+  return os_close(sock);
 }
 
 int
@@ -108,13 +109,13 @@ os_getsocket4(int bufspace, struct interface *ifp, bool bind_to_unicast, uint16_
 
   if (setsockopt(Sock, SOL_SOCKET, SO_BROADCAST, (char *)&On, sizeof(On)) < 0) {
     OLSR_ERROR(LOG_NETWORKING, "Cannot set socket for OLSR PDUs to broadcast mode (%s)\n", strerror(errno));
-    CLOSESOCKET(Sock);
+    os_close(Sock);
     olsr_exit(EXIT_FAILURE);
   }
 
   if (setsockopt(Sock, SOL_SOCKET, SO_REUSEADDR, (char *)&On, sizeof(On)) < 0) {
     OLSR_ERROR(LOG_NETWORKING, "Cannot set socket for OLSR PDUs to broadcast mode (%s)\n", strerror(errno));
-    CLOSESOCKET(Sock);
+    os_close(Sock);
     olsr_exit(EXIT_FAILURE);
   }
 
@@ -141,13 +142,13 @@ os_getsocket4(int bufspace, struct interface *ifp, bool bind_to_unicast, uint16_
 
   if (bind(Sock, (struct sockaddr *)&Addr, sizeof(Addr)) < 0) {
     OLSR_ERROR(LOG_NETWORKING, "Could not bind socket for OLSR PDUs to device (%s)\n", strerror(errno));
-    CLOSESOCKET(Sock);
+    os_close(Sock);
     olsr_exit(EXIT_FAILURE);
   }
 
   if (WSAIoctl(Sock, FIONBIO, &On, sizeof(On), NULL, 0, &Len, NULL, NULL) < 0) {
     OLSR_ERROR(LOG_NETWORKING, "WSAIoctl");
-    CLOSESOCKET(Sock);
+    os_close(Sock);
     olsr_exit(EXIT_FAILURE);
   }
 
@@ -167,13 +168,13 @@ os_getsocket6(int bufspace, struct interface *ifp, bool bind_to_unicast, uint16_
 
   if (setsockopt(Sock, SOL_SOCKET, SO_BROADCAST, (char *)&On, sizeof(On)) < 0) {
     OLSR_ERROR(LOG_NETWORKING, "Cannot set socket for OLSR PDUs to broadcast mode (%s)\n", strerror(errno));
-    CLOSESOCKET(Sock);
+    os_close(Sock);
     olsr_exit(EXIT_FAILURE);
   }
 
   if (setsockopt(Sock, SOL_SOCKET, SO_REUSEADDR, (char *)&On, sizeof(On)) < 0) {
     OLSR_ERROR(LOG_NETWORKING, "Cannot set socket for OLSR PDUs to broadcast mode (%s)\n", strerror(errno));
-    CLOSESOCKET(Sock);
+    os_close(Sock);
     olsr_exit(EXIT_FAILURE);
   }
 
@@ -197,7 +198,7 @@ os_getsocket6(int bufspace, struct interface *ifp, bool bind_to_unicast, uint16_
 
   if (bind(Sock, (struct sockaddr *)&Addr6, sizeof(Addr6)) < 0) {
     OLSR_ERROR(LOG_NETWORKING, "Could not bind socket for OLSR PDUs to device (%s)\n", strerror(errno));
-    CLOSESOCKET(Sock);
+    os_close(Sock);
     olsr_exit(EXIT_FAILURE);
   }
 
@@ -313,7 +314,8 @@ DisableIcmpRedirects(void)
 
 static OVERLAPPED RouterOver;
 
-void os_init_global_ifoptions(void)
+/* enable IP forwarding */
+void os_init(void)
 {
   HMODULE Lib;
   unsigned int __stdcall(*EnableRouterFunc) (HANDLE * Hand, OVERLAPPED * Over);
@@ -351,9 +353,10 @@ void os_init_global_ifoptions(void)
   return;
 }
 
-static int
-disable_ip_forwarding(void)
-{
+/**
+ * disable IP forwarding
+ */
+void os_cleanup(void) {
   HMODULE Lib;
   unsigned int __stdcall(*UnenableRouterFunc) (OVERLAPPED * Over, unsigned int *Count);
   unsigned int Count;
@@ -361,28 +364,20 @@ disable_ip_forwarding(void)
   Lib = LoadLibrary(WIDE_STRING("iphlpapi.dll"));
 
   if (Lib == NULL)
-    return 0;
+    return;
 
   UnenableRouterFunc = (unsigned int __stdcall(*)(OVERLAPPED *, unsigned int *))
     GetProcAddress(Lib, WIDE_STRING("UnenableRouter"));
 
   if (UnenableRouterFunc == NULL)
-    return 0;
+    return;
 
   if (UnenableRouterFunc(&RouterOver, &Count) != NO_ERROR) {
     OLSR_WARN(LOG_NETWORKING, "UnenableRouter()");
-    return -1;
+    return;
   }
 
   OLSR_DEBUG(LOG_NETWORKING, "Routing disabled, count = %u.\n", Count);
-
-  return 0;
-}
-
-int os_cleanup_global_ifoptions(void) {
-  disable_ip_forwarding();
-
-  return 0;
 }
 
 /**

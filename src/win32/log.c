@@ -39,16 +39,7 @@
  *
  */
 
-#include "os_log.h"
-
-void
-os_syslog_init(const char *Id __attribute__ ((unused)))
-{
-}
-
-void
-os_syslog_cleanup(void) {
-}
+#include "os_system.h"
 
 void
 os_printf_syslog(int Level __attribute__ ((unused)), const char *Format __attribute__ ((unused)),...)

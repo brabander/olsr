@@ -39,7 +39,7 @@
  *
  */
 
-#include "apm.h"
+#include "os_apm.h"
 #include "defs.h"
 #include <stdio.h>
 #include <string.h>
@@ -51,12 +51,12 @@ apm_init(void)
 }
 
 void
-apm_printinfo(struct olsr_apm_info *ApmInfo __attribute__ ((unused)))
+os_apm_printinfo(struct olsr_apm_info *ApmInfo __attribute__ ((unused)))
 {
 }
 
 int
-apm_read(struct olsr_apm_info *ApmInfo __attribute__ ((unused)))
+os_apm_read(struct olsr_apm_info *ApmInfo __attribute__ ((unused)))
 {
   return -1;
 }

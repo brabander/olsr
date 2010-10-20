@@ -74,7 +74,7 @@ void
 void
   olsr_init_willingness(void);
 
-uint8_t olsr_calculate_willingness(void);
+void olsr_calculate_willingness(void);
 
 const char *olsr_msgtype_to_string(uint8_t);
 

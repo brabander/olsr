@@ -39,7 +39,7 @@
  *
  */
 
-#include "apm.h"
+#include "os_apm.h"
 #include "defs.h"
 #include "olsr_cfg.h"
 #include "olsr_logging.h"
@@ -51,30 +51,15 @@
 #include <windows.h>
 #undef interface
 
-int
-apm_init(void)
-{
-  struct olsr_apm_info ApmInfo;
-
-  OLSR_INFO(LOG_MAIN, "Initializing APM\n");
-
-  if (apm_read(&ApmInfo) < 0)
-    return -1;
-
-  apm_printinfo(&ApmInfo);
-
-  return 0;
-}
-
 void
-apm_printinfo(struct olsr_apm_info *ApmInfo)
+os_apm_printinfo(struct olsr_apm_info *ApmInfo)
 {
   OLSR_INFO(LOG_MAIN, "APM info:\n\tAC status %d\n\tBattery percentage %d%%\n\n",
             ApmInfo->ac_line_status, ApmInfo->battery_percentage);
 }
 
 int
-apm_read(struct olsr_apm_info *ApmInfo)
+os_apm_read(struct olsr_apm_info *ApmInfo)
 {
 #if !defined WINCE
   SYSTEM_POWER_STATUS PowerStat;

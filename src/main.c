@@ -53,7 +53,7 @@
 #include "scheduler.h"
 #include "parser.h"
 #include "plugin_loader.h"
-#include "apm.h"
+#include "os_apm.h"
 #include "net_olsr.h"
 #include "olsr_cfg_gen.h"
 #include "common/string.h"
@@ -65,6 +65,7 @@
 #include "os_net.h"
 #include "os_kernel_routes.h"
 #include "os_time.h"
+#include "os_system.h"
 
 #if defined linux
 #include <linux/types.h>
@@ -200,8 +201,8 @@ main(int argc, char *argv[])
     olsr_exit(EXIT_FAILURE);
   }
 
-  /* set global interface options */
-  os_init_global_ifoptions();
+  /* setup os specific global options */
+  os_init();
 
 #ifndef WIN32
   /* Check if user is root */
@@ -312,20 +313,7 @@ main(int argc, char *argv[])
    *Set up willingness/APM
    */
   if (olsr_cnf->willingness_auto) {
-    if (apm_init() < 0) {
-      OLSR_INFO(LOG_MAIN, "Could not read APM info - setting default willingness(%d)\n", WILL_DEFAULT);
-
-      olsr_cnf->willingness_auto = 0;
-      olsr_cnf->willingness = WILL_DEFAULT;
-    } else {
-#if REMOVE_LOG_INFO != 1
-      struct millitxt_buf tbuf;
-#endif
-      olsr_cnf->willingness = olsr_calculate_willingness();
-
-      OLSR_INFO(LOG_MAIN, "Willingness set to %d - next update in %s secs\n",
-          olsr_cnf->willingness, olsr_milli_to_txt(&tbuf, olsr_cnf->will_int));
-    }
+    olsr_calculate_willingness();
   }
 
 #if defined linux
@@ -565,9 +553,6 @@ olsr_shutdown(void)
   }
 #endif
 
-  /* Reset network settings */
-  os_cleanup_global_ifoptions();
-
   /* ioctl socket */
   os_close(olsr_cnf->ioctl_s);
 
@@ -602,6 +587,9 @@ olsr_shutdown(void)
 
   /* Free cookies and memory pools attached. */
   olsr_cookie_cleanup();
+
+  /* Reset os_specific global options */
+  os_cleanup();
 
   /* Flush config */
   olsr_free_cfg(olsr_cnf);

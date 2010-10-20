@@ -48,7 +48,7 @@
 #include "olsr_cfg.h"
 #include "olsr_cfg_data.h"
 #include "olsr_logging.h"
-#include "os_log.h"
+#include "os_system.h"
 #include "os_time.h"
 
 struct log_handler_entry {
@@ -85,9 +85,6 @@ olsr_log_init(void)
   char error[256];
   bool printError = false;
   int i, j;
-
-  /* open syslog */
-  os_syslog_init("olsrd");
 
   /* clear global mask */
   for (j = 0; j < LOG_SEVERITY_COUNT; j++) {
@@ -140,8 +137,6 @@ olsr_log_cleanup(void)
     fflush(log_fileoutput);
     fclose(log_fileoutput);
   }
-
-  os_syslog_cleanup();
 }
 
 /**

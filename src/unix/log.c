@@ -44,7 +44,8 @@
  */
 
 #include "olsr_logging.h"
-#include "os_log.h"
+#include "os_system.h"
+#include "unix/unix_log.h"
 
 #include <syslog.h>
 #include <stdarg.h>

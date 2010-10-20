@@ -69,9 +69,6 @@ int EXPORT(os_getsocket6)(int, struct interface *, bool, uint16_t);
 int EXPORT(os_socket_set_nonblocking) (int fd);
 
 /* OS dependent interface functions */
-void os_init_global_ifoptions(void);
-int os_cleanup_global_ifoptions(void);
-
 int os_init_interface(struct interface *, struct olsr_if_config *);
 void os_cleanup_interface(struct interface *);
 

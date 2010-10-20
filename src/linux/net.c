@@ -253,7 +253,7 @@ void net_os_restore_ifoption(struct interface *ifs) {
 /**
  *Resets the spoof filter and ICMP redirect settings
  */
-int
+void
 os_cleanup_global_ifoptions(void)
 {
   char procfile[FILENAME_MAX];
@@ -285,7 +285,6 @@ os_cleanup_global_ifoptions(void)
       }
     }
   }
-  return 1;
 }
 
 /**

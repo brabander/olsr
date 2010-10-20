@@ -52,14 +52,14 @@
 #include "lq_mpr.h"
 #include "olsr_spf.h"
 #include "scheduler.h"
-#include "apm.h"
+#include "os_apm.h"
 #include "neighbor_table.h"
 #include "lq_packet.h"
 #include "common/avl.h"
 #include "net_olsr.h"
 #include "lq_plugin.h"
 #include "olsr_logging.h"
-#include "os_log.h"
+#include "os_system.h"
 
 #include <assert.h>
 #include <stdarg.h>
@@ -367,7 +367,7 @@ olsr_update_willingness(void *foo __attribute__ ((unused)))
   int tmp_will = olsr_cnf->willingness;
 
   /* Re-calculate willingness */
-  olsr_cnf->willingness = olsr_calculate_willingness();
+  olsr_calculate_willingness();
 
   if (tmp_will != olsr_cnf->willingness) {
     OLSR_INFO(LOG_MAIN, "Local willingness updated: old %d new %d\n", tmp_will, olsr_cnf->willingness);
@@ -398,31 +398,40 @@ olsr_init_willingness(void)
  *@return a 8bit value from 0-7 representing the willingness
  */
 
-uint8_t
+void
 olsr_calculate_willingness(void)
 {
   struct olsr_apm_info ainfo;
+  struct millitxt_buf tbuf;
 
   /* If fixed willingness */
   if (!olsr_cnf->willingness_auto)
-    return olsr_cnf->willingness;
+    return;
 
-  if (apm_read(&ainfo) < 1)
-    return WILL_DEFAULT;
+  if (os_apm_read(&ainfo) < 1) {
+    olsr_cnf->willingness = WILL_DEFAULT;
+    olsr_cnf->willingness_auto = false;
+    OLSR_WARN(LOG_MAIN, "Cannot read APM info, setting willingness to default value (%d)", olsr_cnf->willingness);
+    return;
+  }
 
-  apm_printinfo(&ainfo);
+  os_apm_printinfo(&ainfo);
 
   /* If AC powered */
-  if (ainfo.ac_line_status == OLSR_AC_POWERED)
-    return 6;
-
+  if (ainfo.ac_line_status == OLSR_AC_POWERED) {
+    olsr_cnf->willingness = 6;
+  }
+  else {
   /* If battery powered
    *
    * juice > 78% will: 3
    * 78% > juice > 26% will: 2
    * 26% > juice will: 1
    */
-  return (ainfo.battery_percentage / 26);
+    olsr_cnf->willingness = (ainfo.battery_percentage / 26);
+  }
+  OLSR_INFO(LOG_MAIN, "Willingness set to %d - next update in %s secs\n",
+      olsr_cnf->willingness, olsr_milli_to_txt(&tbuf, olsr_cnf->will_int));
 }
 
 const char *
