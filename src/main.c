@@ -62,6 +62,7 @@
 #include "olsr_comport.h"
 #include "neighbor_table.h"
 #include "olsr_logging.h"
+#include "os_apm.h"
 #include "os_net.h"
 #include "os_kernel_routes.h"
 #include "os_time.h"
@@ -192,30 +193,7 @@ main(int argc, char *argv[])
   case CFG_OK:
     /* Continue */
     break;
-  }                             /* switch */
-
-  OLSR_INFO(LOG_MAIN, "\n *** %s ***\n Build date: %s on %s\n http://www.olsr.org\n\n", olsrd_version, build_date, build_host);
-
-  /* Sanity check configuration */
-  if (olsr_sanity_check_cfg(olsr_cnf) < 0) {
-    olsr_exit(EXIT_FAILURE);
   }
-
-  /* setup os specific global options */
-  os_init();
-
-#ifndef WIN32
-  /* Check if user is root */
-  if (geteuid()) {
-    fprintf(stderr, "You must be root(uid = 0) to run olsrd!\nExiting\n\n");
-    exit(EXIT_FAILURE);
-  }
-#else
-  if (WSAStartup(0x0202, &WsaData)) {
-    fprintf(stderr, "Could not initialize WinSock.\n");
-    olsr_exit(EXIT_FAILURE);
-  }
-#endif
 
   /* Set avl tree comparator */
   if (olsr_cnf->ipsize == 4) {
@@ -232,6 +210,29 @@ main(int argc, char *argv[])
 
   /* initialize logging */
   olsr_log_init();
+
+  OLSR_INFO(LOG_MAIN, "\n *** %s ***\n Build date: %s on %s\n http://www.olsr.org\n\n", olsrd_version, build_date, build_host);
+
+  /* Sanity check configuration */
+  if (olsr_sanity_check_cfg(olsr_cnf) < 0) {
+    olsr_exit(EXIT_FAILURE);
+  }
+
+  /* setup os specific global options */
+  os_init();
+
+#ifndef WIN32
+  /* Check if user is root */
+  if (geteuid()) {
+    OLSR_ERROR(LOG_MAIN, "You must be root(uid = 0) to run olsrd!\nExiting\n\n");
+    olsr_exit(EXIT_FAILURE);
+  }
+#else
+  if (WSAStartup(0x0202, &WsaData)) {
+    OLSR_ERROR(LOG_MAIN, "Could not initialize WinSock.\n");
+    olsr_exit(EXIT_FAILURE);
+  }
+#endif
 
   /* initialize cookie system */
   olsr_cookie_init();
@@ -581,15 +582,16 @@ olsr_shutdown(void)
   /* Remove IP filters */
   deinit_netfilters();
 
-  OLSR_INFO(LOG_MAIN, "\n <<<< %s - terminating >>>>\n           http://www.olsr.org\n", olsrd_version);
-
-  olsr_log_cleanup();
-
   /* Free cookies and memory pools attached. */
   olsr_cookie_cleanup();
 
   /* Reset os_specific global options */
   os_cleanup();
+
+  OLSR_INFO(LOG_MAIN, "\n <<<< %s - terminating >>>>\n           http://www.olsr.org\n", olsrd_version);
+
+  /* cleanup logging system */
+  olsr_log_cleanup();
 
   /* Flush config */
   olsr_free_cfg(olsr_cnf);

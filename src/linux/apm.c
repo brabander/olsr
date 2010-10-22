@@ -44,10 +44,10 @@
  * Acpi-Power Enlightenment epplet
  */
 
-#include "os_apm.h"
 #include "defs.h"
 #include "olsr_logging.h"
 #include "linux/linux_apm.h"
+#include "os_apm.h"
 
 #include <stdio.h>
 #include <string.h>

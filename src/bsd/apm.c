@@ -45,7 +45,7 @@
 #include <string.h>
 
 int
-apm_init(void)
+os_apm_init(void)
 {
   return -1;
 }

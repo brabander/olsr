@@ -52,7 +52,6 @@
 #include "lq_mpr.h"
 #include "olsr_spf.h"
 #include "scheduler.h"
-#include "os_apm.h"
 #include "neighbor_table.h"
 #include "lq_packet.h"
 #include "common/avl.h"
@@ -60,6 +59,7 @@
 #include "lq_plugin.h"
 #include "olsr_logging.h"
 #include "os_system.h"
+#include "os_apm.h"
 
 #include <assert.h>
 #include <stdarg.h>
