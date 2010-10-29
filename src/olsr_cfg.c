@@ -50,6 +50,7 @@
 #include "common/string.h"
 #include "olsr_time.h"
 #include "os_net.h"
+#include "os_system.h"
 
 #include <unistd.h>
 #include <string.h>
@@ -510,7 +511,7 @@ parse_cfg_interface(char *argstr, struct olsr_config *rcfg, char *rmsg)
                      (0 == strcasecmp("Midinterval", p_next[0])) || (0 == strcasecmp("MidValidityTime", p_next[0])) ||
                      (0 == strcasecmp("Hnainterval", p_next[0])) || (0 == strcasecmp("HnaValidityTime", p_next[0]))) {
             fprintf(stderr,"ERROR: %s is deprecated within the interface section. All message intervals/validities except Hellos are global!\n",p_next[0]);
-            exit(1);
+            os_exit(1);
           } else if (0 == strcasecmp("Weight", p_next[0])) {
             new_if->cnf->weight.fixed = true;
             PARSER_DEBUG_PRINTF("\tFixed willingness: %d\n", new_if->cnf->weight.value);

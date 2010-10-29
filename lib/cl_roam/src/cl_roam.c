@@ -46,6 +46,7 @@
 #include "olsr_cookie.h"
 #include "olsr_ip_prefix_list.h"
 #include "olsr_logging.h"
+#include "os_system.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -363,7 +364,7 @@ static void ping_infinite(struct guest_client * target) {
     rc = pthread_create(&thread, NULL, ping_thread_infinite, (void *) target);
     if (rc) {
       printf("ERROR; return code from pthread_create() is %d\n", rc);
-      exit(-1);
+      os_exit(-1);
     }
     target->ping_thread = thread;
     OLSR_INFO(LOG_PLUGINS, "Set up ping-thread for %s\n", inet_ntoa(target->ip.v4));
@@ -792,7 +793,7 @@ static void olsr_event2(void *foo  __attribute__ ((unused))) {
     rc = pthread_create(&thread, NULL, check_neighbour_host, (void *) nbr);
     if (rc) {
       printf("ERROR; return code from pthread_create() is %d\n", rc);
-      exit(-1);
+      os_exit(-1);
     }
   }
 }

@@ -5,6 +5,8 @@
  *      Author: rogge
  */
 
+#include <stdlib.h>
+
 #include "os_system.h"
 #include "unix/unix_log.h"
 
@@ -14,6 +16,16 @@
 #else
 #include "bsd/bsd_net.h"
 #endif
+
+void
+os_arg(int *argc __attribute__ ((unused)), char **argv __attribute__ ((unused))) {
+  return;
+}
+
+void  __attribute__((noreturn))
+os_exit(int ret) {
+  exit(ret);
+}
 
 void os_init(void) {
   os_syslog_init("olsrd");

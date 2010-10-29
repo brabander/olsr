@@ -518,7 +518,7 @@ olsr_exit(int val)
   fflush(stdout);
   olsr_cnf->exit_value = val;
   if (app_state == STATE_INIT) {
-    exit(val);
+    os_exit(val);
   }
   app_state = STATE_SHUTDOWN;
 }

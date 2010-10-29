@@ -73,6 +73,25 @@ void PError(const char *);
 static void DisableIcmpRedirects(void);
 
 /**
+ * Argument preprocessor
+ * @param argc
+ * @param argv
+ */
+void
+os_arg(int *argc __attribute__ ((unused)), char **argv __attribute__ ((unused))) {
+  return;
+}
+
+/**
+ * Wrapper for exit call
+ * @param ret return value
+ */
+void  __attribute__((noreturn))
+os_exit(int ret) {
+  exit(ret);
+}
+
+/**
  * Wrapper for closing sockets
  * @param
  * @param sock

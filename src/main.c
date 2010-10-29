@@ -152,6 +152,9 @@ main(int argc, char *argv[])
   /* Using PID as random seed */
   srandom(getpid());
 
+  /* call os dependent argument preprocessor */
+  os_arg(&argc, argv);
+
   /*
    * Set default configfile name
    */
@@ -180,7 +183,7 @@ main(int argc, char *argv[])
   case CFG_ERROR:
     if (parse_msg[0])
       fprintf(stderr, "Error: %s\n", parse_msg);
-    exit(EXIT_FAILURE);
+    os_exit(EXIT_FAILURE);
     break;
   case CFG_WARN:
     if (parse_msg[0])
@@ -188,7 +191,7 @@ main(int argc, char *argv[])
     /* No exit */
     break;
   case CFG_EXIT:
-    exit(EXIT_SUCCESS);
+    os_exit(EXIT_SUCCESS);
     break;
   case CFG_OK:
     /* Continue */
@@ -354,7 +357,7 @@ main(int argc, char *argv[])
     OLSR_INFO(LOG_MAIN, "%s detaching from the current process...\n", olsrd_version);
     if (daemon(0, 0) < 0) {
       OLSR_ERROR(LOG_MAIN, "daemon(3) failed: %s\n", strerror(errno));
-      exit(EXIT_FAILURE);
+      olsr_exit(EXIT_FAILURE);
     }
   }
 #endif
