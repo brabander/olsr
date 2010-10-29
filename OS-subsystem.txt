@@ -1,0 +1,55 @@
+Document a little bit the latest changes for the OS refactoring
+===============================================================
+
+
+
+
+moved OS sepcfic includes to src/os_*.h
+deleted and renamed many .h files
+
+
+os_system.h:
+
+
+  /* called very soon ! any static intializations for the OS go here */
+  void os_init(void);
+
+  /* called shortly before olsrd quits . Called very late */
+  void os_cleanup(void);
+   
+
+
+os_net.h:
+
+renamed all olsr_$function to os_$function . For example olsr_sendto() -> os_sendto().
+
+
+/* called very early while initialization of the interface */
+int os_init_interface(struct interface *, struct olsr_if_config *);
+
+/* called very late while cleaning up of the interface */
+void os_cleanup_interface(struct interface *);
+
+
+
+os_kernel_routes.h:
+
+int os_route_add_rtentry(const struct rt_entry *, int);
+int os_route_del_rtentry(const struct rt_entry *, int);
+
+
+os_time.h:
+
+
+  11 #include <sys/time.h>
+  12 #include "defs.h"
+  13 
+  14 int EXPORT(os_gettimeofday)(struct timeval *TVal, void *TZone);
+  15 void EXPORT(os_sleep)(unsigned int Sec);
+  16 int EXPORT(os_nanosleep)(struct timespec *Req, struct timespec *Rem);
+
+
+These are actually posix functions.
+Because they are exported, these can be interfaced with the event based simulator :))
+
+
