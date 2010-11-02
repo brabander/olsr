@@ -97,8 +97,6 @@ struct neighbor_entry *olsr_lookup_neighbor_table(const union olsr_ip_addr *);
 
 struct neighbor_entry *olsr_lookup_neighbor_table_alias(const union olsr_ip_addr *);
 
-bool olsr_lookup_neighbor_table_check(void);
-
 void olsr_time_out_two_hop_neighbors(struct neighbor_entry *);
 
 void olsr_time_out_neighborhood_tables(void);
