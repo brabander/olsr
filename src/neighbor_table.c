@@ -148,6 +148,43 @@ olsr_lookup_my_neighbors(const struct neighbor_entry *neighbor, const union olsr
 }
 
 /**
+ * Update a neighbours main_addr inlcuding hash
+*/
+
+int 
+olsr_update_neighbor_main_addr(struct neighbor_entry *entry, const union olsr_ip_addr *new_main_addr)
+{
+  /*uint32_t hash = olsr_ip_hashing(&neigh->neighbor_main_addr);
+  
+  struct neighbor_entry *entry;
+
+  entry = neighbortable[hash].next;
+
+  while (entry != &neighbortable[hash]) {
+    if (ipequal(&entry->neighbor_main_addr, &neigh->neighbor_main_addr))
+      break;
+
+    entry = entry->next;
+  }
+
+  if (entry == &neighbortable[hash])
+    return 0;
+
+  if (entry == neigh) printf("bullshit\n");
+  else printf("updating neighbor has!\n");*/
+
+  //remove from old pos
+  DEQUEUE_ELEM(entry);
+
+  //update entry
+  entry->neighbor_main_addr = *new_main_addr;
+
+  //insert it again
+  QUEUE_ELEM(neighbortable[olsr_ip_hashing(new_main_addr)], entry);
+
+}
+
+/**
  *Delete a neighbr table entry.
  *
  *Remember: Deleting a neighbor entry results
@@ -295,6 +332,27 @@ olsr_lookup_neighbor_table_alias(const union olsr_ip_addr *dst)
   return NULL;
 
 }
+
+//check if all neighbour entries are findable in neighbour table
+bool
+olsr_lookup_neighbor_table_check(void)
+{
+  struct ipaddr_str buf1;
+  struct neighbor_entry *entry;
+  printf("\n checking neighbour table: ");
+  /* Neighbors */
+  OLSR_FOR_ALL_NBR_ENTRIES(entry) {
+    printf("%s, ",olsr_ip_to_string(&buf1, &entry->neighbor_main_addr));
+    if (olsr_lookup_neighbor_table_alias(&entry->neighbor_main_addr)==NULL) {
+      struct neighbor_2_list_entry *two_hop_list, *two_hop_to_delete;
+      printf("-> entry has wrong hash!");
+      return true;
+    }
+  }
+  OLSR_FOR_ALL_NBR_ENTRIES_END(neigh);
+  return false;
+}
+
 
 int
 update_neighbor_status(struct neighbor_entry *entry, int lnk)

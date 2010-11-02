@@ -97,12 +97,16 @@ struct neighbor_entry *olsr_lookup_neighbor_table(const union olsr_ip_addr *);
 
 struct neighbor_entry *olsr_lookup_neighbor_table_alias(const union olsr_ip_addr *);
 
+bool olsr_lookup_neighbor_table_check(void);
+
 void olsr_time_out_two_hop_neighbors(struct neighbor_entry *);
 
 void olsr_time_out_neighborhood_tables(void);
 void olsr_expire_nbr2_list(void *);
 
 void olsr_print_neighbor_table(void);
+
+int olsr_update_neighbor_main_addr(struct neighbor_entry *, const union olsr_ip_addr *);
 
 int update_neighbor_status(struct neighbor_entry *, int);
 
