@@ -301,23 +301,23 @@ ipc_action(int fd, void *data __attribute__ ((unused)), unsigned int flags __att
        */
       if (0 != strstr(requ, "/neighbours"))
         send_what = SIW_NEIGHLINK;
-      else if (0 != strstr(requ, "/neigh"))
+      else if (0 != strstr(requ, "/nei"))
         send_what = SIW_NEIGH;
-      else if (0 != strstr(requ, "/link"))
+      else if (0 != strstr(requ, "/lin"))
         send_what = SIW_LINK;
-      else if (0 != strstr(requ, "/route"))
+      else if (0 != strstr(requ, "/rou"))
         send_what = SIW_ROUTE;
       else if (0 != strstr(requ, "/hna"))
         send_what = SIW_HNA;
       else if (0 != strstr(requ, "/mid"))
         send_what = SIW_MID;
-      else if (0 != strstr(requ, "/topo"))
+      else if (0 != strstr(requ, "/top"))
         send_what = SIW_TOPO;
-      else if (0 != strstr(requ, "/gateway"))
+      else if (0 != strstr(requ, "/gat"))
         send_what = SIW_GATEWAY;
-      else if (0 != strstr(requ, "/config"))
+      else if (0 != strstr(requ, "/con"))
         send_what = SIW_CONFIG;
-      else if (0 != strstr(requ, "/interface"))
+      else if (0 != strstr(requ, "/int"))
         send_what = SIW_INTERFACE;
     }
   }
@@ -615,28 +615,27 @@ static void
 ipc_print_interface(struct autobuf *abuf)
 {
   const struct olsr_if *ifs;
-  abuf_puts(abuf, "Interface Table\n");
-  abuf_puts(abuf, "Index\tName\tSrc-Adress\tMask\tDest-Adress\tMTU\tWLAN\tState\n");
+  abuf_puts(abuf, "Table: Interfaces\nName\tState\tMTU\tWLAN\tSrc-Adress\tMask\tDst-Adress\n");
   for (ifs = olsr_cnf->interfaces; ifs != NULL; ifs = ifs->next) {
     const struct interface *const rifs = ifs->interf;
     abuf_appendf(abuf, "%s\t", ifs->name);
     if (!rifs) {
-      abuf_puts(abuf, "\t\t\t\t\tDOWN\n");
+      abuf_puts(abuf, "DOWN\n");
       continue;
     }
+    abuf_appendf(abuf, "UP\t%d\t%s\t",
+               rifs->int_mtu, rifs->is_wireless ? "Yes" : "No");
  
     if (olsr_cnf->ip_version == AF_INET) {
       struct ipaddr_str addrbuf, maskbuf, bcastbuf;
-      abuf_appendf(abuf, "%s\t%s\t%s",
+      abuf_appendf(abuf, "%s\t%s\t%s\n",
                  ip4_to_string(&addrbuf, rifs->int_addr.sin_addr), ip4_to_string(&maskbuf, rifs->int_netmask.sin_addr),
                  ip4_to_string(&bcastbuf, rifs->int_broadaddr.sin_addr));
     } else {
        struct ipaddr_str addrbuf, maskbuf;
-      abuf_appendf(abuf, "%s\t\t%s",
+      abuf_appendf(abuf, "%s\t\t%s\n",
                  ip6_to_string(&addrbuf, &rifs->int6_addr.sin6_addr), ip6_to_string(&maskbuf, &rifs->int6_multaddr.sin6_addr));
     }
-    abuf_appendf(abuf, "\t%d\t%s\tUP\n",
-               rifs->int_mtu, rifs->is_wireless ? "Yes" : "No");
   }
   abuf_puts(abuf, "\n");
 }
