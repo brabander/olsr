@@ -111,6 +111,8 @@ static void ipc_print_gateway(struct autobuf *);
 
 static void ipc_print_config(struct autobuf *);
 
+static void ipc_print_interface(struct autobuf *);
+
 #define TXT_IPC_BUFSIZE 256
 
 #define SIW_ALL 0
@@ -123,6 +125,7 @@ static void ipc_print_config(struct autobuf *);
 #define SIW_NEIGHLINK 7
 #define SIW_GATEWAY 8
 #define SIW_CONFIG 9
+#define SIW_INTERFACE 10
 
 #define MAX_CLIENTS 3
 
@@ -314,6 +317,8 @@ ipc_action(int fd, void *data __attribute__ ((unused)), unsigned int flags __att
         send_what = SIW_GATEWAY;
       else if (0 != strstr(requ, "/config"))
         send_what = SIW_CONFIG;
+      else if (0 != strstr(requ, "/interface"))
+        send_what = SIW_INTERFACE;
     }
   }
 
@@ -607,6 +612,37 @@ ipc_print_config(struct autobuf *abuf)
 }
 
 static void
+ipc_print_interface(struct autobuf *abuf)
+{
+  const struct olsr_if *ifs;
+  abuf_puts(abuf, "Interface Table\n");
+  abuf_puts(abuf, "Index\tName\tSrc-Adress\tMask\tDest-Adress\tMTU\tWLAN\tState\n");
+  for (ifs = olsr_cnf->interfaces; ifs != NULL; ifs = ifs->next) {
+    const struct interface *const rifs = ifs->interf;
+    abuf_appendf(abuf, "%s\t", ifs->name);
+    if (!rifs) {
+      abuf_puts(abuf, "\t\t\t\t\tDOWN\n");
+      continue;
+    }
+ 
+    if (olsr_cnf->ip_version == AF_INET) {
+      struct ipaddr_str addrbuf, maskbuf, bcastbuf;
+      abuf_appendf(abuf, "%s\t%s\t%s",
+                 ip4_to_string(&addrbuf, rifs->int_addr.sin_addr), ip4_to_string(&maskbuf, rifs->int_netmask.sin_addr),
+                 ip4_to_string(&bcastbuf, rifs->int_broadaddr.sin_addr));
+    } else {
+       struct ipaddr_str addrbuf, maskbuf;
+      abuf_appendf(abuf, "%s\t\t%s",
+                 ip6_to_string(&addrbuf, &rifs->int6_addr.sin6_addr), ip6_to_string(&maskbuf, &rifs->int6_multaddr.sin6_addr));
+    }
+    abuf_appendf(abuf, "\t%d\t%s\tUP\n",
+               rifs->int_mtu, rifs->is_wireless ? "Yes" : "No");
+  }
+  abuf_puts(abuf, "\n");
+}
+
+
+static void
 txtinfo_write_data(void *foo __attribute__ ((unused))) {
   fd_set set;
   int result, i, j, max;
@@ -701,6 +737,10 @@ send_info(int send_what, int the_socket)
   /* config */
   if (send_what == SIW_CONFIG)
     ipc_print_config(&abuf);
+
+  /* interface */
+  if (send_what == SIW_INTERFACE)
+    ipc_print_interface(&abuf);
 
   outbuffer[outbuffer_count] = olsr_malloc(abuf.len, "txt output buffer");
   outbuffer_size[outbuffer_count] = abuf.len;
