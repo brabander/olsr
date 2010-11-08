@@ -574,8 +574,8 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__ ((unused)))
 
   ifs.int_flags = ifr.ifr_flags;
 
-  if ((ifs.int_flags & IFF_UP) == 0) {
-    OLSR_PRINTF(debuglvl, "\tInterface not up - skipping it...\n");
+  if ( ( (ifs.int_flags & IFF_UP) == 0) || ( (ifs.int_flags & IFF_RUNNING) == 0) ) {
+    OLSR_PRINTF(debuglvl, "\tInterface not up & running - skipping it...\n");
     return 0;
   }
 
