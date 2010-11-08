@@ -85,6 +85,8 @@ static enum olsr_txtcommand_result txtinfo_hna(struct comport_connection *con,
     const char *cmd, const char *param);
 static enum olsr_txtcommand_result txtinfo_mid(struct comport_connection *con,
     const char *cmd, const char *param);
+static enum olsr_txtcommand_result txtinfo_interfaces(struct comport_connection *con,
+    const char *cmd, const char *param);
 
 /* plugin configuration */
 static struct ip_acl allowed_nets;
@@ -115,6 +117,7 @@ static struct txtinfo_cmd commands[] = {
     {"hna", &txtinfo_hna, NULL},
     {"mid", &txtinfo_mid, NULL},
     {"routes", &txtinfo_routes, NULL},
+    {"interfaces", &txtinfo_interfaces, NULL},
 };
 
 /* base path for http access (should end with a '/') */
@@ -136,8 +139,12 @@ static const char KEY_RAWLINKCOST[] = "rawlinkcost";
 static const char KEY_HOPCOUNT[] = "hopcount";
 static const char KEY_INTERFACE[] = "interface";
 static const char KEY_VTIME[] = "vtime";
+static const char KEY_STATE[] = "state";
+static const char KEY_MTU[] = "mtu";
+static const char KEY_SRCIP[] = "srcip";
+static const char KEY_DSTIP[] = "dstip";
 
-static struct ipaddr_str buf_localip, buf_neighip, buf_aliasip;
+static struct ipaddr_str buf_localip, buf_neighip, buf_aliasip, buf_srcip, buf_dstip;
 struct ipprefix_str buf_destprefix;
 static char buf_sym[6], buf_mrp[4], buf_mprs[4], buf_virtual[4];
 static char buf_willingness[7];
@@ -145,6 +152,8 @@ static char buf_2hop[6];
 static char buf_rawlinkcost[11];
 static char buf_linkcost[LQTEXT_MAXLENGTH];
 static char buf_hopcount[4];
+static char buf_state[5];
+static char buf_mtu[5];
 static char buf_interface[IF_NAMESIZE];
 struct millitxt_buf buf_vtime;
 
@@ -206,6 +215,16 @@ static const char *keys_mid[] = {
 };
 static char *values_mid[] = {
   buf_localip.buf, buf_aliasip.buf, buf_vtime.buf
+};
+
+static const char *tmpl_interface = "%interface%\t%state%\t%mtu%\t%srcip%\t%dstip%\n";
+static const char *keys_interface[] = {
+  KEY_INTERFACE, KEY_STATE, KEY_MTU, 
+  KEY_SRCIP, KEY_DSTIP
+};
+static char *values_interface[] = {
+  buf_interface, buf_state, buf_mtu, 
+  buf_srcip.buf, buf_dstip.buf
 };
 
 /**
@@ -528,6 +547,63 @@ txtinfo_topology(struct comport_connection *con,
       if (abuf_templatef(&con->out, template, values_topology, tmpl_indices, indexLength) < 0) {
           return ABUF_ERROR;
       }
+    }
+  }
+
+  return CONTINUE;
+}
+
+/**
+ * Callback for interfaces command
+ */
+static enum olsr_txtcommand_result
+txtinfo_interfaces(struct comport_connection *con,
+    const char *cmd __attribute__ ((unused)), const char *param __attribute__ ((unused)))
+{
+  const struct olsr_if_config *ifs;
+  const char *template;
+  int indexLength;
+
+  template = param != NULL ? parse_user_template(param) : tmpl_interface;
+  if (param == NULL) {
+    if (abuf_puts(&con->out, "Table: Interfaces\nName\tState\tMTU\tSrc-Adress\tDst-Adress\n") < 0) {
+      return ABUF_ERROR;
+    }
+  }
+
+  if ((indexLength = abuf_template_init(keys_interface, ARRAYSIZE(keys_interface),
+      template, tmpl_indices, ARRAYSIZE(tmpl_indices))) < 0) {
+    return ABUF_ERROR;
+  }
+
+
+  for (ifs = olsr_cnf->if_configs; ifs != NULL; ifs = ifs->next) {
+    const struct interface *const rifs = ifs->interf;
+
+    //prepare values
+    strscpy(buf_interface, ifs->name, sizeof(buf_interface));
+
+    if (!rifs) {
+      snprintf(buf_state, sizeof(buf_state), "DOWN");
+      snprintf(buf_mtu, sizeof(buf_mtu), "-");
+      snprintf(buf_srcip.buf, sizeof(buf_srcip.buf), "-");
+      snprintf(buf_dstip.buf, sizeof(buf_srcip.buf), "-");
+    } else {
+      snprintf(buf_mtu, sizeof(buf_mtu), "%d", rifs->int_mtu);
+      snprintf(buf_state, sizeof(buf_state), "UP");
+
+      if (olsr_cnf->ip_version == AF_INET){
+        ip4_to_string(&buf_srcip, rifs->int_src.v4.sin_addr);
+        ip4_to_string(&buf_dstip, rifs->int_multicast.v4.sin_addr);
+      } else {
+        ip6_to_string(&buf_srcip, &rifs->int_src.v6.sin6_addr);
+        ip6_to_string(&buf_dstip, &rifs->int_multicast.v6.sin6_addr); 
+      }
+    }
+
+    if (abuf_templatef(&con->out, template, 
+        values_interface, tmpl_indices, indexLength) < 0) {
+        return ABUF_ERROR;
     }
   }
 
