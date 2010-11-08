@@ -125,10 +125,11 @@ chk_if_changed(struct olsr_if_config *iface)
   int_flags = ifr.ifr_flags;
 
   /*
-   * First check if the interface is set DOWN
+   * First check if the interface is UP & RUNNING
+   * e.g. "NO-CARRIER" == only up but not running 
    */
-  if ((int_flags & IFF_UP) == 0) {
-    OLSR_DEBUG(LOG_INTERFACE, "\tInterface %s not up - removing it...\n", iface->name);
+  if ( ((int_flags & IFF_UP) == 0) || ((int_flags & IFF_RUNNING) == 0) ) {
+    OLSR_DEBUG(LOG_INTERFACE, "\tInterface %s not up & running - removing it...\n", iface->name);
     remove_interface(iface->interf);
     return 0;
   }
