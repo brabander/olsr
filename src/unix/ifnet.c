@@ -180,8 +180,8 @@ chk_if_changed(struct olsr_if *iface)
    * First check if the interface is set DOWN
    */
 
-  if ((ifp->int_flags & IFF_UP) == 0) {
-    OLSR_PRINTF(1, "\tInterface %s not up - removing it...\n", iface->name);
+  if ((ifp->int_flags & IFF_UP) == 0 || (ifp->int_flags & IFF_RUNNING) == 0) {
+    OLSR_PRINTF(1, "\tInterface %s not up and running - removing it...\n", iface->name);
     goto remove_interface;
   }
 
