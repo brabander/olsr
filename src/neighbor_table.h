@@ -104,7 +104,7 @@ void olsr_expire_nbr2_list(void *);
 
 void olsr_print_neighbor_table(void);
 
-int olsr_update_neighbor_main_addr(struct neighbor_entry *, const union olsr_ip_addr *);
+void olsr_update_neighbor_main_addr(struct neighbor_entry *, const union olsr_ip_addr *);
 
 int update_neighbor_status(struct neighbor_entry *, int);
 
