@@ -151,7 +151,7 @@ olsr_lookup_my_neighbors(const struct neighbor_entry *neighbor, const union olsr
  * Update a neighbours main_addr inlcuding hash
 */
 
-int 
+void
 olsr_update_neighbor_main_addr(struct neighbor_entry *entry, const union olsr_ip_addr *new_main_addr)
 {
   /*remove from old pos*/
