@@ -42,7 +42,7 @@
 #include "os_system.h"
 
 void
-os_printf_syslog(int Level __attribute__ ((unused)), const char *Format __attribute__ ((unused)),...)
+os_printline(int Level __attribute__ ((unused)), const char *line __attribute__ ((unused)))
 {
 }
 

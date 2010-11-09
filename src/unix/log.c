@@ -48,7 +48,6 @@
 #include "unix/unix_log.h"
 
 #include <syslog.h>
-#include <stdarg.h>
 
 void
 os_syslog_init(const char *ident)
@@ -65,11 +64,10 @@ os_syslog_cleanup(void) {
 }
 
 void
-os_printf_syslog(int level, const char *format, ...)
+os_printline(int level, const char *line)
 {
 
   int linux_level;
-  va_list arglist;
 
   switch (level) {
   case (SEVERITY_DEBUG):
@@ -90,10 +88,7 @@ os_printf_syslog(int level, const char *format, ...)
     return;
   }
 
-  va_start(arglist, format);
-  vsyslog(linux_level, format, arglist);
-  va_end(arglist);
-
+  vsyslog(linux_level, "%s\n", line);
   return;
 }
 

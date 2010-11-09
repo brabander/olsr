@@ -56,7 +56,7 @@ void os_cleanup(void);
 void os_exit(int ret);
 
 void os_clear_console(void);
-void os_printf_syslog (int level, const char *format, ...) __attribute__ ((format(printf, 2, 3)));
+void os_printline (int level, const char *line);
 
 
 #endif

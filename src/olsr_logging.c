@@ -304,6 +304,6 @@ olsr_log_syslog(enum log_severity severity, enum log_source source,
                 int prefixLength __attribute__ ((unused)))
 {
   if (olsr_cnf->log_event[severity][source]) {
-    os_printf_syslog(severity, "%s\n", &buffer[timeLength]);
+    os_printline(severity, &buffer[timeLength]);
   }
 }
