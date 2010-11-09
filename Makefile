@@ -76,7 +76,7 @@ switch:
 src/builddata.c:
 	@$(RM) "$@"
 	@echo "#include \"defs.h\"" >> "$@" 
-	@echo "const char olsrd_version[] = \"olsr.org - $(VERS)\";" >> "$@" 
+	@echo "const char olsrd_version[] = \"olsr.org - $(VERS)-`git log -1 --pretty=%h`\";"  >> "$@"
 	@date +"const char build_date[] = \"%Y-%m-%d %H:%M:%S\";" >> "$@" 
 	@echo "const char build_host[] = \"$(shell hostname)\";" >> "$@" 
 
