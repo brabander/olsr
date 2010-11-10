@@ -1,2 +1,2 @@
 #!/bin/sh
-cat `find . -name *.c`|md5sum
+cat `find . -name *. [ch]`|md5sum
