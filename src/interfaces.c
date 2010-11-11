@@ -179,19 +179,18 @@ add_interface(struct olsr_if_config *iface) {
   struct interface *ifp;
 
   ifp = olsr_cookie_malloc(interface_mem_cookie);
+  ifp->int_name = iface->name;
+
+  if ((os_init_interface(ifp, iface))) {
+    olsr_cookie_free(interface_mem_cookie, ifp);
+    return NULL;
+  }
 
   ifp->olsr_socket = os_getsocket46(olsr_cnf->ip_version, BUFSPACE, ifp, false, olsr_cnf->olsr_port);
   ifp->send_socket = os_getsocket46(olsr_cnf->ip_version, 0, ifp, true, olsr_cnf->olsr_port);
   if (ifp->olsr_socket < 0 || ifp->send_socket < 0) {
     OLSR_ERROR(LOG_INTERFACE, "Could not initialize socket... exiting!\n\n");
     olsr_exit(EXIT_FAILURE);
-  }
-
-  if ((os_init_interface(ifp, iface))) {
-    os_close(ifp->olsr_socket);
-    os_close(ifp->send_socket);
-    olsr_cookie_free(interface_mem_cookie, ifp);
-    return NULL;
   }
 
   set_buffer_timer(ifp);
@@ -352,7 +351,7 @@ remove_interface(struct interface *ifp)
   os_close(ifp->send_socket);
   ifp->olsr_socket = -1;
 
-  free(ifp->int_name);
+  ifp->int_name = NULL;
   unlock_interface(ifp);
 
   if (list_is_empty(&interface_head) && !olsr_cnf->allow_no_interfaces) {
@@ -409,6 +408,9 @@ if_ifwithsock(int fd)
 
   OLSR_FOR_ALL_INTERFACES(ifp, iterator) {
     if (ifp->olsr_socket == fd) {
+      return ifp;
+    }
+    if (ifp->send_socket == fd) {
       return ifp;
     }
   }

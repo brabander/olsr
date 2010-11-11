@@ -21,7 +21,7 @@ MUDFLAP ?= 0
 # enables several security features like exec ASLR,
 # stack protector, fortify source, RELRO and BIND_NOW
 # only for linux at the moment
-HARDENING ?= 1
+HARDENING ?= 0
 
 # enable static linking of plugins (list of plugin directory names) 
 STATIC_PLUGINS ?= lq_etx_ff

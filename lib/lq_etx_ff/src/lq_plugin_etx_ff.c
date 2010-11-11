@@ -171,7 +171,8 @@ lq_etxff_packet_parser(struct olsr_packet *pkt, uint8_t *binary __attribute__ ((
 #ifndef REMOVE_LOG_WARN
     struct ipaddr_str buf;
 #endif
-    OLSR_WARN(LOG_LQ_PLUGINS, "Got package with same sequence number from %s\n", olsr_ip_to_string(&buf, from_addr));
+    OLSR_WARN(LOG_LQ_PLUGINS, "Got package with same sequence number from %s, if=%s, seq=0x%04x\n",
+        olsr_ip_to_string(&buf, from_addr), in_if->int_name, pkt->seqno);
     return;
   }
   if (lnk->last_seq_nr > pkt->seqno) {

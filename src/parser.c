@@ -361,8 +361,9 @@ olsr_input(int fd, void *data __attribute__ ((unused)), unsigned int flags __att
       break;
     }
 
-    OLSR_DEBUG(LOG_PACKET_PARSING, "Recieved a packet from %s\n",
-               sockaddr_to_string(addrbuf, sizeof(addrbuf), (struct sockaddr *)&from, fromlen));
+    OLSR_DEBUG(LOG_PACKET_PARSING, "Recieved a packet from %s (fd=%d)\n",
+               sockaddr_to_string(addrbuf, sizeof(addrbuf), (struct sockaddr *)&from, fromlen),
+               fd);
 
     if (olsr_cnf->ip_version == AF_INET) {
       /* IPv4 sender address */
