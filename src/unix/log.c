@@ -88,7 +88,7 @@ os_printline(int level, const char *line)
     return;
   }
 
-  vsyslog(linux_level, "%s\n", line);
+  syslog(linux_level, "%s\n", line);
   return;
 }
 
