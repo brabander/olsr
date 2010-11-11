@@ -137,6 +137,7 @@ static const char KEY_2HOP[] = "2hop";
 static const char KEY_LINKCOST[] = "linkcost";
 static const char KEY_RAWLINKCOST[] = "rawlinkcost";
 static const char KEY_HOPCOUNT[] = "hopcount";
+static const char KEY_FAILCOUNT[] = "failcount";
 static const char KEY_INTERFACE[] = "interface";
 static const char KEY_VTIME[] = "vtime";
 static const char KEY_STATE[] = "state";
@@ -152,6 +153,7 @@ static char buf_2hop[6];
 static char buf_rawlinkcost[11];
 static char buf_linkcost[LQTEXT_MAXLENGTH];
 static char buf_hopcount[4];
+static char buf_failcount[8];
 static char buf_state[5];
 static char buf_mtu[5];
 static char buf_interface[IF_NAMESIZE];
@@ -181,14 +183,14 @@ static char *values_neigh[] = {
   buf_neighip.buf, buf_sym, buf_mprs, buf_mprs, buf_willingness, buf_2hop
 };
 
-static const char *tmpl_routes = "%destprefix%\t%neighip%\t%hopcount%\t%linkcost%\t%interface%\n";
+static const char *tmpl_routes = "%destprefix%\t%neighip%\t%hopcount%\t%linkcost%\t%interface%\t%failcount%\n";
 static const char *keys_routes[] = {
   KEY_DESTPREFIX, KEY_NEIGHIP, KEY_HOPCOUNT, KEY_VTIME,
-  KEY_INTERFACE, KEY_RAWLINKCOST, KEY_LINKCOST
+  KEY_INTERFACE, KEY_RAWLINKCOST, KEY_LINKCOST, KEY_FAILCOUNT
 };
 static char *values_routes[] = {
   buf_destprefix.buf, buf_neighip.buf, buf_hopcount, buf_vtime.buf,
-  buf_interface, buf_rawlinkcost, buf_linkcost
+  buf_interface, buf_rawlinkcost, buf_linkcost, buf_failcount
 };
 
 static const char *tmpl_topology = "%neighip%\t%localip%\t%isvirtual%\t%linkcost%\n";
@@ -481,6 +483,11 @@ txtinfo_routes(struct comport_connection *con,
     }
     olsr_ip_prefix_to_string(&buf_destprefix, &rt->rt_dst);
     olsr_ip_to_string(&buf_neighip, &rt->rt_best->rtp_nexthop.gateway);
+
+    if (rt->failure_count < 0)  snprintf(buf_failcount, sizeof(buf_failcount), "%d del", rt->failure_count*(-1));
+    else if (rt->failure_count == 0) snprintf(buf_failcount, sizeof(buf_failcount), "0");
+    else snprintf(buf_failcount, sizeof(buf_failcount), "%d add", rt->failure_count);
+
     snprintf(buf_hopcount, sizeof(buf_hopcount), "%d", rt->rt_best->rtp_metric.hops);
     snprintf(buf_rawlinkcost, sizeof(buf_rawlinkcost), "%ud", rt->rt_best->rtp_metric.cost);
     olsr_get_linkcost_text(rt->rt_best->rtp_metric.cost, true, buf_linkcost, sizeof(buf_linkcost));

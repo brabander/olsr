@@ -46,7 +46,6 @@
 #include <errno.h>
 
 static struct list_entity chg_kernel_list;
-static struct list_entity del_kernel_list;
 
 /*
  * Function hooks for plugins to intercept
@@ -55,6 +54,8 @@ static struct list_entity del_kernel_list;
 export_route_function olsr_add_route_function;
 export_route_function olsr_del_route_function;
 
+#define MAX_FAILURE_COUNT 10000 //should be FAILURE_LESS_NOISE_COUNT * (int)x
+#define FAILURE_LESS_NOISE_COUNT 100 //after x errors only every x errors this is written to log
 
 void
 olsr_init_export_route(void)
@@ -63,7 +64,6 @@ olsr_init_export_route(void)
 
   /* the add/chg and del kernel queues */
   list_init_head(&chg_kernel_list);
-  list_init_head(&del_kernel_list);
 
   olsr_add_route_function = os_route_add_rtentry;
   olsr_del_route_function = os_route_del_rtentry;
@@ -90,14 +90,14 @@ olsr_delete_all_kernel_routes(void)
 /**
  * Enqueue a route on a kernel chg/del queue.
  */
-static void
+static int
 olsr_enqueue_rt(struct list_entity *head_node, struct rt_entry *rt)
 {
   const struct rt_nexthop *nh;
 
   /* if this node is already on some changelist we are done */
   if (list_node_added(&rt->rt_change_node)) {
-    return;
+    return -1;
   }
 
   /*
@@ -111,25 +111,52 @@ olsr_enqueue_rt(struct list_entity *head_node, struct rt_entry *rt)
   } else {
     list_add_before(head_node, &rt->rt_change_node);
   }
+
+  return 0;
 }
 
 /**
- * Process a route from the kernel deletion list.
+ * Process a route deletion
  *
- *@return nada
+ *@return actual error count
  */
-static void
+static int
 olsr_del_route(struct rt_entry *rt)
 {
-  int16_t error = olsr_del_route_function(rt, olsr_cnf->ip_version);
+  int16_t error;
+  if (rt->rt_nexthop.interface == NULL) return 0;
 
-  if (error < 0) {
-    OLSR_WARN(LOG_ROUTING, "KERN: ERROR deleting %s: %s\n", olsr_rt_to_string(rt), strerror(errno));
+  error = olsr_del_route_function(rt, olsr_cnf->ip_version);
+
+  if (error != 0) {
+    if (rt->failure_count>0) {
+      /*ignore if we failed to delete a route we never successfully created*/
+      OLSR_WARN(LOG_ROUTING, "KERN: SUCCESFULLY failed to delete unexisting %s: %s\n", olsr_rt_to_string(rt), strerror(errno));
+      rt->failure_count=0;
+    } else {
+     rt->failure_count--;
+
+     /*rate limit error messages*/
+     if ( (rt->failure_count >= -FAILURE_LESS_NOISE_COUNT ) || (rt->failure_count % FAILURE_LESS_NOISE_COUNT == 0) )
+       OLSR_ERROR(LOG_ROUTING, "KERN: ERROR on %d attempt to delete %s: %s\n", rt->failure_count*(-1), olsr_rt_to_string(rt), strerror(errno));
+
+     /*stop trying it*/
+     if (rt->failure_count <= -MAX_FAILURE_COUNT)  {
+       OLSR_ERROR(LOG_ROUTING, " WILL NOT TRY AGAIN!!\n==============\n");
+       rt->failure_count=0;
+     }
+    }
+
   } else {
+    if (rt->failure_count > 1)
+      OLSR_WARN(LOG_ROUTING, "KERN: SUCCESS on %d attempt to delete %s: %s\n", rt->failure_count*(-1), olsr_rt_to_string(rt), strerror(errno));
 
+    rt->failure_count=0;
     /* release the interface. */
     unlock_interface(rt->rt_nexthop.interface);
   }
+
+  return rt->failure_count;
 }
 
 /**
@@ -140,8 +167,18 @@ olsr_del_route(struct rt_entry *rt)
 static void
 olsr_add_route(struct rt_entry *rt)
 {
-  if (0 > olsr_add_route_function(rt, olsr_cnf->ip_version)) {
-    OLSR_WARN(LOG_ROUTING, "KERN: ERROR adding %s: %s\n", olsr_rtp_to_string(rt->rt_best), strerror(errno));
+  rt->failure_count++;
+
+  if (0 != olsr_add_route_function(rt, olsr_cnf->ip_version)) {
+    /*rate limit error messages*/
+    if ( (rt->failure_count <= FAILURE_LESS_NOISE_COUNT ) || (rt->failure_count % FAILURE_LESS_NOISE_COUNT == 0) )
+      OLSR_ERROR(LOG_ROUTING, "KERN: ERROR on %d attempt to add %s: %s\n", rt->failure_count, olsr_rtp_to_string(rt->rt_best), strerror(errno));
+
+    /*stop trying it*/
+    if (rt->failure_count >= MAX_FAILURE_COUNT)  {
+       OLSR_ERROR(LOG_ROUTING, " WILL NOT TRY AGAIN!!\n==============\n");
+       rt->failure_count=0;
+     }
   } else {
     /* route addition has suceeded */
 
@@ -151,6 +188,11 @@ olsr_add_route(struct rt_entry *rt)
 
     /* lock the interface such that it does not vanish underneath us */
     lock_interface(rt->rt_nexthop.interface);
+
+    /*reset failure_counter and print info if we needed more than once*/
+    if (rt->failure_count > 1)
+      OLSR_WARN(LOG_ROUTING, "KERN: SUCCESS on %d attmpt to add %s: %s\n", rt->failure_count, olsr_rtp_to_string(rt->rt_best), strerror(errno));
+    rt->failure_count=0;
   }
 }
 
@@ -183,34 +225,6 @@ olsr_chg_kernel_routes(struct list_entity *head_node)
     olsr_add_route(rt);
 
     list_remove(&rt->rt_change_node);
-  }
-}
-
-/**
- * process the kernel delete list.
- * the routes are already ordered such that nexthop routes
- * are on the head of the queue.
- * non-nexthop routes need to be deleted first and therefore
- * the queue needs to be traversed from tail to head.
- */
-static void
-olsr_del_kernel_routes(struct list_entity *head_node)
-{
-  struct rt_entry *rt;
-  struct list_iterator iterator;
-
-  OLSR_FOR_ALL_RTLIST_ENTRIES(head_node, rt, iterator) {
-    /*
-     * Only attempt to delete the route from kernel if it was
-     * installed previously. A reference to the interface gets
-     * set only when a route installation suceeds.
-     */
-    if (rt->rt_nexthop.interface) {
-      olsr_del_route(rt);
-    }
-
-    list_remove(&rt->rt_change_node);
-    olsr_cookie_free(rt_mem_cookie, rt);
   }
 }
 
@@ -265,11 +279,9 @@ olsr_update_rib_routes(void)
     olsr_delete_outdated_routes(rt);
 
     if (!rt->rt_path_tree.count) {
-
       /* oops, all routes are gone - flush the route head */
-      avl_delete(&routingtree, &rt->rt_tree_node);
+      if (olsr_del_route(rt) == 0) avl_delete(&routingtree, &rt->rt_tree_node);
 
-      olsr_enqueue_rt(&del_kernel_list, rt);
       continue;
     }
 
@@ -292,9 +304,6 @@ olsr_update_rib_routes(void)
 void
 olsr_update_kernel_routes(void)
 {
-
-  /* delete unreachable routes */
-  olsr_del_kernel_routes(&del_kernel_list);
 
   /* route changes and additions */
   olsr_chg_kernel_routes(&chg_kernel_list);

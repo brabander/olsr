@@ -88,6 +88,7 @@ struct rt_entry {
   struct rt_metric rt_metric;          /* metric of FIB route */
   struct avl_tree rt_path_tree;
   struct list_entity rt_change_node;     /* queue for kernel FIB add/chg/del */
+  int failure_count;
 };
 
 #define OLSR_FOR_ALL_RTLIST_ENTRIES(head, rt_entry, iterator) list_for_each_element_safe(head, rt_entry, rt_change_node, iterator.loop, iterator.safe)
