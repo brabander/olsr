@@ -316,7 +316,7 @@ add_name_to_list(struct name_entry *my_list, const char *value, int type, const 
   tmp->name = olsr_strndup(value, MAX_NAME);
   tmp->len = strlen(tmp->name);
   tmp->type = type;
-  // all IPs with value 0 will be set to main_addr later
+  // all IPs with value 0 will be set to router_id later
   if (ip == NULL)
     memset(&tmp->ip, 0, sizeof(tmp->ip));
   else
@@ -329,14 +329,14 @@ add_name_to_list(struct name_entry *my_list, const char *value, int type, const 
 /**
  * last initialization
  *
- * we have to do this here because some things like main_addr
+ * we have to do this here because some things like router_id
  * or the dns suffix (for validation) are not known before
  *
  * this is beause of the order in which the plugin is initialized
  * by the plugin loader:
  *   - first the parameters are sent
  *   - then register_olsr_data() from olsrd_plugin.c is called
- *     which sets up main_addr and some other variables
+ *     which sets up router_id and some other variables
  *   - register_olsr_data() then then finally calls this function
  */
 int

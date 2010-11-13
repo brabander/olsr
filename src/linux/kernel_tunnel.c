@@ -89,7 +89,7 @@ int os_iptunnel_init(void) {
     return -1;
   }
 
-  return olsr_os_ifip(if_nametoindex(dev), &olsr_cnf->main_addr, true);
+  return olsr_os_ifip(if_nametoindex(dev), &olsr_cnf->router_id, true);
 }
 
 void os_iptunnel_cleanup(void) {
@@ -252,7 +252,7 @@ struct olsr_iptunnel_entry *os_iptunnel_add_ipip(union olsr_ip_addr *target, boo
     }
 
     /* set originator IP for tunnel */
-    olsr_os_ifip(if_idx, &olsr_cnf->main_addr, true);
+    olsr_os_ifip(if_idx, &olsr_cnf->router_id, true);
 
     t = olsr_cookie_malloc(tunnel_cookie);
     memcpy(&t->target, target, sizeof(*target));

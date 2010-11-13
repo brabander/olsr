@@ -56,6 +56,7 @@ enum log_source {
   LOG_PACKET_PARSING,                  //!< LOG_PACKET_PARSING
   LOG_ROUTING,                         //!< LOG_ROUTING
   LOG_SCHEDULER,                       //!< LOG_SCHEDULER
+  LOG_TIMER,                           //!< LOG_TIMER
   LOG_PLUGINS,                         //!< LOG_PLUGINS
   LOG_LQ_PLUGINS,                      //!< LOG_LQ_PLUGINS
   LOG_LL_PLUGINS,                      //!< LOG_LL_PLUGINS

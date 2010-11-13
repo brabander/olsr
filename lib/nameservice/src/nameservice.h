@@ -98,7 +98,7 @@ struct name_entry {
 
 /* *
  * linked list of db_entries for each originator with
- * originator being its main_addr
+ * originator being its router_id
  *
  * names points to the name_entry with its hostname, dns-server or
  * service-line entry

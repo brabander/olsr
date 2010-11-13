@@ -320,7 +320,7 @@ ipc_eval_net_info(struct netmsg *msg)
   printf("Evaluating NET info...\n");
 
   /*
-     printf("\tMain address: %s\n", ip_to_string(&msg->main_addr));
+     printf("\tMain address: %s\n", ip_to_string(&msg->router_id));
      printf("\tMid adresses: %d\n", msg->mids);
      printf("\tHna adresses: %d\n", msg->hnas);
      printf("\tHELLO interval: %f\n", (float)(ntohs(msg->hello_int)));

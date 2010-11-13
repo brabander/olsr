@@ -494,7 +494,7 @@ lookup_link_entry(const union olsr_ip_addr *remote, const union olsr_ip_addr *re
                                                                 : olsr_ipcmp(&local->ip_addr, &link->local_iface_addr) == 0)) {
       /* check the remote-main address only if there is one given */
       if (NULL != remote_main && olsr_ipcmp(remote_main, &link->neighbor->nbr_addr) != 0) {
-        /* Neighbor has changed it's main_addr, update */
+        /* Neighbor has changed it's router_id, update */
 #if !defined REMOVE_LOG_DEBUG
         struct ipaddr_str oldbuf, newbuf;
 #endif
