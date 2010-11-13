@@ -63,8 +63,8 @@ ssize_t EXPORT(os_recvfrom)(int, void *, size_t, int, union olsr_sockaddr *, soc
 int os_select(int, fd_set *, fd_set *, fd_set *, struct timeval *);
 int EXPORT(os_close)(int);
 
-int EXPORT(os_getsocket4)(int, struct interface *, bool, uint16_t);
-int EXPORT(os_getsocket6)(int, struct interface *, bool, uint16_t);
+int EXPORT(os_getsocket4)(const char *if_name, uint16_t port, int bufspace, union olsr_sockaddr *bindto);
+int EXPORT(os_getsocket6)(const char *if_name, uint16_t port, int bufspace, union olsr_sockaddr *bindto);
 
 int EXPORT(os_socket_set_nonblocking) (int fd);
 
@@ -87,15 +87,14 @@ int get_ipv6_address(char *, struct sockaddr_in6 *, int);
 
 /* helper function for getting a socket */
 static inline int
-os_getsocket46(int family, int bufferSize, struct interface *interf,
-    bool bind_to_unicast, uint16_t port) {
+os_getsocket46(int family, const char *if_name, uint16_t port, int bufspace, union olsr_sockaddr *bindto) {
   assert (family == AF_INET || family == AF_INET6);
 
   if (family == AF_INET) {
-    return os_getsocket4(bufferSize, interf, bind_to_unicast, port);
+    return os_getsocket4(if_name, port, bufspace, bindto);
   }
   else {
-    return os_getsocket6(bufferSize, interf, bind_to_unicast, port);
+    return os_getsocket6(if_name, port, bufspace, bindto);
   }
 }
 #endif

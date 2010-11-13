@@ -186,8 +186,8 @@ add_interface(struct olsr_if_config *iface) {
     return NULL;
   }
 
-  ifp->olsr_socket = os_getsocket46(olsr_cnf->ip_version, BUFSPACE, ifp, false, olsr_cnf->olsr_port);
-  ifp->send_socket = os_getsocket46(olsr_cnf->ip_version, 0, ifp, true, olsr_cnf->olsr_port);
+  ifp->olsr_socket = os_getsocket46(olsr_cnf->ip_version, ifp->int_name, olsr_cnf->olsr_port, BUFSPACE, NULL);
+  ifp->send_socket = os_getsocket46(olsr_cnf->ip_version, ifp->int_name, olsr_cnf->olsr_port, BUFSPACE, &ifp->int_multicast);
   if (ifp->olsr_socket < 0 || ifp->send_socket < 0) {
     OLSR_ERROR(LOG_INTERFACE, "Could not initialize socket... exiting!\n\n");
     olsr_exit(EXIT_FAILURE);

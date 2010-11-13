@@ -297,7 +297,7 @@ os_cleanup_global_ifoptions(void)
  */
 
 static int
-bind_socket_to_device(int sock, char *dev_name)
+bind_socket_to_device(int sock, const char *dev_name)
 {
   /*
    *Bind to device using the SO_BINDTODEVICE flag
@@ -313,7 +313,7 @@ bind_socket_to_device(int sock, char *dev_name)
  *@return the FD of the socket or -1 on error.
  */
 int
-os_getsocket4(int bufspace, struct interface *ifp, bool bind_to_unicast, uint16_t port)
+os_getsocket4(const char *if_name, uint16_t port, int bufspace, union olsr_sockaddr *bindto)
 {
   struct sockaddr_in sin4;
   int on;
@@ -357,23 +357,20 @@ os_getsocket4(int bufspace, struct interface *ifp, bool bind_to_unicast, uint16_
    */
 
   /* Bind to device */
-  if (bind_socket_to_device(sock, ifp->int_name) < 0) {
-    OLSR_ERROR(LOG_NETWORKING, "Could not bind socket for OLSR PDUs to device (%s)\n", strerror(errno));
+  if (bind_socket_to_device(sock, if_name) < 0) {
+    OLSR_ERROR(LOG_NETWORKING, "Cannot bind socket for OLSR PDUs to interface %s: %s (%d)\n", if_name, strerror(errno), errno);
     close(sock);
     olsr_exit(EXIT_FAILURE);
   }
 
-  memset(&sin4, 0, sizeof(sin4));
-  sin4.sin_family = AF_INET;
-  sin4.sin_port = htons(port);
-
-  if(bind_to_unicast) {
-    sin4.sin_addr = ifp->int_src.v4.sin_addr;
+  if (bindto == NULL) {
+    memset(&sin4, 0, sizeof(sin4));
+    sin4.sin_family = AF_INET;
+    sin4.sin_port = htons(port);
+    sin4.sin_addr.s_addr = 0;
+    bindto = (union olsr_sockaddr *)&sin4;
   }
-  else {
-    assert(sin4.sin_addr.s_addr == INADDR_ANY);
-  }
-  if (bind(sock, (struct sockaddr *)&sin4, sizeof(sin4)) < 0) {
+  if (bind(sock, &bindto->std, sizeof(*bindto)) < 0) {
     OLSR_ERROR(LOG_NETWORKING, "Coult not bind socket for OLSR PDUs to port (%s)\n", strerror(errno));
     close(sock);
     olsr_exit(EXIT_FAILURE);
@@ -390,7 +387,7 @@ os_getsocket4(int bufspace, struct interface *ifp, bool bind_to_unicast, uint16_
  *@return the FD of the socket or -1 on error.
  */
 int
-os_getsocket6(int bufspace, struct interface *ifp, bool bind_to_unicast, uint16_t port)
+os_getsocket6(const char *if_name, uint16_t port, int bufspace, union olsr_sockaddr *bindto)
 {
   struct sockaddr_in6 sin6;
   int on;
@@ -457,23 +454,19 @@ os_getsocket6(int bufspace, struct interface *ifp, bool bind_to_unicast, uint16_
    */
 
   /* Bind to device */
-  if (bind_socket_to_device(sock, ifp->int_name) < 0) {
-    OLSR_ERROR(LOG_NETWORKING, "Cannot bind socket for OLSR PDUs to interface %s (%s)\n", ifp->int_name, strerror(errno));
+  if (bind_socket_to_device(sock, if_name) < 0) {
+    OLSR_ERROR(LOG_NETWORKING, "Cannot bind socket for OLSR PDUs to interface %s: %s (%d)\n", if_name, strerror(errno), errno);
     close(sock);
     olsr_exit(EXIT_FAILURE);
   }
 
-  memset(&sin6, 0, sizeof(sin6));
-  sin6.sin6_family = AF_INET6;
-  sin6.sin6_port = htons(port);
-
-  if(bind_to_unicast) {
-    memcpy(&sin6.sin6_addr, &ifp->int_src.v6.sin6_addr, sizeof(struct in6_addr));
+  if (bindto == NULL) {
+    memset(&sin6, 0, sizeof(sin6));
+    sin6.sin6_family = AF_INET6;
+    sin6.sin6_port = htons(port);
+    bindto = (union olsr_sockaddr *)&sin6;
   }
-  else {
-    assert(0 == memcmp(&sin6.sin6_addr, &in6addr_any, sizeof(sin6.sin6_addr)));   /* == IN6ADDR_ANY_INIT */
-  }
-  if (bind(sock, (struct sockaddr *)&sin6, sizeof(sin6)) < 0) {
+  if (bind(sock, &bindto->std, sizeof(*bindto)) < 0) {
     OLSR_ERROR(LOG_NETWORKING, "Cannot bind socket for OLSR PDUs (%s)\n", strerror(errno));
     close(sock);
     olsr_exit(EXIT_FAILURE);

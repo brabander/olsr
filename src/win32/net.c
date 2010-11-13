@@ -115,7 +115,7 @@ os_socket_set_nonblocking(int fd)
 }
 
 int
-os_getsocket4(int bufspace, struct interface *ifp, bool bind_to_unicast, uint16_t port)
+os_getsocket4(const char *if_name __attribute__ ((unused)), uint16_t port, int bufspace, union olsr_sockaddr *bindto)
 {
   struct sockaddr_in Addr;
   int On = 1;
@@ -148,18 +148,16 @@ os_getsocket4(int bufspace, struct interface *ifp, bool bind_to_unicast, uint16_
   if (bufspace <= 8192)
     OLSR_WARN(LOG_NETWORKING, "Cannot set IPv4 socket receive buffer.\n");
 
-  memset(&Addr, 0, sizeof(Addr));
-  Addr.sin_family = AF_INET;
-  Addr.sin_port = htons(port);
-
-  if(bind_to_unicast) {
-    Addr.sin_addr.s_addr = ifp->int_src.v4.sin_addr.s_addr;
-  }
-  else {
+  if (bindto == NULL) {
+    memset(&Addr, 0, sizeof(Addr));
+    Addr.sin_family = AF_INET;
+    Addr.sin_port = htons(port);
     Addr.sin_addr.s_addr = INADDR_ANY;
+
+    bindto = (union olsr_sockaddr *)&Addr;
   }
 
-  if (bind(Sock, (struct sockaddr *)&Addr, sizeof(Addr)) < 0) {
+  if (bind(Sock, &bindto->std, sizeof(Addr)) < 0) {
     OLSR_ERROR(LOG_NETWORKING, "Could not bind socket for OLSR PDUs to device (%s)\n", strerror(errno));
     os_close(Sock);
     olsr_exit(EXIT_FAILURE);
@@ -175,7 +173,7 @@ os_getsocket4(int bufspace, struct interface *ifp, bool bind_to_unicast, uint16_
 }
 
 int
-os_getsocket6(int bufspace, struct interface *ifp, bool bind_to_unicast, uint16_t port)
+os_getsocket6(const char *if_name __attribute__ ((unused)), uint16_t port, int bufspace, union olsr_sockaddr *bindto)
 {
   struct sockaddr_in6 Addr6;
   int On = 1;
@@ -207,15 +205,14 @@ os_getsocket6(int bufspace, struct interface *ifp, bool bind_to_unicast, uint16_
   if (bufspace <= 8192)
     OLSR_WARN(LOG_NETWORKING, "Cannot set IPv6 socket receive buffer.\n");
 
-  memset(&Addr6, 0, sizeof(Addr6));
-  Addr6.sin6_family = AF_INET6;
-  Addr6.sin6_port = htons(port);
-
-  if(bind_to_unicast) {
-    memcpy(&Addr6.sin6_addr, &ifp->int_src.v6.sin6_addr, sizeof(struct in6_addr));
+  if (bindto == NULL) {
+    memset(&Addr6, 0, sizeof(Addr6));
+    Addr6.sin6_family = AF_INET6;
+    Addr6.sin6_port = htons(port);
+    bindto = (union olsr_sockaddr *)&Addr6;
   }
 
-  if (bind(Sock, (struct sockaddr *)&Addr6, sizeof(Addr6)) < 0) {
+  if (bind(Sock, &bindto->std, sizeof(Addr6)) < 0) {
     OLSR_ERROR(LOG_NETWORKING, "Could not bind socket for OLSR PDUs to device (%s)\n", strerror(errno));
     os_close(Sock);
     olsr_exit(EXIT_FAILURE);
