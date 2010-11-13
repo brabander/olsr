@@ -62,11 +62,8 @@
 
 #include "common/autobuf.h"
 
-#define PLUGIN_NAME    "OLSRD debuginfo plugin"
-#define PLUGIN_VERSION "0.1"
+#define PLUGIN_DESCR    "OLSRD debuginfo plugin"
 #define PLUGIN_AUTHOR   "Henning Rogge"
-#define MOD_DESC PLUGIN_NAME " " PLUGIN_VERSION " by " PLUGIN_AUTHOR
-#define PLUGIN_INTERFACE_VERSION 5
 
 struct debuginfo_cmd {
   const char *name;
@@ -74,8 +71,10 @@ struct debuginfo_cmd {
   struct olsr_txtcommand *cmd;
 };
 
-static void debuginfo_new(void) __attribute__ ((constructor));
-static void debuginfo_delete(void) __attribute__ ((destructor));
+static bool debuginfo_init(void);
+static bool debuginfo_enable(void);
+static bool debuginfo_exit(void);
+
 
 static enum olsr_txtcommand_result debuginfo_msgstat(struct comport_connection *con,
     const char *cmd, const char *param);
@@ -106,6 +105,15 @@ static const struct olsrd_plugin_parameters plugin_parameters[] = {
   {.name = "stat_slots", .set_plugin_parameter = &set_plugin_int, .data = &traffic_slots},
 };
 
+OLSR_PLUGIN6(plugin_parameters) {
+  .descr = PLUGIN_DESCR,
+  .author = PLUGIN_AUTHOR,
+  .init = debuginfo_init,
+  .enable = debuginfo_enable,
+  .exit = debuginfo_exit,
+  .deactivate = false
+};
+
 /* command callbacks and names */
 static struct debuginfo_cmd commands[] = {
     {"msgstat", &debuginfo_msgstat, NULL},
@@ -126,29 +134,13 @@ static struct olsr_timer_info *statistics_timer = NULL;
 
 static union olsr_ip_addr total_ip_addr;
 
-int
-olsrd_plugin_interface_version(void)
-{
-  return PLUGIN_INTERFACE_VERSION;
-}
-
-void
-olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size)
-{
-  *params = plugin_parameters;
-  *size = ARRAYSIZE(plugin_parameters);
-}
-
 
 /**
  *Constructor
  */
-static void
-debuginfo_new(void)
+static bool
+debuginfo_init(void)
 {
-  /* Print plugin info to stdout */
-  OLSR_INFO(LOG_PLUGINS, "%s\n", MOD_DESC);
-
   ip_acl_init(&allowed_nets);
 
   traffic_interval = 5; /* seconds */
@@ -156,6 +148,30 @@ debuginfo_new(void)
   current_slot = 0;
 
   memset(&total_ip_addr, 255, sizeof(total_ip_addr));
+  return false;
+}
+
+/**
+ *Destructor
+ */
+static bool
+debuginfo_exit(void)
+{
+  size_t i;
+
+  for (i=0; i<ARRAYSIZE(commands); i++) {
+    olsr_com_remove_normal_txtcommand(commands[i].cmd);
+  }
+  olsr_parser_remove_function(&olsr_msg_statistics);
+  olsr_preprocessor_remove_function(&olsr_packet_statistics);
+  ip_acl_flush(&allowed_nets);
+  return false;
+}
+
+static bool
+debuginfo_enable(void)
+{
+  size_t i;
 
   /* always allow localhost */
   if (olsr_cnf->ip_version == AF_INET) {
@@ -167,28 +183,6 @@ debuginfo_new(void)
     ip_acl_add(&allowed_nets, (const union olsr_ip_addr *)&in6addr_loopback, 128, false);
     ip_acl_add(&allowed_nets, (const union olsr_ip_addr *)&in6addr_v4mapped_loopback, 128, false);
   }
-}
-
-/**
- *Destructor
- */
-static void
-debuginfo_delete(void)
-{
-  size_t i;
-
-  for (i=0; i<ARRAYSIZE(commands); i++) {
-    olsr_com_remove_normal_txtcommand(commands[i].cmd);
-  }
-  olsr_parser_remove_function(&olsr_msg_statistics);
-  olsr_preprocessor_remove_function(&olsr_packet_statistics);
-  ip_acl_flush(&allowed_nets);
-}
-
-int
-olsrd_plugin_init(void)
-{
-  size_t i;
 
   for (i=0; i<ARRAYSIZE(commands); i++) {
     commands[i].cmd = olsr_com_add_normal_txtcommand(commands[i].name, commands[i].handler);
@@ -211,7 +205,7 @@ olsrd_plugin_init(void)
 
   olsr_parser_add_function(&olsr_msg_statistics, PROMISCUOUS);
   olsr_preprocessor_add_function(&olsr_packet_statistics);
-  return 1;
+  return false;
 }
 
 static struct debug_msgtraffic *get_msgtraffic_entry(union olsr_ip_addr *ip) {
