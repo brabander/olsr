@@ -120,6 +120,10 @@ implementations detect etx_ffeth nodes with LQ 0 (ETX infinite).
 etx_ffeth only use integer arithmetic, so it performs well on embedded
 hardware.
 
+All ethernet interfaces must be marked with "mode ether" 
+(see olsrd.conf.default.full) in their interface configuration to get any
+useful advantage of etxff_eth.
+
 At the time of this writing, etx_ffeth is the prefered metric for building new
 mesh networks which include links over LAN cables (such as daisy chained
 linksys routers).
