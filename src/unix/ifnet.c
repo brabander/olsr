@@ -462,11 +462,6 @@ os_init_interface(struct interface *ifp, struct olsr_if_config *iface)
     OLSR_DEBUG(LOG_INTERFACE, "\tMulticast: %s\n", ip6_to_string(&buf, &ifp->int_multicast.v6.sin6_addr));
   }
 
-  /*
-   * Clone interface name.
-   */
-  ifp->int_name = olsr_strdup(ifr_basename);
-
   /* Set interface options */
 #ifdef linux
   net_os_set_ifoptions(ifr_basename, ifp);
