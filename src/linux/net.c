@@ -486,6 +486,9 @@ join_mcast(struct interface *ifs, int sock)
 #endif
   struct ipv6_mreq mcastreq;
 
+  if (olsr_cnf->ip_version == AF_INET) {
+    return 0;
+  }
   mcastreq.ipv6mr_multiaddr = ifs->int_multicast.v6.sin6_addr;
   mcastreq.ipv6mr_interface = ifs->if_index;
 

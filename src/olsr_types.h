@@ -104,7 +104,7 @@ struct olsr_ip_prefix {
 };
 
 struct olsr_interface_id {
-  union olsr_ip_addr ip;
+  struct olsr_ip_prefix addr;
   uint32_t if_index;
 };
 

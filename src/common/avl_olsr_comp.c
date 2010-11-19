@@ -37,17 +37,31 @@ int avl_comp_strcasecmp(const void *txt1, const void *txt2, void *ptr __attribut
 
 int avl_comp_int(const void *p1, const void *p2, void *ptr __attribute__ ((unused))) {
   const int *i1 = p1, *i2 = p2;
-  return *i1 - *i2;
+
+  if (*i1 > *i2) {
+    return 1;
+  }
+  if (*i1 < *i2) {
+    return -1;
+  }
+  return 0;
 }
 
-int avl_comp_interface_id(const void *p1, const void *p2, void *ptr __attribute__ ((unused))) {
+int avl_comp_interface_id(const void *p1, const void *p2, void *ptr) {
   const struct olsr_interface_id *id1 = p1, *id2 = p2;
   int diff;
 
-  diff = olsr_ipcmp(&id1->ip, &id2->ip);
+  diff = avl_comp_prefix_default(&id1->addr, &id2->addr, ptr);
   if (diff != 0)
     return diff;
-  return (int)(id1->if_index) - (int)(id2->if_index);
+
+  if (id1->if_index > id2->if_index) {
+    return 1;
+  }
+  if (id1->if_index < id2->if_index) {
+    return -1;
+  }
+  return 0;
 }
 
 /**
@@ -78,13 +92,13 @@ avl_comp_ipv4_prefix_origin(const void *prefix1, const void *prefix2,
   }
 
   /* prefix length */
-  diff = pfx2->prefix_len - pfx1->prefix_len;
+  diff = (int)pfx2->prefix_len - (int)pfx1->prefix_len;
   if (diff) {
     return diff;
   }
 
   /* prefix origin */
-  return (pfx2->prefix_origin - pfx1->prefix_origin);
+  return (int)pfx2->prefix_origin - (int)pfx1->prefix_origin;
 }
 
 /**
@@ -113,13 +127,13 @@ avl_comp_ipv6_prefix_origin(const void *prefix1, const void *prefix2,
   }
 
   /* prefix length */
-  diff = pfx2->prefix_len - pfx1->prefix_len;
+  diff = (int)pfx2->prefix_len - (int)pfx1->prefix_len;
   if (diff) {
     return diff;
   }
 
   /* prefix origin */
-  return (pfx2->prefix_origin - pfx1->prefix_origin);
+  return (int)pfx2->prefix_origin - (int)pfx1->prefix_origin;
 }
 
 /**
@@ -138,18 +152,16 @@ avl_comp_ipv4_prefix(const void *prefix1, const void *prefix2,
 {
   const struct olsr_ip_prefix *pfx1 = prefix1;
   const struct olsr_ip_prefix *pfx2 = prefix2;
-  const uint32_t addr1 = ntohl(pfx1->prefix.v4.s_addr);
-  const uint32_t addr2 = ntohl(pfx2->prefix.v4.s_addr);
   int diff;
 
   /* prefix */
-  diff = addr2 - addr1;
+  diff = ip4cmp(&pfx1->prefix.v4, &pfx2->prefix.v4);
   if (diff) {
     return diff;
   }
 
   /* prefix length */
-  return (pfx2->prefix_len - pfx1->prefix_len);
+  return (int)pfx2->prefix_len - (int)pfx1->prefix_len;
 }
 
 /**
@@ -177,7 +189,7 @@ avl_comp_ipv6_prefix(const void *prefix1, const void *prefix2,
   }
 
   /* prefix length */
-  return (pfx2->prefix_len - pfx1->prefix_len);
+  return (int)pfx2->prefix_len - (int)pfx1->prefix_len;
 }
 
 /**
@@ -205,7 +217,7 @@ avl_comp_ipv4_addr_origin(const void *prefix1, const void *prefix2,
   }
 
   /* prefix origin */
-  return (pfx2->prefix_origin - pfx1->prefix_origin);
+  return (int)pfx2->prefix_origin - (int)pfx1->prefix_origin;
 }
 
 /**
@@ -231,5 +243,5 @@ avl_comp_ipv6_addr_origin(const void *prefix1, const void *prefix2,
   }
 
   /* prefix origin */
-  return (pfx2->prefix_origin - pfx1->prefix_origin);
+  return (int)pfx2->prefix_origin - (int)pfx1->prefix_origin;
 }
