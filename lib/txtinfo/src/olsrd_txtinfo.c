@@ -301,21 +301,24 @@ ipc_action(int fd, void *data __attribute__ ((unused)), unsigned int flags __att
        * header parsing is sufficient for standard wget.
        */
       if (0 != strstr(requ, "/neighbours")) send_what = SIW_NEIGH | SIW_LINK;
-      else if (0 != strstr(requ, "/all")) send_what = SIW_ALL;
       else {
-      /* print out evrey combinations of requested tabled
-       * 3++ letter abbreviations are matched */
-        if (0 != strstr(requ, "/nei")) send_what |= SIW_NEIGH;
-        if (0 != strstr(requ, "/lin")) send_what |= SIW_LINK;
-        if (0 != strstr(requ, "/rou")) send_what |= SIW_ROUTE;
-        if (0 != strstr(requ, "/hna")) send_what |= SIW_HNA;
-        if (0 != strstr(requ, "/mid")) send_what |= SIW_MID;
-        if (0 != strstr(requ, "/top")) send_what |= SIW_TOPO;
+        /* print out every combinations of requested tabled
+         * 3++ letter abbreviations are matched */
+        if (0 != strstr(requ, "/all")) send_what = SIW_ALL;
+        else { /*already included in /all*/
+          if (0 != strstr(requ, "/nei")) send_what |= SIW_NEIGH;
+          if (0 != strstr(requ, "/lin")) send_what |= SIW_LINK;
+          if (0 != strstr(requ, "/rou")) send_what |= SIW_ROUTE;
+          if (0 != strstr(requ, "/hna")) send_what |= SIW_HNA;
+          if (0 != strstr(requ, "/mid")) send_what |= SIW_MID;
+          if (0 != strstr(requ, "/top")) send_what |= SIW_TOPO;
+        }
         if (0 != strstr(requ, "/gat")) send_what |= SIW_GATEWAY;
         if (0 != strstr(requ, "/con")) send_what |= SIW_CONFIG;
         if (0 != strstr(requ, "/int")) send_what |= SIW_INTERFACE;
       }
-    } else send_what = SIW_ALL;
+    } 
+    else send_what = SIW_ALL;
   }
 
   send_info(send_what, ipc_connection);
