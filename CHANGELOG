@@ -6,12 +6,12 @@ Bugfix release for 0.6.0
 
 Markus Kittenberger <Markus.Kittenberger@gmx.at>
 - Major bugfix for the neighbor table when a neighbor gets a new main IP.
-- add /interface command to txtinfo
+- add /interface command to txtinfo, allow multiple commands per request
 
 Henning Rogge <henning.rogge@fkie.fraunhofer.de>
 - wait up to four seconds for aquiring the OLSRd lock. This helps to
   shutdown OLSRd with a script and restart it at once (kill <pid> is
-  asynchrone, kill -w is not available in busybox)
+  asynchrone, and kill -w is not available in busybox)
 - add md5 has of all source/headers into version string
 
 Mitar<mitar@tnode.com>
