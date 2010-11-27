@@ -90,14 +90,14 @@ olsr_delete_all_kernel_routes(void)
 /**
  * Enqueue a route on a kernel chg/del queue.
  */
-static int
+static void
 olsr_enqueue_rt(struct list_entity *head_node, struct rt_entry *rt)
 {
   const struct rt_nexthop *nh;
 
   /* if this node is already on some changelist we are done */
   if (list_node_added(&rt->rt_change_node)) {
-    return -1;
+    return;
   }
 
   /*
@@ -111,8 +111,6 @@ olsr_enqueue_rt(struct list_entity *head_node, struct rt_entry *rt)
   } else {
     list_add_before(head_node, &rt->rt_change_node);
   }
-
-  return 0;
 }
 
 /**
