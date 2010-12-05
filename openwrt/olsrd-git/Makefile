@@ -8,16 +8,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=olsrd-git
-PKG_VERSION:=20101205
-PKG_REV:=HEAD
+PKG_VERSION:=$(shell date +%Y%m%d)+$(shell git --git-dir=$(CURDIR)/../../.git log -1 --pretty=%h)
 PKG_RELEASE:=1
-
-
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
-PKG_SOURCE_URL:=http://olsr.org/git/olsrd.git
-PKG_SOURCE_PROTO:=git
-PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
-PKG_SOURCE_VERSION:=$(PKG_REV)
 
 PKG_BUILD_PARALLEL:=1
 PKG_INSTALL:=1
@@ -25,6 +17,11 @@ PKG_INSTALL:=1
 include $(INCLUDE_DIR)/package.mk
 
 TARGET_CFLAGS += $(FPIC)
+
+define Build/Prepare
+	mkdir -p $(PKG_BUILD_DIR)
+	$(CP) $(CURDIR)/../../* $(PKG_BUILD_DIR)/
+endef
 
 define Package/olsrd-git/template
   SECTION:=net
