@@ -8,7 +8,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=olsrd-git
-PKG_VERSION:=$(shell date +%Y%m%d)+$(shell git --git-dir=$(CURDIR)/../../.git log -1 --pretty=%h)
+PKG_VERSION:=$(shell date +%Y%m%d)+$(shell git --git-dir=$(CURDIR)/../.git log -1 --pretty=%h)
 PKG_RELEASE:=1
 
 PKG_BUILD_PARALLEL:=1
@@ -20,7 +20,7 @@ TARGET_CFLAGS += $(FPIC)
 
 define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)
-	$(CP) $(CURDIR)/../../* $(PKG_BUILD_DIR)/
+	$(CP) $(CURDIR)/../* $(PKG_BUILD_DIR)/
 endef
 
 define Package/olsrd-git/template
