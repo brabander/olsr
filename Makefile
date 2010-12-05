@@ -169,70 +169,100 @@ libs_install install_libs:
 httpinfo:
 		$(MAKECMD) -C lib/httpinfo clean
 		$(MAKECMD) -C lib/httpinfo 
+
+httpinfo_install:
 		$(MAKECMD) -C lib/httpinfo DESTDIR=$(DESTDIR) install 
 
 tas:
 		$(MAKECMD) -C lib/tas clean
 		$(MAKECMD) -C lib/tas
+
+tas_install:
 		$(MAKECMD) -C lib/tas DESTDIR=$(DESTDIR) install
 
 dot_draw:
 		$(MAKECMD) -C lib/dot_draw clean
 		$(MAKECMD) -C lib/dot_draw
+
+dot_draw_install:
 		$(MAKECMD) -C lib/dot_draw DESTDIR=$(DESTDIR) install
 
 nameservice:
 		$(MAKECMD) -C lib/nameservice clean
 		$(MAKECMD) -C lib/nameservice
+
+nameservice_install:
 		$(MAKECMD) -C lib/nameservice DESTDIR=$(DESTDIR) install
 
 dyn_gw:
 		$(MAKECMD) -C lib/dyn_gw clean
 		$(MAKECMD) -C lib/dyn_gw
+
+dyn_gw_install:
 		$(MAKECMD) -C lib/dyn_gw DESTDIR=$(DESTDIR) install
 
 dyn_gw_plain:
 		$(MAKECMD) -C lib/dyn_gw_plain clean
 		$(MAKECMD) -C lib/dyn_gw_plain
+
+dyn_gw_plain_install:
 		$(MAKECMD) -C lib/dyn_gw_plain DESTDIR=$(DESTDIR) install
 
 secure:
 		$(MAKECMD) -C lib/secure clean
 		$(MAKECMD) -C lib/secure
+
+secure_install:
 		$(MAKECMD) -C lib/secure DESTDIR=$(DESTDIR) install
 
 pgraph:
 		$(MAKECMD) -C lib/pgraph clean
 		$(MAKECMD) -C lib/pgraph 
+
+pgraph_install:
 		$(MAKECMD) -C lib/pgraph DESTDIR=$(DESTDIR) install 
 
 bmf:
 		$(MAKECMD) -C lib/bmf clean
 		$(MAKECMD) -C lib/bmf 
+
+bmf_install:
 		$(MAKECMD) -C lib/bmf DESTDIR=$(DESTDIR) install 
 
 quagga:
 		$(MAKECMD) -C lib/quagga clean
 		$(MAKECMD) -C lib/quagga 
+
+quagga_install:
 		$(MAKECMD) -C lib/quagga DESTDIR=$(DESTDIR) install 
 
 mdns:
 		$(MAKECMD) -C lib/mdns clean
 		$(MAKECMD) -C lib/mdns 
+
+mdns_install:
 		$(MAKECMD) -C lib/mdns DESTDIR=$(DESTDIR) install 
+
 txtinfo:
 		$(MAKECMD) -C lib/txtinfo clean
 		$(MAKECMD) -C lib/txtinfo 
+
+txtinfo_install:
 		$(MAKECMD) -C lib/txtinfo DESTDIR=$(DESTDIR) install 
 
 arprefresh:
 		$(MAKECMD) -C lib/arprefresh clean
 		$(MAKECMD) -C lib/arprefresh
+
+arprefresh_install:
 		$(MAKECMD) -C lib/arprefresh DESTDIR=$(DESTDIR) install
 
 watchdog:
 		$(MAKECMD) -C lib/watchdog clean
 		$(MAKECMD) -C lib/watchdog
+
+
+watchdog_install:
 		$(MAKECMD) -C lib/watchdog DESTDIR=$(DESTDIR) install
 
 build_all:	all switch libs

@@ -35,3 +35,15 @@ gui/win32/Shim/Release/
 .cproject
 .project
 .settings
+build-stamp
+configure-stamp
+debian/olsrd/
+debian/olsrd-plugins/
+debian/olsrd-plugins.debhelper.log
+debian/olsrd.debhelper.log
+debian/files
+debian/olsrd-plugins.substvars
+debian/olsrd.postinst.debhelper
+debian/olsrd.postrm.debhelper
+debian/olsrd.prerm.debhelper
+debian/olsrd.substvars
