@@ -6,6 +6,7 @@
  *                     includes code by Andreas Lopatic
  *                     includes code by Sven-Ola Tuecke
  *                     includes code by Lorenz Schori
+ *                     includes bugs by Markus Kittenberger
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -318,7 +319,7 @@ ipc_action(int fd, void *data __attribute__ ((unused)), unsigned int flags __att
         if (0 != strstr(requ, "/int")) send_what |= SIW_INTERFACE;
       }
     } 
-    else send_what = SIW_ALL;
+    if ( send_what == 0 ) send_what = SIW_ALL;
   }
 
   send_info(send_what, ipc_connection);
