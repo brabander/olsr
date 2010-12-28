@@ -262,23 +262,23 @@ pcf_event(int ipc_connection, int chgs_neighborhood, int chgs_topology, int chgs
   int res = 0;
 
   if (chgs_neighborhood || chgs_topology || chgs_hna) {
-    struct nbr_entry *neighbor_table_tmp;
-    struct tc_entry *tc;
-    struct ip_prefix_entry *hna;
-    struct list_iterator iterator, iterator2;
+    struct nbr_entry *neighbor_table_tmp, *nbr_iterator;
+    struct tc_entry *tc, *tc_iterator;
+    struct hna_net *hna, *hna_iterator;
+    struct ip_prefix_entry *prefix, *prefix_iterator;
 
     /* Print tables to IPC socket */
     ipc_send_str(ipc_connection, "digraph topology\n{\n");
 
     /* Neighbors */
-    OLSR_FOR_ALL_NBR_ENTRIES(neighbor_table_tmp, iterator) {
+    OLSR_FOR_ALL_NBR_ENTRIES(neighbor_table_tmp, nbr_iterator) {
       ipc_print_neigh_link(ipc_connection, neighbor_table_tmp);
     }
 
     /* Topology */
-    OLSR_FOR_ALL_TC_ENTRIES(tc, iterator) {
-      struct tc_edge_entry *tc_edge;
-      OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge, iterator2) {
+    OLSR_FOR_ALL_TC_ENTRIES(tc, tc_iterator) {
+      struct tc_edge_entry *tc_edge, *edge_iterator;
+      OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge, edge_iterator) {
         if (tc_edge->edge_inv) {
           ipc_print_tc_link(ipc_connection, tc, tc_edge);
         }
@@ -286,17 +286,16 @@ pcf_event(int ipc_connection, int chgs_neighborhood, int chgs_topology, int chgs
     }
 
     /* HNA entries */
-    OLSR_FOR_ALL_TC_ENTRIES(tc, iterator) {
+    OLSR_FOR_ALL_TC_ENTRIES(tc, tc_iterator) {
       /* Check all networks */
-      struct hna_net *tmp_net;
-      OLSR_FOR_ALL_TC_HNA_ENTRIES(tc, tmp_net, iterator2) {
-        ipc_print_net(ipc_connection, &tc->addr, &tmp_net->hna_prefix);
+      OLSR_FOR_ALL_TC_HNA_ENTRIES(tc, hna, hna_iterator) {
+        ipc_print_net(ipc_connection, &tc->addr, &hna->hna_prefix);
       }
     }
 
     /* Local HNA entries */
-    OLSR_FOR_ALL_IPPREFIX_ENTRIES(&olsr_cnf->hna_entries, hna, iterator) {
-      ipc_print_net(ipc_connection, &olsr_cnf->router_id, &hna->net);
+    OLSR_FOR_ALL_IPPREFIX_ENTRIES(&olsr_cnf->hna_entries, prefix, prefix_iterator) {
+      ipc_print_net(ipc_connection, &olsr_cnf->router_id, &prefix->net);
     }
       ipc_send_str(ipc_connection, "}\n\n");
 

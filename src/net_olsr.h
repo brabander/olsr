@@ -61,7 +61,7 @@ struct filter_entry {
   union olsr_ip_addr filter_addr;
 };
 
-#define OLSR_FOR_ALL_FILTERS(filter, iterator) avl_for_each_element_safe(&filter_tree, filter, filter_node, iterator.loop, iterator.safe)
+#define OLSR_FOR_ALL_FILTERS(filter, iterator) avl_for_each_element_safe(&filter_tree, filter, filter_node, iterator)
 
 void init_net(void);
 

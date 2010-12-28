@@ -76,7 +76,7 @@ struct olsr_timer_info {
   uint32_t changes;
 };
 
-#define OLSR_FOR_ALL_TIMERS(ti, iterator) avl_for_each_element_safe(&timerinfo_tree, ti, node, iterator.loop, iterator.safe)
+#define OLSR_FOR_ALL_TIMERS(ti, iterator) avl_for_each_element_safe(&timerinfo_tree, ti, node, iterator)
 
 /*
  * Our timer implementation is a based on individual timers arranged in
@@ -174,7 +174,7 @@ struct olsr_socket_entry {
 
 /* deletion safe macro for socket list traversal */
 
-#define OLSR_FOR_ALL_SOCKETS(socket, iterator) list_for_each_element_safe(&socket_head, socket, socket_node, iterator.loop, iterator.safe)
+#define OLSR_FOR_ALL_SOCKETS(socket, iterator) list_for_each_element_safe(&socket_head, socket, socket_node, iterator)
 
 uint32_t EXPORT(olsr_getTimestamp) (uint32_t s);
 int32_t EXPORT(olsr_getTimeDue) (uint32_t s);

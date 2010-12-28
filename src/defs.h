@@ -121,13 +121,6 @@ enum log_severity {
   LOG_SEVERITY_COUNT                   //!< LOG_SEVERITY_COUNT
 };
 
-/**
- * Double list pointer for save iteration
- */
-struct list_iterator {
-  struct list_entity *loop;
-  struct list_entity *safe;
-};
 extern volatile enum app_state app_state;
 
 #endif

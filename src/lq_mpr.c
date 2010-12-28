@@ -49,17 +49,16 @@
 void
 olsr_calculate_lq_mpr(void)
 {
-  struct nbr2_entry *nbr2;
-  struct nbr_entry *neigh;
-  struct nbr_con *walker;
-  struct link_entry *lnk;
-  struct list_iterator iterator, iterator2;
+  struct nbr2_entry *nbr2, *nbr2_iterator;
+  struct nbr_entry *neigh, *neigh_iterator;
+  struct nbr_con *walker, *walker_iterator;
+  struct link_entry *lnk, *lnk_iterator;
   int k;
   olsr_linkcost best, best_1hop;
   bool mpr_changes = false;
   bool found_better_path;
 
-  OLSR_FOR_ALL_NBR_ENTRIES(neigh, iterator) {
+  OLSR_FOR_ALL_NBR_ENTRIES(neigh, neigh_iterator) {
 
     /* Memorize previous MPR status. */
     neigh->was_mpr = neigh->is_mpr;
@@ -81,7 +80,7 @@ olsr_calculate_lq_mpr(void)
   }
 
   /* loop through all 2-hop neighbours */
-  OLSR_FOR_ALL_NBR2_ENTRIES(nbr2, iterator) {
+  OLSR_FOR_ALL_NBR2_ENTRIES(nbr2, nbr2_iterator) {
 
     best_1hop = LINK_COST_BROKEN;
 
@@ -106,7 +105,7 @@ olsr_calculate_lq_mpr(void)
       /* see wether we find a better route via an MPR */
       walker = NULL;
       found_better_path = false;
-      OLSR_FOR_ALL_NBR2_CON_ENTRIES(nbr2, walker, iterator2) {
+      OLSR_FOR_ALL_NBR2_CON_ENTRIES(nbr2, walker, walker_iterator) {
         if (walker->path_linkcost < best_1hop) {
           found_better_path = true;
           break;
@@ -126,7 +125,7 @@ olsr_calculate_lq_mpr(void)
        */
 
       /* mark all 1-hop neighbours as not selected */
-      OLSR_FOR_ALL_NBR2_CON_ENTRIES(nbr2, walker, iterator2) {
+      OLSR_FOR_ALL_NBR2_CON_ENTRIES(nbr2, walker, walker_iterator) {
         walker->nbr->skip = false;
       }
 
@@ -136,7 +135,7 @@ olsr_calculate_lq_mpr(void)
         neigh = NULL;
         best = LINK_COST_BROKEN;
 
-        OLSR_FOR_ALL_NBR2_CON_ENTRIES(nbr2, walker, iterator2) {
+        OLSR_FOR_ALL_NBR2_CON_ENTRIES(nbr2, walker, walker_iterator) {
           if (walker->nbr->is_sym && !walker->nbr->skip && walker->path_linkcost < best) {
             neigh = walker->nbr;
             best = walker->path_linkcost;
@@ -166,7 +165,7 @@ olsr_calculate_lq_mpr(void)
   }
 
   /* ugly hack */
-  OLSR_FOR_ALL_LINK_ENTRIES(lnk, iterator) {
+  OLSR_FOR_ALL_LINK_ENTRIES(lnk, lnk_iterator) {
     lnk->is_mpr = lnk->neighbor->is_mpr;
   }
 

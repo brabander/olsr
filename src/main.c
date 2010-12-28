@@ -520,8 +520,7 @@ signal_shutdown(int signo __attribute__ ((unused)))
 static void
 olsr_shutdown(void)
 {
-  struct mid_entry *mid;
-  struct list_iterator iterator;
+  struct mid_entry *mid, *iterator;
 
   olsr_delete_all_kernel_routes();
 

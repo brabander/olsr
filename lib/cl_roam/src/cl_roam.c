@@ -690,8 +690,7 @@ static void* check_neighbour_host(void* neighbour) {
 }
 
 static void spread_host(struct guest_client * host) {
-  struct interface *ifp;
-  struct list_iterator iterator;
+  struct interface *ifp, *iterator;
   uint8_t msg_buffer[MAXMESSAGESIZE - OLSR_HEADERSIZE] __attribute__ ((aligned));
   uint8_t *curr = msg_buffer;
   uint8_t *length_field, *last;
@@ -738,8 +737,7 @@ static void spread_host(struct guest_client * host) {
 // sends packet immedeately!
 void single_hna(union olsr_ip_addr * ip, uint32_t vtime) {
   union olsr_ip_addr subnet;
-  struct interface *ifp;
-  struct list_iterator iterator;
+  struct interface *ifp, *iterator;
   uint8_t msg_buffer[MAXMESSAGESIZE - OLSR_HEADERSIZE] __attribute__ ((aligned));
   uint8_t *curr = msg_buffer;
   uint8_t *length_field, *last;
@@ -784,8 +782,7 @@ static void olsr_event1(void *foo __attribute__ ((unused)) ) {
 }
 
 static void olsr_event2(void *foo  __attribute__ ((unused))) {
-  struct nbr_entry *nbr;
-  struct list_iterator iterator;
+  struct nbr_entry *nbr, *iterator;
 
   OLSR_FOR_ALL_NBR_ENTRIES(nbr, iterator) {
     int rc;

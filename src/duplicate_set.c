@@ -131,8 +131,7 @@ olsr_init_duplicate_set(void)
 void
 olsr_flush_duplicate_entries(void)
 {
-  struct dup_entry *entry;
-  struct list_iterator iterator;
+  struct dup_entry *entry, *iterator;
 
   OLSR_FOR_ALL_FORWARD_DUP_ENTRIES(entry, iterator) {
     olsr_delete_duplicate_entry(entry);
@@ -242,8 +241,7 @@ olsr_print_duplicate_table(void)
 {
 #if !defined REMOVE_LOG_INFO
   /* The whole function makes no sense without it. */
-  struct dup_entry *entry;
-  struct list_iterator iterator;
+  struct dup_entry *entry, *iterator;
   const int ipwidth = olsr_cnf->ip_version == AF_INET ? 15 : 30;
 
   OLSR_INFO(LOG_DUPLICATE_SET, "\n--- %s ------------------------------------------------- DUPLICATE SET (forwarding)\n\n",

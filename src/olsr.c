@@ -275,8 +275,7 @@ olsr_forward_message(struct olsr_message *msg, uint8_t *binary, struct interface
 {
   union olsr_ip_addr *src;
   struct nbr_entry *neighbor;
-  struct interface *ifn;
-  struct list_iterator iterator;
+  struct interface *ifn, *iterator;
   uint8_t *tmp;
 #if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;

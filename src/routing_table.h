@@ -91,7 +91,7 @@ struct rt_entry {
   int failure_count;
 };
 
-#define OLSR_FOR_ALL_RTLIST_ENTRIES(head, rt_entry, iterator) list_for_each_element_safe(head, rt_entry, rt_change_node, iterator.loop, iterator.safe)
+#define OLSR_FOR_ALL_RTLIST_ENTRIES(head, rt_entry, iterator) list_for_each_element_safe(head, rt_entry, rt_change_node, iterator)
 
 /*
  * For every received route a rt_path is added to the RIB.
@@ -113,7 +113,7 @@ struct rt_path {
   uint32_t rtp_version;                /* for detection of outdated rt_paths */
 };
 
-#define OLSR_FOR_ALL_RT_PATH_ENTRIES(rt, rtp, iterator) avl_for_each_element_safe(&rt->rt_path_tree, rtp, rtp_tree_node, iterator.loop, iterator.safe)
+#define OLSR_FOR_ALL_RT_PATH_ENTRIES(rt, rtp, iterator) avl_for_each_element_safe(&rt->rt_path_tree, rtp, rtp_tree_node, iterator)
 
 /*
  * Different routes types used in olsrd.
@@ -138,7 +138,7 @@ enum olsr_rt_origin {
  * the loop prefetches the next node in order to not loose context if
  * for example the caller wants to delete the current rt_entry.
  */
-#define OLSR_FOR_ALL_RT_ENTRIES(rt, iterator) avl_for_each_element_safe(&routingtree, rt, rt_tree_node, iterator.loop, iterator.safe)
+#define OLSR_FOR_ALL_RT_ENTRIES(rt, iterator) avl_for_each_element_safe(&routingtree, rt, rt_tree_node, iterator)
 
 /**
  * IPv4 <-> IPv6 wrapper

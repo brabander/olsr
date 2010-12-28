@@ -1,6 +1,6 @@
 /*
  * PacketBB handler library (see RFC 5444)
- * Copyright (c) 2010 Henning Rogge <henning.rogge@fkie.fraunhofer.de>
+ * Copyright (c) 2010 Henning Rogge <hrogge@googlemail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -256,33 +256,34 @@ static inline void list_merge(struct list_entity *add_to, struct list_entity *re
   container_of((&(element)->list_member)->prev, typeof(*(element)), list_member)
 
 /**
- * internal macro that loops over a limited range of nodes
- * @param first_entity first element of loop
- * @param last_entity last element of loop
- * @param element pointer to list element struct
+ * Loop over a block of elements of a list, used similar to a for() command.
+ * This loop should not be used if elements are removed from the list during
+ * the loop.
+ *
+ * @param first_element first element of loop
+ * @param last_element last element of loop
+ * @param element iterator pointer to list element struct
  * @param list_member name of list_entity within list element struct
- * @param loop_ptr iteration list_entity pointer
  */
-#define __list_for_element_range(first_entity, last_entity, element, list_member, loop_ptr) \
-  for (loop_ptr = (first_entity), element = container_of(loop_ptr, typeof(*(element)), list_member); \
-       loop_ptr->prev != (last_entity); \
-       loop_ptr = loop_ptr->next, \
-         element = container_of(loop_ptr, typeof(*(element)), list_member))
-
+#define list_for_element_range(first_element, last_element, element, list_member) \
+  for (element = (first_element); \
+       element->list_member.prev != &(last_element)->list_member; \
+       element = list_next_element(element, list_member))
 
 /**
- * internal macro that loops backward over a limited range of nodes
- * @param first_entity first element of range (will be last returned by the loop)
- * @param last_entity last element of range (will be first returned by the loop)
- * @param element pointer to list element struct
+ * Loop over a block of elements of a list backwards, used similar to a for() command.
+ * This loop should not be used if elements are removed from the list during
+ * the loop.
+ *
+ * @param first_element first element of range (will be last returned by the loop)
+ * @param last_element last element of range (will be first returned by the loop)
+ * @param element iterator pointer to list element struct
  * @param list_member name of list_entity within list element struct
- * @param loop_ptr iteration list_entity pointer
  */
-#define __list_for_element_range_reverse(first_entity, last_entity, element, list_member, loop_ptr) \
-  for (loop_ptr = (last_entity), element = container_of(loop_ptr, typeof(*(element)), list_member); \
-       loop_ptr->next != (first_entity); \
-       loop_ptr = loop_ptr->prev, \
-         element = container_of(loop_ptr, typeof(*(element)), list_member))
+#define list_for_element_range_reverse(first_element, last_element, element, list_member) \
+  for (element = (last_element); \
+       element->list_member.next != &(first_element)->list_member; \
+       element = list_prev_element(element, list_member))
 
 /**
  * Loop over all elements of a list, used similar to a for() command.
@@ -294,11 +295,11 @@ static inline void list_merge(struct list_entity *add_to, struct list_entity *re
  *    contain the current node of the list during the loop
  * @param list_member name of the list_entity element inside the
  *    larger struct
- * @param loop_ptr pointer to an list_entity which is used as the
- *    internal iterator
  */
-#define list_for_each_element(head, element, list_member, loop_ptr) \
-  __list_for_element_range((head)->next, (head)->prev, element, list_member, loop_ptr)
+#define list_for_each_element(head, element, list_member) \
+  list_for_element_range(list_first_element(head, element, list_member), \
+                         list_last_element(head, element, list_member), \
+                         element, list_member)
 
 /**
  * Loop over all elements of a list backwards, used similar to a for() command.
@@ -310,45 +311,11 @@ static inline void list_merge(struct list_entity *add_to, struct list_entity *re
  *    contain the current node of the list during the loop
  * @param list_member name of the list_entity element inside the
  *    larger struct
- * @param loop_ptr pointer to an list_entity which is used as the
- *    internal iterator
  */
-#define list_for_each_element_reverse(head, element, list_member, loop_ptr) \
-  __list_for_element_range_reverse((head)->next, (head)->prev, element, list_member, loop_ptr)
-
-/**
- * Loop over a block of elements of a list, used similar to a for() command.
- * This loop should not be used if elements are removed from the list during
- * the loop.
- *
- * @param first pointer to first element of loop
- * @param last pointer to last element of loop
- * @param element pointer to a node of the list, this element will
- *    contain the current node of the list during the loop
- * @param list_member name of the list_entity element inside the
- *    larger struct
- * @param loop_ptr pointer to an list_entity which is used as the
- *    internal iterator
- */
-#define list_for_element_range(first, last, element, list_member, loop_ptr) \
-  __list_for_element_range(&(first)->list_member, &(last)->list_member, element, list_member, loop_ptr)
-
-/**
- * Loop over a block of elements of a list backwards, used similar to a for() command.
- * This loop should not be used if elements are removed from the list during
- * the loop.
- *
- * @param first pointer to first element of range
- * @param last pointer to last element of range
- * @param element pointer to a node of the list, this element will
- *    contain the current node of the list during the loop
- * @param list_member name of the list_entity element inside the
- *    larger struct
- * @param loop_ptr pointer to an list_entity which is used as the
- *    internal iterator
- */
-#define list_for_element_range_reverse(first, last, element, list_member, loop_ptr) \
-  __list_for_element_range_reverse(&(first)->list_member, &(last)->list_member, element, list_member, loop_ptr)
+#define list_for_each_element_reverse(head, element, list_member) \
+  list_for_element_range_reverse(list_first_element(head, element, list_member), \
+                                 list_last_element(head, element, list_member), \
+                                 element, list_member)
 
 /**
  * Loop over a block of elements of a list, used similar to a for() command.
@@ -362,11 +329,9 @@ static inline void list_merge(struct list_entity *add_to, struct list_entity *re
  *    contain the current node of the list during the loop
  * @param list_member name of the list_entity element inside the
  *    larger struct
- * @param loop_ptr pointer to an list_entity which is used as the
- *    internal iterator
  */
-#define list_for_element_to_last(head, first, element, list_member, loop_ptr) \
-  __list_for_element_range(&(first)->list_member, (head)->prev, element, list_member, loop_ptr)
+#define list_for_element_to_last(head, first, element, list_member) \
+  list_for_element_range(first, list_last_element(head, element, list_member), element, list_member)
 
 /**
  * Loop over a block of elements of a list backwards, used similar to a for() command.
@@ -380,11 +345,9 @@ static inline void list_merge(struct list_entity *add_to, struct list_entity *re
  *    contain the current node of the list during the loop
  * @param list_member name of the list_entity element inside the
  *    larger struct
- * @param loop_ptr pointer to an list_entity which is used as the
- *    internal iterator
  */
-#define list_for_element_to_last_reverse(head, first, element, list_member, loop_ptr) \
-  __list_for_element_range_reverse(&(first)->list_member, (head)->prev, element, list_member, loop_ptr)
+#define list_for_element_to_last_reverse(head, first, element, list_member) \
+  list_for_element_range_reverse(first, list_last_element(head, element, list_member), element, list_member)
 
 /**
  * Loop over a block of elements of a list, used similar to a for() command.
@@ -398,11 +361,9 @@ static inline void list_merge(struct list_entity *add_to, struct list_entity *re
  *    contain the current node of the list during the loop
  * @param list_member name of the list_entity element inside the
  *    larger struct
- * @param loop_ptr pointer to an list_entity which is used as the
- *    internal iterator
  */
-#define list_for_first_to_element(head, last, element, list_member, loop_ptr) \
-  __list_for_element_range((head)->next, &(last)->list_member, element, list_member, loop_ptr)
+#define list_for_first_to_element(head, last, element, list_member) \
+  list_for_element_range(list_first_element(head, element, list_member), last, element, list_member)
 
 /**
  * Loop over a block of elements of a list backwards, used similar to a for() command.
@@ -419,8 +380,44 @@ static inline void list_merge(struct list_entity *add_to, struct list_entity *re
  * @param loop_ptr pointer to an list_entity which is used as the
  *    internal iterator
  */
-#define list_for_first_to_element_reverse(head, last, element, list_member, loop_ptr) \
-  __list_for_element_range_reverse((head)->next, &(last)->list_member, element, list_member, loop_ptr)
+#define list_for_first_to_element_reverse(head, last, element, list_member) \
+  list_for_element_range_reverse(list_first_element(head, element, list_member), last, element, list_member)
+
+/**
+ * Loop over a block of elements of a list, used similar to a for() command.
+ * This loop can be used if the current element might be removed from
+ * the list during the loop. Other elements should not be removed during
+ * the loop.
+ *
+ * @param first_element first element of loop
+ * @param last_element last element of loop
+ * @param element iterator pointer to list element struct
+ * @param list_member name of list_entity within list element struct
+ * @param ptr pointer to list element struct which is used to store
+ *    the next node during the loop
+ */
+#define list_for_element_range_safe(first_element, last_element, element, list_member, ptr) \
+  for (element = (first_element), ptr = list_next_element(first_element, list_member); \
+       element->list_member.prev != &(last_element)->list_member; \
+       element = ptr, ptr = list_next_element(ptr, list_member))
+
+/**
+ * Loop over a block of elements of a list backwards, used similar to a for() command.
+ * This loop can be used if the current element might be removed from
+ * the list during the loop. Other elements should not be removed during
+ * the loop.
+ *
+ * @param first_element first element of range (will be last returned by the loop)
+ * @param last_element last element of range (will be first returned by the loop)
+ * @param element iterator pointer to list element struct
+ * @param list_member name of list_entity within list element struct
+ * @param ptr pointer to list element struct which is used to store
+ *    the previous node during the loop
+ */
+#define list_for_element_range_reverse_safe(first_element, last_element, element, list_member, ptr) \
+  for (element = (last_element), ptr = list_prev_element(last_element, list_member); \
+       element->list_member.next != &(first_element)->list_member; \
+       element = ptr, ptr = list_prev_element(ptr, list_member))
 
 /**
  * Loop over all elements of a list, used similar to a for() command.
@@ -433,17 +430,13 @@ static inline void list_merge(struct list_entity *add_to, struct list_entity *re
  *    contain the current node of the list during the loop
  * @param list_member name of the list_entity element inside the
  *    larger struct
- * @param loop_ptr pointer to an list_entity which is used as the
- *    internal iterator for the loop
- * @param safe_ptr pointer to an list_entity which is used to store
+ * @param ptr pointer to an list element struct which is used to store
  *    the next node during the loop
  */
-#define list_for_each_element_safe(head, element, list_member, loop_ptr, safe_ptr) \
-  for (loop_ptr = (head)->next, safe_ptr = loop_ptr->next, \
-         element = container_of(loop_ptr, typeof(*(element)), list_member); \
-       loop_ptr != head; \
-       loop_ptr = safe_ptr, safe_ptr = safe_ptr->next, \
-         element = container_of(loop_ptr, typeof(*(element)), list_member))
+#define list_for_each_element_safe(head, element, list_member, ptr) \
+  list_for_element_range_safe(list_first_element(head, element, list_member), \
+                              list_last_element(head, element, list_member), \
+                              element, list_member, ptr)
 
 /**
  * Loop over all elements of a list backwards, used similar to a for() command.
@@ -456,16 +449,12 @@ static inline void list_merge(struct list_entity *add_to, struct list_entity *re
  *    contain the current node of the list during the loop
  * @param list_member name of the list_entity element inside the
  *    larger struct
- * @param loop_ptr pointer to an list_entity which is used as the
- *    internal iterator for the loop
- * @param safe_ptr pointer to an list_entity which is used to store
+ * @param ptr pointer to an list element struct which is used to store
  *    the next node during the loop
  */
-#define list_for_each_element_reverse_safe(head, element, list_member, loop_ptr, safe_ptr) \
-  for (loop_ptr = (head)->prev, safe_ptr = loop_ptr->prev, \
-         element = container_of(loop_ptr, typeof(*(element)), list_member); \
-       loop_ptr != head; \
-       loop_ptr = safe_ptr, safe_ptr = safe_ptr->prev, \
-         element = container_of(loop_ptr, typeof(*(element)), list_member))
+#define list_for_each_element_reverse_safe(head, element, list_member, ptr) \
+  list_for_element_range_reverse_safe(list_first_element(head, element, list_member), \
+                                      list_last_element(head, element, list_member), \
+                                      element, list_member, ptr)
 
 #endif /* LIST_H_ */

@@ -164,8 +164,7 @@ olsr_spf_extract_best(struct avl_tree *tree)
 static void
 olsr_spf_relax(struct avl_tree *cand_tree, struct tc_entry *tc)
 {
-  struct tc_edge_entry *tc_edge;
-  struct list_iterator iterator;
+  struct tc_edge_entry *tc_edge, *iterator;
   olsr_linkcost new_cost;
 
 #if !defined REMOVE_LOG_DEBUG
@@ -288,13 +287,12 @@ olsr_calculate_routing_table(bool force)
 #endif
   struct avl_tree cand_tree;
   struct list_entity path_list;          /* head of the path_list */
-  struct tc_entry *tc;
-  struct rt_path *rtp;
+  struct tc_entry *tc, *tc_iterator;
+  struct rt_path *rtp, *rtp_iterator;
   struct tc_edge_entry *tc_edge;
-  struct nbr_entry *neigh;
+  struct nbr_entry *neigh, *neigh_iterator;
   struct link_entry *link;
   int path_count = 0;
-  struct list_iterator iterator;
 
   /* We are done if our backoff timer is running */
   if (!force && spf_backoff_timer != NULL) {
@@ -318,7 +316,7 @@ olsr_calculate_routing_table(bool force)
   /*
    * Initialize vertices in the lsdb.
    */
-  OLSR_FOR_ALL_TC_ENTRIES(tc, iterator) {
+  OLSR_FOR_ALL_TC_ENTRIES(tc, tc_iterator) {
     tc->next_hop = NULL;
     tc->path_cost = ROUTE_COST_BROKEN;
     tc->hops = 0;
@@ -350,7 +348,7 @@ olsr_calculate_routing_table(bool force)
   /*
    * Set the next-hops of our neighbor link.
    */
-  OLSR_FOR_ALL_NBR_ENTRIES(neigh, iterator) {
+  OLSR_FOR_ALL_NBR_ENTRIES(neigh, neigh_iterator) {
     tc_edge = neigh->tc_edge;
 
     if (neigh->is_sym) {
@@ -405,7 +403,7 @@ olsr_calculate_routing_table(bool force)
      * If the prefix is already in the RIB, refresh the entry such
      * that olsr_delete_outdated_routes() does not purge it off.
      */
-    OLSR_FOR_ALL_PREFIX_ENTRIES(tc, rtp, iterator) {
+    OLSR_FOR_ALL_PREFIX_ENTRIES(tc, rtp, rtp_iterator) {
       if (rtp->rtp_rt) {
 
         /*

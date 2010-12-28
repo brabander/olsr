@@ -93,7 +93,7 @@ struct link_entry {
 #define OLSR_LINK_LOSS_JITTER  0        /* percent jitter */
 
 /* deletion safe macro for link entry traversal */
-#define OLSR_FOR_ALL_LINK_ENTRIES(link, iterator) list_for_each_element_safe(&link_entry_head, link, link_list, iterator.loop, iterator.safe)
+#define OLSR_FOR_ALL_LINK_ENTRIES(link, iterator) list_for_each_element_safe(&link_entry_head, link, link_list, iterator)
 
 /* Externals */
 extern struct list_entity EXPORT(link_entry_head);

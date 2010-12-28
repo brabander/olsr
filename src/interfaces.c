@@ -161,15 +161,14 @@ is_lost_interface_ip(union olsr_ip_addr *ip) {
 }
 
 void destroy_interfaces(void) {
-  struct interface *iface;
-  struct interface_lost *lost;
-  struct list_iterator iterator;
+  struct interface *iface, *iface_iterator;
+  struct interface_lost *lost, *lost_iterator;
 
-  OLSR_FOR_ALL_INTERFACES(iface, iterator) {
+  OLSR_FOR_ALL_INTERFACES(iface, iface_iterator) {
     remove_interface(iface);
   }
 
-  OLSR_FOR_ALL_LOSTIF_ENTRIES(lost, iterator) {
+  OLSR_FOR_ALL_LOSTIF_ENTRIES(lost, lost_iterator) {
     remove_lost_interface_ip(lost);
   }
 }
@@ -263,8 +262,7 @@ static void
 check_interface_updates(void *foo __attribute__ ((unused)))
 {
   struct olsr_if_config *tmp_if;
-  struct interface_lost *lost;
-  struct list_iterator iterator;
+  struct interface_lost *lost, *iterator;
 
   OLSR_DEBUG(LOG_INTERFACE, "Checking for updates in the interface set\n");
 
@@ -379,8 +377,7 @@ run_ifchg_cbs(struct interface *ifp, int flag)
 struct interface *
 if_ifwithaddr(const union olsr_ip_addr *addr)
 {
-  struct interface *ifp;
-  struct list_iterator iterator;
+  struct interface *ifp, *iterator;
   if (!addr) {
     return NULL;
   }
@@ -403,8 +400,7 @@ if_ifwithaddr(const union olsr_ip_addr *addr)
 struct interface *
 if_ifwithsock(int fd)
 {
-  struct interface *ifp;
-  struct list_iterator iterator;
+  struct interface *ifp, *iterator;
 
   OLSR_FOR_ALL_INTERFACES(ifp, iterator) {
     if (ifp->olsr_socket == fd) {
@@ -429,8 +425,7 @@ if_ifwithsock(int fd)
 struct interface *
 if_ifwithname(const char *if_name)
 {
-  struct interface *ifp;
-  struct list_iterator iterator;
+  struct interface *ifp, *iterator;
 
   OLSR_FOR_ALL_INTERFACES(ifp, iterator) {
     /* good ol' strcmp should be sufficient here */
@@ -452,8 +447,7 @@ if_ifwithname(const char *if_name)
 struct interface *
 if_ifwithindex(const int if_index)
 {
-  struct interface *ifp;
-  struct list_iterator iterator;
+  struct interface *ifp, *iterator;
   OLSR_FOR_ALL_INTERFACES(ifp, iterator) {
     if (ifp->if_index == if_index) {
       return ifp;

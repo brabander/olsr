@@ -156,8 +156,7 @@ olsr_com_init_http(void) {
 }
 
 void olsr_com_destroy_http(void) {
-  struct olsr_html_site *site;
-  struct list_iterator iterator;
+  struct olsr_html_site *site, *iterator;
 
   OLSR_FOR_ALL_HTML_ENTRIES(site, iterator) {
     olsr_com_remove_htmlsite(site);

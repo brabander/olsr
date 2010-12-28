@@ -170,7 +170,7 @@ struct interface {
 };
 
 /* deletion safe macro for interface list traversal */
-#define OLSR_FOR_ALL_INTERFACES(interface, iterator) list_for_each_element_safe(&interface_head, interface, int_node, iterator.loop, iterator.safe)
+#define OLSR_FOR_ALL_INTERFACES(interface, iterator) list_for_each_element_safe(&interface_head, interface, int_node, iterator)
 
 struct interface_lost {
   struct avl_node node;
@@ -178,7 +178,7 @@ struct interface_lost {
   uint32_t valid_until;
 };
 
-#define OLSR_FOR_ALL_LOSTIF_ENTRIES(lostif, iterator) avl_for_each_element_safe(&interface_lost_tree, lostif, node, iterator.loop, iterator.safe)
+#define OLSR_FOR_ALL_LOSTIF_ENTRIES(lostif, iterator) avl_for_each_element_safe(&interface_lost_tree, lostif, node, iterator)
 
 #define OLSR_BUFFER_HOLD_JITTER 25      /* percent */
 #define OLSR_BUFFER_HOLD_TIME  100      /* milliseconds */

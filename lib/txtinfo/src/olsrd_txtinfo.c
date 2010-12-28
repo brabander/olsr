@@ -370,8 +370,7 @@ static enum olsr_txtcommand_result
 txtinfo_neigh(struct comport_connection *con,
     const char *cmd __attribute__ ((unused)), const char *param)
 {
-  struct nbr_entry *neigh;
-  struct list_iterator iterator;
+  struct nbr_entry *neigh, *iterator;
   const char *template;
   int indexLength;
 
@@ -410,8 +409,7 @@ static enum olsr_txtcommand_result
 txtinfo_link(struct comport_connection *con,
     const char *cmd __attribute__ ((unused)), const char *param)
 {
-  struct link_entry *lnk;
-  struct list_iterator iterator;
+  struct link_entry *lnk, *iterator;
   size_t i;
   const char *template;
   int indexLength;
@@ -457,8 +455,7 @@ static enum olsr_txtcommand_result
 txtinfo_routes(struct comport_connection *con,
     const char *cmd __attribute__ ((unused)), const char *param __attribute__ ((unused)))
 {
-  struct rt_entry *rt;
-  struct list_iterator iterator;
+  struct rt_entry *rt, *iterator;
   const char *template;
   int indexLength;
 
@@ -509,8 +506,7 @@ static enum olsr_txtcommand_result
 txtinfo_topology(struct comport_connection *con,
     const char *cmd __attribute__ ((unused)), const char *param __attribute__ ((unused)))
 {
-  struct tc_entry *tc;
-  struct list_iterator iterator, iterator2;
+  struct tc_entry *tc, *iterator;
   const char *template;
   int indexLength;
 
@@ -529,7 +525,7 @@ txtinfo_topology(struct comport_connection *con,
 
   /* Topology */
   OLSR_FOR_ALL_TC_ENTRIES(tc, iterator) {
-    struct tc_edge_entry *tc_edge;
+    struct tc_edge_entry *tc_edge, *edge_iterator;
     olsr_ip_to_string(&buf_localip, &tc->addr);
     if (tc->validity_timer) {
       olsr_milli_to_txt(&buf_vtime, tc->validity_timer->timer_clock - now_times);
@@ -538,7 +534,7 @@ txtinfo_topology(struct comport_connection *con,
       strscpy(buf_vtime.buf, "0.0", sizeof(buf_vtime));
     }
 
-    OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge, iterator2) {
+    OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge, edge_iterator) {
       olsr_ip_to_string(&buf_neighip, &tc_edge->T_dest_addr);
       strscpy(buf_virtual, tc_edge->virtual ? OLSR_YES : OLSR_NO, sizeof(buf_virtual));
       if (tc_edge->virtual) {
@@ -624,9 +620,8 @@ static enum olsr_txtcommand_result
 txtinfo_hna(struct comport_connection *con,
     const char *cmd __attribute__ ((unused)), const char *param __attribute__ ((unused)))
 {
-  const struct ip_prefix_entry *hna;
-  struct list_iterator iterator, iterator2;
-  struct tc_entry *tc;
+  const struct ip_prefix_entry *hna, *prefix_iterator;
+  struct tc_entry *tc, *tc_iterator;
   const char *template;
   int indexLength;
 
@@ -643,7 +638,7 @@ txtinfo_hna(struct comport_connection *con,
   }
 
   /* Announced HNA entries */
-  OLSR_FOR_ALL_IPPREFIX_ENTRIES(&olsr_cnf->hna_entries, hna, iterator) {
+  OLSR_FOR_ALL_IPPREFIX_ENTRIES(&olsr_cnf->hna_entries, hna, prefix_iterator) {
     olsr_ip_to_string(&buf_localip, &olsr_cnf->router_id);
     olsr_ip_prefix_to_string(&buf_destprefix, &hna->net);
     strscpy(buf_vtime.buf, "0.0", sizeof(buf_vtime));
@@ -654,8 +649,8 @@ txtinfo_hna(struct comport_connection *con,
   }
 
   /* HNA entries */
-  OLSR_FOR_ALL_TC_ENTRIES(tc, iterator) {
-    struct hna_net *tmp_net;
+  OLSR_FOR_ALL_TC_ENTRIES(tc, tc_iterator) {
+    struct hna_net *tmp_net, *hna_iterator;
 
     olsr_ip_to_string(&buf_localip, &tc->addr);
     if (tc->validity_timer) {
@@ -666,7 +661,7 @@ txtinfo_hna(struct comport_connection *con,
     }
 
     /* Check all networks */
-    OLSR_FOR_ALL_TC_HNA_ENTRIES(tc, tmp_net, iterator2) {
+    OLSR_FOR_ALL_TC_HNA_ENTRIES(tc, tmp_net, hna_iterator) {
       olsr_ip_prefix_to_string(&buf_destprefix, &tmp_net->hna_prefix);
 
       if (abuf_templatef(&con->out, template, values_hna, tmpl_indices, indexLength) < 0) {
@@ -685,9 +680,8 @@ static enum olsr_txtcommand_result
 txtinfo_mid(struct comport_connection *con,
     const char *cmd __attribute__ ((unused)), const char *param __attribute__ ((unused)))
 {
-  struct tc_entry *tc;
-  struct interface *interface;
-  struct list_iterator iterator, iterator2;
+  struct tc_entry *tc, *tc_iterator;
+  struct interface *interface, *ifp_iterator;
 
   const char *template;
   int indexLength;
@@ -704,7 +698,7 @@ txtinfo_mid(struct comport_connection *con,
     return ABUF_ERROR;
   }
 
-  OLSR_FOR_ALL_INTERFACES(interface, iterator) {
+  OLSR_FOR_ALL_INTERFACES(interface, ifp_iterator) {
     if (olsr_ipcmp(&olsr_cnf->router_id, &interface->ip_addr) != 0) {
       olsr_ip_to_string(&buf_localip, &olsr_cnf->router_id);
       olsr_ip_to_string(&buf_aliasip, &interface->ip_addr);
@@ -717,8 +711,8 @@ txtinfo_mid(struct comport_connection *con,
   }
 
   /* MID root is the TC entry */
-  OLSR_FOR_ALL_TC_ENTRIES(tc, iterator) {
-    struct mid_entry *alias;
+  OLSR_FOR_ALL_TC_ENTRIES(tc, tc_iterator) {
+    struct mid_entry *alias, *alias_iterator;
 
     olsr_ip_to_string(&buf_localip, &tc->addr);
     if (tc->validity_timer) {
@@ -729,7 +723,7 @@ txtinfo_mid(struct comport_connection *con,
         strscpy(buf_vtime.buf, "0.0", sizeof(buf_vtime));
       }
 
-      OLSR_FOR_ALL_TC_MID_ENTRIES(tc, alias, iterator2) {
+      OLSR_FOR_ALL_TC_MID_ENTRIES(tc, alias, alias_iterator) {
         olsr_ip_to_string(&buf_aliasip, &alias->mid_alias_addr);
 
         if (abuf_templatef(&con->out, template, values_mid, tmpl_indices, indexLength) < 0) {

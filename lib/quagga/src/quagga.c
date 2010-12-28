@@ -97,8 +97,7 @@ void
 zebra_cleanup(void)
 {
   int i;
-  struct rt_entry *tmp;
-  struct list_iterator iterator;
+  struct rt_entry *tmp, *iterator;
 
   if (zebra.options & OPTION_EXPORT) {
     OLSR_FOR_ALL_RT_ENTRIES(tmp, iterator) {

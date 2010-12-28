@@ -204,8 +204,7 @@ olsr_add_route(struct rt_entry *rt)
 static void
 olsr_chg_kernel_routes(struct list_entity *head_node)
 {
-  struct rt_entry *rt;
-  struct list_iterator iterator;
+  struct rt_entry *rt, *iterator;
 
   if (list_is_empty(head_node)) {
     return;
@@ -235,8 +234,7 @@ olsr_chg_kernel_routes(struct list_entity *head_node)
 static void
 olsr_delete_outdated_routes(struct rt_entry *rt)
 {
-  struct rt_path *rtp;
-  struct list_iterator iterator;
+  struct rt_path *rtp, *iterator;
 
   OLSR_FOR_ALL_RT_PATH_ENTRIES(rt, rtp, iterator) {
     /*
@@ -264,8 +262,7 @@ olsr_delete_outdated_routes(struct rt_entry *rt)
 void
 olsr_update_rib_routes(void)
 {
-  struct rt_entry *rt;
-  struct list_iterator iterator;
+  struct rt_entry *rt, *iterator;
 
   OLSR_DEBUG(LOG_ROUTING, "Updating kernel routes...\n");
 

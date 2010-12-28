@@ -70,7 +70,7 @@ lookup_position_latlon(union olsr_ip_addr *ip)
 {
   int hash;
   struct db_entry *entry;
-  struct list_entity *list_head, *loop;
+  struct list_entity *list_head;
 
   if (olsr_ipcmp(ip, &olsr_cnf->router_id) == 0) {
     return my_latlon_str;
@@ -79,7 +79,7 @@ lookup_position_latlon(union olsr_ip_addr *ip)
   for (hash = 0; hash < HASHSIZE; hash++) {
     list_head = &latlon_list[hash];
 
-    list_for_each_element(list_head, entry, db_list, loop) {
+    list_for_each_element(list_head, entry, db_list) {
       if (entry->names && olsr_ipcmp(&entry->originator, ip) == 0) {
         return entry->names->name;
       }
@@ -98,9 +98,9 @@ mapwrite_work(FILE * fmap)
   struct olsr_if_config *ifs;
   union olsr_ip_addr ip;
   struct ipaddr_str strbuf1, strbuf2;
-  struct tc_entry *tc;
-  struct tc_edge_entry *tc_edge;
-  struct list_iterator iterator, iterator2;
+  struct tc_entry *tc, *tc_iterator;
+  struct tc_edge_entry *tc_edge, *edge_iterator;
+
   if (!my_names || !fmap)
     return;
 
@@ -124,9 +124,9 @@ mapwrite_work(FILE * fmap)
     }
   }
 
-  OLSR_FOR_ALL_TC_ENTRIES(tc, iterator) {
-    struct mid_entry *alias;
-    OLSR_FOR_ALL_TC_MID_ENTRIES(tc, alias, iterator2) {
+  OLSR_FOR_ALL_TC_ENTRIES(tc, tc_iterator) {
+    struct mid_entry *alias, *alias_iterator;
+    OLSR_FOR_ALL_TC_MID_ENTRIES(tc, alias, alias_iterator) {
       if (0 > fprintf(fmap, "Mid('%s','%s');\n",
                       olsr_ip_to_string(&strbuf1, &tc->addr), olsr_ip_to_string(&strbuf2, &alias->mid_alias_addr))) {
         return;
@@ -143,10 +143,10 @@ mapwrite_work(FILE * fmap)
   }
   for (hash = 0; hash < HASHSIZE; hash++) {
     struct db_entry *entry;
-    struct list_entity *list_head, *loop;
+    struct list_entity *list_head;
 
     list_head = &latlon_list[hash];
-    list_for_each_element(list_head, entry, db_list, loop) {
+    list_for_each_element(list_head, entry, db_list) {
       if (NULL != entry->names) {
         if (0 > fprintf(fmap, "Node('%s',%s,'%s','%s');\n",
                         olsr_ip_to_string(&strbuf1, &entry->originator),
@@ -158,8 +158,8 @@ mapwrite_work(FILE * fmap)
     }
   }
 
-  OLSR_FOR_ALL_TC_ENTRIES(tc, iterator) {
-    OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge, iterator2) {
+  OLSR_FOR_ALL_TC_ENTRIES(tc, tc_iterator) {
+    OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge, edge_iterator) {
       char *lla = lookup_position_latlon(&tc->addr);
       char *llb = lookup_position_latlon(&tc_edge->T_dest_addr);
       if (NULL != lla && NULL != llb) {

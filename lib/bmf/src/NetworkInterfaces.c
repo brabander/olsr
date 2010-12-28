@@ -387,8 +387,7 @@ FindNeighbors(struct TBestNeighbors *neighbors,
               struct TBmfInterface *intf,
               union olsr_ip_addr *source, union olsr_ip_addr *forwardedBy, union olsr_ip_addr *forwardedTo, int *nPossibleNeighbors)
 {
-  struct link_entry *walker;
-  struct list_iterator iterator;
+  struct link_entry *walker, *iterator;
   olsr_linkcost previousLinkEtx = LINK_COST_BROKEN;
   olsr_linkcost bestEtx = LINK_COST_BROKEN;
 

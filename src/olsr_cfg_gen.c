@@ -81,8 +81,7 @@ olsr_write_cnf_buf(struct autobuf *abuf, struct olsr_config *cnf, bool write_mor
   abuf_appendf(abuf, "# HNA IPv%d routes\n"
                "# syntax: netaddr/prefix\n" "Hna%d {\n", cnf->ip_version == AF_INET ? 4 : 6, cnf->ip_version == AF_INET ? 4 : 6);
   if (!list_is_empty(&cnf->hna_entries)) {
-    struct ip_prefix_entry *h;
-    struct list_iterator iterator;
+    struct ip_prefix_entry *h, *iterator;
 
     OLSR_FOR_ALL_IPPREFIX_ENTRIES(&cnf->hna_entries, h, iterator) {
       struct ipprefix_str strbuf;

@@ -196,11 +196,10 @@ lq_etxff_packet_parser(struct olsr_packet *pkt, uint8_t *binary __attribute__ ((
 static void
 lq_etxff_timer(void __attribute__ ((unused)) * context)
 {
-  struct link_entry *link;
-  struct list_iterator iterator;
-  struct nbr_entry *nbr;
+  struct link_entry *link, *link_iterator;
+  struct nbr_entry *nbr, *nbr_iterator;
 
-  OLSR_FOR_ALL_LINK_ENTRIES(link, iterator) {
+  OLSR_FOR_ALL_LINK_ENTRIES(link, link_iterator) {
     struct lq_etxff_link_entry *lq_link;
     uint32_t ratio;
     uint16_t i, received, lost;
@@ -259,7 +258,7 @@ lq_etxff_timer(void __attribute__ ((unused)) * context)
     link->linkcost = lq_etxff_calc_link_entry_cost(link);
   }
 
-  OLSR_FOR_ALL_NBR_ENTRIES(nbr, iterator) {
+  OLSR_FOR_ALL_NBR_ENTRIES(nbr, nbr_iterator) {
     olsr_neighbor_cost_may_changed(nbr);
   }
 }

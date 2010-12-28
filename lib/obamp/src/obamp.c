@@ -75,8 +75,8 @@
 #include "common/list.h"
 
 
-#define OLSR_FOR_ALL_OBAMPNODE_ENTRIES(n, iterator) list_for_each_element_safe(&ListOfObampNodes, n, list, iterator.loop, iterator.safe)
-#define OLSR_FOR_ALL_OBAMPSNIFF_ENTRIES(s, iterator) list_for_each_element_safe(&ListOfObampSniffingIf, s, list, iterator.loop, iterator.safe)
+#define OLSR_FOR_ALL_OBAMPNODE_ENTRIES(n, iterator) list_for_each_element_safe(&ListOfObampNodes, n, list, iterator)
+#define OLSR_FOR_ALL_OBAMPSNIFF_ENTRIES(s, iterator) list_for_each_element_safe(&ListOfObampSniffingIf, s, list, iterator)
 
 struct ObampNodeState *myState;        //Internal state of the OBAMP node
 
@@ -101,9 +101,8 @@ static struct ObampNode *
 select_tree_anchor(void)
 {
 
-  struct ObampNode *tmp;               //temp pointers used when parsing the list
+  struct ObampNode *tmp, *iterator;               //temp pointers used when parsing the list
   struct ObampNode *best;
-  struct list_iterator iterator;
   struct rt_entry *rt;                 //"rt->rt_best->rtp_metric.cost" is the value you are looking for, a 32 bit
 
   unsigned int mincost = 15;
@@ -245,8 +244,7 @@ static int
 CreateObampSniffingInterfaces(void)
 {
 
-  struct ObampSniffingIf *tmp;
-  struct list_iterator iterator;
+  struct ObampSniffingIf *tmp, *iterator;
   OLSR_DEBUG(LOG_PLUGINS, "CreateObampSniffingInterfaces");
 
   if (list_is_empty(&ListOfObampSniffingIf)) {        //if the list is empty
@@ -279,8 +277,7 @@ activate_tree_link(struct OBAMP_tree_link_ack *ack)
 #if !defined(REMOVE_LOG_DEBUG)
   struct ipaddr_str buf;
 #endif
-  struct ObampNode *tmp;
-  struct list_iterator iterator;
+  struct ObampNode *tmp, *iterator;
 
   if (memcmp(&myState->CoreAddress.v4, &ack->CoreAddress.v4, sizeof(struct in_addr)) != 0) {
     OLSR_DEBUG(LOG_PLUGINS, "Discarding message with no coherent core address");
@@ -405,8 +402,7 @@ tree_link_ack(struct OBAMP_tree_link_req *req)
   struct sockaddr_in si_other;
   struct in_addr addr;
 
-  struct ObampNode *tmp;
-  struct list_iterator iterator;
+  struct ObampNode *tmp, *iterator;
 
 #if !defined(REMOVE_LOG_DEBUG)
   struct ipaddr_str buf;
@@ -519,8 +515,7 @@ printObampNodesList(void)
 #if !defined(REMOVE_LOG_DEBUG)
   struct ipaddr_str buf;
 #endif
-  struct ObampNode *tmp;
-  struct list_iterator iterator;
+  struct ObampNode *tmp, *iterator;
 
   if (list_is_empty(&ListOfObampNodes)) {     //if the list is empty
     return;
@@ -548,8 +543,7 @@ DoIHaveATreeLink(void)
 {
 
   //struct ipaddr_str buf;
-  struct ObampNode *tmp;
-  struct list_iterator iterator;
+  struct ObampNode *tmp, *iterator;
 
   if (list_is_empty(&ListOfObampNodes)) {     //if the list is empty
     return 0;
@@ -569,8 +563,7 @@ unsolicited_tree_destroy(void *x)
 {
 
   //struct ipaddr_str buf;
-  struct ObampNode *tmp;
-  struct list_iterator iterator;
+  struct ObampNode *tmp, *iterator;
 
   OLSR_FOR_ALL_OBAMPNODE_ENTRIES(tmp, iterator) {
     if (tmp->isTree == 0) {
@@ -585,8 +578,7 @@ DoIHaveAMeshLink(void)
 {
 
   //struct ipaddr_str buf;
-  struct ObampNode *tmp;
-  struct list_iterator iterator;
+  struct ObampNode *tmp, *iterator;
 
   OLSR_FOR_ALL_OBAMPNODE_ENTRIES(tmp, iterator) {
     if (tmp->isMesh == 1) {
@@ -599,8 +591,7 @@ DoIHaveAMeshLink(void)
 static void
 reset_tree_links(void)
 {
-  struct ObampNode *tmp;
-  struct list_iterator iterator;
+  struct ObampNode *tmp, *iterator;
 
   OLSR_DEBUG(LOG_PLUGINS,"Reset Tree Links Now");
 
@@ -622,8 +613,7 @@ deactivate_tree_link(struct OBAMP_tree_destroy *destroy_msg)
 #if !defined(REMOVE_LOG_DEBUG)
   struct ipaddr_str buf;
 #endif
-  struct ObampNode *tmp;
-  struct list_iterator iterator;
+  struct ObampNode *tmp, *iterator;
 
   if (memcmp(&myState->CoreAddress.v4, &destroy_msg->CoreAddress.v4, sizeof(struct in_addr)) != 0) {
     OLSR_DEBUG(LOG_PLUGINS, "Discarding message with no coherent core address");
@@ -651,8 +641,7 @@ CoreElection(void)
 #if !defined(REMOVE_LOG_DEBUG)
   struct ipaddr_str buf;
 #endif
-  struct ObampNode *tmp;
-  struct list_iterator iterator;
+  struct ObampNode *tmp, *iterator;
   u_int32_t smallestIP = 0xFFFFFFFF;
 
   //Update my current IP address
@@ -735,8 +724,7 @@ UdpServer(void)
 static void
 decap_data(char *buffer)
 {
-  struct ObampSniffingIf *tmp;         //temp pointers used when parsing the list
-  struct list_iterator iterator;
+  struct ObampSniffingIf *tmp, *iterator;
   unsigned char *ipPacket;
   int stripped_len;
   struct ip *ipHeader;
@@ -790,8 +778,7 @@ static int
 CheckDataFromTreeLink(char *buffer)
 {
 
-  struct ObampNode *tmp;               //temp pointers used when parsing the list
-  struct list_iterator iterator;
+  struct ObampNode *tmp, *iterator;
   struct OBAMP_data_message4 *data_msg;
 
   data_msg = (struct OBAMP_data_message4 *)buffer;
@@ -816,8 +803,7 @@ static int
 CheckDupData(char *buffer)
 {
 
-  struct ObampNode *tmp;               //temp pointers used when parsing the list
-  struct list_iterator iterator;
+  struct ObampNode *tmp, *iterator;
   struct OBAMP_data_message4 *data_msg;
 
   data_msg = (struct OBAMP_data_message4 *)buffer;
@@ -852,8 +838,7 @@ forward_obamp_data(char *buffer)
   struct ipaddr_str buf;
   struct ipaddr_str buf2;
 #endif
-  struct ObampNode *tmp;               //temp pointers used when parsing the list
-  struct list_iterator iterator;
+  struct ObampNode *tmp, *iterator;
   struct OBAMP_data_message4 *data_msg;
   struct sockaddr_in si_other;
   struct in_addr temporary;
@@ -887,8 +872,7 @@ manage_hello(char *packet)
 
   struct OBAMP_hello *hello;
 
-  struct ObampNode *tmp;               //temp pointers used when parsing the list
-  struct list_iterator iterator;
+  struct ObampNode *tmp, *iterator;
 
   hello = (struct OBAMP_hello *)packet;
 
@@ -923,8 +907,7 @@ manage_tree_create(char *packet)
   struct ipaddr_str buf2;              //buf to print debug infos
 #endif
 
-  struct ObampNode *tmp;               //temp pointers used when parsing the list
-  struct list_iterator iterator;
+  struct ObampNode *tmp, *iterator;
 
   OLSR_DEBUG(LOG_PLUGINS,"manage_tree_create");
   msg = (struct OBAMP_tree_create *)packet;
@@ -1086,8 +1069,7 @@ addObampNode4(struct in_addr *ipv4, u_int8_t status)
   struct ipaddr_str buf;
 #endif
   struct ObampNode *neighbor_to_add;
-  struct ObampNode *tmp;
-  struct list_iterator iterator;
+  struct ObampNode *tmp, *iterator;
   neighbor_to_add = olsr_malloc(sizeof(struct ObampNode), "OBAMPNode");
 
 //OLSR_DEBUG(LOG_PLUGINS,"Adding to list node - %s\n",ip4_to_string(&buf,*ipv4));
@@ -1204,8 +1186,7 @@ olsr_obamp_gen(void *packet, int len)
   /* send buffer: huge */
   uint8_t buffer[10240];
   struct olsr_message msg;
-  struct interface *ifn;
-  struct list_iterator iterator;
+  struct interface *ifn, *iterator;
   uint8_t *curr, *sizeptr;
 
   /* fill message */
@@ -1239,8 +1220,7 @@ olsr_obamp_gen(void *packet, int len)
 void
 outer_tree_create(void *x __attribute__ ((unused)))
 {
-  struct ObampNode *tmp;               //temp pointers used when parsing the list
-  struct list_iterator iterator;
+  struct ObampNode *tmp, *iterator;
 
   if (!((DoIHaveATreeLink() == 0) && (myState->iamcore == 0))) {   //If there are tree links
     return;
@@ -1288,8 +1268,7 @@ tree_create(void *x __attribute__ ((unused)))
 #if !defined(REMOVE_LOG_DEBUG)
   struct ipaddr_str buf;
 #endif
-  struct ObampNode *tmp;               //temp pointers used when parsing the list
-  struct list_iterator iterator;
+  struct ObampNode *tmp, *iterator;
 
   // Check if I'm core
   if (myState->iamcore != 1) {
@@ -1321,8 +1300,7 @@ mesh_create(void *x __attribute__ ((unused)))
 #if !defined(REMOVE_LOG_DEBUG)
   struct ipaddr_str buf;
 #endif
-  struct ObampNode *tmp;               //temp pointers used when parsing the list
-  struct list_iterator iterator;
+  struct ObampNode *tmp, *iterator;
 
   struct rt_entry *rt;                 //"rt->rt_best->rtp_metric.cost" is the value you are looking for, a 32 bit
 
@@ -1411,8 +1389,7 @@ purge_nodes(void *x __attribute__ ((unused)))
 #if !defined(REMOVE_LOG_DEBUG)
   struct ipaddr_str buf;
 #endif
-  struct ObampNode *tmp;
-  struct list_iterator iterator;
+  struct ObampNode *tmp, *iterator;
   int nodesdeleted = 0;
 
   if (myState->TreeHeartBeat > 0) {
@@ -1484,8 +1461,7 @@ EncapFlowInObamp(int skfd, void *data __attribute__ ((unused)), unsigned int fla
 #if !defined(REMOVE_LOG_DEBUG)
   struct ipaddr_str buf;
 #endif
-  struct ObampNode *tmp;
-  struct list_iterator iterator;
+  struct ObampNode *tmp, *iterator;
 
   union olsr_ip_addr dst;              /* Destination IP address in captured packet */
   struct ip *ipHeader;                 /* The IP header inside the captured IP packet */

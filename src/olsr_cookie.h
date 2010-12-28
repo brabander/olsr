@@ -115,10 +115,10 @@ struct olsr_memory_prefix {
   uint8_t padding[sizeof(size_t) - sizeof(uint8_t)];
 };
 
-#define OLSR_FOR_ALL_COOKIES(ci, iterator) avl_for_each_element_safe(&olsr_cookie_tree, ci, ci_node, iterator.loop, iterator.safe)
-#define OLSR_FOR_ALL_USED_MEM(ci, mem, iterator) list_for_each_element_safe(&ci->ci_used_list, mem, node, iterator.loop, iterator.safe)
-#define OLSR_FOR_ALL_FREE_MEM(ci, mem, iterator) list_for_each_element_safe(&ci->ci_free_list, mem, node, iterator.loop, iterator.safe)
-#define OLSR_FOR_ALL_CUSTOM_MEM(ci, custom, iterator) list_for_each_element_safe(&ci->ci_custom_list, custom, node, iterator.loop, iterator.safe)
+#define OLSR_FOR_ALL_COOKIES(ci, iterator) avl_for_each_element_safe(&olsr_cookie_tree, ci, ci_node, iterator)
+#define OLSR_FOR_ALL_USED_MEM(ci, mem, iterator) list_for_each_element_safe(&ci->ci_used_list, mem, node, iterator)
+#define OLSR_FOR_ALL_FREE_MEM(ci, mem, iterator) list_for_each_element_safe(&ci->ci_free_list, mem, node, iterator)
+#define OLSR_FOR_ALL_CUSTOM_MEM(ci, custom, iterator) list_for_each_element_safe(&ci->ci_custom_list, custom, node, iterator)
 
 #define COOKIE_FREE_LIST_THRESHOLD 10   /* Blocks / Percent  */
 

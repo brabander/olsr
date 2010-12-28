@@ -176,8 +176,7 @@ set_buffer_timer(struct interface *ifn)
 void
 deinit_netfilters(void)
 {
-  struct filter_entry *filter;
-  struct list_iterator iterator;
+  struct filter_entry *filter, *iterator;
   OLSR_FOR_ALL_FILTERS(filter, iterator) {
     avl_delete(&filter_tree, &filter->filter_node);
     free(filter);

@@ -69,7 +69,7 @@
 
 #define COMPORT_MAX_INPUTBUFFER 65536
 
-#define OLSR_FOR_ALL_COMPORT_ENTRIES(comport, iterator) list_for_each_element_safe(&olsr_comport_head, comport, node, iterator.loop, iterator.safe)
+#define OLSR_FOR_ALL_COMPORT_ENTRIES(comport, iterator) list_for_each_element_safe(&olsr_comport_head, comport, node, iterator)
 
 struct list_entity olsr_comport_head;
 
@@ -134,8 +134,7 @@ olsr_com_init(bool failfast) {
 
 void
 olsr_com_destroy(void) {
-  struct comport_connection *con;
-  struct list_iterator iterator;
+  struct comport_connection *con, *iterator;
   OLSR_FOR_ALL_COMPORT_ENTRIES(con, iterator) {
     olsr_com_cleanup_session(con);
   }

@@ -154,8 +154,7 @@ olsr_delete_hna_net(struct hna_net *hna_net)
 void
 olsr_flush_hna_nets(struct tc_entry *tc)
 {
-  struct hna_net *hna_net;
-  struct list_iterator iterator;
+  struct hna_net *hna_net, *iterator;
 
 #if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
@@ -237,18 +236,17 @@ olsr_print_hna_set(void)
 {
   /* The whole function doesn't do anything else. */
 #if !defined REMOVE_LOG_INFO
-  struct tc_entry *tc;
+  struct tc_entry *tc, *tc_iterator;
   struct ipaddr_str buf;
   struct ipprefix_str prefixstr;
-  struct hna_net *hna_net;
-  struct list_iterator iterator, iterator2;
+  struct hna_net *hna_net, *hna_iterator;
 
   OLSR_INFO(LOG_HNA, "\n--- %s ------------------------------------------------- HNA\n\n", olsr_wallclock_string());
 
-  OLSR_FOR_ALL_TC_ENTRIES(tc, iterator) {
+  OLSR_FOR_ALL_TC_ENTRIES(tc, tc_iterator) {
     OLSR_INFO_NH(LOG_HNA, "HNA-gw %s:\n", olsr_ip_to_string(&buf, &tc->addr));
 
-    OLSR_FOR_ALL_TC_HNA_ENTRIES(tc, hna_net, iterator2) {
+    OLSR_FOR_ALL_TC_HNA_ENTRIES(tc, hna_net, hna_iterator) {
       OLSR_INFO_NH(LOG_HNA, "\t%-27s\n", olsr_ip_prefix_to_string(&prefixstr, &hna_net->hna_prefix));
     }
   }
@@ -258,8 +256,7 @@ olsr_print_hna_set(void)
 static void
 olsr_prune_hna_entries(struct tc_entry *tc)
 {
-  struct hna_net *hna_net;
-  struct list_iterator iterator;
+  struct hna_net *hna_net, *iterator;
 
   OLSR_FOR_ALL_TC_HNA_ENTRIES(tc, hna_net, iterator) {
     if (hna_net->tc_entry_seqno != tc->hna_seq) {
@@ -333,9 +330,8 @@ olsr_input_hna(struct olsr_message *msg,
 
 void
 generate_hna(void *p __attribute__ ((unused))) {
-  struct interface *ifp;
-  struct list_iterator iterator;
-  struct ip_prefix_entry *h;
+  struct interface *ifp, *ifp_iterator;
+  struct ip_prefix_entry *h, *h_iterator;
   uint8_t msg_buffer[MAXMESSAGESIZE - OLSR_HEADERSIZE] __attribute__ ((aligned));
   uint8_t *curr = msg_buffer;
   uint8_t *length_field, *last;
@@ -356,7 +352,7 @@ generate_hna(void *p __attribute__ ((unused))) {
   pkt_put_u16(&curr, get_msg_seqno());
 
   last = msg_buffer + sizeof(msg_buffer) - olsr_cnf->ipsize;
-  OLSR_FOR_ALL_IPPREFIX_ENTRIES(&olsr_cnf->hna_entries, h, iterator) {
+  OLSR_FOR_ALL_IPPREFIX_ENTRIES(&olsr_cnf->hna_entries, h, h_iterator) {
     union olsr_ip_addr subnet;
 
     olsr_prefix_to_netmask(&subnet, h->net.prefix_len);
@@ -371,7 +367,7 @@ generate_hna(void *p __attribute__ ((unused))) {
 
   pkt_put_u16(&length_field, curr - msg_buffer);
 
-  OLSR_FOR_ALL_INTERFACES(ifp, iterator) {
+  OLSR_FOR_ALL_INTERFACES(ifp, ifp_iterator) {
     if (net_outbuffer_bytes_left(ifp) < curr - msg_buffer) {
       net_output(ifp);
       set_buffer_timer(ifp);

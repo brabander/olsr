@@ -241,9 +241,8 @@ static struct debug_pkttraffic *get_pkttraffic_entry(union olsr_ip_addr *ip, str
 static void
 update_statistics_ptr(void *data __attribute__ ((unused)))
 {
-  struct debug_msgtraffic *msg;
-  struct debug_pkttraffic *pkt;
-  struct list_iterator iterator;
+  struct debug_msgtraffic *msg, *msg_iterator;
+  struct debug_pkttraffic *pkt, *pkt_iterator;
   uint32_t last_slot, i;
 
   last_slot = current_slot;
@@ -253,7 +252,7 @@ update_statistics_ptr(void *data __attribute__ ((unused)))
   }
 
   /* move data from "current" template to slot array */
-  OLSR_FOR_ALL_MSGTRAFFIC_ENTRIES(msg, iterator) {
+  OLSR_FOR_ALL_MSGTRAFFIC_ENTRIES(msg, msg_iterator) {
     /* subtract old values from node count and total count */
     for (i=0; i<DTR_MSG_COUNT; i++) {
       msg->total.data[i] -= msg->traffic[current_slot].data[i];
@@ -278,7 +277,7 @@ update_statistics_ptr(void *data __attribute__ ((unused)))
     }
   }
 
-  OLSR_FOR_ALL_PKTTRAFFIC_ENTRIES(pkt, iterator) {
+  OLSR_FOR_ALL_PKTTRAFFIC_ENTRIES(pkt, pkt_iterator) {
     /* subtract old values from node count and total count */
     for (i=0; i<DTR_PKT_COUNT; i++) {
       pkt->total.data[i] -= pkt->traffic[current_slot].data[i];
@@ -397,8 +396,7 @@ static enum olsr_txtcommand_result
 debuginfo_msgstat(struct comport_connection *con,
     const char *cmd __attribute__ ((unused)), const char *param __attribute__ ((unused)))
 {
-  struct debug_msgtraffic *tr;
-  struct list_iterator iterator;
+  struct debug_msgtraffic *tr, *iterator;
 
   if (abuf_appendf(&con->out, "Slot size: %d seconds\tSlot count: %d\n", traffic_interval, traffic_slots) < 0) {
     return ABUF_ERROR;
@@ -471,8 +469,7 @@ static enum olsr_txtcommand_result
 debuginfo_pktstat(struct comport_connection *con,
     const char *cmd __attribute__ ((unused)), const char *param __attribute__ ((unused)))
 {
-  struct debug_pkttraffic *tr;
-  struct list_iterator iterator;
+  struct debug_pkttraffic *tr, *iterator;
 
   if (abuf_appendf(&con->out, "Slot size: %d seconds\tSlot count: %d\n", traffic_interval, traffic_slots) < 0) {
     return ABUF_ERROR;
@@ -533,8 +530,7 @@ debuginfo_pktstat(struct comport_connection *con,
 }
 
 static INLINE bool debuginfo_print_cookies_mem(struct autobuf *buf) {
-  struct olsr_cookie_info *c;
-  struct list_iterator iterator;
+  struct olsr_cookie_info *c, *iterator;
 
   OLSR_FOR_ALL_COOKIES(c, iterator) {
     if (abuf_appendf(buf, "%-25s (MEMORY) size: %lu usage: %u freelist: %u\n",
@@ -546,8 +542,7 @@ static INLINE bool debuginfo_print_cookies_mem(struct autobuf *buf) {
 }
 
 static INLINE bool debuginfo_print_cookies_timer(struct autobuf *buf) {
-  struct olsr_timer_info *t;
-  struct list_iterator iterator;
+  struct olsr_timer_info *t, *iterator;
 
   OLSR_FOR_ALL_TIMERS(t, iterator) {
     if (abuf_appendf(buf, "%-25s (TIMER) usage: %u changes: %u\n",

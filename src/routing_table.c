@@ -387,8 +387,7 @@ void
 olsr_rt_best(struct rt_entry *rt)
 {
   /* grab the first entry */
-  struct rt_path *rtp;
-  struct list_iterator iterator;
+  struct rt_path *rtp, *iterator;
 
   assert (!avl_is_empty(&rt->rt_path_tree));
 
@@ -566,15 +565,14 @@ olsr_print_routing_table(void)
 {
   /* The whole function makes no sense without it. */
 #if !defined REMOVE_LOG_INFO
-  struct rt_entry *rt;
-  struct rt_path *rtp;
+  struct rt_entry *rt, *rt_iterator;
+  struct rt_path *rtp, *rtp_iterator;
 
   char lqbuffer[LQTEXT_MAXLENGTH];
-  struct list_iterator iterator, iterator2;
 
   OLSR_INFO(LOG_ROUTING, "ROUTING TABLE\n");
 
-  OLSR_FOR_ALL_RT_ENTRIES(rt, iterator) {
+  OLSR_FOR_ALL_RT_ENTRIES(rt, rt_iterator) {
     struct ipaddr_str origstr, gwstr;
     struct ipprefix_str prefixstr;
 
@@ -586,7 +584,7 @@ olsr_print_routing_table(void)
                  olsr_ip_to_string(&gwstr, &rt->rt_best->rtp_originator.prefix));
 
     /* walk the per-originator path tree of routes */
-    OLSR_FOR_ALL_RT_PATH_ENTRIES(rt, rtp, iterator2) {
+    OLSR_FOR_ALL_RT_PATH_ENTRIES(rt, rtp, rtp_iterator) {
       OLSR_INFO_NH(LOG_ROUTING, "\tfrom %s, cost %s, metric %u, via %s, dev %s, v %u\n",
                    olsr_ip_to_string(&origstr, &rtp->rtp_originator.prefix),
                    olsr_get_linkcost_text(rtp->rtp_metric.cost, true, lqbuffer, sizeof(lqbuffer)),

@@ -49,8 +49,7 @@
 void
 ip_prefix_list_flush(struct list_entity *ip_prefix_head)
 {
-  struct ip_prefix_entry *entry;
-  struct list_iterator iterator;
+  struct ip_prefix_entry *entry, *iterator;
 
   OLSR_FOR_ALL_IPPREFIX_ENTRIES(ip_prefix_head, entry, iterator) {
     list_remove(&entry->node);
@@ -73,8 +72,7 @@ ip_prefix_list_add(struct list_entity *ip_prefix_head, const union olsr_ip_addr 
 int
 ip_prefix_list_remove(struct list_entity *ip_prefix_head, const union olsr_ip_addr *net, uint8_t prefix_len, int ip_version)
 {
-  struct ip_prefix_entry *h;
-  struct list_iterator iterator;
+  struct ip_prefix_entry *h, *iterator;
 
   OLSR_FOR_ALL_IPPREFIX_ENTRIES(ip_prefix_head, h, iterator) {
     if (ipcmp(ip_version, net, &h->net.prefix) == 0 && h->net.prefix_len == prefix_len) {
@@ -89,8 +87,7 @@ ip_prefix_list_remove(struct list_entity *ip_prefix_head, const union olsr_ip_ad
 struct ip_prefix_entry *
 ip_prefix_list_find(struct list_entity *ip_prefix_head, const union olsr_ip_addr *net, uint8_t prefix_len, int ip_version)
 {
-  struct ip_prefix_entry *h;
-  struct list_iterator iterator;
+  struct ip_prefix_entry *h, *iterator;
 
   OLSR_FOR_ALL_IPPREFIX_ENTRIES(ip_prefix_head, h, iterator) {
     if (prefix_len == h->net.prefix_len && ipcmp(ip_version, net, &h->net.prefix) == 0) {

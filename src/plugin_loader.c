@@ -135,8 +135,7 @@ void olsr_plugins_init(bool fail_fast) {
 }
 
 void olsr_plugins_enable(enum plugin_type type, bool fail_fast) {
-  struct olsr_plugin *plugin;
-  struct list_iterator iterator;
+  struct olsr_plugin *plugin, *iterator;
 
   /* activate all plugins (configured and static linked ones) */
   OLSR_FOR_ALL_PLUGIN_ENTRIES(plugin, iterator) {
@@ -157,8 +156,7 @@ void olsr_plugins_enable(enum plugin_type type, bool fail_fast) {
 
 void
 olsr_destroy_pluginsystem(void) {
-  struct olsr_plugin *plugin;
-  struct list_iterator iterator;
+  struct olsr_plugin *plugin, *iterator;
   OLSR_FOR_ALL_PLUGIN_ENTRIES(plugin, iterator) {
     olsr_disable_plugin(plugin);
     olsr_internal_unload_plugin(plugin, true);

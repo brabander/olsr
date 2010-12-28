@@ -152,8 +152,7 @@ olsr_init_tc(void)
 void
 olsr_change_myself_tc(void)
 {
-  struct nbr_entry *entry;
-  struct list_iterator iterator;
+  struct nbr_entry *entry, *iterator;
   bool main_ip_change = false;
 
   if (tc_myself) {
@@ -217,9 +216,8 @@ olsr_change_myself_tc(void)
 void
 olsr_delete_tc_entry(struct tc_entry *tc)
 {
-  struct tc_edge_entry *tc_edge;
-  struct rt_path *rtp;
-  struct list_iterator iterator;
+  struct tc_edge_entry *tc_edge, *edge_iterator;
+  struct rt_path *rtp, *rtp_iterator;
 
 #if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
@@ -227,7 +225,7 @@ olsr_delete_tc_entry(struct tc_entry *tc)
   OLSR_DEBUG(LOG_TC, "TC: del entry %s\n", olsr_ip_to_string(&buf, &tc->addr));
 
   /* The delete all non-virtual edges */
-  OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge, iterator) {
+  OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge, edge_iterator) {
     olsr_delete_tc_edge_entry(tc_edge);
   }
 
@@ -245,7 +243,7 @@ olsr_delete_tc_entry(struct tc_entry *tc)
     return;
   }
 
-  OLSR_FOR_ALL_PREFIX_ENTRIES(tc, rtp, iterator) {
+  OLSR_FOR_ALL_PREFIX_ENTRIES(tc, rtp, rtp_iterator) {
     olsr_delete_rt_path(rtp);
   }
 
@@ -497,8 +495,7 @@ olsr_delete_tc_edge_entry(struct tc_edge_entry *tc_edge)
 static bool
 delete_outdated_tc_edges(struct tc_entry *tc)
 {
-  struct tc_edge_entry *tc_edge;
-  struct list_iterator iterator;
+  struct tc_edge_entry *tc_edge, *iterator;
   bool retval = false;
 
   OLSR_DEBUG(LOG_TC, "TC: deleting outdated TC-edge entries\n");
@@ -526,8 +523,7 @@ delete_outdated_tc_edges(struct tc_entry *tc)
 static int
 olsr_delete_revoked_tc_edges(struct tc_entry *tc, uint16_t ansn, union olsr_ip_addr *lower_border, union olsr_ip_addr *upper_border)
 {
-  struct tc_edge_entry *tc_edge;
-  struct list_iterator iterator;
+  struct tc_edge_entry *tc_edge, *iterator;
   int retval = 0;
   bool passedLowerBorder = false;
 
@@ -647,8 +643,7 @@ olsr_print_tc_table(void)
 {
 #if !defined REMOVE_LOG_INFO
   /* The whole function makes no sense without it. */
-  struct tc_entry *tc;
-  struct list_iterator iterator, iterator2;
+  struct tc_entry *tc, *tc_iterator;
   const int ipwidth = olsr_cnf->ip_version == AF_INET ? 15 : 30;
   static char NONE[] = "-";
 
@@ -656,8 +651,8 @@ olsr_print_tc_table(void)
   OLSR_INFO_NH(LOG_TC, "%-*s %-*s %-7s      %8s %12s %5s\n", ipwidth,
                "Source IP addr", ipwidth, "Dest IP addr", "", olsr_get_linklabel(0), "vtime", "ansn");
 
-  OLSR_FOR_ALL_TC_ENTRIES(tc, iterator) {
-    struct tc_edge_entry *tc_edge;
+  OLSR_FOR_ALL_TC_ENTRIES(tc, tc_iterator) {
+    struct tc_edge_entry *tc_edge, *edge_iterator;
     struct millitxt_buf tbuf;
     char *vtime = NONE;
 
@@ -666,7 +661,7 @@ olsr_print_tc_table(void)
       vtime = tbuf.buf;
     }
 
-    OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge, iterator2) {
+    OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge, edge_iterator) {
       struct ipaddr_str addrbuf, dstaddrbuf;
       char lqbuffer1[LQTEXT_MAXLENGTH];
 
@@ -864,13 +859,12 @@ getRelevantTcCount(void)
 
 void
 olsr_delete_all_tc_entries(void) {
-  struct tc_entry *tc;
-  struct tc_edge_entry *edge;
-  struct list_iterator iterator, iterator2;
+  struct tc_entry *tc, *tc_iterator;
+  struct tc_edge_entry *edge, *edge_iterator;
 
   /* delete tc_edges */
-  OLSR_FOR_ALL_TC_ENTRIES(tc, iterator) {
-    OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, edge, iterator2) {
+  OLSR_FOR_ALL_TC_ENTRIES(tc, tc_iterator) {
+    OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, edge, edge_iterator) {
       if (edge->neighbor) {
         /* break connector with neighbor */
         edge->neighbor->tc_edge = NULL;
@@ -882,7 +876,7 @@ olsr_delete_all_tc_entries(void) {
   }
 
   /* delete tc_entries */
-  OLSR_FOR_ALL_TC_ENTRIES(tc, iterator) {
+  OLSR_FOR_ALL_TC_ENTRIES(tc, tc_iterator) {
     olsr_delete_tc_entry(tc);
   }
 
@@ -933,9 +927,8 @@ static bool
 olsr_output_lq_tc_internal(void *ctx  __attribute__ ((unused)), union olsr_ip_addr *nextIp, bool skip)
 {
   static int ttl_list[] = { 2, 8, 2, 16, 2, 8, 2, MAX_TTL };
-  struct interface *ifp;
-  struct list_iterator iterator;
-  struct nbr_entry *nbr;
+  struct interface *ifp, *ifp_iterator;
+  struct nbr_entry *nbr, *nbr_iterator;
   struct link_entry *link;
   struct nbr_entry *prevNbr;
   uint8_t msg_buffer[MAXMESSAGESIZE - OLSR_HEADERSIZE] __attribute__ ((aligned));
@@ -980,7 +973,7 @@ olsr_output_lq_tc_internal(void *ctx  __attribute__ ((unused)), union olsr_ip_ad
 
   last = msg_buffer + sizeof(msg_buffer) - olsr_cnf->ipsize - olsr_sizeof_TCLQ();
 
-  OLSR_FOR_ALL_NBR_ENTRIES(nbr, iterator) {
+  OLSR_FOR_ALL_NBR_ENTRIES(nbr, nbr_iterator) {
     /* allow fragmentation */
     if (skip) {
       if (olsr_ipcmp(&nbr->nbr_addr, nextIp) != 0) {
@@ -1059,7 +1052,7 @@ olsr_output_lq_tc_internal(void *ctx  __attribute__ ((unused)), union olsr_ip_ad
   pkt_put_u16(&length_field, curr - msg_buffer);
 
   /* send to all interfaces */
-  OLSR_FOR_ALL_INTERFACES(ifp, iterator) {
+  OLSR_FOR_ALL_INTERFACES(ifp, ifp_iterator) {
     if (net_outbuffer_bytes_left(ifp) < curr - msg_buffer) {
       net_output(ifp);
       set_buffer_timer(ifp);

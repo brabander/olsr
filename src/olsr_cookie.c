@@ -104,8 +104,7 @@ olsr_create_memcookie(const char *cookie_name, size_t size)
 void
 olsr_cleanup_memcookie(struct olsr_cookie_info *ci)
 {
-  struct olsr_memory_prefix *memory_entity;
-  struct list_iterator iterator;
+  struct olsr_memory_prefix *memory_entity, *iterator;
 
   /* remove from tree */
   avl_delete(&olsr_cookie_tree, &ci->ci_node);
@@ -139,8 +138,7 @@ olsr_cleanup_memcookie(struct olsr_cookie_info *ci)
 void
 olsr_cookie_cleanup(void)
 {
-  struct olsr_cookie_info *info;
-  struct list_iterator iterator;
+  struct olsr_cookie_info *info, *iterator;
 
   /*
    * Walk the full index range and kill 'em all.
@@ -188,8 +186,7 @@ void *
 olsr_cookie_malloc(struct olsr_cookie_info *ci)
 {
   struct olsr_memory_prefix *mem;
-  struct olsr_cookie_custom *custom;
-  struct list_iterator iterator;
+  struct olsr_cookie_custom *custom, *iterator;
 
 #if !defined REMOVE_LOG_DEBUG
   bool reuse = false;
@@ -251,8 +248,7 @@ void
 olsr_cookie_free(struct olsr_cookie_info *ci, void *ptr)
 {
   struct olsr_memory_prefix *mem;
-  struct olsr_cookie_custom *custom;
-  struct list_iterator iterator;
+  struct olsr_cookie_custom *custom, *iterator;
 #if !defined REMOVE_LOG_DEBUG
   bool reuse = false;
 #endif
@@ -306,8 +302,7 @@ olsr_alloc_cookie_custom(struct olsr_cookie_info *ci, size_t size, const char *n
     void (*init)(struct olsr_cookie_info *, void *, void *),
     void (*cleanup)(struct olsr_cookie_info *, void *, void *)) {
   struct olsr_cookie_custom *custom;
-  struct olsr_memory_prefix *mem;
-  struct list_iterator iterator;
+  struct olsr_memory_prefix *mem, *iterator;
   size_t old_total_size, new_total_size;
 
   custom = olsr_malloc(sizeof(struct olsr_cookie_custom), name);
@@ -355,9 +350,8 @@ olsr_alloc_cookie_custom(struct olsr_cookie_info *ci, size_t size, const char *n
 
 void
 olsr_free_cookie_custom(struct olsr_cookie_info *ci, struct olsr_cookie_custom *custom) {
-  struct olsr_memory_prefix *mem;
-  struct olsr_cookie_custom *c_ptr;
-  struct list_iterator iterator;
+  struct olsr_memory_prefix *mem, *mem_iterator;
+  struct olsr_cookie_custom *c_ptr, *c_iterator;
   size_t prefix_block, suffix_block;
   bool match;
 
@@ -365,7 +359,7 @@ olsr_free_cookie_custom(struct olsr_cookie_info *ci, struct olsr_cookie_custom *
   suffix_block = 0;
   match = false;
 
-  OLSR_FOR_ALL_CUSTOM_MEM(ci, c_ptr, iterator) {
+  OLSR_FOR_ALL_CUSTOM_MEM(ci, c_ptr, c_iterator) {
     if (c_ptr == custom) {
       match = true;
       continue;
@@ -382,14 +376,14 @@ olsr_free_cookie_custom(struct olsr_cookie_info *ci, struct olsr_cookie_custom *
 
   /* move the custom memory back into a continous block */
   if (suffix_block > 0) {
-    OLSR_FOR_ALL_USED_MEM(ci, mem, iterator) {
+    OLSR_FOR_ALL_USED_MEM(ci, mem, mem_iterator) {
       memmove(mem->custom + prefix_block, mem->custom + prefix_block + custom->size, suffix_block);
     }
   }
   ci->ci_total_size -= custom->size;
 
   /* remove all free data blocks, they have the wrong size */
-  OLSR_FOR_ALL_FREE_MEM(ci, mem, iterator) {
+  OLSR_FOR_ALL_FREE_MEM(ci, mem, mem_iterator) {
     list_remove(&mem->node);
     free(mem);
   }

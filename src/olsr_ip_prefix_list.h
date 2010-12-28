@@ -52,7 +52,7 @@ struct ip_prefix_entry {
 };
 
 /* deletion safe macro for ip_prefix traversal */
-#define OLSR_FOR_ALL_IPPREFIX_ENTRIES(head, prefix_node, iterator) list_for_each_element_safe(head, prefix_node, node, iterator.loop, iterator.safe)
+#define OLSR_FOR_ALL_IPPREFIX_ENTRIES(head, prefix_node, iterator) list_for_each_element_safe(head, prefix_node, node, iterator)
 
 /*
  * List functions

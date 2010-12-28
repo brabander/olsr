@@ -56,8 +56,8 @@ struct mid_entry {
   struct timer_entry *mid_timer;       /* Vtime */
 };
 
-#define OLSR_FOR_ALL_MID_ENTRIES(mid_alias, iterator) avl_for_each_element_safe(&mid_tree, mid_alias, mid_node, iterator.loop, iterator.safe)
-#define OLSR_FOR_ALL_TC_MID_ENTRIES(tc, mid_alias, iterator) avl_for_each_element_safe(&tc->mid_tree, mid_alias, mid_tc_node, iterator.loop, iterator.safe)
+#define OLSR_FOR_ALL_MID_ENTRIES(mid_alias, iterator) avl_for_each_element_safe(&mid_tree, mid_alias, mid_node, iterator)
+#define OLSR_FOR_ALL_TC_MID_ENTRIES(tc, mid_alias, iterator) avl_for_each_element_safe(&tc->mid_tree, mid_alias, mid_tc_node, iterator)
 
 #define OLSR_MID_JITTER 5       /* percent */
 

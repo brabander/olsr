@@ -102,9 +102,9 @@ struct nbr2_entry {
  * the loop prefetches the next node in order to not loose context if
  * for example the caller wants to delete the current entry.
  */
-#define OLSR_FOR_ALL_NBR_ENTRIES(nbr, iterator) avl_for_each_element_safe(&nbr_tree, nbr, nbr_node, iterator.loop, iterator.safe)
+#define OLSR_FOR_ALL_NBR_ENTRIES(nbr, iterator) avl_for_each_element_safe(&nbr_tree, nbr, nbr_node, iterator)
 
-#define OLSR_FOR_ALL_NBR_CON_ENTRIES(nbr, con, iterator) avl_for_each_element_safe(&nbr->con_tree, con, nbr_tree_node, iterator.loop, iterator.safe)
+#define OLSR_FOR_ALL_NBR_CON_ENTRIES(nbr, con, iterator) avl_for_each_element_safe(&nbr->con_tree, con, nbr_tree_node, iterator)
 
 /*
  * macros for traversing two-hop neighbors and neighbor ref lists.
@@ -114,9 +114,9 @@ struct nbr2_entry {
  * the loop prefetches the next node in order to not loose context if
  * for example the caller wants to delete the current entry.
  */
-#define OLSR_FOR_ALL_NBR2_ENTRIES(nbr2, iterator) avl_for_each_element_safe(&nbr2_tree, nbr2, nbr2_node, iterator.loop, iterator.safe)
+#define OLSR_FOR_ALL_NBR2_ENTRIES(nbr2, iterator) avl_for_each_element_safe(&nbr2_tree, nbr2, nbr2_node, iterator)
 
-#define OLSR_FOR_ALL_NBR2_CON_ENTRIES(nbr2, con, iterator) avl_for_each_element_safe(&nbr2->con_tree, con, nbr2_tree_node, iterator.loop, iterator.safe)
+#define OLSR_FOR_ALL_NBR2_CON_ENTRIES(nbr2, con, iterator) avl_for_each_element_safe(&nbr2->con_tree, con, nbr2_tree_node, iterator)
 
 /*
  * The one hop neighbor and two hop neighbor trees.

@@ -182,8 +182,7 @@ olsr_mdns_gen(unsigned char *packet, int len)
   uint8_t buffer[10240];
   int aligned_size;
   struct olsr_message msg;
-  struct interface *ifn;
-  struct list_iterator iterator;
+  struct interface *ifn, *iterator;
   uint8_t *sizeptr, *curr;
   
   aligned_size=len;

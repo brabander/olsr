@@ -111,7 +111,7 @@ struct olsr_plugin {
   bool internal_active;
 };
 
-#define OLSR_FOR_ALL_PLUGIN_ENTRIES(plugin, iterator) avl_for_each_element_safe(&plugin_tree, plugin, p_node, iterator.loop, iterator.safe)
+#define OLSR_FOR_ALL_PLUGIN_ENTRIES(plugin, iterator) avl_for_each_element_safe(&plugin_tree, plugin, p_node, iterator)
 
 struct olsr_plugin *EXPORT(olsr_get_plugin)(const char *libname);
 

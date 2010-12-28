@@ -53,7 +53,7 @@
 #include "olsr_comport_txt.h"
 #include "plugin_loader.h"
 
-#define OLSR_FOR_EACH_TXTCMD_ENTRY(cmd, iterator) avl_for_each_element_safe(&txt_normal_tree, cmd, node, iterator.loop, iterator.safe)
+#define OLSR_FOR_EACH_TXTCMD_ENTRY(cmd, iterator) avl_for_each_element_safe(&txt_normal_tree, cmd, node, iterator)
 
 struct txt_repeat_data {
   struct timer_entry *timer;
@@ -349,8 +349,7 @@ olsr_txtcmd_displayhelp(struct comport_connection *con,
 static enum olsr_txtcommand_result
 olsr_txtcmd_help(struct comport_connection *con,
     const char *cmd __attribute__ ((unused)), const char *param) {
-  struct olsr_txtcommand *ptr;
-  struct list_iterator iterator;
+  struct olsr_txtcommand *ptr, *iterator;
 
   if (param != NULL) {
     ptr = avl_find_element(&txt_help_tree, param, ptr, node);
@@ -479,8 +478,7 @@ olsr_txtcmd_version(struct comport_connection *con,
 
 static enum olsr_txtcommand_result
 olsr_txtcmd_plugin(struct comport_connection *con, const char *cmd, const char *param) {
-  struct olsr_plugin *plugin;
-  struct list_iterator iterator;
+  struct olsr_plugin *plugin, *iterator;
   char *para2 = NULL;
   if (param == NULL || strcasecmp(param, "list") == 0) {
     if (abuf_puts(&con->out, "Table:\n") < 0) {

@@ -218,8 +218,7 @@ add_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, v
 int
 remove_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm)
 {
-  struct olsr_socket_entry *entry;
-  struct list_iterator iterator;
+  struct olsr_socket_entry *entry, *iterator;
 
   if (fd < 0 || (pf_pr == NULL && pf_imm == NULL)) {
     OLSR_WARN(LOG_SCHEDULER, "Bogus socket entry - not processing...");
@@ -241,8 +240,7 @@ remove_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm
 void
 enable_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, unsigned int flags)
 {
-  struct olsr_socket_entry *entry;
-  struct list_iterator iterator;
+  struct olsr_socket_entry *entry, *iterator;
 
   OLSR_FOR_ALL_SOCKETS(entry, iterator) {
     if (entry->fd == fd && entry->process_immediate == pf_imm && entry->process_pollrate == pf_pr) {
@@ -254,8 +252,7 @@ enable_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm
 void
 disable_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, unsigned int flags)
 {
-  struct olsr_socket_entry *entry;
-  struct list_iterator iterator;
+  struct olsr_socket_entry *entry, *iterator;
 
   OLSR_FOR_ALL_SOCKETS(entry, iterator) {
     if (entry->fd == fd && entry->process_immediate == pf_imm && entry->process_pollrate == pf_pr) {
@@ -270,8 +267,7 @@ disable_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_im
 void
 olsr_flush_sockets(void)
 {
-  struct olsr_socket_entry *entry;
-  struct list_iterator iterator;
+  struct olsr_socket_entry *entry, *iterator;
 
   OLSR_FOR_ALL_SOCKETS(entry, iterator) {
     os_close(entry->fd);
@@ -284,8 +280,7 @@ static void
 poll_sockets(void)
 {
   int n;
-  struct olsr_socket_entry *entry;
-  struct list_iterator iterator;
+  struct olsr_socket_entry *entry, *iterator;
   fd_set ibits, obits;
   struct timeval tvp = { 0, 0 };
   int hfd = 0, fdsets = 0;
@@ -359,8 +354,7 @@ poll_sockets(void)
 static void
 handle_fds(uint32_t next_interval)
 {
-  struct olsr_socket_entry *entry;
-  struct list_iterator iterator;
+  struct olsr_socket_entry *entry, *iterator;
   struct timeval tvp;
   int32_t remaining;
 
@@ -689,8 +683,7 @@ walk_timers(uint32_t * last_run)
 void
 olsr_flush_timers(void)
 {
-  struct olsr_timer_info *ti;
-  struct list_iterator iterator;
+  struct olsr_timer_info *ti, *iterator;
 
   struct list_entity *timer_head_node;
   unsigned int wheel_slot = 0;

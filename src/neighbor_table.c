@@ -149,8 +149,7 @@ olsr_add_nbr_entry(const union olsr_ip_addr *addr)
 void
 olsr_delete_nbr_entry(struct nbr_entry *nbr)
 {
-  struct nbr_con *connector;
-  struct list_iterator iterator;
+  struct nbr_con *connector, *iterator;
 #if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
 #endif
@@ -300,8 +299,7 @@ olsr_add_nbr2_entry(const union olsr_ip_addr *addr) {
  */
 void
 olsr_delete_nbr2_entry(struct nbr2_entry *nbr2) {
-  struct nbr_con *connector;
-  struct list_iterator iterator;
+  struct nbr_con *connector, *iterator;
 
 #if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
@@ -475,19 +473,18 @@ olsr_print_neighbor_table(void)
   /* The whole function doesn't do anything else. */
 
   const int ipwidth = olsr_cnf->ip_version == AF_INET ? INET_ADDRSTRLEN : INET6_ADDRSTRLEN;
-  struct nbr_entry *nbr;
+  struct nbr_entry *nbr, *nbr_iterator;
   struct link_entry *lnk;
   struct ipaddr_str buf, buf2;
-  struct nbr2_entry *nbr2;
-  struct nbr_con *connector;
-  struct list_iterator iterator, iterator2;
+  struct nbr2_entry *nbr2, *nbr2_iterator;
+  struct nbr_con *connector, *con_iterator;
   char lqbuffer[LQTEXT_MAXLENGTH];
   bool first;
 
   OLSR_INFO(LOG_NEIGHTABLE, "\n--- %s ------------------------------------------------ NEIGHBORS\n\n"
             "%-*s\tSYM\tMPR\tMPRS\twill\n", olsr_wallclock_string(), ipwidth, "IP address");
 
-  OLSR_FOR_ALL_NBR_ENTRIES(nbr, iterator) {
+  OLSR_FOR_ALL_NBR_ENTRIES(nbr, nbr_iterator) {
 
     lnk = get_best_link_to_neighbor_ip(&nbr->nbr_addr);
     if (!lnk) {
@@ -505,9 +502,9 @@ olsr_print_neighbor_table(void)
   OLSR_INFO(LOG_2NEIGH, "\n--- %s ----------------------- TWO-HOP NEIGHBORS\n\n"
             "IP addr (2-hop)  IP addr (1-hop)  Total cost\n", olsr_wallclock_string());
 
-  OLSR_FOR_ALL_NBR2_ENTRIES(nbr2, iterator) {
+  OLSR_FOR_ALL_NBR2_ENTRIES(nbr2, nbr2_iterator) {
     first = true;
-    OLSR_FOR_ALL_NBR2_CON_ENTRIES(nbr2, connector, iterator2) {
+    OLSR_FOR_ALL_NBR2_CON_ENTRIES(nbr2, connector, con_iterator) {
       OLSR_INFO_NH(LOG_2NEIGH, "%-*s  %-*s  %s\n",
                    ipwidth, first ? olsr_ip_to_string(&buf, &nbr2->nbr2_addr) : "",
                    ipwidth, olsr_ip_to_string(&buf2, &connector->nbr->nbr_addr),

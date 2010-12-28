@@ -107,9 +107,9 @@ struct tc_entry {
  * the loop prefetches the next node in order to not loose context if
  * for example the caller wants to delete the current entry.
  */
-#define OLSR_FOR_ALL_TC_ENTRIES(tc, iterator) avl_for_each_element_safe(&tc_tree, tc, vertex_node, iterator.loop, iterator.safe)
-#define OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge, iterator) avl_for_each_element_safe(&tc->edge_tree, tc_edge, edge_node, iterator.loop, iterator.safe)
-#define OLSR_FOR_ALL_PREFIX_ENTRIES(tc, rtp, iterator) avl_for_each_element_safe(&tc->prefix_tree, rtp, rtp_prefix_tree_node, iterator.loop, iterator.safe)
+#define OLSR_FOR_ALL_TC_ENTRIES(tc, iterator) avl_for_each_element_safe(&tc_tree, tc, vertex_node, iterator)
+#define OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge, iterator) avl_for_each_element_safe(&tc->edge_tree, tc_edge, edge_node, iterator)
+#define OLSR_FOR_ALL_PREFIX_ENTRIES(tc, rtp, iterator) avl_for_each_element_safe(&tc->prefix_tree, rtp, rtp_prefix_tree_node, iterator)
 
 extern struct avl_tree EXPORT(tc_tree);
 extern struct tc_entry *tc_myself;

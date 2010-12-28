@@ -131,15 +131,12 @@ olsr_flush_tc_duplicates(struct mid_entry *alias) {
  * This optimization is not specified in rfc3626.
  */
 static void
-olsr_flush_nbr2_duplicates(struct mid_entry *alias)
+olsr_flush_nbr2_duplicates(struct tc_entry *tc)
 {
-  struct tc_entry *tc;
-  struct list_iterator iterator;
+  struct mid_entry *alias, *iterator;
 #if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf1, buf2;
 #endif
-
-  tc = alias->mid_tc;
 
   OLSR_FOR_ALL_TC_MID_ENTRIES(tc, alias, iterator) {
     struct nbr_entry *nbr;
@@ -309,7 +306,7 @@ olsr_update_mid_entry(const union olsr_ip_addr *main_addr,
    * Do the needful if one of our neighbors has changed its main address.
    */
   olsr_fixup_mid_main_addr(main_addr, alias_addr);
-  olsr_flush_nbr2_duplicates(alias);
+  olsr_flush_nbr2_duplicates(alias->mid_tc);
   olsr_flush_tc_duplicates(alias);
 
   /*
@@ -406,8 +403,7 @@ olsr_delete_mid_entry(struct mid_entry *alias)
 void
 olsr_flush_mid_entries(struct tc_entry *tc)
 {
-  struct mid_entry *alias;
-  struct list_iterator iterator;
+  struct mid_entry *alias, *iterator;
   OLSR_FOR_ALL_TC_MID_ENTRIES(tc, alias, iterator) {
     olsr_delete_mid_entry(alias);
   }
@@ -421,15 +417,14 @@ void
 olsr_print_mid_set(void)
 {
 #if !defined REMOVE_LOG_INFO
-  struct tc_entry *tc;
-  struct mid_entry *alias;
-  struct list_iterator iterator, iterator2;
+  struct tc_entry *tc, *tc_iterator;
+  struct mid_entry *alias, *mid_iterator;
   struct ipaddr_str buf1, buf2;
 
   OLSR_INFO(LOG_MID, "\n--- %s ------------------------------------------------- MID\n\n", olsr_wallclock_string());
 
-  OLSR_FOR_ALL_TC_ENTRIES(tc, iterator) {
-    OLSR_FOR_ALL_TC_MID_ENTRIES(tc, alias, iterator2) {
+  OLSR_FOR_ALL_TC_ENTRIES(tc, tc_iterator) {
+    OLSR_FOR_ALL_TC_MID_ENTRIES(tc, alias, mid_iterator) {
       OLSR_INFO_NH(LOG_MID, "%-15s: %s\n", olsr_ip_to_string(&buf1, &tc->addr), olsr_ip_to_string(&buf2, &alias->mid_alias_addr));
     }
   }
@@ -494,8 +489,7 @@ olsr_input_mid(struct olsr_message *msg,
 
 void
 generate_mid(void *p  __attribute__ ((unused))) {
-  struct interface *ifp, *allif;
-  struct list_iterator iterator;
+  struct interface *ifp, *allif, *iterator;
   struct olsr_message msg;
   uint8_t msg_buffer[MAXMESSAGESIZE - OLSR_HEADERSIZE] __attribute__ ((aligned));
   uint8_t *curr = msg_buffer;

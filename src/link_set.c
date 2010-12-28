@@ -141,8 +141,7 @@ get_best_link_to_neighbor_ip(const union olsr_ip_addr *remote)
 struct link_entry *
 get_best_link_to_neighbor(struct nbr_entry *nbr)
 {
-  struct link_entry *walker, *good_link;
-  struct list_iterator iterator;
+  struct link_entry *walker, *good_link, *iterator;
   olsr_linkcost curr_lcost = LINK_COST_BROKEN;
 
   /* we haven't selected any links, yet */
@@ -259,8 +258,7 @@ olsr_delete_link_entry(struct link_entry *link)
 void
 olsr_delete_link_entry_by_if(const struct interface *ifp)
 {
-  struct link_entry *link;
-  struct list_iterator iterator;
+  struct link_entry *link, *iterator;
 #if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
 #endif
@@ -463,8 +461,7 @@ add_link_entry(const union olsr_ip_addr *local,
 int
 check_neighbor_link(const union olsr_ip_addr *int_addr)
 {
-  struct link_entry *link;
-  struct list_iterator iterator;
+  struct link_entry *link, *iterator;
 
   OLSR_FOR_ALL_LINK_ENTRIES(link, iterator) {
     if (olsr_ipcmp(int_addr, &link->neighbor_iface_addr) == 0) {
@@ -486,8 +483,7 @@ check_neighbor_link(const union olsr_ip_addr *int_addr)
 struct link_entry *
 lookup_link_entry(const union olsr_ip_addr *remote, const union olsr_ip_addr *remote_main, const struct interface *local)
 {
-  struct link_entry *link;
-  struct list_iterator iterator;
+  struct link_entry *link, *iterator;
 
   OLSR_FOR_ALL_LINK_ENTRIES(link, iterator) {
     if (olsr_ipcmp(remote, &link->neighbor_iface_addr) == 0 && (link->if_name ? !strcmp(link->if_name, local->int_name)
@@ -577,8 +573,7 @@ update_link_entry(const union olsr_ip_addr *local,
 int
 replace_neighbor_link_set(const struct nbr_entry *old, struct nbr_entry *new)
 {
-  struct link_entry *link;
-  struct list_iterator iterator;
+  struct link_entry *link, *iterator;
   int retval = 0;
 
   if (list_is_empty(&link_entry_head)) {
@@ -635,8 +630,7 @@ olsr_print_link_set(void)
 {
 #if !defined REMOVE_LOG_INFO
   /* The whole function makes no sense without it. */
-  struct link_entry *walker;
-  struct list_iterator iterator;
+  struct link_entry *walker, *iterator;
   char totaltxt[256] = { 0 };
   const char *txt;
   int addrsize;
@@ -737,8 +731,7 @@ generate_hello(void *p) {
   struct olsr_message msg;
   uint8_t *curr = msg_buffer;
   uint8_t *length_field, *last;
-  struct link_entry *link;
-  struct list_iterator iterator;
+  struct link_entry *link, *iterator;
   uint8_t writeLinkType, writeNeighType;
   OLSR_INFO(LOG_PACKET_CREATION, "Building Hello for %s\n-------------------\n", ifp->int_name);
 

@@ -58,7 +58,7 @@ struct hna_net {
 
 #define OLSR_HNA_NET_JITTER 5   /* percent */
 
-#define OLSR_FOR_ALL_TC_HNA_ENTRIES(tc, hna_set, iterator) avl_for_each_element_safe(&tc->hna_tree, hna_set, hna_tc_node, iterator.loop, iterator.safe)
+#define OLSR_FOR_ALL_TC_HNA_ENTRIES(tc, hna_set, iterator) avl_for_each_element_safe(&tc->hna_tree, hna_set, hna_tc_node, iterator)
 
 /* HNA msg input parser */
 void olsr_input_hna(struct olsr_message *, struct interface *, union olsr_ip_addr *, enum duplicate_status);

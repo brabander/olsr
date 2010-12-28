@@ -75,8 +75,7 @@ bool
 ip_acl_acceptable(struct ip_acl *acl, const union olsr_ip_addr *ip, int ip_version)
 {
   struct list_entity *first, *second;
-  struct ip_prefix_entry *entry;
-  struct list_iterator iterator;
+  struct ip_prefix_entry *entry, *iterator;
 
   first = acl->first_accept ? &acl->accept : &acl->reject;
   second = acl->first_accept ? &acl->reject : &acl->accept;
