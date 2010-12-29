@@ -172,7 +172,7 @@ static inline bool list_node_added(struct list_entity *node) {
  * @param entity pointer to node
  * @return true if node is first element of list, false otherwise
  */
-static inline bool list_is_first(struct list_entity *head, struct list_entity *entity) {
+static inline bool list_is_first(const struct list_entity *head, const struct list_entity *entity) {
   return head->next == entity;
 }
 
@@ -182,7 +182,7 @@ static inline bool list_is_first(struct list_entity *head, struct list_entity *e
  * @param entity pointer to node
  * @return true if node is last element of list, false otherwise
  */
-static inline bool list_is_last(struct list_entity *head, struct list_entity *entity) {
+static inline bool list_is_last(const struct list_entity *head, const struct list_entity *entity) {
   return head->prev == entity;
 }
 
