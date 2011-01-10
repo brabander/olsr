@@ -64,6 +64,14 @@
 #include <syslog.h>
 #include <unistd.h>
 
+/**
+ * Fix bug in GLIBC, see https://bugzilla.redhat.com/show_bug.cgi?id=635260
+ */
+#ifdef IPTOS_CLASS
+#undef IPTOS_CLASS
+#endif
+#define IPTOS_CLASS(class)    ((class) & IPTOS_CLASS_MASK)
+
 #define IPV6_ADDR_LOOPBACK      0x0010U
 #define IPV6_ADDR_LINKLOCAL     0x0020U
 #define IPV6_ADDR_SITELOCAL     0x0040U
