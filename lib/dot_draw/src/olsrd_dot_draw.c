@@ -43,7 +43,6 @@
  * Dynamic linked library for the olsr.org olsr daemon
  */
 
-#include "olsrd_dot_draw.h"
 #include "olsr.h"
 #include "ipcalc.h"
 #include "neighbor_table.h"
@@ -53,6 +52,7 @@
 #include "olsr_ip_prefix_list.h"
 #include "olsr_logging.h"
 #include "os_net.h"
+#include "plugin_util.h"
 
 #ifdef _WRS_KERNEL
 #include <vxWorks.h>
@@ -64,17 +64,38 @@
 #include <stdarg.h>
 #endif
 
+#define PLUGIN_DESCR    "OLSRD dot draw plugin"
+#define PLUGIN_AUTHOR   "Andreas Tonnesen"
+
 #ifdef _WRS_KERNEL
 static int ipc_open;
 static int ipc_socket_up;
 #define DOT_DRAW_PORT 2004
 #endif
 
+static bool dotdraw_init(void);
+static bool dotdraw_enable(void);
+static bool dotdraw_exit(void);
+
 static int ipc_socket;
 
-/* IPC initialization function */
-static int
-  plugin_ipc_init(void);
+static union olsr_ip_addr ipc_accept_ip;
+static int ipc_port;
+
+/* plugin parameters */
+static const struct olsrd_plugin_parameters plugin_parameters[] = {
+  {.name = "port",.set_plugin_parameter = &set_plugin_port,.data = &ipc_port},
+  {.name = "accept",.set_plugin_parameter = &set_plugin_ipaddress,.data = &ipc_accept_ip},
+};
+
+OLSR_PLUGIN6(plugin_parameters) {
+  .descr = PLUGIN_DESCR,
+  .author = PLUGIN_AUTHOR,
+  .init = dotdraw_init,
+  .enable = dotdraw_enable,
+  .exit = dotdraw_exit,
+  .deactivate = false
+};
 
 /* Event function to register with the sceduler */
 static int
@@ -101,43 +122,28 @@ static void
 #define ipc_send_str(fd, data) ipc_send((fd), (data), strlen(data))
 
 
-/**
- *Do initialization here
- *
- *This function is called by the my_init
- *function in uolsrd_plugin.c
- */
-#ifdef _WRS_KERNEL
-int
-olsrd_dotdraw_init(void)
-#else
-int
-olsrd_plugin_init(void)
-#endif
+static bool
+dotdraw_init(void)
 {
-  /* Initial IPC value */
+  /* defaults for parameters */
+  ipc_port = 2004;
+  ipc_accept_ip.v4.s_addr = htonl(INADDR_LOOPBACK);
+
   ipc_socket = -1;
-
-  plugin_ipc_init();
-
-  return 1;
+  return false;
 }
-
 
 /**
  * destructor - called at unload
  */
-#ifdef _WRS_KERNEL
-void
-olsrd_dotdraw_exit(void)
-#else
-void
-olsr_plugin_exit(void)
-#endif
+static bool
+dotdraw_exit(void)
 {
   if (ipc_socket != -1) {
     os_close(ipc_socket);
+    ipc_socket = -1;
   }
+  return false;
 }
 
 
@@ -170,10 +176,8 @@ ipc_print_neigh_link(int ipc_connection, const struct nbr_entry *neighbor)
   }
 }
 
-
-static int
-plugin_ipc_init(void)
-{
+static bool
+dotdraw_enable(void) {
   struct sockaddr_in addr;
   uint32_t yes = 1;
 
@@ -185,19 +189,19 @@ plugin_ipc_init(void)
   ipc_socket = socket(AF_INET, SOCK_STREAM, 0);
   if (ipc_socket == -1) {
     OLSR_WARN(LOG_PLUGINS, "(DOT DRAW)IPC socket %s\n", strerror(errno));
-    return 0;
+    return true;
   }
 
   if (setsockopt(ipc_socket, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes)) < 0) {
     OLSR_WARN(LOG_PLUGINS, "SO_REUSEADDR failed %s\n", strerror(errno));
     os_close(ipc_socket);
-    return 0;
+    return true;
   }
 #if defined __FreeBSD__ && defined SO_NOSIGPIPE
   if (setsockopt(ipc_socket, SOL_SOCKET, SO_NOSIGPIPE, (char *)&yes, sizeof(yes)) < 0) {
     OLSR_WARN(LOG_PLUGINS, "SO_REUSEADDR failed %s\n", strerror(errno));
     CLOSESOCKET(ipc_socket);
-    return 0;
+    return true;
   }
 #endif
 
@@ -213,20 +217,20 @@ plugin_ipc_init(void)
   if (bind(ipc_socket, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
     OLSR_WARN(LOG_PLUGINS, "(DOT DRAW)IPC bind %s\n", strerror(errno));
     os_close(ipc_socket);
-    return 0;
+    return true;
   }
 
   /* show that we are willing to listen */
   if (listen(ipc_socket, 1) == -1) {
     OLSR_WARN(LOG_PLUGINS, "(DOT DRAW)IPC listen %s\n", strerror(errno));
     os_close(ipc_socket);
-    return 0;
+    return true;
   }
 
   /* Register with olsrd */
   add_olsr_socket(ipc_socket, &ipc_action, NULL, NULL, SP_PR_READ);
 
-  return 1;
+  return false;
 }
 
 
@@ -303,7 +307,7 @@ pcf_event(int ipc_connection, int chgs_neighborhood, int chgs_topology, int chgs
   }
 
   if (ipc_socket == -1) {
-    plugin_ipc_init();
+    dotdraw_enable();
   }
   return res;
 }
