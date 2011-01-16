@@ -130,7 +130,7 @@ static int olsr_create_lock_file(bool noExitOnFail) {
 #ifdef WIN32
   HANDLE lck = CreateEvent(NULL, TRUE, FALSE, lock_file_name);
   if (NULL == lck || ERROR_ALREADY_EXISTS == GetLastError()) {
-    if (noenoExitOnFail) {
+    if (noExitOnFail) {
       return -1;
     }
     if (NULL == lck) {
