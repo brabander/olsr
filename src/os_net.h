@@ -81,7 +81,7 @@ int EXPORT(os_interface_set_state)(const char *dev, bool up);
 void ListInterfaces(void);
 #endif
 
-void os_socket_set_olsr_options(struct interface *ifs, int socket);
+void os_socket_set_olsr_options(struct interface *ifs, int socket, union olsr_sockaddr *);
 
 int get_ipv6_address(char *, struct sockaddr_in6 *, int);
 

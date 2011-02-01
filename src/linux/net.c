@@ -486,55 +486,72 @@ os_getsocket6(const char *if_name, uint16_t port, int bufspace, union olsr_socka
 
 
 static int
-join_mcast(struct interface *ifs, int sock)
-{
+join_mcast(struct interface *ifs, int sock, union olsr_sockaddr *mcast_socket) {
   /* See linux/in6.h */
 #if !defined REMOVE_LOG_INFO
-  struct ipaddr_str buf;
+  struct ipaddr_str buf1, buf2;
 #endif
-  struct ipv6_mreq mcastreq;
+  struct ip_mreq   v4_mreq;
+  struct ipv6_mreq v6_mreq;
+  char p;
+
+  OLSR_INFO(LOG_NETWORKING, "Interface %s joining multicast %s (src %s)\n", ifs->int_name,
+      olsr_sockaddr_to_string(&buf1, mcast_socket),
+      olsr_sockaddr_to_string(&buf2, &ifs->int_src));
 
   if (olsr_cnf->ip_version == AF_INET) {
-    return 0;
-  }
-  mcastreq.ipv6mr_multiaddr = ifs->int_multicast.v6.sin6_addr;
-  mcastreq.ipv6mr_interface = ifs->if_index;
+    if (!IN_MULTICAST(ntohl(mcast_socket->v4.sin_addr.s_addr))) {
+      return 0;
+    }
 
-  OLSR_INFO(LOG_NETWORKING, "Interface %s joining multicast %s\n", ifs->int_name,
-            olsr_sockaddr_to_string(&buf, &ifs->int_multicast));
-  /* Send multicast */
-  if (setsockopt(sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char *)&mcastreq, sizeof(struct ipv6_mreq))
-      < 0) {
-    OLSR_WARN(LOG_NETWORKING, "Cannot join multicast group (%s)\n", strerror(errno));
-    return -1;
-  }
-#if 0
-  /* Old libc fix */
-#ifdef IPV6_JOIN_GROUP
-  /* Join reciever group */
-  if (setsockopt(sock, IPPROTO_IPV6, IPV6_JOIN_GROUP, (char *)&mcastreq, sizeof(struct ipv6_mreq))
-      < 0)
-#else
-  /* Join reciever group */
-  if (setsockopt(sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char *)&mcastreq, sizeof(struct ipv6_mreq))
-      < 0)
-#endif
-  {
-    perror("Join multicast send");
-    return -1;
-  }
-#endif
-  if (setsockopt(sock, IPPROTO_IPV6, IPV6_MULTICAST_IF, (char *)&mcastreq.ipv6mr_interface, sizeof(mcastreq.ipv6mr_interface))
-      < 0) {
-    OLSR_WARN(LOG_NETWORKING, "Cannot set multicast interface (%s)\n", strerror(errno));
-    return -1;
-  }
+    v4_mreq.imr_multiaddr = mcast_socket->v4.sin_addr;
+    v4_mreq.imr_interface = ifs->int_src.v4.sin_addr;
 
+    if (setsockopt(sock, IPPROTO_IP, IP_ADD_MEMBERSHIP,
+        &v4_mreq, sizeof(v4_mreq)) < 0) {
+      OLSR_WARN(LOG_NETWORKING, "Cannot join multicast group (%s)\n", strerror(errno));
+      return -1;
+    }
+    if (setsockopt(sock, IPPROTO_IP, IP_MULTICAST_IF,
+        &ifs->int_src, sizeof(ifs->int_src.v4)) < 0) {
+      OLSR_WARN(LOG_NETWORKING, "Cannot set multicast interface (%s)\n", strerror(errno));
+      return -1;
+    }
+
+    p = 0;
+    if(setsockopt(sock, IPPROTO_IP, IP_MULTICAST_LOOP, (char *)&p, sizeof(p)) < 0) {
+      OLSR_WARN(LOG_NETWORKING, "Cannot deactivate local loop of multicast interface (%s)\n",
+          strerror(errno));
+      return -1;
+    }
+  }
+  else {
+    v6_mreq.ipv6mr_multiaddr = mcast_socket->v6.sin6_addr;
+    v6_mreq.ipv6mr_interface = ifs->if_index;
+
+    /* Send multicast */
+    if (setsockopt(sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP,
+        &v6_mreq, sizeof(v6_mreq)) < 0) {
+      OLSR_WARN(LOG_NETWORKING, "Cannot join multicast group (%s)\n", strerror(errno));
+      return -1;
+    }
+    if (setsockopt(sock, IPPROTO_IPV6, IPV6_MULTICAST_IF,
+        &ifs->if_index, sizeof(ifs->if_index)) < 0) {
+      OLSR_WARN(LOG_NETWORKING, "Cannot set multicast interface (%s)\n", strerror(errno));
+      return -1;
+    }
+    p = 0;
+    if(setsockopt(sock, IPPROTO_IPV6, IPV6_MULTICAST_LOOP, (char *)&p, sizeof(p)) < 0) {
+      OLSR_WARN(LOG_NETWORKING, "Cannot deactivate local loop of multicast interface (%s)\n",
+          strerror(errno));
+      return -1;
+    }
+  }
   return 0;
 }
 
 void
-os_socket_set_olsr_options(struct interface * ifs, int sock) {
+os_socket_set_olsr_options(struct interface * ifs, int sock, union olsr_sockaddr *mcast) {
   /* Set TOS */
   int data = IPTOS_PREC(olsr_cnf->tos);
   if (setsockopt(sock, SOL_SOCKET, SO_PRIORITY, (char *)&data, sizeof(data)) < 0) {
@@ -545,7 +562,9 @@ os_socket_set_olsr_options(struct interface * ifs, int sock) {
     OLSR_WARN(LOG_INTERFACE, "setsockopt(IP_TOS) error %s", strerror(errno));
   }
 
-  join_mcast(ifs, sock);
+  if (mcast) {
+    join_mcast(ifs, sock, mcast);
+  }
 }
 
 /*
