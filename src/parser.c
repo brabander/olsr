@@ -230,12 +230,14 @@ parse_packet(uint8_t *binary, int size, struct interface *in_if, union olsr_ip_a
   struct packetparser_function_entry *packetparser;
   enum duplicate_status dup_status = 0;
   uint8_t *curr, *end;
+  const uint8_t *packet;
 
 #if !defined(REMOVE_LOG_INFO) || !defined(REMOVE_LOG_WARN)
   struct ipaddr_str buf;
 #endif
 
   curr = binary;
+  packet = binary;
   end = binary + size;
 
   /* packet smaller than minimal olsr packet ? */
@@ -245,8 +247,8 @@ parse_packet(uint8_t *binary, int size, struct interface *in_if, union olsr_ip_a
     return;
   }
 
-  pkt_get_u16((const uint8_t **)&curr, &pkt.size);
-  pkt_get_u16((const uint8_t **)&curr, &pkt.seqno);
+  pkt_get_u16(&packet, &pkt.size);
+  pkt_get_u16(&packet, &pkt.seqno);
 
   if (pkt.size != (size_t) size) {
     OLSR_WARN(LOG_PACKET_PARSING, "Received packet from %s (%u bytes) has bad size field: %u bytes\n",
