@@ -526,7 +526,7 @@ int main(int argc, char *argv[]) {
    */
   for (i=5; i>=0; i--) {
     OLSR_PRINTF(3, "Trying to get olsrd lock...\n");
-    if (olsr_create_lock_file(i > 0) == 0) {
+    if (!olsr_cnf->host_emul && olsr_create_lock_file(i > 0) == 0) {
       /* lock sucessfully created */
       break;
     }
