@@ -123,8 +123,8 @@ PacketReceivedFromOLSR(unsigned char *encapsulationUdpData, int len)
   int destPort;
   bool isInList = false;
 
-  ipHeader = (struct ip *)encapsulationUdpData;
-  ip6Header = (struct ip6_hdr *)encapsulationUdpData;
+  ipHeader = (struct ip *) ARM_NOWARN_ALIGN(encapsulationUdpData);
+  ip6Header = (struct ip6_hdr *) ARM_NOWARN_ALIGN(encapsulationUdpData);
   //OLSR_DEBUG(LOG_PLUGINS, "P2PD PLUGIN got packet from OLSR message\n");
 
   if (check_and_mark_recent_packet(encapsulationUdpData, len))
@@ -196,8 +196,8 @@ PacketReceivedFromOLSR(unsigned char *encapsulationUdpData, int len)
       if (olsr_cnf->ip_version == AF_INET) {
         // Determine the IP address and the port from the header information
         if (ipHeader->ip_p == SOL_UDP && !IsIpv4Fragment(ipHeader)) {
-          udpHeader = (struct udphdr*)(encapsulationUdpData +
-                                       GetIpHeaderLength(encapsulationUdpData));
+          udpHeader = (struct udphdr*) ARM_NOWARN_ALIGN((encapsulationUdpData +
+                                       GetIpHeaderLength(encapsulationUdpData)));
           destAddr.v4.s_addr = ipHeader->ip_dst.s_addr;
           destPort = htons(udpHeader->dest);
           isInList = InUdpDestPortList(AF_INET, &destAddr, destPort);
@@ -216,7 +216,7 @@ PacketReceivedFromOLSR(unsigned char *encapsulationUdpData, int len)
         }
       } else /* (olsr_cnf->ip_version == AF_INET6) */ {
         if (ip6Header->ip6_nxt == SOL_UDP && !IsIpv6Fragment(ip6Header)) {
-          udpHeader = (struct udphdr*)(encapsulationUdpData + 40);
+          udpHeader = (struct udphdr*) ARM_NOWARN_ALIGN((encapsulationUdpData + 40));
           memcpy(&destAddr.v6, &ip6Header->ip6_dst, sizeof(struct in6_addr));
           destPort = htons(udpHeader->dest);
           isInList = InUdpDestPortList(AF_INET6, &destAddr, destPort);
@@ -627,7 +627,7 @@ P2pdPacketCaptured(unsigned char *encapsulationUdpData, int nBytes)
 
   if ((encapsulationUdpData[0] & 0xf0) == 0x40) {       //IPV4
 
-    ipHeader = (struct ip *)encapsulationUdpData;
+    ipHeader = (struct ip *) ARM_NOWARN_ALIGN(encapsulationUdpData);
 
     dst.v4 = ipHeader->ip_dst;
 
@@ -651,8 +651,8 @@ P2pdPacketCaptured(unsigned char *encapsulationUdpData, int nBytes)
     if (check_and_mark_recent_packet(encapsulationUdpData, nBytes))
       return;
 
-    udpHeader = (struct udphdr *)(encapsulationUdpData +
-                                  GetIpHeaderLength(encapsulationUdpData));
+    udpHeader = (struct udphdr *) ARM_NOWARN_ALIGN((encapsulationUdpData +
+                                  GetIpHeaderLength(encapsulationUdpData)));
     destPort = ntohs(udpHeader->dest);
 
     if (!InUdpDestPortList(AF_INET, &dst, destPort)) {
@@ -666,7 +666,7 @@ P2pdPacketCaptured(unsigned char *encapsulationUdpData, int nBytes)
   }                            //END IPV4
   else if ((encapsulationUdpData[0] & 0xf0) == 0x60) {  //IPv6
 
-    ipHeader6 = (struct ip6_hdr *)encapsulationUdpData;
+    ipHeader6 = (struct ip6_hdr *) ARM_NOWARN_ALIGN(encapsulationUdpData);
 
     memcpy(&dst.v6, &ipHeader6->ip6_dst, sizeof(struct in6_addr));
 
@@ -693,7 +693,7 @@ P2pdPacketCaptured(unsigned char *encapsulationUdpData, int nBytes)
     if (check_and_mark_recent_packet(encapsulationUdpData, nBytes))
       return;
 
-    udpHeader = (struct udphdr *)(encapsulationUdpData + 40);
+    udpHeader = (struct udphdr *) ARM_NOWARN_ALIGN((encapsulationUdpData + 40));
     destPort = ntohs(udpHeader->dest);
 
     if (!InUdpDestPortList(AF_INET6, &dst, destPort)) {
