@@ -68,6 +68,14 @@
 #include <netdb.h>
 #include <unistd.h>
 
+/**
+ * Fix bug in GLIBC, see https://bugzilla.redhat.com/show_bug.cgi?id=635260
+ */
+#ifdef IPTOS_CLASS
+#undef IPTOS_CLASS
+#endif
+#define IPTOS_CLASS(class)    ((class) & IPTOS_CLASS_MASK)
+
 #define BUFSPACE  (127*1024)    /* max. input buffer size to request */
 
 int
