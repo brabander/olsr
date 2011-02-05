@@ -379,7 +379,9 @@ os_getsocket4(const char *if_name, uint16_t port, int bufspace, union olsr_socka
     bindto = (union olsr_sockaddr *)&sin4;
   }
   if (bind(sock, &bindto->std, sizeof(*bindto)) < 0) {
-    OLSR_ERROR(LOG_NETWORKING, "Coult not bind socket for OLSR PDUs to port (%s)\n", strerror(errno));
+    struct ipaddr_str buf;
+    OLSR_ERROR(LOG_NETWORKING, "Could not bind socket for OLSR PDUs to %s/%d: %s (%d)\n",
+        inet_ntop(AF_INET, &sin4.sin_addr, buf.buf, sizeof(buf)), port, strerror(errno), errno);
     close(sock);
     olsr_exit(EXIT_FAILURE);
   }
