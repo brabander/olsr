@@ -59,8 +59,7 @@ struct ip_prefix_entry {
  */
 void EXPORT(ip_prefix_list_add) (struct list_entity *, const union olsr_ip_addr *, uint8_t);
 int EXPORT(ip_prefix_list_remove) (struct list_entity *, const union olsr_ip_addr *, uint8_t, int);
-void ip_prefix_list_flush(struct list_entity *);
-struct ip_prefix_entry *ip_prefix_list_find(struct list_entity *, const union olsr_ip_addr *, uint8_t, int);
-
+void EXPORT(ip_prefix_list_flush)(struct list_entity *);
+struct ip_prefix_entry *EXPORT(ip_prefix_list_find)(struct list_entity *, const union olsr_ip_addr *, uint8_t, int);
 
 #endif /* OLSR_IP_PREFIX_LIST_H_ */
