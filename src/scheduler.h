@@ -122,18 +122,23 @@ extern struct avl_tree EXPORT(timerinfo_tree);
 
 void olsr_init_timers(void);
 void olsr_flush_timers(void);
-struct olsr_timer_info *olsr_alloc_timerinfo(const char *name, timer_cb_func callback, bool periodic);
+
+uint32_t EXPORT(olsr_getTimestamp) (uint32_t s);
+int32_t EXPORT(olsr_getTimeDue) (uint32_t s);
+bool EXPORT(olsr_isTimedOut) (uint32_t s);
 
 void EXPORT(olsr_set_timer) (struct timer_entry **, uint32_t, uint8_t,
     void *, struct olsr_timer_info *);
 struct timer_entry *EXPORT(olsr_start_timer) (uint32_t, uint8_t,
     void *, struct olsr_timer_info *);
-void olsr_change_timer(struct timer_entry *, uint32_t, uint8_t);
+void EXPORT(olsr_change_timer)(struct timer_entry *, uint32_t, uint8_t);
 void EXPORT(olsr_stop_timer) (struct timer_entry *);
 
+struct olsr_timer_info *EXPORT(olsr_alloc_timerinfo)(const char *name, timer_cb_func callback, bool periodic);
+
 /* Printing timestamps */
-const char *olsr_clock_string(uint32_t);
-const char *olsr_wallclock_string(void);
+const char *EXPORT(olsr_clock_string)(uint32_t);
+const char *EXPORT(olsr_wallclock_string)(void);
 
 /* Main scheduler loop */
 void olsr_scheduler(void);
@@ -176,24 +181,11 @@ struct olsr_socket_entry {
 
 #define OLSR_FOR_ALL_SOCKETS(socket, iterator) list_for_each_element_safe(&socket_head, socket, socket_node, iterator)
 
-uint32_t EXPORT(olsr_getTimestamp) (uint32_t s);
-int32_t EXPORT(olsr_getTimeDue) (uint32_t s);
-bool EXPORT(olsr_isTimedOut) (uint32_t s);
-
 void EXPORT(add_olsr_socket) (int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, void *data, unsigned int flags);
 int EXPORT(remove_olsr_socket) (int fd, socket_handler_func pf_pr, socket_handler_func pf_imm);
 void olsr_flush_sockets(void);
 void EXPORT(enable_olsr_socket) (int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, unsigned int flags);
 void EXPORT(disable_olsr_socket) (int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, unsigned int flags);
-
-/*
- * a wrapper around times(2). times(2) has the problem, that it may return -1
- * in case of an err (e.g. EFAULT on the parameter) or immediately before an
- * overrun (though it is not en error) just because the jiffies (or whatever
- * the underlying kernel calls the smallest accountable time unit) are
- * inherently "unsigned" (and always incremented).
- */
-
 
 #endif
 
