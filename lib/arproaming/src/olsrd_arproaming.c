@@ -104,8 +104,8 @@ static bool arproaming_init(void);
 int arproaming_plugin_exit(void);
 
 static bool arproaming_init(void) {
-	if (arproaming_init() < 0) {
-		OLSR_ERROR(LOG_PLUGINS, "*** ARPROAMING: Could not initialize arproaming plugin!\n");
+	if (arproaming_plugin_init() < 0) {
+		OLSR_ERROR(LOG_PLUGINS, "[ARPROAMING] Could not initialize arproaming plugin!\n");
 		return true;
 	}
 
