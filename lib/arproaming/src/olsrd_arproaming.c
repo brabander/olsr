@@ -61,13 +61,28 @@
 #define PLUGIN_AUTHOR "amadeus"
 
 static bool arproaming_init(void);
+static bool arproaming_exit(void);
+static int arproaming_plugin_init(void);
+static int arproaming_plugin_exit(void);
+
 static void arproaming_schedule_event(void *);
+static void arproaming_list_add(unsigned int timeout, const union olsr_ip_addr *ip, const struct olsr_mac48_addr *mac);
+static void arproaming_list_remove(const struct olsr_mac48_addr *mac);
+static void arproaming_client_add(void);
+static void arproaming_client_remove(const union olsr_ip_addr *ip);
+static int arproaming_client_probe(const union olsr_ip_addr *ip);
+static void arproaming_client_update(void);
+static void arproaming_systemconf(int arproaming_socketfd_system);
+
+#if 0
+static void arproaming_list_update(const union olsr_ip_addr *ip, unsigned int timeout);
+#endif
 
 struct arproaming_nodes {
   struct list_entity node;
   unsigned int timeout;
-  union olsr_ip_addr ip_;
-  struct olsr_mac48_addr mac_;
+  union olsr_ip_addr ip;
+  struct olsr_mac48_addr mac;
 };
 
 static struct olsr_timer_info *timer_info;
@@ -91,22 +106,12 @@ OLSR_PLUGIN6(plugin_parameters) {
 	.descr = PLUGIN_DESCR,
 	.author = PLUGIN_AUTHOR,
 	.init = arproaming_init,
+	.exit = arproaming_exit,
 	.deactivate = false
 };
 
-void arproaming_list_add(unsigned int timeout, const union olsr_ip_addr *ip, const struct olsr_mac48_addr *mac);
-void arproaming_list_remove(const struct olsr_mac48_addr *mac);
-void arproaming_list_update(const union olsr_ip_addr *ip, unsigned int timeout);
-void arproaming_client_add(void);
-void arproaming_client_remove(const union olsr_ip_addr *ip);
-int arproaming_client_probe(const union olsr_ip_addr *ip);
-void arproaming_client_update(void);
-void arproaming_systemconf(int arproaming_socketfd_system);
-int arproaming_plugin_init(void);
-static bool arproaming_init(void);
-int arproaming_plugin_exit(void);
-
-static bool arproaming_init(void) {
+static bool
+arproaming_init(void) {
 	if (arproaming_plugin_init() < 0) {
 		OLSR_ERROR(LOG_PLUGINS, "[ARPROAMING] Could not initialize arproaming plugin!\n");
 		return true;
@@ -117,44 +122,56 @@ static bool arproaming_init(void) {
 	return false;
 }
 
-void arproaming_list_add(unsigned int timeout, const union olsr_ip_addr *ip, const struct olsr_mac48_addr *mac)
+static bool
+arproaming_exit(void) {
+  arproaming_plugin_exit();
+  return false;
+}
+
+static void
+arproaming_list_add(unsigned int timeout, const union olsr_ip_addr *ip, const struct olsr_mac48_addr *mac)
 {
 	struct arproaming_nodes *new;
 
 	new = malloc(sizeof(*new));
 
 	new->timeout = timeout;
-	memcpy(&new->ip_, ip, sizeof(*ip));
-	memcpy(&new->mac_, mac, sizeof(*mac));
+	memcpy(&new->ip, ip, sizeof(*ip));
+	memcpy(&new->mac, mac, sizeof(*mac));
 
 	list_add_tail(&arproaming_nodes, &new->node);
 }
 
-void arproaming_list_remove(const struct olsr_mac48_addr *mac)
+static void
+arproaming_list_remove(const struct olsr_mac48_addr *mac)
 {
 	struct arproaming_nodes *element, *iterator;
 
 	list_for_each_element_safe(&arproaming_nodes, element, node, iterator) {
-		if (memcmp(&element->mac_, mac, sizeof(*mac)) == 0) {
+		if (memcmp(&element->mac, mac, sizeof(*mac)) == 0) {
 		  list_remove(&element->node);
 			free(element);
 		}
 	}
 }
 
-void arproaming_list_update(const union olsr_ip_addr *ip, unsigned int timeout)
+#if 0
+static void
+arproaming_list_update(const union olsr_ip_addr *ip, unsigned int timeout)
 {
 	struct arproaming_nodes *element;
 
 	list_for_each_element(&arproaming_nodes, element, node) {
-		if (olsr_ipcmp(&element->ip_, ip) == 0) {
+		if (olsr_ipcmp(&element->ip, ip) == 0) {
 			element->timeout = timeout;
 			break;
 		}
 	}
 }
+#endif
 
-void arproaming_client_add(void)
+static void
+arproaming_client_add(void)
 {
 	int status, rtattrlen, len;
 	char buf[10240];
@@ -200,7 +217,7 @@ void arproaming_client_add(void)
 #if !defined REMOVE_LOG_DEBUG
 			  struct ipaddr_str ipbuf;
 #endif
-			  memcpy(&mac, RTA_DATA(rtatp), 6);
+			  memcpy(&mac, RTA_DATA(rtatp), sizeof(mac));
 
 				ip_prefix_list_add(&olsr_cnf->hna_entries, &host_net, 32);
 				arproaming_list_add(time(NULL) + arproaming_parameter_timeout, &host_net, &mac);
@@ -214,7 +231,8 @@ void arproaming_client_add(void)
 	}
 }
 
-void arproaming_client_remove(const union olsr_ip_addr *ip)
+static void
+arproaming_client_remove(const union olsr_ip_addr *ip)
 {
 	int socketfd;
 	struct arpreq req;
@@ -232,7 +250,8 @@ void arproaming_client_remove(const union olsr_ip_addr *ip)
 	close(socketfd);
 }
 
-int arproaming_client_probe(const union olsr_ip_addr *ip)
+static int
+arproaming_client_probe(const union olsr_ip_addr *ip)
 {
 	int ret = 0;
 	int	timeout = 1;
@@ -296,7 +315,8 @@ int arproaming_client_probe(const union olsr_ip_addr *ip)
 	return ret;
 }
 
-void arproaming_client_update(void)
+static void
+arproaming_client_update(void)
 {
 	struct arproaming_nodes *element, *iterator;
 #if !defined REMOVE_LOG_DEBUG
@@ -305,22 +325,23 @@ void arproaming_client_update(void)
 
   list_for_each_element_safe(&arproaming_nodes, element, node, iterator) {
 		if (element->timeout > 0 && element->timeout <= (unsigned int)time(NULL)) {
-			if (arproaming_client_probe(&element->ip_) == 0) {
-			  OLSR_DEBUG(LOG_PLUGINS, "[ARPROAMING] Removing host %s\n", olsr_ip_to_string(&buf, &element->ip_));
-				ip_prefix_list_remove(&olsr_cnf->hna_entries, &element->ip_, 32, 4);
-				arproaming_client_remove(&element->ip_);
-				arproaming_list_remove(&element->mac_);
+			if (arproaming_client_probe(&element->ip) == 0) {
+			  OLSR_DEBUG(LOG_PLUGINS, "[ARPROAMING] Removing host %s\n", olsr_ip_to_string(&buf, &element->ip));
+				ip_prefix_list_remove(&olsr_cnf->hna_entries, &element->ip, 32, 4);
+				arproaming_client_remove(&element->ip);
+				arproaming_list_remove(&element->mac);
 				break;
 			}
 			else {
-				OLSR_DEBUG(LOG_PLUGINS, "[ARPROAMING] Renewing host %s\n", olsr_ip_to_string(&buf, &element->ip_));
+				OLSR_DEBUG(LOG_PLUGINS, "[ARPROAMING] Renewing host %s\n", olsr_ip_to_string(&buf, &element->ip));
 				element->timeout = time(NULL) + arproaming_parameter_timeout;
 			}
 		}
 	}
 }
 
-void arproaming_systemconf(int arproaming_socketfd_system)
+static void
+arproaming_systemconf(int arproaming_socketfd_system)
 {
 	int i, optval = 1;
 	char buf[1024];
@@ -356,13 +377,15 @@ void arproaming_systemconf(int arproaming_socketfd_system)
 	setsockopt(arproaming_socketfd_arp, SOL_SOCKET, SO_BROADCAST, &optval, sizeof(optval));
 }
 
-static void arproaming_schedule_event(void *foo __attribute__ ((unused)))
+static
+void arproaming_schedule_event(void *foo __attribute__ ((unused)))
 {
 	arproaming_client_add();
 	arproaming_client_update();
 }
 
-int arproaming_plugin_init(void)
+static int
+arproaming_plugin_init(void)
 {
 	int arproaming_socketfd_system = -1;
 	struct olsr_mac48_addr mac;
@@ -383,7 +406,8 @@ int arproaming_plugin_init(void)
 	}
 }
 
-int arproaming_plugin_exit(void)
+static int
+arproaming_plugin_exit(void)
 {
 	if (arproaming_socketfd_netlink >= 0) {
 		OLSR_DEBUG(LOG_PLUGINS, "[ARPROAMING] Closing netlink socket.\n");
