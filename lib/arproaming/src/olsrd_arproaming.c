@@ -412,7 +412,6 @@ static bool
 arproaming_exit(void)
 {
   olsr_stop_timer(event_timer);
-  olsr_cleanup_timerinfo(timer_info);
 
 	if (arproaming_socketfd_netlink >= 0) {
 		OLSR_DEBUG(LOG_PLUGINS, "[ARPROAMING] Closing netlink socket.\n");
