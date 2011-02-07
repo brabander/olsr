@@ -115,6 +115,10 @@ union olsr_sockaddr {
   struct sockaddr_storage storage;
 };
 
+struct olsr_mac48_addr {
+  uint8_t mac[6];
+};
+
 typedef uint32_t olsr_linkcost;
 
 #endif
