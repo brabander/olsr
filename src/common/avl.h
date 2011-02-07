@@ -145,23 +145,12 @@ struct avl_tree {
   void *cmp_ptr;
 };
 
-/**
- * internal enum for avl_find_... macros
- */
-enum avl_find_mode {
-  AVL_FIND_EQUAL,
-  AVL_FIND_LESSEQUAL,
-  AVL_FIND_GREATEREQUAL
-};
-
 void EXPORT(avl_init)(struct avl_tree *, avl_tree_comp, bool, void *);
 struct avl_node *EXPORT(avl_find)(const struct avl_tree *, const void *);
 struct avl_node *EXPORT(avl_find_greaterequal)(const struct avl_tree *tree, const void *key);
 struct avl_node *EXPORT(avl_find_lessequal)(const struct avl_tree *tree, const void *key);
 int EXPORT(avl_insert)(struct avl_tree *, struct avl_node *);
 void EXPORT(avl_delete)(struct avl_tree *, struct avl_node *);
-void *EXPORT(__avl_find_element)(const struct avl_tree *tree, const void *key,
-    size_t offset, enum avl_find_mode mode);
 
 /**
  * @param tree pointer to avl-tree
@@ -193,6 +182,50 @@ avl_is_empty(struct avl_tree *tree) {
 }
 
 /**
+ * Internal helper function to get an element with a specified key from
+ * a tree and keep NULL for "no element found"
+ * @param tree pointer to avl tree
+ * @param key pointer to key
+ * @param offset offset of node inside the embedded struct
+ * @return pointer to tree element, NULL if not found
+ */
+static inline void *
+__avl_find_element(const struct avl_tree *tree, const void *key, size_t offset) {
+  void *node = avl_find(tree, key);
+  return node == NULL ? NULL : (((char *)node) - offset);
+}
+
+/**
+ * Internal helper function to get an element with the largest key
+ * less or equal to the specified one from a tree and keep
+ * NULL for "no element found"
+ * @param tree pointer to avl tree
+ * @param key pointer to key
+ * @param offset offset of node inside the embedded struct
+ * @return pointer to tree element, NULL if not found
+ */
+static inline void *
+__avl_find_le_element(const struct avl_tree *tree, const void *key, size_t offset) {
+  void *node = avl_find_lessequal(tree, key);
+  return node == NULL ? NULL : (((char *)node) - offset);
+}
+
+/**
+ * Internal helper function to get an element with the smalles key
+ * greater or equal to the specified one from a tree and keep
+ * NULL for "no element found"
+ * @param tree pointer to avl tree
+ * @param key pointer to key
+ * @param offset offset of node inside the embedded struct
+ * @return pointer to tree element, NULL if not found
+ */
+static inline void *
+__avl_find_ge_element(const struct avl_tree *tree, const void *key, size_t offset) {
+  void *node = avl_find_greaterequal(tree, key);
+  return node == NULL ? NULL : (((char *)node) - offset);
+}
+
+/**
  * @param tree pointer to avl-tree
  * @param key pointer to key
  * @param element pointer to a node element
@@ -203,7 +236,7 @@ avl_is_empty(struct avl_tree *tree) {
  *    NULL if no element was found
  */
 #define avl_find_element(tree, key, element, node_element) \
-  ((typeof(*(element)) *)__avl_find_element(tree, key, offsetof(typeof(*(element)), node_element), AVL_FIND_EQUAL))
+  ((typeof(*(element)) *)__avl_find_element(tree, key, offsetof(typeof(*(element)), node_element)))
 
 /**
  * @param tree pointer to avl-tree
@@ -216,7 +249,7 @@ avl_is_empty(struct avl_tree *tree) {
  *    NULL if no element was found
  */
 #define avl_find_le_element(tree, key, element, node_element) \
-  ((typeof(*(element)) *)__avl_find_element(tree, key, offsetof(typeof(*(element)), node_element), AVL_FIND_LESSEQUAL))
+  ((typeof(*(element)) *)__avl_find_le_element(tree, key, offsetof(typeof(*(element)), node_element)))
 
 /**
  * @param tree pointer to avl-tree
@@ -229,7 +262,7 @@ avl_is_empty(struct avl_tree *tree) {
  *    NULL if no element was found
  */
 #define avl_find_ge_element(tree, key, element, node_element) \
-  ((typeof(*(element)) *)__avl_find_element(tree, key, offsetof(typeof(*(element)), node_element), AVL_FIND_GREATEREQUAL))
+  ((typeof(*(element)) *)__avl_find_ge_element(tree, key, offsetof(typeof(*(element)), node_element)))
 
 /**
  * This function must not be called for an empty tree
