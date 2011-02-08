@@ -38,7 +38,7 @@ void olsr_callback_cleanup(void);
 int EXPORT(olsr_callback_prv_create)(struct olsr_callback_provider *, const char *);
 void EXPORT(olsr_callback_prv_destroy)(struct olsr_callback_provider *);
 
-struct olsr_callback_provider *EXPORT(olsr_callback_cons_register)(
+int EXPORT(olsr_callback_cons_register)(
     const char *, const char *, struct olsr_callback_consumer *);
 void EXPORT(olsr_callback_cons_unregister)(struct olsr_callback_consumer *);
 

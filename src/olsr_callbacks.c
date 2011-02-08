@@ -18,11 +18,17 @@ static const char *unknown_key(void *);
 
 struct avl_tree callback_provider_tree;
 
+/**
+ * Initialize the internal data of the callback provider system
+ */
 void
 olsr_callback_init(void) {
   avl_init(&callback_provider_tree, avl_comp_strcasecmp, false, NULL);
 }
 
+/**
+ * Cleanup the internal data of the callback provider system
+ */
 void
 olsr_callback_cleanup(void) {
   struct olsr_callback_provider *prv, *iterator;
@@ -32,6 +38,12 @@ olsr_callback_cleanup(void) {
   }
 }
 
+/**
+ * Create a new callback provider
+ * @param prv pointer to uninitialized callback provider datastructure
+ * @param name pointer to name of provider
+ * @return 0 if provider was registered sucessfully, 1 otherwise
+ */
 int
 olsr_callback_prv_create(struct olsr_callback_provider *prv, const char *name) {
   if (avl_find(&callback_provider_tree, name) != NULL) {
@@ -51,6 +63,10 @@ olsr_callback_prv_create(struct olsr_callback_provider *prv, const char *name) {
   return 0;
 }
 
+/**
+ * Cleans up an existing registered callback provider
+ * @param pointer to initialized callback provider
+ */
 void
 olsr_callback_prv_destroy(struct olsr_callback_provider *prv) {
   struct olsr_callback_consumer *cons, *iterator;
@@ -67,7 +83,14 @@ olsr_callback_prv_destroy(struct olsr_callback_provider *prv) {
   prv->name = NULL;
 }
 
-struct olsr_callback_provider *
+/**
+ * Registers a new callback consumer to an existing provider
+ * @param prv_name name of callback provider
+ * @param cons_name name of new callback consumer
+ * @param cons pointer to uninitialized callback consumer
+ * @return 0 if sucessfully registered, 1 otherwise
+ */
+int
 olsr_callback_cons_register(const char *prv_name, const char *cons_name,
     struct olsr_callback_consumer *cons) {
   struct olsr_callback_provider *prv;
@@ -75,17 +98,22 @@ olsr_callback_cons_register(const char *prv_name, const char *cons_name,
   prv = avl_find_element(&callback_provider_tree, prv_name, prv, node);
   if (prv == NULL) {
     OLSR_WARN(LOG_CALLBACK, "Could not find callback provider '%s'\n", prv_name);
-    return NULL;
+    return 1;
   }
 
   OLSR_DEBUG(LOG_CALLBACK, "Register callback '%s' with provider '%s'\n",
       cons_name, prv_name);
+  memset(cons, 0, sizeof(*cons));
   cons->provider = prv;
   cons->name = strdup(cons_name);
   list_add_tail(&prv->callbacks, &cons->node);
-  return prv;
+  return 0;
 }
 
+/**
+ * Unregistered an initialized callback consumer
+ * @param cons pointer to callback consumer
+ */
 void
 olsr_callback_cons_unregister(struct olsr_callback_consumer *cons) {
   if (cons->node.next != NULL && cons->node.prev) {
@@ -99,6 +127,11 @@ olsr_callback_cons_unregister(struct olsr_callback_consumer *cons) {
   }
 }
 
+/**
+ * Fire a callback for an added object
+ * @param pointer to callback provider
+ * @param pointer to object
+ */
 void
 olsr_callback_add_object(struct olsr_callback_provider *prv, void *obj) {
   struct olsr_callback_consumer *cons, *iterator;
@@ -113,6 +146,11 @@ olsr_callback_add_object(struct olsr_callback_provider *prv, void *obj) {
   }
 }
 
+/**
+ * Fire a callback for a changed object
+ * @param pointer to callback provider
+ * @param pointer to object
+ */
 void
 olsr_callback_change_object(struct olsr_callback_provider *prv, void *obj) {
   struct olsr_callback_consumer *cons, *iterator;
@@ -126,6 +164,11 @@ olsr_callback_change_object(struct olsr_callback_provider *prv, void *obj) {
   }
 }
 
+/**
+ * Fire a callback for a removed object
+ * @param pointer to callback provider
+ * @param pointer to object
+ */
 void
 olsr_callback_remove_object(struct olsr_callback_provider *prv, void *obj) {
   struct olsr_callback_consumer *cons, *iterator;
@@ -140,6 +183,11 @@ olsr_callback_remove_object(struct olsr_callback_provider *prv, void *obj) {
   prv->obj_count--;
 }
 
+/**
+ * Helper function to display a name of an object.
+ * @param pointer to object
+ * @return string representation of objects hexadecimal address
+ */
 static const char *
 unknown_key(void *obj) {
   static char buffer[32];
