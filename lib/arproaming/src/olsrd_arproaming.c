@@ -372,6 +372,8 @@ arproaming_init(void)
 	int arproaming_socketfd_system = -1;
 	struct olsr_mac48_addr mac;
 
+	list_init_head(&arproaming_nodes);
+
 	memset(&mac, 0, sizeof(mac));
 	arproaming_list_add(0, &all_zero, &mac);
 
