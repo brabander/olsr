@@ -75,7 +75,8 @@ const char *LOG_SOURCE_NAMES[] = {
   "comport",
   "apm",
   "rtnetlink",
-  "tunnel"
+  "tunnel",
+  "callback"
 };
 
 const char *LOG_SEVERITY_NAMES[] = {

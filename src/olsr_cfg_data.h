@@ -74,6 +74,7 @@ enum log_source {
   LOG_APM,                             //!< LOG_APM
   LOG_RTNETLINK,                       //!< LOG_RTNETLINK
   LOG_TUNNEL,                          //!< LOG_TUNNEL
+  LOG_CALLBACK,                        //!< LOG_CALLBACK
 
   /* this one must be the last of the enums ! */
   LOG_SOURCE_COUNT                     //!< LOG_SOURCE_COUNT
