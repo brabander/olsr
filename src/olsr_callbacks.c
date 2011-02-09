@@ -46,13 +46,16 @@ olsr_callback_cleanup(void) {
  */
 int
 olsr_callback_prv_create(struct olsr_callback_provider *prv, const char *name) {
+  /* Clear provider entry first */
+  memset(prv, 0, sizeof(*prv));
+
+  /* check if provider already exists */
   if (avl_find(&callback_provider_tree, name) != NULL) {
     OLSR_WARN(LOG_CALLBACK, "Provider '%s' already exists\n", name);
     return 1;
   }
 
   OLSR_DEBUG(LOG_CALLBACK, "Create callback provider '%s'\n", name);
-  memset(prv, 0, sizeof(*prv));
 
   prv->node.key = strdup(name);
   prv->name = prv->node.key;
