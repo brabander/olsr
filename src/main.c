@@ -62,6 +62,7 @@
 #include "olsr_comport.h"
 #include "neighbor_table.h"
 #include "olsr_logging.h"
+#include "olsr_callbacks.h"
 #include "os_apm.h"
 #include "os_net.h"
 #include "os_kernel_routes.h"
@@ -243,6 +244,10 @@ main(int argc, char *argv[])
   /* Initialize timers and scheduler part */
   olsr_init_timers();
 
+  /* initialize callback system */
+  olsr_callback_init();
+
+  /* generate global timers */
   pulse_timer_info = olsr_alloc_timerinfo("Stdout pulse", &generate_stdout_pulse, true);
   tc_gen_timer_info = olsr_alloc_timerinfo("TC generation", &olsr_output_lq_tc, true);
   mid_gen_timer_info = olsr_alloc_timerinfo("MID generation", &generate_mid, true);
@@ -583,6 +588,9 @@ olsr_shutdown(void)
 
   /* Remove IP filters */
   deinit_netfilters();
+
+  /* release callback system */
+  olsr_callback_cleanup();
 
   /* Free cookies and memory pools attached. */
   olsr_cookie_cleanup();
