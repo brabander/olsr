@@ -18,6 +18,7 @@ struct olsr_callback_provider {
 
   struct list_entity callbacks;
   uint32_t obj_count;
+  bool in_use;
 
   const char *(*getKey)(void *);
 };

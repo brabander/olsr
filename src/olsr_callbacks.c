@@ -139,6 +139,13 @@ void
 olsr_callback_add_object(struct olsr_callback_provider *prv, void *obj) {
   struct olsr_callback_consumer *cons, *iterator;
 
+  if (prv->in_use) {
+    OLSR_WARN(LOG_CALLBACK, "Warning, recursive use of callback %s\n",
+        prv->name);
+    return;
+  }
+
+  prv->in_use = true;
   prv->obj_count++;
   OLSR_DEBUG(LOG_CALLBACK, "Adding object %s (%u) to callback '%s'\n",
       prv->getKey(obj), prv->obj_count, prv->name);
@@ -147,6 +154,7 @@ olsr_callback_add_object(struct olsr_callback_provider *prv, void *obj) {
     OLSR_DEBUG(LOG_CALLBACK, "Calling '%s' add callback\n", cons->name);
     cons->add(obj);
   }
+  prv->in_use = false;
 }
 
 /**
@@ -158,6 +166,13 @@ void
 olsr_callback_change_object(struct olsr_callback_provider *prv, void *obj) {
   struct olsr_callback_consumer *cons, *iterator;
 
+  if (prv->in_use) {
+    OLSR_WARN(LOG_CALLBACK, "Warning, recursive use of callback %s\n",
+        prv->name);
+    return;
+  }
+
+  prv->in_use = true;
   OLSR_DEBUG(LOG_CALLBACK, "Changing object %s (%u) of callback '%s'\n",
       prv->getKey(obj), prv->obj_count, prv->name);
 
@@ -165,6 +180,7 @@ olsr_callback_change_object(struct olsr_callback_provider *prv, void *obj) {
     OLSR_DEBUG(LOG_CALLBACK, "Calling '%s' change callback\n", cons->name);
     cons->change(obj);
   }
+  prv->in_use = false;
 }
 
 /**
@@ -176,6 +192,13 @@ void
 olsr_callback_remove_object(struct olsr_callback_provider *prv, void *obj) {
   struct olsr_callback_consumer *cons, *iterator;
 
+  if (prv->in_use) {
+    OLSR_WARN(LOG_CALLBACK, "Warning, recursive use of callback %s\n",
+        prv->name);
+    return;
+  }
+
+  prv->in_use = true;
   OLSR_DEBUG(LOG_CALLBACK, "Removing object %s (%u) from callback '%s'\n",
       prv->getKey(obj), prv->obj_count, prv->name);
 
@@ -184,6 +207,7 @@ olsr_callback_remove_object(struct olsr_callback_provider *prv, void *obj) {
     cons->remove(obj);
   }
   prv->obj_count--;
+  prv->in_use = false;
 }
 
 /**
