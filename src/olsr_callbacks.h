@@ -12,26 +12,38 @@
 #include "common/avl.h"
 #include "defs.h"
 
+
+/* general notes:
+ * 
+ * memory allocation: we are completely independent of the memory manager!
+ * Therefore you have to allocate all memory yourself and in general pass pointers 
+ * to your memory region for each function 
+*/
+
 struct olsr_callback_provider {
   struct avl_node node;
-  char *name;
+  char *name;			/* key for avl node . The consumers need this name as key */
 
   struct list_entity callbacks;
-  uint32_t obj_count;
-  bool in_use;
+  uint32_t obj_count;	/* bookkeeping */
+  bool in_use;			/* protection against recursive callbacks. Set to true if we are in a callback */
 
+  /* convert pointer to object into char * (name of the key). 
+   * This helps for debugging. You can now print identifiers 
+   * of the object pointed to */
   const char *(*getKey)(void *);
 };
 
 struct olsr_callback_consumer {
-  struct list_entity node;
-  struct olsr_callback_provider *provider;
-  char *name;
+  struct list_entity node;	
+  struct olsr_callback_provider *provider;		/* backptr to the provider */
+  char *name;			/* name of the consumer */
 
-  void (*add)(void *);
-  void (*change)(void *);
-  void (*remove)(void *);
+  void (*add)(void *);		/* callback ptr when something gets added . Parameter is pointer to the object */
+  void (*change)(void *);	/* same, but for change */
+  void (*remove)(void *);	/* same, but for remove */
 };
+
 
 void olsr_callback_init(void);
 void olsr_callback_cleanup(void);

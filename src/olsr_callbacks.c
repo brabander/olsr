@@ -51,7 +51,7 @@ olsr_callback_prv_create(struct olsr_callback_provider *prv, const char *name) {
 
   /* check if provider already exists */
   if (avl_find(&callback_provider_tree, name) != NULL) {
-    OLSR_WARN(LOG_CALLBACK, "Provider '%s' already exists\n", name);
+    OLSR_WARN(LOG_CALLBACK, "Provider '%s' already exists. Not creating.\n", name);
     return 1;
   }
 
@@ -140,7 +140,7 @@ olsr_callback_add_object(struct olsr_callback_provider *prv, void *obj) {
   struct olsr_callback_consumer *cons, *iterator;
 
   if (prv->in_use) {
-    OLSR_WARN(LOG_CALLBACK, "Warning, recursive use of callback %s\n",
+    OLSR_WARN(LOG_CALLBACK, "Warning, recursive use of callback %s. Skipping.\n",
         prv->name);
     return;
   }
