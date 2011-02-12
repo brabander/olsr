@@ -1,31 +1,33 @@
 
    Using the callback API in OLSR
 =========================================
+by Aaron Kaplan (aaron@lo-res.org)
 
-Since early 2011, OLSR has an internal callback API.
-The idea behind it is, that plugins and other parts of the code
-can inform listeners/consumers of changes to internal datastructures.
+Since early 2011, OLSR has an internal callback API.  The idea behind it is,
+that plugins and other parts of the code can inform each other about changes to
+internal database structures.  For this purpose, the callback API offers
+listeners/consumers datastructres which can trigger callbacks in the case of
+changes to internal datastructures.
+
 Such an event can either be:
   * addition (for example of objects to the routing DB)
   * deletion 
   * change
 
-The callback API knows "providers" and "consumers" and objects.
-A provider is a datastructure which can call callback functions 
-for events for objects.
-A consumer is a datastructure which specifies who will consume 
-the callback for an event of an object.
+The callback API knows "providers" and "consumers" and objects.  A provider is
+a datastructure which can call callback functions for events for objects.  A
+consumer is a datastructure which specifies who will consume the callback for
+an event of an object.
 
-Objects (such as routing DB entries)  are identified  by a unique
-name (that is, a unique key in the form of a char*).
+Objects (such as routing DB entries)  are identified  by a unique name (that
+is, a unique key in the form of a char*).
 
 
 Example usage
 ==============
 
-In src/nhdp.{c,h} we want to trigger "add" events when a link
-changes.
-First of all in nhdp.c we define the key (unique name) for the object:
+In src/nhdp.{c,h} we want to trigger "add" events when a link changes.  First
+of all in nhdp.c we define the key (unique name) for the object:
 
    const char *CB_NHDP_LINK = "nhdp link";
 
@@ -58,9 +60,9 @@ void nhdp_link_cleanup(void) {
 
 
 
-And finally, this code shows how consumers get informed of the deletion of
-an object (an nhdp link in this case, a similar case would be for an 
-addition of an object):
+And finally, this code shows how consumers get informed of the deletion of an
+object (an nhdp link in this case, a similar case would be for an addition of
+an object):
 
 /**
  * Delete a NHDP link
