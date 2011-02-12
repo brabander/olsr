@@ -151,8 +151,10 @@ olsr_callback_add_object(struct olsr_callback_provider *prv, void *obj) {
       prv->getKey(obj), prv->obj_count, prv->name);
 
   OLSR_FOR_ALL_CALLBACK_CONSUMERS(prv, cons, iterator) {
-    OLSR_DEBUG(LOG_CALLBACK, "Calling '%s' add callback\n", cons->name);
-    cons->add(obj);
+    if (cons->add) {
+      OLSR_DEBUG(LOG_CALLBACK, "Calling '%s' add callback\n", cons->name);
+      cons->add(obj);
+    }
   }
   prv->in_use = false;
 }
@@ -177,8 +179,10 @@ olsr_callback_change_object(struct olsr_callback_provider *prv, void *obj) {
       prv->getKey(obj), prv->obj_count, prv->name);
 
   OLSR_FOR_ALL_CALLBACK_CONSUMERS(prv, cons, iterator) {
-    OLSR_DEBUG(LOG_CALLBACK, "Calling '%s' change callback\n", cons->name);
-    cons->change(obj);
+    if (cons->change) {
+      OLSR_DEBUG(LOG_CALLBACK, "Calling '%s' change callback\n", cons->name);
+      cons->change(obj);
+    }
   }
   prv->in_use = false;
 }
@@ -203,8 +207,10 @@ olsr_callback_remove_object(struct olsr_callback_provider *prv, void *obj) {
       prv->getKey(obj), prv->obj_count, prv->name);
 
   OLSR_FOR_ALL_CALLBACK_CONSUMERS(prv, cons, iterator) {
-    OLSR_DEBUG(LOG_CALLBACK, "Calling '%s' remove callback\n", cons->name);
-    cons->remove(obj);
+    if (cons->remove) {
+      OLSR_DEBUG(LOG_CALLBACK, "Calling '%s' remove callback\n", cons->name);
+      cons->remove(obj);
+    }
   }
   prv->obj_count--;
   prv->in_use = false;
