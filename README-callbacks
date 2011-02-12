@@ -1,0 +1,84 @@
+
+   Using the callback API in OLSR
+=========================================
+
+Since early 2011, OLSR has an internal callback API.
+The idea behind it is, that plugins and other parts of the code
+can inform listeners/consumers of changes to internal datastructures.
+Such an event can either be:
+  * addition (for example of objects to the routing DB)
+  * deletion 
+  * change
+
+The callback API knows "providers" and "consumers" and objects.
+A provider is a datastructure which can call callback functions 
+for events for objects.
+A consumer is a datastructure which specifies who will consume 
+the callback for an event of an object.
+
+Objects (such as routing DB entries)  are identified  by a unique
+name (that is, a unique key in the form of a char*).
+
+
+Example usage
+==============
+
+In src/nhdp.{c,h} we want to trigger "add" events when a link
+changes.
+First of all in nhdp.c we define the key (unique name) for the object:
+
+   const char *CB_NHDP_LINK = "nhdp link";
+
+
+Next, let's take a look at the init function:
+
+nhdp_link_init(void) {
+  /* (...) */
+
+  /* initialize callback provider */
+  if (olsr_callback_prv_create(&nhdp_link_callback, CB_NHDP_LINK)) {
+	/* callback providers for internal databases are mandatory */
+	OLSR_ERROR(LOG_NHDP, "Callback provider for NHDP link database is
+mandatory\n"); 
+    olsr_exit(1); 
+  } 
+}
+
+Here, we initialize the callback provider. Please note, that the CB_NHDP_LINK
+key is passed as second parameter.
+
+
+
+This code fragment shows how to destroy a callback provider:
+
+void nhdp_link_cleanup(void) {
+  olsr_callback_prv_destroy(&nhdp_link_callback);
+  /* (...) */
+}
+
+
+
+And finally, this code shows how consumers get informed of the deletion of
+an object (an nhdp link in this case, a similar case would be for an 
+addition of an object):
+
+/**
+ * Delete a NHDP link
+ * @param link nhdp link pointer
+ */
+void
+nhdp_delete_link(struct nhdp_link *link) {
+
+
+  /* (...) */
+
+  /* inform everyone that object will be removed */
+  olsr_callback_remove_object(&nhdp_link_callback, link);
+
+  /* (...) */
+}
+
+
+
+
+
