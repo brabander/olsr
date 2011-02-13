@@ -261,6 +261,9 @@ parse_packet(uint8_t *binary, int size, struct interface *in_if, union olsr_ip_a
     packetparser->function(&pkt, binary, in_if, from_addr);
   }
 
+  /* advance pointer to messages */
+  curr += 4;
+
   for (;curr <= end - MIN_MESSAGE_SIZE(); curr += msg.size) {
     const uint8_t *msg_payload = curr;
     olsr_parse_msg_hdr(&msg_payload, &msg);
