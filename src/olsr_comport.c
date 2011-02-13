@@ -53,7 +53,7 @@
 #include "olsr_logging.h"
 #include "olsr_cfg.h"
 #include "scheduler.h"
-#include "olsr_cookie.h"
+#include "olsr_memcookie.h"
 #include "common/autobuf.h"
 #include "common/avl.h"
 #include "common/list.h"
@@ -77,7 +77,7 @@ struct list_entity olsr_comport_head;
 static int comsocket_http = 0;
 static int comsocket_txt = 0;
 
-static struct olsr_cookie_info *connection_cookie;
+static struct olsr_memcookie_info *connection_cookie;
 static struct olsr_timer_info *connection_timeout;
 
 /* counter for open connections */
@@ -95,7 +95,7 @@ static void olsr_com_timeout_handler(void *);
 void
 olsr_com_init(bool failfast) {
   connection_cookie =
-      olsr_create_memcookie("comport connections", sizeof(struct comport_connection));
+      olsr_memcookie_add("comport connections", sizeof(struct comport_connection));
 
   connection_timeout = olsr_alloc_timerinfo("comport timout",
       &olsr_com_timeout_handler, false);
@@ -228,7 +228,7 @@ olsr_com_parse_request(int fd, void *data __attribute__ ((unused)), unsigned int
     return;
   }
 
-  con = olsr_cookie_malloc(connection_cookie);
+  con = olsr_memcookie_malloc(connection_cookie);
   abuf_init(&con->in, 1024);
   abuf_init(&con->out, 0);
 
@@ -296,7 +296,7 @@ olsr_com_cleanup_session(struct comport_connection *con) {
   abuf_free(&con->in);
   abuf_free(&con->out);
 
-  olsr_cookie_free(connection_cookie, con);
+  olsr_memcookie_free(connection_cookie, con);
 }
 
 static void

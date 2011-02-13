@@ -43,7 +43,7 @@
 #include "ipcalc.h"
 #include "scheduler.h"
 #include "olsr.h"
-#include "olsr_cookie.h"
+#include "olsr_memcookie.h"
 #include "olsr_ip_prefix_list.h"
 #include "olsr_logging.h"
 #include "os_system.h"
@@ -100,7 +100,7 @@ struct guest_client {
   float last_seen;
   pthread_t ping_thread;
   pthread_t ping_thread_add;
-  struct olsr_cookie_info *arping_timer_cookie;
+  struct olsr_memcookie_info *arping_timer_cookie;
   char ping_thread_done;
   struct timer_entry *arping_timer;
   int remaing_announcements;

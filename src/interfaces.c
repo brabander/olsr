@@ -73,8 +73,8 @@ static struct ifchgf *ifchgf_list = NULL;
 
 
 /* Some cookies for stats keeping */
-static struct olsr_cookie_info *interface_mem_cookie = NULL;
-static struct olsr_cookie_info *interface_lost_mem_cookie = NULL;
+static struct olsr_memcookie_info *interface_mem_cookie = NULL;
+static struct olsr_memcookie_info *interface_lost_mem_cookie = NULL;
 
 static struct olsr_timer_info *interface_poll_timerinfo = NULL;
 static struct olsr_timer_info *hello_gen_timerinfo = NULL;
@@ -99,9 +99,9 @@ init_interfaces(void)
   /*
    * Get some cookies for getting stats to ease troubleshooting.
    */
-  interface_mem_cookie = olsr_create_memcookie("Interface", sizeof(struct interface));
+  interface_mem_cookie = olsr_memcookie_add("Interface", sizeof(struct interface));
 
-  interface_lost_mem_cookie = olsr_create_memcookie("Interface lost", sizeof(struct interface_lost));
+  interface_lost_mem_cookie = olsr_memcookie_add("Interface lost", sizeof(struct interface_lost));
 
   interface_poll_timerinfo = olsr_alloc_timerinfo("Interface Polling", &check_interface_updates, true);
   hello_gen_timerinfo = olsr_alloc_timerinfo("Hello Generation", &generate_hello, true);
@@ -128,7 +128,7 @@ static void remove_lost_interface_ip(struct interface_lost *lost) {
   OLSR_DEBUG(LOG_INTERFACE, "Remove %s from lost interface list\n",
       olsr_ip_to_string(&buf, &lost->ip));
   avl_delete(&interface_lost_tree, &lost->node);
-  olsr_cookie_free(interface_lost_mem_cookie, lost);
+  olsr_memcookie_free(interface_lost_mem_cookie, lost);
 }
 
 static void add_lost_interface_ip(union olsr_ip_addr *ip, uint32_t hello_timeout) {
@@ -137,7 +137,7 @@ static void add_lost_interface_ip(union olsr_ip_addr *ip, uint32_t hello_timeout
   struct ipaddr_str buf;
 #endif
 
-  lost = olsr_cookie_malloc(interface_lost_mem_cookie);
+  lost = olsr_memcookie_malloc(interface_lost_mem_cookie);
   lost->node.key = &lost->ip;
   lost->ip = *ip;
   lost->valid_until = olsr_getTimestamp(hello_timeout * 2);
@@ -177,11 +177,11 @@ struct interface *
 add_interface(struct olsr_if_config *iface) {
   struct interface *ifp;
 
-  ifp = olsr_cookie_malloc(interface_mem_cookie);
+  ifp = olsr_memcookie_malloc(interface_mem_cookie);
   ifp->int_name = iface->name;
 
   if ((os_init_interface(ifp, iface))) {
-    olsr_cookie_free(interface_mem_cookie, ifp);
+    olsr_memcookie_free(interface_mem_cookie, ifp);
     return NULL;
   }
 
@@ -499,7 +499,7 @@ unlock_interface(struct interface *ifp)
 
   /* Free memory */
   free(ifp->int_name);
-  olsr_cookie_free(interface_mem_cookie, ifp);
+  olsr_memcookie_free(interface_mem_cookie, ifp);
 }
 
 

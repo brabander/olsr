@@ -44,7 +44,7 @@
 
 #include "olsr_cfg.h"
 #include "olsr_logging.h"
-#include "olsr_cookie.h"
+#include "olsr_memcookie.h"
 #include "olsr_ip_acl.h"
 #include "olsr.h"
 #include "ipcalc.h"
@@ -64,7 +64,7 @@ struct txt_repeat_data {
 };
 
 static struct avl_tree txt_normal_tree, txt_help_tree;
-static struct olsr_cookie_info *txtcommand_cookie;
+static struct olsr_memcookie_info *txtcommand_cookie;
 static struct olsr_timer_info *txt_repeat_timerinfo;
 
 static void olsr_txt_repeat_timer(void *data);
@@ -134,7 +134,7 @@ olsr_com_init_txt(void) {
   avl_init(&txt_normal_tree, &avl_comp_strcasecmp, false, NULL);
   avl_init(&txt_help_tree, &avl_comp_strcasecmp, false, NULL);
 
-  txtcommand_cookie = olsr_create_memcookie("comport txt commands", sizeof(struct olsr_txtcommand));
+  txtcommand_cookie = olsr_memcookie_add("comport txt commands", sizeof(struct olsr_txtcommand));
 
   txt_repeat_timerinfo = olsr_alloc_timerinfo("txt repeat timer", olsr_txt_repeat_timer, true);
 
@@ -156,7 +156,7 @@ struct olsr_txtcommand *
 olsr_com_add_normal_txtcommand (const char *command, olsr_txthandler handler) {
   struct olsr_txtcommand *txt;
 
-  txt = olsr_cookie_malloc(txtcommand_cookie);
+  txt = olsr_memcookie_malloc(txtcommand_cookie);
   txt->node.key = strdup(command);
   txt->handler = handler;
 
@@ -168,7 +168,7 @@ struct olsr_txtcommand *
 olsr_com_add_help_txtcommand (const char *command, olsr_txthandler handler) {
   struct olsr_txtcommand *txt;
 
-  txt = olsr_cookie_malloc(txtcommand_cookie);
+  txt = olsr_memcookie_malloc(txtcommand_cookie);
   txt->node.key = strdup(command);
   txt->handler = handler;
 
@@ -179,13 +179,13 @@ olsr_com_add_help_txtcommand (const char *command, olsr_txthandler handler) {
 void olsr_com_remove_normal_txtcommand (struct olsr_txtcommand *cmd) {
   avl_delete(&txt_normal_tree, &cmd->node);
   free(cmd->node.key);
-  olsr_cookie_free(txtcommand_cookie, cmd);
+  olsr_memcookie_free(txtcommand_cookie, cmd);
 }
 
 void olsr_com_remove_help_txtcommand (struct olsr_txtcommand *cmd) {
   avl_delete(&txt_help_tree, &cmd->node);
   free(cmd->node.key);
-  olsr_cookie_free(txtcommand_cookie, cmd);
+  olsr_memcookie_free(txtcommand_cookie, cmd);
 }
 
 enum olsr_txtcommand_result

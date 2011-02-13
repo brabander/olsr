@@ -239,7 +239,7 @@ main(int argc, char *argv[])
 #endif
 
   /* initialize cookie system */
-  olsr_cookie_init();
+  olsr_memcookie_init();
 
   /* Initialize timers and scheduler part */
   olsr_init_timers();
@@ -593,7 +593,7 @@ olsr_shutdown(void)
   olsr_callback_cleanup();
 
   /* Free cookies and memory pools attached. */
-  olsr_cookie_cleanup();
+  olsr_memcookie_cleanup();
 
   /* Reset os_specific global options */
   os_cleanup();

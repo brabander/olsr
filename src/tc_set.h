@@ -47,7 +47,7 @@
 #include "olsr_protocol.h"
 #include "lq_packet.h"
 #include "scheduler.h"
-#include "olsr_cookie.h"
+#include "olsr_memcookie.h"
 #include "duplicate_set.h"
 
 /*
@@ -114,7 +114,7 @@ struct tc_entry {
 extern struct avl_tree EXPORT(tc_tree);
 extern struct tc_entry *tc_myself;
 
-extern struct olsr_cookie_info *EXPORT(tc_mem_cookie);
+extern struct olsr_memcookie_info *EXPORT(tc_mem_cookie);
 
 void olsr_init_tc(void);
 void olsr_change_myself_tc(void);

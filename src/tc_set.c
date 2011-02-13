@@ -58,7 +58,7 @@ struct avl_tree tc_tree;
 struct tc_entry *tc_myself = NULL;     /* Shortcut to ourselves */
 
 /* Some cookies for stats keeping */
-struct olsr_cookie_info *tc_mem_cookie = NULL;
+struct olsr_memcookie_info *tc_mem_cookie = NULL;
 static struct olsr_timer_info *tc_edge_gc_timer_info = NULL;
 static struct olsr_timer_info *tc_validity_timer_info = NULL;
 
@@ -92,7 +92,7 @@ olsr_add_tc_entry(const union olsr_ip_addr *adr)
 
   OLSR_DEBUG(LOG_TC, "TC: add entry %s\n", olsr_ip_to_string(&buf, adr));
 
-  tc = olsr_cookie_malloc(tc_mem_cookie);
+  tc = olsr_memcookie_malloc(tc_mem_cookie);
   if (!tc) {
     return NULL;
   }
@@ -142,7 +142,7 @@ olsr_init_tc(void)
   tc_edge_gc_timer_info = olsr_alloc_timerinfo("TC edge GC", olsr_expire_tc_edge_gc, false);
   tc_validity_timer_info = olsr_alloc_timerinfo("TC validity", &olsr_expire_tc_entry, false);
 
-  tc_mem_cookie = olsr_create_memcookie("tc_entry", sizeof(struct tc_entry));
+  tc_mem_cookie = olsr_memcookie_add("tc_entry", sizeof(struct tc_entry));
 }
 
 /**
@@ -254,7 +254,7 @@ olsr_delete_tc_entry(struct tc_entry *tc)
   olsr_flush_hna_nets(tc);
 
   avl_delete(&tc_tree, &tc->vertex_node);
-  olsr_cookie_free(tc_mem_cookie, tc);
+  olsr_memcookie_free(tc_mem_cookie, tc);
 }
 
 /**

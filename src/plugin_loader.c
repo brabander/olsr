@@ -47,7 +47,7 @@
 #include "olsr_logging.h"
 #include "common/avl.h"
 #include "common/list.h"
-#include "olsr_cookie.h"
+#include "olsr_memcookie.h"
 
 #include <dlfcn.h>
 #include <errno.h>
@@ -60,7 +60,7 @@ static struct olsr_plugin *olsr_load_legacy_plugin(const char *, void *);
 struct avl_tree plugin_tree;
 static bool plugin_tree_initialized = false;
 
-static struct olsr_cookie_info *plugin_mem_cookie = NULL;
+static struct olsr_memcookie_info *plugin_mem_cookie = NULL;
 
 static int olsr_internal_unload_plugin(struct olsr_plugin *plugin, bool cleanup);
 
@@ -88,7 +88,7 @@ olsr_hookup_plugin(struct olsr_plugin *pl_def) {
  */
 void
 olsr_init_pluginsystem(void) {
-  plugin_mem_cookie = olsr_create_memcookie("Plugin handle", sizeof(struct olsr_plugin));
+  plugin_mem_cookie = olsr_memcookie_add("Plugin handle", sizeof(struct olsr_plugin));
 
   /* could already be initialized */
   if (!plugin_tree_initialized) {
@@ -235,7 +235,7 @@ olsr_load_legacy_plugin(const char *libname, void *dlhandle) {
   OLSR_DEBUG(LOG_PLUGINS, "Got plugin %s, version: %d - OK\n", libname, plugin_interface_version);
 
   /* initialize plugin structure */
-  plugin = (struct olsr_plugin *)olsr_cookie_malloc(plugin_mem_cookie);
+  plugin = (struct olsr_plugin *)olsr_memcookie_malloc(plugin_mem_cookie);
   /* SOT: Hacked away the funny plugin check which fails if pathname is included */
   if (strrchr(libname, '/')) libname = strrchr(libname, '/') + 1;
   plugin->name = libname;
@@ -338,7 +338,7 @@ olsr_internal_unload_plugin(struct olsr_plugin *plugin, bool cleanup) {
    * modern plugins
    */
   if (legacy) {
-    olsr_cookie_free(plugin_mem_cookie, plugin);
+    olsr_memcookie_free(plugin_mem_cookie, plugin);
   }
   return false;
 }

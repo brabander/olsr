@@ -127,8 +127,8 @@ static struct avl_tree stat_msg_tree, stat_pkt_tree;
 static struct debug_msgtraffic_count total_msg_traffic;
 static struct debug_pkttraffic_count total_pkt_traffic;
 
-static struct olsr_cookie_info *statistics_msg_mem = NULL;
-static struct olsr_cookie_info *statistics_pkt_mem = NULL;
+static struct olsr_memcookie_info *statistics_msg_mem = NULL;
+static struct olsr_memcookie_info *statistics_pkt_mem = NULL;
 
 static struct olsr_timer_info *statistics_timer = NULL;
 
@@ -192,10 +192,10 @@ debuginfo_enable(void)
   statistics_timer = olsr_alloc_timerinfo("debuginfo timer", &update_statistics_ptr, true);
   olsr_start_timer(traffic_interval * 1000, 0, NULL, statistics_timer);
 
-  statistics_msg_mem = olsr_create_memcookie("debuginfo msgstat",
+  statistics_msg_mem = olsr_memcookie_add("debuginfo msgstat",
       sizeof(struct debug_msgtraffic) + sizeof(struct debug_msgtraffic_count) * traffic_slots);
 
-  statistics_pkt_mem = olsr_create_memcookie("debuginfo pktstat",
+  statistics_pkt_mem = olsr_memcookie_add("debuginfo pktstat",
       sizeof(struct debug_pkttraffic) + sizeof(struct debug_pkttraffic_count) * traffic_slots);
 
   memset(&total_msg_traffic, 0, sizeof(total_msg_traffic));
@@ -212,7 +212,7 @@ static struct debug_msgtraffic *get_msgtraffic_entry(union olsr_ip_addr *ip) {
   struct debug_msgtraffic *tr;
   tr = (struct debug_msgtraffic *) avl_find(&stat_msg_tree, ip);
   if (tr == NULL) {
-    tr = olsr_cookie_malloc(statistics_msg_mem);
+    tr = olsr_memcookie_malloc(statistics_msg_mem);
 
     memcpy(&tr->ip, ip, sizeof(union olsr_ip_addr));
     tr->node.key = &tr->ip;
@@ -226,7 +226,7 @@ static struct debug_pkttraffic *get_pkttraffic_entry(union olsr_ip_addr *ip, str
   struct debug_pkttraffic *tr;
   tr = (struct debug_pkttraffic *) avl_find(&stat_pkt_tree, ip);
   if (tr == NULL) {
-    tr = olsr_cookie_malloc(statistics_pkt_mem);
+    tr = olsr_memcookie_malloc(statistics_pkt_mem);
 
     memcpy(&tr->ip, ip, sizeof(union olsr_ip_addr));
     tr->node.key = &tr->ip;
@@ -273,7 +273,7 @@ update_statistics_ptr(void *data __attribute__ ((unused)))
       /* no traffic left, cleanup ! */
 
       avl_delete(&stat_msg_tree, &msg->node);
-      olsr_cookie_free(statistics_msg_mem, msg);
+      olsr_memcookie_free(statistics_msg_mem, msg);
     }
   }
 
@@ -299,7 +299,7 @@ update_statistics_ptr(void *data __attribute__ ((unused)))
 
       avl_delete(&stat_pkt_tree, &pkt->node);
       free(pkt->int_name);
-      olsr_cookie_free(statistics_pkt_mem, pkt);
+      olsr_memcookie_free(statistics_pkt_mem, pkt);
     }
   }
 }
@@ -530,7 +530,7 @@ debuginfo_pktstat(struct comport_connection *con,
 }
 
 static INLINE bool debuginfo_print_cookies_mem(struct autobuf *buf) {
-  struct olsr_cookie_info *c, *iterator;
+  struct olsr_memcookie_info *c, *iterator;
 
   OLSR_FOR_ALL_COOKIES(c, iterator) {
     if (abuf_appendf(buf, "%-25s (MEMORY) size: %lu usage: %u freelist: %u\n",

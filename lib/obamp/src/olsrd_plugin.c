@@ -52,7 +52,7 @@
 #include "defs.h"               /* uint8_t, olsr_cnf */
 #include "scheduler.h"          /* olsr_start_timer() */
 #include "olsr_cfg.h"           /* olsr_cnf() */
-#include "olsr_cookie.h"        /* olsr_create_memcookie() */
+#include "olsr_memcookie.h"        /* olsr_memcookie_add() */
 
 /* OBAMP includes */
 #include "obamp.h"

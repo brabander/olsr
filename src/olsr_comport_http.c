@@ -47,7 +47,7 @@
 #include "common/avl_olsr_comp.h"
 #include "common/string.h"
 #include "olsr_logging.h"
-#include "olsr_cookie.h"
+#include "olsr_memcookie.h"
 #include "olsr_comport.h"
 #include "olsr_comport_http.h"
 #include "olsr_comport_txt.h"
@@ -59,7 +59,7 @@
 static const char HTTP_VERSION[] = "HTTP/1.0";
 static const char TELNET_PATH[] = "/telnet/";
 
-static struct olsr_cookie_info *htmlsite_cookie;
+static struct olsr_memcookie_info *htmlsite_cookie;
 struct avl_tree http_handler_tree;
 
 /**Response types */
@@ -146,7 +146,7 @@ void
 olsr_com_init_http(void) {
   avl_init(&http_handler_tree, &avl_comp_strcasecmp, false, NULL);
 
-  htmlsite_cookie = olsr_create_memcookie("comport http sites", sizeof(struct olsr_html_site));
+  htmlsite_cookie = olsr_memcookie_add("comport http sites", sizeof(struct olsr_html_site));
 
   /* activate telnet gateway */
   olsr_com_add_htmlhandler(olsr_com_html2telnet_gate, TELNET_PATH);
@@ -167,7 +167,7 @@ struct olsr_html_site *
 olsr_com_add_htmlsite(const char *path, const char *content, size_t length) {
   struct olsr_html_site *site;
 
-  site = olsr_cookie_malloc(htmlsite_cookie);
+  site = olsr_memcookie_malloc(htmlsite_cookie);
   site->node.key = strdup(path);
 
   site->static_site = true;
@@ -183,7 +183,7 @@ olsr_com_add_htmlhandler(void(*sitehandler)(struct comport_connection *con, stru
     const char *path) {
   struct olsr_html_site *site;
 
-  site = olsr_cookie_malloc(htmlsite_cookie);
+  site = olsr_memcookie_malloc(htmlsite_cookie);
   site->node.key = strdup(path);
 
   site->static_site = false;
@@ -197,7 +197,7 @@ void
 olsr_com_remove_htmlsite(struct olsr_html_site *site) {
   avl_delete(&http_handler_tree, &site->node);
   free(site->node.key);
-  olsr_cookie_free(htmlsite_cookie, site);
+  olsr_memcookie_free(htmlsite_cookie, site);
 }
 
 void

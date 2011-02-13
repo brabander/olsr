@@ -52,7 +52,7 @@
 
 /* Some cookies for stats keeping */
 static struct olsr_timer_info *hna_net_timer_info = NULL;
-static struct olsr_cookie_info *hna_net_mem_cookie = NULL;
+static struct olsr_memcookie_info *hna_net_mem_cookie = NULL;
 
 static void olsr_expire_hna_net_entry(void *context);
 
@@ -66,7 +66,7 @@ olsr_init_hna_set(void)
 
   hna_net_timer_info = olsr_alloc_timerinfo("HNA Network", &olsr_expire_hna_net_entry, false);
 
-  hna_net_mem_cookie = olsr_create_memcookie("hna_net", sizeof(struct hna_net));
+  hna_net_mem_cookie = olsr_memcookie_add("hna_net", sizeof(struct hna_net));
 }
 
 /**
@@ -99,7 +99,7 @@ static struct hna_net *
 olsr_add_hna_net(struct tc_entry *tc, const struct olsr_ip_prefix *prefix)
 {
   /* Add the net */
-  struct hna_net *new_net = olsr_cookie_malloc(hna_net_mem_cookie);
+  struct hna_net *new_net = olsr_memcookie_malloc(hna_net_mem_cookie);
 
   /* Fill struct */
   new_net->hna_prefix = *prefix;
@@ -143,7 +143,7 @@ olsr_delete_hna_net(struct hna_net *hna_net)
   /*
    * Unlock and free.
    */
-  olsr_cookie_free(hna_net_mem_cookie, hna_net);
+  olsr_memcookie_free(hna_net_mem_cookie, hna_net);
 }
 
 /**

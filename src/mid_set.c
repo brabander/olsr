@@ -48,7 +48,7 @@
 #include "link_set.h"
 #include "tc_set.h"
 #include "net_olsr.h"
-#include "olsr_cookie.h"
+#include "olsr_memcookie.h"
 #include "olsr_logging.h"
 #include "olsr_protocol.h"
 
@@ -62,7 +62,7 @@ static void olsr_expire_mid_entries(void *context);
 struct avl_tree mid_tree;
 
 /* validity timer of MID entries */
-static struct olsr_cookie_info *mid_address_mem_cookie = NULL;
+static struct olsr_memcookie_info *mid_address_mem_cookie = NULL;
 static struct olsr_timer_info *mid_validity_timer_info = NULL;
 
 /**
@@ -80,7 +80,7 @@ olsr_init_mid_set(void)
    */
   mid_validity_timer_info = olsr_alloc_timerinfo("MID validity", &olsr_expire_mid_entries, false);
 
-  mid_address_mem_cookie = olsr_create_memcookie("MID address", sizeof(struct mid_entry));
+  mid_address_mem_cookie = olsr_memcookie_add("MID address", sizeof(struct mid_entry));
 }
 
 /**
@@ -241,7 +241,7 @@ olsr_insert_mid_entry(const union olsr_ip_addr *main_addr,
   tc = olsr_locate_tc_entry(main_addr);
   assert(tc);
 
-  alias = olsr_cookie_malloc(mid_address_mem_cookie);
+  alias = olsr_memcookie_malloc(mid_address_mem_cookie);
   alias->mid_alias_addr = *alias_addr;
   alias->mid_tc = tc;
 
@@ -392,7 +392,7 @@ olsr_delete_mid_entry(struct mid_entry *alias)
    */
   avl_delete(&mid_tree, &alias->mid_node);
 
-  olsr_cookie_free(mid_address_mem_cookie, alias);
+  olsr_memcookie_free(mid_address_mem_cookie, alias);
 }
 
 /**

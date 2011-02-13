@@ -57,9 +57,9 @@ struct avl_tree nbr_tree;
 struct avl_tree nbr2_tree;
 
 /* memory management */
-static struct olsr_cookie_info *nbr2_mem_cookie = NULL;
-static struct olsr_cookie_info *nbr_mem_cookie = NULL;
-static struct olsr_cookie_info *nbr_connector_mem_cookie = NULL;
+static struct olsr_memcookie_info *nbr2_mem_cookie = NULL;
+static struct olsr_memcookie_info *nbr_mem_cookie = NULL;
+static struct olsr_memcookie_info *nbr_connector_mem_cookie = NULL;
 
 /* neighbor connection validity timer */
 static struct olsr_timer_info *nbr_connector_timer_info = NULL;
@@ -78,11 +78,11 @@ olsr_init_neighbor_table(void)
   avl_init(&nbr2_tree, avl_comp_default, false, NULL);
 
   nbr_connector_timer_info = olsr_alloc_timerinfo("Neighbor connector", &olsr_expire_nbr_con, false);
-  nbr_connector_mem_cookie = olsr_create_memcookie("Neighbor connector", sizeof(struct nbr_con));
+  nbr_connector_mem_cookie = olsr_memcookie_add("Neighbor connector", sizeof(struct nbr_con));
 
-  nbr_mem_cookie = olsr_create_memcookie("1-Hop Neighbor", sizeof(struct nbr_entry));
+  nbr_mem_cookie = olsr_memcookie_add("1-Hop Neighbor", sizeof(struct nbr_entry));
 
-  nbr2_mem_cookie = olsr_create_memcookie("2-Hop Neighbor", sizeof(struct nbr2_entry));
+  nbr2_mem_cookie = olsr_memcookie_add("2-Hop Neighbor", sizeof(struct nbr2_entry));
 }
 
 /**
@@ -109,7 +109,7 @@ olsr_add_nbr_entry(const union olsr_ip_addr *addr)
 
   OLSR_DEBUG(LOG_NEIGHTABLE, "Add 1-hop neighbor: %s\n", olsr_ip_to_string(&buf, addr));
 
-  nbr = olsr_cookie_malloc(nbr_mem_cookie);
+  nbr = olsr_memcookie_malloc(nbr_mem_cookie);
 
   /* Set address, willingness and status */
   nbr->nbr_addr = *addr;
@@ -175,7 +175,7 @@ olsr_delete_nbr_entry(struct nbr_entry *nbr)
   /* Remove from global neighbor tree */
   avl_delete(&nbr_tree, &nbr->nbr_node);
 
-  olsr_cookie_free(nbr_mem_cookie, nbr);
+  olsr_memcookie_free(nbr_mem_cookie, nbr);
 
   changes_neighborhood = true;
   changes_topology = true;
@@ -278,7 +278,7 @@ olsr_add_nbr2_entry(const union olsr_ip_addr *addr) {
 
   OLSR_DEBUG(LOG_2NEIGH, "Adding 2 hop neighbor %s\n", olsr_ip_to_string(&buf, addr));
 
-  nbr2 = olsr_cookie_malloc(nbr2_mem_cookie);
+  nbr2 = olsr_memcookie_malloc(nbr2_mem_cookie);
 
   /* Init neighbor connector subtree */
   avl_init(&nbr2->con_tree, avl_comp_default, false, NULL);
@@ -317,7 +317,7 @@ olsr_delete_nbr2_entry(struct nbr2_entry *nbr2) {
   /* Remove from global neighbor tree */
   avl_delete(&nbr2_tree, &nbr2->nbr2_node);
 
-  olsr_cookie_free(nbr2_mem_cookie, nbr2);
+  olsr_memcookie_free(nbr2_mem_cookie, nbr2);
   changes_neighborhood = true;
 }
 
@@ -366,7 +366,7 @@ olsr_link_nbr_nbr2(struct nbr_entry *nbr, const union olsr_ip_addr *nbr2_addr, u
    */
   nbr2 = olsr_add_nbr2_entry(nbr2_addr);
 
-  connector = olsr_cookie_malloc(nbr_connector_mem_cookie);
+  connector = olsr_memcookie_malloc(nbr_connector_mem_cookie);
 
   connector->nbr = nbr;
   connector->nbr2 = nbr2;
@@ -396,7 +396,7 @@ internal_delete_nbr_con(struct nbr_con *connector) {
   avl_delete(&connector->nbr->con_tree, &connector->nbr_tree_node);
   avl_delete(&connector->nbr2->con_tree, &connector->nbr2_tree_node);
 
-  olsr_cookie_free(nbr_connector_mem_cookie, connector);
+  olsr_memcookie_free(nbr_connector_mem_cookie, connector);
 }
 
 /**

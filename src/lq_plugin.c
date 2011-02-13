@@ -45,7 +45,7 @@
 #include "olsr_spf.h"
 #include "lq_packet.h"
 #include "olsr.h"
-#include "olsr_cookie.h"
+#include "olsr_memcookie.h"
 #include "common/avl.h"
 #include "common/string.h"
 #include "olsr_logging.h"
@@ -55,9 +55,9 @@
 
 struct lq_handler *active_lq_handler = NULL;
 
-static struct olsr_cookie_info *tc_edge_mem_cookie = NULL;
-static struct olsr_cookie_info *lq_hello_neighbor_mem_cookie = NULL;
-static struct olsr_cookie_info *link_entry_mem_cookie = NULL;
+static struct olsr_memcookie_info *tc_edge_mem_cookie = NULL;
+static struct olsr_memcookie_info *lq_hello_neighbor_mem_cookie = NULL;
+static struct olsr_memcookie_info *link_entry_mem_cookie = NULL;
 
 void
 init_lq_handler(void)
@@ -69,13 +69,13 @@ init_lq_handler(void)
 
   OLSR_INFO(LOG_LQ_PLUGINS, "Initializing LQ handler %s...\n", active_lq_handler->name);
 
-  tc_edge_mem_cookie = olsr_create_memcookie("tc_edge", active_lq_handler->size_tc_edge);
+  tc_edge_mem_cookie = olsr_memcookie_add("tc_edge", active_lq_handler->size_tc_edge);
 
   lq_hello_neighbor_mem_cookie =
-      olsr_create_memcookie("lq_hello_neighbor", active_lq_handler->size_lq_hello_neighbor);
+      olsr_memcookie_add("lq_hello_neighbor", active_lq_handler->size_lq_hello_neighbor);
 
   link_entry_mem_cookie =
-      olsr_create_memcookie("link_entry", active_lq_handler->size_link_entry);
+      olsr_memcookie_add("link_entry", active_lq_handler->size_link_entry);
 
   if (active_lq_handler->initialize) {
     active_lq_handler->initialize();
@@ -386,7 +386,7 @@ olsr_malloc_tc_edge_entry(void)
 {
   struct tc_edge_entry *t;
 
-  t = olsr_cookie_malloc(tc_edge_mem_cookie);
+  t = olsr_memcookie_malloc(tc_edge_mem_cookie);
   if (active_lq_handler->clear_tc_edge_entry)
     active_lq_handler->clear_tc_edge_entry(t);
   return t;
@@ -405,7 +405,7 @@ olsr_malloc_lq_hello_neighbor(void)
 {
   struct lq_hello_neighbor *h;
 
-  h = olsr_cookie_malloc(lq_hello_neighbor_mem_cookie);
+  h = olsr_memcookie_malloc(lq_hello_neighbor_mem_cookie);
   if (active_lq_handler->clear_lq_hello_neighbor)
     active_lq_handler->clear_lq_hello_neighbor(h);
   return h;
@@ -424,7 +424,7 @@ olsr_malloc_link_entry(void)
 {
   struct link_entry *h;
 
-  h = olsr_cookie_malloc(link_entry_mem_cookie);
+  h = olsr_memcookie_malloc(link_entry_mem_cookie);
   if (active_lq_handler->clear_link_entry)
     active_lq_handler->clear_link_entry(h);
   return h;
@@ -440,7 +440,7 @@ olsr_malloc_link_entry(void)
 void
 olsr_free_link_entry(struct link_entry *link)
 {
-  olsr_cookie_free(link_entry_mem_cookie, link);
+  olsr_memcookie_free(link_entry_mem_cookie, link);
 }
 
 /**
@@ -453,7 +453,7 @@ olsr_free_link_entry(struct link_entry *link)
 void
 olsr_free_lq_hello_neighbor(struct lq_hello_neighbor *neigh)
 {
-  olsr_cookie_free(lq_hello_neighbor_mem_cookie, neigh);
+  olsr_memcookie_free(lq_hello_neighbor_mem_cookie, neigh);
 }
 
 /**
@@ -466,7 +466,7 @@ olsr_free_lq_hello_neighbor(struct lq_hello_neighbor *neigh)
 void
 olsr_free_tc_edge_entry(struct tc_edge_entry *edge)
 {
-  olsr_cookie_free(tc_edge_mem_cookie, edge);
+  olsr_memcookie_free(tc_edge_mem_cookie, edge);
 }
 
 /**

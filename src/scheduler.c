@@ -48,7 +48,7 @@
 #include "scheduler.h"
 #include "link_set.h"
 #include "olsr.h"
-#include "olsr_cookie.h"
+#include "olsr_memcookie.h"
 #include "os_net.h"
 #include "os_time.h"
 #include "olsr_logging.h"
@@ -64,8 +64,8 @@ static uint32_t timer_last_run;        /* remember the last timeslot walk */
 
 /* Memory cookie for the timer manager */
 struct avl_tree timerinfo_tree;
-static struct olsr_cookie_info *timer_mem_cookie = NULL;
-static struct olsr_cookie_info *timerinfo_cookie = NULL;
+static struct olsr_memcookie_info *timer_mem_cookie = NULL;
+static struct olsr_memcookie_info *timerinfo_cookie = NULL;
 
 /* Head of all OLSR used sockets */
 static struct list_entity socket_head;
@@ -166,7 +166,7 @@ struct olsr_timer_info *
 olsr_alloc_timerinfo(const char *name, timer_cb_func callback, bool periodic) {
   struct olsr_timer_info *ti;
 
-  ti = olsr_cookie_malloc(timerinfo_cookie);
+  ti = olsr_memcookie_malloc(timerinfo_cookie);
   ti->name = strdup(name);
   ti->node.key = ti->name;
   ti->callback = callback;
@@ -565,10 +565,10 @@ olsr_init_timers(void)
   timer_last_run = now_times;
 
   /* Allocate a cookie for the block based memory manager. */
-  timer_mem_cookie = olsr_create_memcookie("timer_entry", sizeof(struct timer_entry));
+  timer_mem_cookie = olsr_memcookie_add("timer_entry", sizeof(struct timer_entry));
 
   avl_init(&timerinfo_tree, avl_comp_strcasecmp, false, NULL);
-  timerinfo_cookie = olsr_create_memcookie("timerinfo", sizeof(struct olsr_timer_info));
+  timerinfo_cookie = olsr_memcookie_add("timerinfo", sizeof(struct olsr_timer_info));
 }
 
 /**
@@ -645,7 +645,7 @@ walk_timers(uint32_t * last_run)
         }
         else {
           /* free memory */
-          olsr_cookie_free(timer_mem_cookie, timer);
+          olsr_memcookie_free(timer_mem_cookie, timer);
         }
 
         timers_fired++;
@@ -704,11 +704,11 @@ olsr_flush_timers(void)
   OLSR_FOR_ALL_TIMERS(ti, iterator) {
     avl_delete(&timerinfo_tree, &ti->node);
     free(ti->name);
-    olsr_cookie_free(timerinfo_cookie, ti);
+    olsr_memcookie_free(timerinfo_cookie, ti);
   }
 
   /* release memory cookie for timers */
-  olsr_cleanup_memcookie(timerinfo_cookie);
+  olsr_memcookie_remove(timerinfo_cookie);
 }
 
 /**
@@ -810,7 +810,7 @@ olsr_start_timer(unsigned int rel_time,
   assert(rel_time);
   assert(jitter_pct <= 100);
 
-  timer = olsr_cookie_malloc(timer_mem_cookie);
+  timer = olsr_memcookie_malloc(timer_mem_cookie);
 
   /*
    * Compute random numbers only once.
@@ -875,7 +875,7 @@ olsr_stop_timer(struct timer_entry *timer)
   timer->timer_info->changes++;
 
   if (!timer->timer_in_callback) {
-    olsr_cookie_free(timer_mem_cookie, timer);
+    olsr_memcookie_free(timer_mem_cookie, timer);
   }
 }
 

@@ -49,7 +49,7 @@
 #include "defs.h"
 #include "ipcalc.h"
 #include "scheduler.h"
-#include "olsr_cookie.h"
+#include "olsr_memcookie.h"
 #include "olsr_ip_prefix_list.h"
 #include "olsr_logging.h"
 

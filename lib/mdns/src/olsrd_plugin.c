@@ -48,7 +48,7 @@
 #include "defs.h"               /* uint8_t, olsr_cnf */
 #include "scheduler.h"          /* olsr_start_timer() */
 #include "olsr_cfg.h"           /* olsr_cnf() */
-#include "olsr_cookie.h"        /* olsr_create_memcookie() */
+#include "olsr_memcookie.h"        /* olsr_memcookie_add() */
 
 /* BMF includes */
 #include "mdns.h"               /* InitBmf(), CloseBmf() */
@@ -58,7 +58,7 @@
 static void __attribute__ ((constructor)) my_init(void);
 static void __attribute__ ((destructor)) my_fini(void);
 
-//static struct olsr_cookie_info *prune_packet_history_timer_cookie;
+//static struct olsr_memcookie_info *prune_packet_history_timer_cookie;
 
 void olsr_plugin_exit(void);
 
@@ -97,7 +97,7 @@ olsrd_plugin_init(void)
   //add_ifchgf(&InterfaceChange);
 
   /* create the cookie */
-  //prune_packet_history_timer_cookie = olsr_create_memcookie("BMF: Prune Packet History", OLSR_COOKIE_TYPE_TIMER);
+  //prune_packet_history_timer_cookie = olsr_memcookie_add("BMF: Prune Packet History", OLSR_COOKIE_TYPE_TIMER);
 
   /* Register the duplicate registration pruning process */
   //olsr_start_timer(3 * MSEC_PER_SEC, 0, OLSR_TIMER_PERIODIC,

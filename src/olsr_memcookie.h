@@ -55,7 +55,7 @@ extern struct avl_tree EXPORT(olsr_cookie_tree);
  * It is used for tracking resource usage in the system and also
  * for locating memory corruption.
  */
-struct olsr_cookie_info {
+struct olsr_memcookie_info {
   struct avl_node ci_node;
   /* Name */
   char *ci_name;
@@ -95,19 +95,39 @@ struct olsr_cookie_info {
 };
 
 /* Custom addition to existing cookie */
-struct olsr_cookie_custom {
+struct olsr_memcookie_custom {
   struct list_entity node;
 
+  /* name of the custom extension */
   char *name;
 
+  /* padded (aligned) number of bytes allocated for the custom extension */
   size_t size;
+
+  /* offset in the memory array for the custom extensions */
   size_t offset;
 
-  void (*init)(struct olsr_cookie_info *, void *, void *);
-  void (*cleanup)(struct olsr_cookie_info *, void *, void *);
+  /**
+   * Called every times a new instance of memory is allocated
+   * @param ci pointer to memcookie_info
+   * @param ptr pointer to allocated memory
+   * @param c_ptr pointer to custom memory section
+   */
+  void (*init)(struct olsr_memcookie_info *ci, void *ptr, void *c_ptr);
+
+  /**
+   * Called every times the custom memory section is moved
+   *
+   * Content of the custom memory section will already have been copied.
+   *
+   * @param ci pointer to memcookie info
+   * @param ptr pointer to allocated memory
+   * @param c_ptr pointer to new position of the custom memory section
+   */
+  void (*move)(struct olsr_memcookie_info *ci, void *ptr, void *c_ptr);
 };
 
-/* should have a length of 2*memory_alignment */
+/* should have a length of 2*memory_alignment (4 pointers) */
 struct olsr_memory_prefix {
   struct list_entity node;
   uint8_t *custom;
@@ -123,29 +143,31 @@ struct olsr_memory_prefix {
 #define COOKIE_FREE_LIST_THRESHOLD 10   /* Blocks / Percent  */
 
 /* Externals. */
-void olsr_cookie_init(void);
-void olsr_cookie_cleanup(void);
+void olsr_memcookie_init(void);
+void olsr_memcookie_cleanup(void);
 
-struct olsr_cookie_info *EXPORT(olsr_create_memcookie) (const char *, size_t size);
-void EXPORT(olsr_cleanup_memcookie)(struct olsr_cookie_info *);
+struct olsr_memcookie_info *EXPORT(olsr_memcookie_add) (const char *, size_t size);
+void EXPORT(olsr_memcookie_remove)(struct olsr_memcookie_info *);
 
-void EXPORT(olsr_cookie_set_min_free)(struct olsr_cookie_info *, uint32_t);
+void *EXPORT(olsr_memcookie_malloc) (struct olsr_memcookie_info *);
+void EXPORT(olsr_memcookie_free) (struct olsr_memcookie_info *, void *);
 
-void *EXPORT(olsr_cookie_malloc) (struct olsr_cookie_info *);
-void EXPORT(olsr_cookie_free) (struct olsr_cookie_info *, void *);
+struct olsr_memcookie_custom *EXPORT(olsr_memcookie_add_custom)(
+    const char *memcookie_name, const char *name, size_t size,
+    void (*init)(struct olsr_memcookie_info *, void *, void *),
+    void (*move)(struct olsr_memcookie_info *, void *, void *));
 
-struct olsr_cookie_custom *EXPORT(olsr_alloc_cookie_custom)(
-    struct olsr_cookie_info *ci, size_t size, const char *name,
-    void (*init)(struct olsr_cookie_info *, void *, void *),
-    void (*cleanup)(struct olsr_cookie_info *, void *, void *));
+void EXPORT(olsr_memcookie_remove_custom)(
+    const char *memcookie_name, struct olsr_memcookie_custom *custom);
 
-void EXPORT(olsr_free_cookie_custom)(
-    struct olsr_cookie_info *ci, struct olsr_cookie_custom *custom);
-
-/* inline function to access memory of custom data */
-static inline void *EXPORT(olsr_cookie_get_custom)(
-    struct olsr_cookie_custom *custom,
-    void *ptr) {
+/**
+ * Get pointer to custom memory part of a cookie instance
+ * @param custom pointer to custom memcookie info
+ * @param ptr pointer to memory block
+ * @return pointer to custom memory block
+ */
+static inline void *
+olsr_memcookie_get_custom(struct olsr_memcookie_custom *custom, void *ptr) {
   struct olsr_memory_prefix *mem;
 
   /* get to the prefix memory structure */
@@ -153,6 +175,18 @@ static inline void *EXPORT(olsr_cookie_get_custom)(
   mem--;
 
   return mem->custom + custom->offset;
+}
+
+/**
+ * Set the minimum number of free allocated blocks for a memcookie that
+ * will be kept back by the cookie_manager
+ * @param ci
+ * @param min_free
+ */
+static inline void
+olsr_memcookie_set_minfree(struct olsr_memcookie_info *ci, uint32_t min_free)
+{
+  ci->ci_min_free_count = min_free;
 }
 
 #endif /* _OLSR_COOKIE_H */

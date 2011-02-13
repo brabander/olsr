@@ -50,7 +50,7 @@
 #include "olsr.h"
 #include "defs.h"
 #include "scheduler.h"
-#include "olsr_cookie.h"
+#include "olsr_memcookie.h"
 #include "olsr_logging.h"
 
 #include "plugin.h"

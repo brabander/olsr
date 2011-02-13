@@ -41,7 +41,7 @@
 
 #include "defs.h"
 #include "olsr_types.h"
-#include "olsr_cookie.h"
+#include "olsr_memcookie.h"
 #include "olsr_logging.h"
 #include "ipcalc.h"
 #include "os_net.h"
@@ -72,13 +72,13 @@ static const char DEV_IPV4_TUNNEL[IFNAMSIZ] = TUNNEL_ENDPOINT_IF;
 static const char DEV_IPV6_TUNNEL[IFNAMSIZ] = TUNNEL_ENDPOINT_IF6;
 
 static bool store_iptunnel_state;
-static struct olsr_cookie_info *tunnel_cookie;
+static struct olsr_memcookie_info *tunnel_cookie;
 static struct avl_tree tunnel_tree;
 
 int os_iptunnel_init(void) {
   const char *dev = olsr_cnf->ip_version == AF_INET ? DEV_IPV4_TUNNEL : DEV_IPV6_TUNNEL;
 
-  tunnel_cookie = olsr_create_memcookie("iptunnel", sizeof(struct olsr_iptunnel_entry));
+  tunnel_cookie = olsr_memcookie_add("iptunnel", sizeof(struct olsr_iptunnel_entry));
   avl_init(&tunnel_tree, avl_comp_default, false, NULL);
 
   store_iptunnel_state = os_is_interface_up(dev);
@@ -106,7 +106,7 @@ void os_iptunnel_cleanup(void) {
     os_interface_set_state(olsr_cnf->ip_version == AF_INET ? DEV_IPV4_TUNNEL : DEV_IPV6_TUNNEL, false);
   }
 
-  olsr_cleanup_memcookie(tunnel_cookie);
+  olsr_memcookie_remove(tunnel_cookie);
 }
 
 /**
@@ -254,7 +254,7 @@ struct olsr_iptunnel_entry *os_iptunnel_add_ipip(union olsr_ip_addr *target, boo
     /* set originator IP for tunnel */
     olsr_os_ifip(if_idx, &olsr_cnf->router_id, true);
 
-    t = olsr_cookie_malloc(tunnel_cookie);
+    t = olsr_memcookie_malloc(tunnel_cookie);
     memcpy(&t->target, target, sizeof(*target));
     t->node.key = &t->target;
 
@@ -297,7 +297,7 @@ static void internal_olsr_os_del_ipip_tunnel(struct olsr_iptunnel_entry *t, bool
 
   avl_delete(&tunnel_tree, &t->node);
   if (!cleanup) {
-    olsr_cookie_free(tunnel_cookie, t);
+    olsr_memcookie_free(tunnel_cookie, t);
   }
 }
 

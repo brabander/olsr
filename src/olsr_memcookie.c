@@ -41,7 +41,7 @@
 
 #include "olsr.h"
 #include "defs.h"
-#include "olsr_cookie.h"
+#include "olsr_memcookie.h"
 #include "olsr_logging.h"
 #include "common/list.h"
 
@@ -51,14 +51,46 @@
 
 struct avl_tree olsr_cookie_tree;
 
-static inline size_t calc_aligned_size(size_t size) {
+/**
+ * Align a byte size correctly to "two size_t" units
+ * @param size number of bytes for an unaligned block
+ * @return number of bytes including padding for alignment
+ */
+static inline size_t
+calc_aligned_size(size_t size) {
   static const size_t add = sizeof(size_t) * 2 - 1;
   static const size_t mask = ~(sizeof(size_t)*2 - 1);
 
   return (size + add) & mask;
 }
 
-void olsr_cookie_init(void) {
+/**
+ * Increment usage state for a given cookie.
+ * @param ci pointer to memcookie info
+ */
+static inline void
+olsr_cookie_usage_incr(struct olsr_memcookie_info *ci)
+{
+  ci->ci_usage++;
+  ci->ci_changes++;
+}
+
+/**
+ * Decrement usage state for a given cookie.
+ * @param ci pointer to memcookie info
+ */
+static inline void
+olsr_cookie_usage_decr(struct olsr_memcookie_info *ci)
+{
+  ci->ci_usage--;
+  ci->ci_changes++;
+}
+
+/**
+ * Initialize the memory cookie system
+ */
+void
+olsr_memcookie_init(void) {
   /* check size of memory prefix */
   assert (sizeof(struct olsr_memory_prefix)
       == calc_aligned_size(sizeof(struct olsr_memory_prefix)));
@@ -66,18 +98,35 @@ void olsr_cookie_init(void) {
   avl_init(&olsr_cookie_tree, &avl_comp_strcasecmp, false, NULL);
 }
 
-/*
- * Allocate a cookie for the next available cookie id.
+/**
+ * Cleanup the memory cookie system
  */
-struct olsr_cookie_info *
-olsr_create_memcookie(const char *cookie_name, size_t size)
+void
+olsr_memcookie_cleanup(void)
 {
-  struct olsr_cookie_info *ci;
+  struct olsr_memcookie_info *info, *iterator;
+
+  /*
+   * Walk the full index range and kill 'em all.
+   */
+  OLSR_FOR_ALL_COOKIES(info, iterator) {
+    olsr_memcookie_remove(info);
+  }
+}
+
+/**
+ * Allocate a new memcookie.
+ * @param cookie_name id of the cookie
+ * @param size number of bytes to allocate for each cookie
+ * @return memcookie_info pointer
+ */
+struct olsr_memcookie_info *
+olsr_memcookie_add(const char *cookie_name, size_t size)
+{
+  struct olsr_memcookie_info *ci;
 
   assert (cookie_name);
-  assert (size > 9);
-
-  ci = olsr_malloc(sizeof(struct olsr_cookie_info), "memory cookie");
+  ci = olsr_malloc(sizeof(struct olsr_memcookie_info), "memory cookie");
 
   /* Now populate the cookie info */
   ci->ci_name = olsr_strdup(cookie_name);
@@ -98,11 +147,12 @@ olsr_create_memcookie(const char *cookie_name, size_t size)
   return ci;
 }
 
-/*
- * Free a cookie that is no longer being used.
+/**
+ * Delete a memcookie and all attached memory
+ * @param ci pointer to memcookie
  */
 void
-olsr_cleanup_memcookie(struct olsr_cookie_info *ci)
+olsr_memcookie_remove(struct olsr_memcookie_info *ci)
 {
   struct olsr_memory_prefix *memory_entity, *iterator;
 
@@ -132,61 +182,16 @@ olsr_cleanup_memcookie(struct olsr_cookie_info *ci)
   free(ci);
 }
 
-/*
- * Flush all cookies. This is really only called upon shutdown.
- */
-void
-olsr_cookie_cleanup(void)
-{
-  struct olsr_cookie_info *info, *iterator;
-
-  /*
-   * Walk the full index range and kill 'em all.
-   */
-  OLSR_FOR_ALL_COOKIES(info, iterator) {
-    olsr_cleanup_memcookie(info);
-  }
-}
-
-/*
- * Set if a returned memory block shall be cleared after returning to
- * the free pool. This is only allowed for memory cookies.
- */
-void
-olsr_cookie_set_min_free(struct olsr_cookie_info *ci, uint32_t min_free)
-{
-  ci->ci_min_free_count = min_free;
-}
-
-
-/*
- * Increment usage state for a given cookie.
- */
-static inline void
-olsr_cookie_usage_incr(struct olsr_cookie_info *ci)
-{
-  ci->ci_usage++;
-  ci->ci_changes++;
-}
-
-/*
- * Decrement usage state for a given cookie.
- */
-static inline void
-olsr_cookie_usage_decr(struct olsr_cookie_info *ci)
-{
-  ci->ci_usage--;
-  ci->ci_changes++;
-}
-
-/*
+/**
  * Allocate a fixed amount of memory based on a passed in cookie type.
+ * @param ci pointer to memcookie info
+ * @return allocated memory
  */
 void *
-olsr_cookie_malloc(struct olsr_cookie_info *ci)
+olsr_memcookie_malloc(struct olsr_memcookie_info *ci)
 {
   struct olsr_memory_prefix *mem;
-  struct olsr_cookie_custom *custom, *iterator;
+  struct olsr_memcookie_custom *custom, *iterator;
 
 #if !defined REMOVE_LOG_DEBUG
   bool reuse = false;
@@ -240,15 +245,15 @@ olsr_cookie_malloc(struct olsr_cookie_info *ci)
   return mem + 1;
 }
 
-/*
+/**
  * Free a memory block owned by a given cookie.
- * Run some corruption checks.
+ * @param ci pointer to memcookie info
+ * @param ptr pointer to memory block
  */
 void
-olsr_cookie_free(struct olsr_cookie_info *ci, void *ptr)
+olsr_memcookie_free(struct olsr_memcookie_info *ci, void *ptr)
 {
   struct olsr_memory_prefix *mem;
-  struct olsr_cookie_custom *custom, *iterator;
 #if !defined REMOVE_LOG_DEBUG
   bool reuse = false;
 #endif
@@ -256,13 +261,6 @@ olsr_cookie_free(struct olsr_cookie_info *ci, void *ptr)
   /* calculate pointer to memory prefix */
   mem = ptr;
   mem--;
-
-  /* call up custom cleanup */
-  OLSR_FOR_ALL_CUSTOM_MEM(ci, custom, iterator) {
-    if (custom->cleanup) {
-      custom->cleanup(ci, ptr, mem->custom + custom->offset);
-    }
-  }
 
   /* remove from used_memory list */
   list_remove(&mem->node);
@@ -297,68 +295,121 @@ olsr_cookie_free(struct olsr_cookie_info *ci, void *ptr)
              ci->ci_name, ptr, (unsigned long)ci->ci_total_size, reuse ? ", reuse" : "");
 }
 
-struct olsr_cookie_custom *
-olsr_alloc_cookie_custom(struct olsr_cookie_info *ci, size_t size, const char *name,
-    void (*init)(struct olsr_cookie_info *, void *, void *),
-    void (*cleanup)(struct olsr_cookie_info *, void *, void *)) {
-  struct olsr_cookie_custom *custom;
-  struct olsr_memory_prefix *mem, *iterator;
+/**
+ * Add a custom memory section to an existing memcookie.
+ *
+ * Calling this function will call the specified init() callback and
+ * the move() callback of all existing custom extensions of this memcookie
+ * for every existing piece of allocated memory of the memcookie.
+ *
+ * @param memcookie_name name of memory cookie to be extended
+ * @param name name of custom addition for the memory cookie
+ * @param size number of bytes needed for custom addition
+ * @param init callback of the custom memcookie manager which is called every
+ *   times a new memcookie instance is allocated. Parameters are the memcookie_info
+ *   object, a pointer to the allocated memory and a pointer to the custom
+ *   part of the memory object.
+ * @param move callback of the custom memcookie manager which is called every
+ *   times the memory of the custom extension changes (because of adding/removal of
+ *   other custom extensions). Parameters are the memcookie_info object, a pointer to
+ *   the allocated memory, a pointer to the old position of the custom extension and
+ *   a pointer to the new custom extension.
+ * @return custom memory cookie
+ */
+struct olsr_memcookie_custom *
+olsr_memcookie_add_custom(const char *memcookie_name, const char *name, size_t size,
+    void (*init)(struct olsr_memcookie_info *, void *, void *),
+    void (*move)(struct olsr_memcookie_info *, void *, void *)) {
+  struct olsr_memcookie_info *ci;
+  struct olsr_memcookie_custom *custom_cookie;
+  struct olsr_memcookie_custom *custom, *custom_iterator;
+  struct olsr_memory_prefix *mem, *mem_iterator;
   size_t old_total_size, new_total_size;
 
-  custom = olsr_malloc(sizeof(struct olsr_cookie_custom), name);
-  custom->name = strdup(name);
-  custom->size = calc_aligned_size(size);
-  custom->init = init;
-  custom->cleanup = cleanup;
+  ci = avl_find_element(&olsr_cookie_tree, memcookie_name, ci, ci_node);
+  if (ci == NULL) {
+    OLSR_WARN(LOG_COOKIE, "Memory cookie '%s' does not exist, cannot add custom block '%s'\n",
+        memcookie_name, name);
+    return NULL;
+  }
+
+  custom_cookie = olsr_malloc(sizeof(struct olsr_memcookie_custom), name);
+  custom_cookie->name = strdup(name);
+  custom_cookie->size = calc_aligned_size(size);
+  custom_cookie->init = init;
+  custom_cookie->move = move;
 
   /* recalculate custom data block size */
   old_total_size = ci->ci_total_size - ci->ci_custom_offset;
-  new_total_size = old_total_size + custom->size;
+  new_total_size = old_total_size + custom_cookie->size;
 
-  custom->offset = old_total_size;
-  ci->ci_total_size += custom->size;
+  custom_cookie->offset = old_total_size;
+  ci->ci_total_size += custom_cookie->size;
 
   /* reallocate custom data blocks on used memory blocks*/
-  OLSR_FOR_ALL_USED_MEM(ci, mem, iterator) {
-    uint8_t *custom_ptr;
+  OLSR_FOR_ALL_USED_MEM(ci, mem, mem_iterator) {
+    uint8_t *new_custom;
 
-    custom_ptr = olsr_malloc(new_total_size, ci->ci_name);
+    new_custom = olsr_malloc(new_total_size, ci->ci_name);
 
     /* copy old data */
     if (old_total_size > 0) {
-      memcpy(custom_ptr, mem->custom, old_total_size);
+      memmove(new_custom, mem->custom, old_total_size);
     }
 
     mem->is_inline = false;
-    mem->custom = custom_ptr;
+    mem->custom = new_custom;
 
     /* call up necessary initialization */
-    init(ci, mem + 1, custom_ptr + old_total_size);
+    if (custom->init) {
+      custom->init(ci, mem + 1, new_custom + old_total_size);
+    }
+
+    /* inform the custom cookie managers that their memory has moved */
+    OLSR_FOR_ALL_CUSTOM_MEM(ci, custom, custom_iterator) {
+      if (custom->move) {
+        custom->move(ci, mem+1, new_custom + custom->offset);
+      }
+    }
   }
 
   /* remove all free data blocks, they have the wrong size */
-  OLSR_FOR_ALL_FREE_MEM(ci, mem, iterator) {
+  OLSR_FOR_ALL_FREE_MEM(ci, mem, mem_iterator) {
     list_remove(&mem->node);
     free(mem);
   }
   ci->ci_free_list_usage = 0;
 
   /* add the custom data object to the list */
-  list_add_tail(&ci->ci_custom_list, &custom->node);
-  return custom;
+  list_add_tail(&ci->ci_custom_list, &custom_cookie->node);
+  return custom_cookie;
 }
 
+/**
+ * Remove a custom addition to a memcookie
+ * @param memcookie_name name of memcookie
+ * @param custom pointer to custom memcookie
+ */
 void
-olsr_free_cookie_custom(struct olsr_cookie_info *ci, struct olsr_cookie_custom *custom) {
+olsr_memcookie_remove_custom(const char*memcookie_name, struct olsr_memcookie_custom *custom) {
+  struct olsr_memcookie_info *ci;
   struct olsr_memory_prefix *mem, *mem_iterator;
-  struct olsr_cookie_custom *c_ptr, *c_iterator;
+  struct olsr_memcookie_custom *c_ptr, *c_iterator;
   size_t prefix_block, suffix_block;
   bool match;
+
+  ci = avl_find_element(&olsr_cookie_tree, memcookie_name, ci, ci_node);
+  if (ci == NULL) {
+    OLSR_WARN(LOG_COOKIE, "Memory cookie '%s' does not exist, cannot remove custom block '%s'\n",
+        memcookie_name, custom->name);
+    return;
+  }
 
   prefix_block = 0;
   suffix_block = 0;
   match = false;
 
+  /* calculate size of (not) modified custom data block */
   OLSR_FOR_ALL_CUSTOM_MEM(ci, c_ptr, c_iterator) {
     if (c_ptr == custom) {
       match = true;
@@ -367,7 +418,6 @@ olsr_free_cookie_custom(struct olsr_cookie_info *ci, struct olsr_cookie_custom *
 
     if (match) {
       suffix_block += c_ptr->size;
-      c_ptr->offset -= custom->size;
     }
     else {
       prefix_block += c_ptr->size;
@@ -378,6 +428,23 @@ olsr_free_cookie_custom(struct olsr_cookie_info *ci, struct olsr_cookie_custom *
   if (suffix_block > 0) {
     OLSR_FOR_ALL_USED_MEM(ci, mem, mem_iterator) {
       memmove(mem->custom + prefix_block, mem->custom + prefix_block + custom->size, suffix_block);
+
+      /* recalculate offsets of moved blocks and inform callbacks */
+      OLSR_FOR_ALL_CUSTOM_MEM(ci, c_ptr, c_iterator) {
+        if (c_ptr == custom) {
+          match = true;
+          continue;
+        }
+
+        if (match) {
+          c_ptr->offset -= custom->size;
+
+          if (c_ptr->move) {
+            c_ptr->move(ci, mem+1, mem->custom + c_ptr->offset);
+          }
+        }
+      }
+
     }
   }
   ci->ci_total_size -= custom->size;
@@ -394,6 +461,7 @@ olsr_free_cookie_custom(struct olsr_cookie_info *ci, struct olsr_cookie_custom *
   free (custom->name);
   free (custom);
 }
+
 
 /*
  * Local Variables:

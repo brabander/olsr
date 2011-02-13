@@ -56,8 +56,8 @@
 #include <assert.h>
 
 /* Cookies */
-struct olsr_cookie_info *rt_mem_cookie = NULL;
-struct olsr_cookie_info *rtp_mem_cookie = NULL; /* Maybe static */
+struct olsr_memcookie_info *rt_mem_cookie = NULL;
+struct olsr_memcookie_info *rtp_mem_cookie = NULL; /* Maybe static */
 
 /*
  * Sven-Ola: if the current internet gateway is switched, the
@@ -92,8 +92,8 @@ olsr_init_routing_table(void)
   /*
    * Get some cookies for memory stats and memory recycling.
    */
-  rt_mem_cookie = olsr_create_memcookie("rt_entry", sizeof(struct rt_entry));
-  rtp_mem_cookie = olsr_create_memcookie("rt_path", sizeof(struct rt_path));
+  rt_mem_cookie = olsr_memcookie_add("rt_entry", sizeof(struct rt_entry));
+  rtp_mem_cookie = olsr_memcookie_add("rt_path", sizeof(struct rt_path));
 }
 
 /**
@@ -149,7 +149,7 @@ olsr_update_rt_path(struct rt_path *rtp, struct tc_entry *tc, struct link_entry 
 static struct rt_entry *
 olsr_alloc_rt_entry(struct olsr_ip_prefix *prefix)
 {
-  struct rt_entry *rt = olsr_cookie_malloc(rt_mem_cookie);
+  struct rt_entry *rt = olsr_memcookie_malloc(rt_mem_cookie);
   if (!rt) {
     return NULL;
   }
@@ -175,7 +175,7 @@ olsr_alloc_rt_entry(struct olsr_ip_prefix *prefix)
 static struct rt_path *
 olsr_alloc_rt_path(struct tc_entry *tc, struct olsr_ip_prefix *prefix, uint8_t origin)
 {
-  struct rt_path *rtp = olsr_cookie_malloc(rtp_mem_cookie);
+  struct rt_path *rtp = olsr_memcookie_malloc(rtp_mem_cookie);
 
   if (!rtp) {
     return NULL;
@@ -299,7 +299,7 @@ olsr_delete_rt_path(struct rt_path *rtp)
     current_inetgw = NULL;
   }
 
-  olsr_cookie_free(rtp_mem_cookie, rtp);
+  olsr_memcookie_free(rtp_mem_cookie, rtp);
 }
 
 /**

@@ -46,7 +46,7 @@
 #include "mid_set.h"
 #include "scheduler.h"
 #include "olsr_time.h"
-#include "olsr_cookie.h"
+#include "olsr_memcookie.h"
 #include "olsr_logging.h"
 
 #include <stdlib.h>
@@ -55,7 +55,7 @@ struct avl_tree forward_set, processing_set;
 
 /* Some cookies for stats keeping */
 static struct olsr_timer_info *duplicate_timer_info = NULL;
-static struct olsr_cookie_info *duplicate_mem_cookie = NULL;
+static struct olsr_memcookie_info *duplicate_mem_cookie = NULL;
 
 int
 olsr_seqno_diff(uint16_t reference, uint16_t other)
@@ -78,7 +78,7 @@ olsr_create_duplicate_entry(union olsr_ip_addr *ip, uint16_t seqnr)
 {
   struct dup_entry *entry;
 
-  entry = olsr_cookie_malloc(duplicate_mem_cookie);
+  entry = olsr_memcookie_malloc(duplicate_mem_cookie);
   if (entry != NULL) {
     memcpy(&entry->ip, ip, olsr_cnf->ip_version == AF_INET ? sizeof(entry->ip.v4) : sizeof(entry->ip.v6));
     entry->seqnr = seqnr;
@@ -96,7 +96,7 @@ olsr_delete_duplicate_entry(struct dup_entry *entry)
   entry->tree = NULL;
   olsr_stop_timer(entry->validity_timer);
   entry->validity_timer = NULL;
-  olsr_cookie_free(duplicate_mem_cookie, entry);
+  olsr_memcookie_free(duplicate_mem_cookie, entry);
 }
 
 static void
@@ -121,7 +121,7 @@ olsr_init_duplicate_set(void)
    */
   duplicate_timer_info = olsr_alloc_timerinfo("Duplicate Set", &olsr_expire_duplicate_entry, false);
 
-  duplicate_mem_cookie = olsr_create_memcookie("dup_entry", sizeof(struct dup_entry));
+  duplicate_mem_cookie = olsr_memcookie_add("dup_entry", sizeof(struct dup_entry));
 }
 
 
