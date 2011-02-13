@@ -48,6 +48,16 @@
 #include "common/avl.h"
 #include "common/list.h"
 
+/*
+ * declare a plugin without parameters (NoParameter)
+ *
+ * OLSR_PLUGIN6_NP() {
+ *   .descr = "<description of the plugin",
+ *   .author = "<author of the plugin",
+ *   .init = <pointer_to_plugin_initialization_callback>,
+ *   .....
+ * };
+ */
 #define OLSR_PLUGIN6_NP()   static struct olsr_plugin olsr_internal_plugin_definition; \
 static void hookup_plugin_definition (void) __attribute__ ((constructor)); \
 static void hookup_plugin_definition (void) { \
@@ -57,6 +67,20 @@ static void hookup_plugin_definition (void) { \
 } \
 static struct olsr_plugin olsr_internal_plugin_definition =
 
+/*
+ * declare a plugin with parameters
+ *
+ * static const struct olsrd_plugin_parameters plugin_parameters[] = {
+ *   { ...},
+ * };
+ *
+ * OLSR_PLUGIN6(plugin_parameters) {
+ *   .descr = "<description of the plugin",
+ *   .author = "<author of the plugin",
+ *   .init = <pointer_to_plugin_initialization_callback>,
+ *   .....
+ * };
+ */
 #define OLSR_PLUGIN6(param) static struct olsr_plugin olsr_internal_plugin_definition; \
 static void hookup_plugin_definition (void) __attribute__ ((constructor)); \
 static void hookup_plugin_definition (void) { \
@@ -68,13 +92,14 @@ static void hookup_plugin_definition (void) { \
 } \
 static struct olsr_plugin olsr_internal_plugin_definition =
 
+/* different types of plugins must be initialized at different times during startup */
 enum plugin_type {
   PLUGIN_TYPE_ALL = -1,
   PLUGIN_TYPE_DEFAULT = 0,
   PLUGIN_TYPE_LQ = 1
 };
 
-/* version 5 */
+/* plugin definition functions (version 5) */
 typedef int (*plugin_init_func) (void);
 typedef int (*get_interface_version_func) (void);
 typedef void (*get_plugin_parameters_func) (const struct olsrd_plugin_parameters ** internal_params, unsigned int *size);
@@ -86,15 +111,24 @@ struct olsr_plugin {
   const char *name;
   const char *descr;
   const char *author;
-  bool deactivate;    /* plugin can be deactivated */
+
+  /* true if the plugin can be (de)activated during runtime */
+  bool deactivate;
+
+  /* type of the plugin, normally 0 */
   enum plugin_type type;
 
-  /* function pointers */
-  bool (*init) (void);
-  bool (*enable) (void);
-  bool (*disable) (void);
-  bool (*exit) (void);
-  int  (*internal_legacy_init) (void);
+  /* plugin callbacks for (de)initialization */
+  int (*init) (void);
+  int (*enable) (void);
+  int (*disable) (void);
+  int (*exit) (void);
+
+  /*
+   * internal callback pointer for legacy plugins, will be initialized
+   * by the plugin loader
+   */
+  int (*internal_legacy_init) (void);
 
   /* plugin interface version */
   int internal_version;
@@ -124,10 +158,10 @@ void olsr_plugins_enable(enum plugin_type type, bool fail_fast);
 void olsr_destroy_pluginsystem(void);
 
 struct olsr_plugin *EXPORT(olsr_init_plugin)(const char *);
-bool EXPORT(olsr_exit_plugin)(struct olsr_plugin *);
+int EXPORT(olsr_exit_plugin)(struct olsr_plugin *);
 
-bool EXPORT(olsr_enable_plugin)(struct olsr_plugin *);
-bool EXPORT(olsr_disable_plugin)(struct olsr_plugin *);
+int EXPORT(olsr_enable_plugin)(struct olsr_plugin *);
+int EXPORT(olsr_disable_plugin)(struct olsr_plugin *);
 
 extern struct avl_tree EXPORT(plugin_tree);
 

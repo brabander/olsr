@@ -62,7 +62,7 @@ static bool plugin_tree_initialized = false;
 
 static struct olsr_cookie_info *plugin_mem_cookie = NULL;
 
-static bool olsr_internal_unload_plugin(struct olsr_plugin *plugin, bool cleanup);
+static int olsr_internal_unload_plugin(struct olsr_plugin *plugin, bool cleanup);
 
 /**
  * This function is called by the constructor of a plugin.
@@ -83,15 +83,9 @@ olsr_hookup_plugin(struct olsr_plugin *pl_def) {
   avl_insert(&plugin_tree, &pl_def->p_node);
 }
 
-struct olsr_plugin *olsr_get_plugin(const char *libname) {
-  struct olsr_plugin *plugin;
-  /* SOT: Hacked away the funny plugin check which fails if pathname is included */
-  if (strrchr(libname, '/')) libname = strrchr(libname, '/') + 1;
-
-  plugin = avl_find_element(&plugin_tree, libname, plugin, p_node);
-  return plugin;
-}
-
+/**
+ * Initialize the plugin loader system
+ */
 void
 olsr_init_pluginsystem(void) {
   plugin_mem_cookie = olsr_create_memcookie("Plugin handle", sizeof(struct olsr_plugin));
@@ -103,7 +97,28 @@ olsr_init_pluginsystem(void) {
   }
 }
 
-void olsr_plugins_init(bool fail_fast) {
+/**
+ * Query for a certain plugin name
+ * @param libname name of plugin
+ * @return pointer to plugin db entry, NULL if not found
+ */
+struct olsr_plugin *
+olsr_get_plugin(const char *libname) {
+  struct olsr_plugin *plugin;
+  /* SOT: Hacked away the funny plugin check which fails if pathname is included */
+  if (strrchr(libname, '/')) libname = strrchr(libname, '/') + 1;
+
+  plugin = avl_find_element(&plugin_tree, libname, plugin, p_node);
+  return plugin;
+}
+
+/**
+ * Load plugins and call the init callback
+ * @param fail_fast if true OLSRd will exit if a plugin throws an error
+ *   during initialization
+ */
+void
+olsr_plugins_init(bool fail_fast) {
   struct plugin_entry *entry;
   struct olsr_plugin *plugin;
 
@@ -134,7 +149,14 @@ void olsr_plugins_init(bool fail_fast) {
   }
 }
 
-void olsr_plugins_enable(enum plugin_type type, bool fail_fast) {
+/**
+ * Enables all plugins of a certain type
+ * @param type PLUGIN_TYPE_ALL, PLUGIN_TYPE_LQ or PLUGIN_TYPE_DEFAULT
+ * @param fail_fast if true OLSRd will exit if a plugin throws an error
+ *   by the enable callback
+ */
+void
+olsr_plugins_enable(enum plugin_type type, bool fail_fast) {
   struct olsr_plugin *plugin, *iterator;
 
   /* activate all plugins (configured and static linked ones) */
@@ -154,6 +176,9 @@ void olsr_plugins_enable(enum plugin_type type, bool fail_fast) {
   OLSR_INFO(LOG_PLUGINS, "All plugins loaded.\n");
 }
 
+/**
+ * Disable and unload all plugins
+ */
 void
 olsr_destroy_pluginsystem(void) {
   struct olsr_plugin *plugin, *iterator;
@@ -163,6 +188,12 @@ olsr_destroy_pluginsystem(void) {
   }
 }
 
+/**
+ * Legacy helper function to load plugins using the old API
+ * @param libname name of plugin
+ * @param dlhandle pointer to dynamic library handler
+ * @return plugin db object, NULL if an error happened
+ */
 static struct olsr_plugin *
 olsr_load_legacy_plugin(const char *libname, void *dlhandle) {
   get_interface_version_func get_interface_version;
@@ -222,11 +253,10 @@ olsr_load_legacy_plugin(const char *libname, void *dlhandle) {
 }
 
 /**
- *Try to load a shared library
+ * Load a plugin and call its initialize callback
  *
  *@param libname the name of the library(file)
- *
- *@return dlhandle
+ *@return plugin db object
  */
 struct olsr_plugin *
 olsr_init_plugin(const char *libname)
@@ -266,7 +296,14 @@ olsr_init_plugin(const char *libname)
   return olsr_load_legacy_plugin(libname, dlhandle);
 }
 
-static bool
+/**
+ * Internal helper function to unload a plugin using the old API
+ * @param plugin pointer to plugin db object
+ * @param cleanup true if this is the final cleanup
+ *   before OLSR shuts down, false otherwise
+ * @return 0 if the plugin was removed, 1 otherwise
+ */
+static int
 olsr_internal_unload_plugin(struct olsr_plugin *plugin, bool cleanup) {
   bool legacy = false;
 
@@ -306,24 +343,37 @@ olsr_internal_unload_plugin(struct olsr_plugin *plugin, bool cleanup) {
   return false;
 }
 
-bool
+/**
+ * Unloads an active plugin. Static plugins cannot be removed until
+ * final cleanup.
+ * @param plugin pointer to plugin db object
+ * @return 0 if plugin was removed, 1 otherwise
+ */
+int
 olsr_exit_plugin(struct olsr_plugin *plugin) {
   return olsr_internal_unload_plugin(plugin, false);
 }
 
-bool olsr_enable_plugin(struct olsr_plugin *plugin) {
+
+/**
+ * Enable a loaded plugin.
+ * @param plugin pointer to plugin db object
+ * @return 0 if plugin was enabled, 1 otherwise
+ */
+int
+olsr_enable_plugin(struct olsr_plugin *plugin) {
   struct plugin_param *params;
   unsigned int i;
 
   if (plugin->internal_active) {
     OLSR_DEBUG(LOG_PLUGINS, "Plugin %s is already active.\n", plugin->name);
-    return false;
+    return 0;
   }
 
   if (plugin->init != NULL) {
     if (plugin->init()) {
       OLSR_WARN(LOG_PLUGINS, "Error, pre init failed for plugin %s\n", plugin->name);
-      return true;
+      return 1;
     }
     OLSR_DEBUG(LOG_PLUGINS, "Pre initialization of plugin %s successful\n", plugin->name);
   }
@@ -339,7 +389,7 @@ bool olsr_enable_plugin(struct olsr_plugin *plugin) {
         if (plugin->internal_param[i].set_plugin_parameter(params->value, plugin->internal_param[i].data,
             0 == plugin->internal_param[i].name[0] ? (set_plugin_parameter_addon) params->key : plugin->internal_param[i].addon)) {
           OLSR_DEBUG(LOG_PLUGINS, "Bad plugin parameter \"%s\" = \"%s\"... ", params->key, params->value);
-          return true;
+          return 1;
         }
         break;
       }
@@ -353,14 +403,14 @@ bool olsr_enable_plugin(struct olsr_plugin *plugin) {
   if (plugin->enable != NULL) {
     if (plugin->enable()) {
       OLSR_WARN(LOG_PLUGINS, "Error, post init failed for plugin %s\n", plugin->name);
-      return true;
+      return 1;
     }
     OLSR_DEBUG(LOG_PLUGINS, "Post initialization of plugin %s successful\n", plugin->name);
   }
   if (plugin->internal_legacy_init != NULL) {
     if (plugin->internal_legacy_init() != 1) {
       OLSR_WARN(LOG_PLUGINS, "Error, legacy init failed for plugin %s\n", plugin->name);
-      return true;
+      return 1;
     }
     OLSR_DEBUG(LOG_PLUGINS, "Post initialization of plugin %s successful\n", plugin->name);
   }
@@ -375,26 +425,38 @@ bool olsr_enable_plugin(struct olsr_plugin *plugin) {
         plugin->internal_version != 6 ? "Legacy " : "", plugin->name);
   }
 
-  return false;
+  return 0;
 }
 
-bool olsr_disable_plugin(struct olsr_plugin *plugin) {
+/**
+ * Disable (but not unload) an active plugin
+ * @param plugin pointer to plugin db object
+ * @return 0 if plugin was disabled, 1 otherwise
+ */
+int
+olsr_disable_plugin(struct olsr_plugin *plugin) {
   if (!plugin->internal_active) {
     OLSR_DEBUG(LOG_PLUGINS, "Plugin %s is not active.\n", plugin->name);
-    return false;
+    return 0;
+  }
+
+  if (!plugin->deactivate) {
+    OLSR_DEBUG(LOG_PLUGINS, "Plugin %s does not support disabling\n", plugin->name);
+    return 1;
   }
 
   OLSR_INFO(LOG_PLUGINS, "Deactivating plugin %s\n", plugin->name);
+
   if (plugin->disable != NULL) {
     if (plugin->disable()) {
       OLSR_DEBUG(LOG_PLUGINS, "Plugin %s cannot be deactivated, error in pre cleanup\n", plugin->name);
-      return true;
+      return 1;
     }
     OLSR_DEBUG(LOG_PLUGINS, "Pre cleanup of plugin %s successful\n", plugin->name);
   }
 
   plugin->internal_active = false;
-  return false;
+  return 0;
 }
 
 /*

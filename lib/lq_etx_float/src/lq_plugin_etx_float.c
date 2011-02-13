@@ -57,7 +57,7 @@
 #define LQ_QUICKSTART_STEPS        12
 
 static int set_plugin_float(const char *, void *, set_plugin_parameter_addon);
-static bool lq_etxfloat_enable(void);
+static int lq_etxfloat_enable(void);
 
 static olsr_linkcost lq_etxfloat_calc_link_entry_cost(struct link_entry *);
 static olsr_linkcost lq_etxfloat_calc_lq_hello_neighbor_cost(struct lq_hello_neighbor *);
@@ -150,7 +150,8 @@ set_plugin_float(const char *value, void *data, set_plugin_parameter_addon addon
   return 0;
 }
 
-static bool lq_etxfloat_enable(void) {
+static int
+lq_etxfloat_enable(void) {
   active_lq_handler = &lq_etxfloat_handler;
   return false;
 }

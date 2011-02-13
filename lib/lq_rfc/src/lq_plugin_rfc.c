@@ -58,7 +58,7 @@
 
 #define LQ_PLUGIN_LC_MULTIPLIER 1024
 
-static bool lq_rfc_enable(void);
+static int lq_rfc_enable(void);
 static int set_plugin_float(const char *, void *, set_plugin_parameter_addon);
 
 static olsr_linkcost lq_rfc_calc_link_entry_cost(struct link_entry *);
@@ -143,7 +143,8 @@ OLSR_PLUGIN6(plugin_parameters) {
   .type = PLUGIN_TYPE_LQ
 };
 
-static bool lq_rfc_enable(void) {
+static int
+lq_rfc_enable(void) {
   active_lq_handler = &lq_rfc_handler;
   return false;
 }

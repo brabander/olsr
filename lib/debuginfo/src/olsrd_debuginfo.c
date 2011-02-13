@@ -71,9 +71,9 @@ struct debuginfo_cmd {
   struct olsr_txtcommand *cmd;
 };
 
-static bool debuginfo_init(void);
-static bool debuginfo_enable(void);
-static bool debuginfo_exit(void);
+static int debuginfo_init(void);
+static int debuginfo_enable(void);
+static int debuginfo_exit(void);
 
 
 static enum olsr_txtcommand_result debuginfo_msgstat(struct comport_connection *con,
@@ -138,7 +138,7 @@ static union olsr_ip_addr total_ip_addr;
 /**
  *Constructor
  */
-static bool
+static int
 debuginfo_init(void)
 {
   ip_acl_init(&allowed_nets);
@@ -148,13 +148,13 @@ debuginfo_init(void)
   current_slot = 0;
 
   memset(&total_ip_addr, 255, sizeof(total_ip_addr));
-  return false;
+  return 0;
 }
 
 /**
  *Destructor
  */
-static bool
+static int
 debuginfo_exit(void)
 {
   size_t i;
@@ -165,10 +165,10 @@ debuginfo_exit(void)
   olsr_parser_remove_function(&olsr_msg_statistics);
   olsr_preprocessor_remove_function(&olsr_packet_statistics);
   ip_acl_flush(&allowed_nets);
-  return false;
+  return 0;
 }
 
-static bool
+static int
 debuginfo_enable(void)
 {
   size_t i;
@@ -205,7 +205,7 @@ debuginfo_enable(void)
 
   olsr_parser_add_function(&olsr_msg_statistics, PROMISCUOUS);
   olsr_preprocessor_add_function(&olsr_packet_statistics);
-  return false;
+  return 0;
 }
 
 static struct debug_msgtraffic *get_msgtraffic_entry(union olsr_ip_addr *ip) {

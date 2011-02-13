@@ -60,8 +60,8 @@
 #define PLUGIN_DESCR	"Arproaming olsrd plugin v0.1"
 #define PLUGIN_AUTHOR "amadeus"
 
-static bool arproaming_init(void);
-static bool arproaming_exit(void);
+static int arproaming_init(void);
+static int arproaming_exit(void);
 
 static void arproaming_schedule_event(void *);
 static void arproaming_list_add(unsigned int timeout, const union olsr_ip_addr *ip, const struct olsr_mac48_addr *mac);
@@ -366,7 +366,7 @@ arproaming_schedule_event(void *foo __attribute__ ((unused)))
 	arproaming_client_update();
 }
 
-static bool
+static int
 arproaming_init(void)
 {
 	int arproaming_socketfd_system = -1;
@@ -381,7 +381,7 @@ arproaming_init(void)
 	if (arproaming_socketfd_netlink < 0) {
 	  OLSR_WARN(LOG_PLUGINS, "Cannot open netlink socket for arproaming plugin: %s (%d)",
 	      strerror(errno), errno);
-	  return true;
+	  return 1;
 	}
 
 	arproaming_socketfd_arp = socket(PF_PACKET, SOCK_PACKET, htons(ETH_P_ARP));
@@ -389,7 +389,7 @@ arproaming_init(void)
     OLSR_WARN(LOG_PLUGINS, "Cannot open raw socket for arproaming plugin: %s (%d)",
         strerror(errno), errno);
 	  close (arproaming_socketfd_netlink);
-	  return true;
+	  return 1;
 	}
 
 	arproaming_socketfd_system = socket(AF_INET, SOCK_DGRAM, 0);
@@ -398,7 +398,7 @@ arproaming_init(void)
         strerror(errno), errno);
     close (arproaming_socketfd_netlink);
     close (arproaming_socketfd_arp);
-    return true;
+    return 1;
   }
 
 	arproaming_systemconf(arproaming_socketfd_system);
@@ -407,10 +407,10 @@ arproaming_init(void)
   event_timer = olsr_start_timer(MSEC_PER_SEC/3, 0, NULL, timer_info);
 
 	close(arproaming_socketfd_system);
-	return false;
+	return 0;
 }
 
-static bool
+static int
 arproaming_exit(void)
 {
   olsr_stop_timer(event_timer);
@@ -427,5 +427,5 @@ arproaming_exit(void)
 
 	OLSR_DEBUG(LOG_PLUGINS, "[ARPROAMING] Exiting.\n");
 
-	return false;
+	return 0;
 }

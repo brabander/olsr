@@ -73,9 +73,9 @@ static int ipc_socket_up;
 #define DOT_DRAW_PORT 2004
 #endif
 
-static bool dotdraw_init(void);
-static bool dotdraw_enable(void);
-static bool dotdraw_exit(void);
+static int dotdraw_init(void);
+static int dotdraw_enable(void);
+static int dotdraw_exit(void);
 
 static int ipc_socket;
 
@@ -122,7 +122,7 @@ static void
 #define ipc_send_str(fd, data) ipc_send((fd), (data), strlen(data))
 
 
-static bool
+static int
 dotdraw_init(void)
 {
   /* defaults for parameters */
@@ -130,20 +130,20 @@ dotdraw_init(void)
   ipc_accept_ip.v4.s_addr = htonl(INADDR_LOOPBACK);
 
   ipc_socket = -1;
-  return false;
+  return 0;
 }
 
 /**
  * destructor - called at unload
  */
-static bool
+static int
 dotdraw_exit(void)
 {
   if (ipc_socket != -1) {
     os_close(ipc_socket);
     ipc_socket = -1;
   }
-  return false;
+  return 0;
 }
 
 
@@ -176,7 +176,7 @@ ipc_print_neigh_link(int ipc_connection, const struct nbr_entry *neighbor)
   }
 }
 
-static bool
+static int
 dotdraw_enable(void) {
   struct sockaddr_in addr;
   uint32_t yes = 1;
@@ -189,19 +189,19 @@ dotdraw_enable(void) {
   ipc_socket = socket(AF_INET, SOCK_STREAM, 0);
   if (ipc_socket == -1) {
     OLSR_WARN(LOG_PLUGINS, "(DOT DRAW)IPC socket %s\n", strerror(errno));
-    return true;
+    return 1;
   }
 
   if (setsockopt(ipc_socket, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes)) < 0) {
     OLSR_WARN(LOG_PLUGINS, "SO_REUSEADDR failed %s\n", strerror(errno));
     os_close(ipc_socket);
-    return true;
+    return 1;
   }
 #if defined __FreeBSD__ && defined SO_NOSIGPIPE
   if (setsockopt(ipc_socket, SOL_SOCKET, SO_NOSIGPIPE, (char *)&yes, sizeof(yes)) < 0) {
     OLSR_WARN(LOG_PLUGINS, "SO_REUSEADDR failed %s\n", strerror(errno));
     CLOSESOCKET(ipc_socket);
-    return true;
+    return 1;
   }
 #endif
 
@@ -217,20 +217,20 @@ dotdraw_enable(void) {
   if (bind(ipc_socket, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
     OLSR_WARN(LOG_PLUGINS, "(DOT DRAW)IPC bind %s\n", strerror(errno));
     os_close(ipc_socket);
-    return true;
+    return 1;
   }
 
   /* show that we are willing to listen */
   if (listen(ipc_socket, 1) == -1) {
     OLSR_WARN(LOG_PLUGINS, "(DOT DRAW)IPC listen %s\n", strerror(errno));
     os_close(ipc_socket);
-    return true;
+    return 1;
   }
 
-  /* Register with olsrd */
+  /* Register socket with olsrd */
   add_olsr_socket(ipc_socket, &ipc_action, NULL, NULL, SP_PR_READ);
 
-  return false;
+  return 0;
 }
 
 
