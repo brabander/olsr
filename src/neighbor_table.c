@@ -481,9 +481,10 @@ olsr_print_neighbor_table(void)
   struct nbr_con *connector, *con_iterator;
   char lqbuffer[LQTEXT_MAXLENGTH];
   bool first;
+  struct timeval_buf timebuf;
 
   OLSR_INFO(LOG_NEIGHTABLE, "\n--- %s ------------------------------------------------ NEIGHBORS\n\n"
-            "%-*s\tSYM\tMPR\tMPRS\twill\n", olsr_timer_getWallclockString(), ipwidth, "IP address");
+            "%-*s\tSYM\tMPR\tMPRS\twill\n", olsr_timer_getWallclockString(&timebuf), ipwidth, "IP address");
 
   OLSR_FOR_ALL_NBR_ENTRIES(nbr, nbr_iterator) {
 
@@ -501,7 +502,7 @@ olsr_print_neighbor_table(void)
   }
 
   OLSR_INFO(LOG_2NEIGH, "\n--- %s ----------------------- TWO-HOP NEIGHBORS\n\n"
-            "IP addr (2-hop)  IP addr (1-hop)  Total cost\n", olsr_timer_getWallclockString());
+            "IP addr (2-hop)  IP addr (1-hop)  Total cost\n", olsr_timer_getWallclockString(&timebuf));
 
   OLSR_FOR_ALL_NBR2_ENTRIES(nbr2, nbr2_iterator) {
     first = true;

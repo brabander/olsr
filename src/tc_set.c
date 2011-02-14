@@ -646,8 +646,10 @@ olsr_print_tc_table(void)
   struct tc_entry *tc, *tc_iterator;
   const int ipwidth = olsr_cnf->ip_version == AF_INET ? 15 : 30;
   static char NONE[] = "-";
+  struct timeval_buf timebuf;
 
-  OLSR_INFO(LOG_TC, "\n--- %s ------------------------------------------------- TOPOLOGY\n\n", olsr_timer_getWallclockString());
+  OLSR_INFO(LOG_TC, "\n--- %s ------------------------------------------------- TOPOLOGY\n\n",
+      olsr_timer_getWallclockString(&timebuf));
   OLSR_INFO_NH(LOG_TC, "%-*s %-*s %-7s      %8s %12s %5s\n", ipwidth,
                "Source IP addr", ipwidth, "Dest IP addr", "", olsr_get_linklabel(0), "vtime", "ansn");
 

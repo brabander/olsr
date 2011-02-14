@@ -81,6 +81,11 @@ struct olsr_timer_entry {
   void *timer_cb_context;
 };
 
+/* buffer for displaying absolute timestamps */
+struct timeval_buf {
+  char buf[sizeof("00:00:00.000000")];
+};
+
 /* Timers */
 extern struct avl_tree EXPORT(timerinfo_tree);
 #define OLSR_FOR_ALL_TIMERS(ti, iterator) avl_for_each_element_safe(&timerinfo_tree, ti, node, iterator)
@@ -110,8 +115,8 @@ void EXPORT(olsr_timer_stop) (struct olsr_timer_entry *);
 
 struct olsr_timer_info *EXPORT(olsr_timer_add)(const char *name, timer_cb_func callback, bool periodic);
 
-const char *EXPORT(olsr_timer_getClockString)(uint32_t);
-const char *EXPORT(olsr_timer_getWallclockString)(void);
+const char *EXPORT(olsr_timer_getClockString)(struct timeval_buf *, uint32_t);
+const char *EXPORT(olsr_timer_getWallclockString)(struct timeval_buf *);
 
 /* Main scheduler loop */
 void olsr_timer_scheduler(void);

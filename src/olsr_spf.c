@@ -293,6 +293,9 @@ olsr_calculate_routing_table(bool force)
   struct nbr_entry *neigh, *neigh_iterator;
   struct link_entry *link;
   int path_count = 0;
+#if !defined(REMOVE_LOG_DEBUG)
+  struct timeval_buf timebuf;
+#endif
 
   /* We are done if our backoff timer is running */
   if (!force && spf_backoff_timer != NULL) {
@@ -368,7 +371,8 @@ olsr_calculate_routing_table(bool force)
    */
   olsr_spf_run_full(&cand_tree, &path_list, &path_count);
 
-  OLSR_DEBUG(LOG_ROUTING, "\n--- %s ------------------------------------------------- DIJKSTRA\n\n", olsr_timer_getWallclockString());
+  OLSR_DEBUG(LOG_ROUTING, "\n--- %s ------------------------------------------------- DIJKSTRA\n\n",
+      olsr_timer_getWallclockString(&timebuf));
 
 #ifdef SPF_PROFILING
   gettimeofday(&t3, NULL);

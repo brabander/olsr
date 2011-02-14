@@ -421,8 +421,10 @@ olsr_print_mid_set(void)
   struct tc_entry *tc, *tc_iterator;
   struct mid_entry *alias, *mid_iterator;
   struct ipaddr_str buf1, buf2;
+  struct timeval_buf timebuf;
 
-  OLSR_INFO(LOG_MID, "\n--- %s ------------------------------------------------- MID\n\n", olsr_timer_getWallclockString());
+  OLSR_INFO(LOG_MID, "\n--- %s ------------------------------------------------- MID\n\n",
+      olsr_timer_getWallclockString(&timebuf));
 
   OLSR_FOR_ALL_TC_ENTRIES(tc, tc_iterator) {
     OLSR_FOR_ALL_TC_MID_ENTRIES(tc, alias, mid_iterator) {

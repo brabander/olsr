@@ -635,6 +635,7 @@ olsr_print_link_set(void)
   char totaltxt[256] = { 0 };
   const char *txt;
   int addrsize;
+  struct timeval_buf timebuf;
   size_t i, j, length, max, totaltxt_len;
   addrsize = olsr_cnf->ip_version == AF_INET ? INET_ADDRSTRLEN : INET6_ADDRSTRLEN;
 
@@ -665,7 +666,8 @@ olsr_print_link_set(void)
   }
   totaltxt[totaltxt_len] = 0;
 
-  OLSR_INFO(LOG_LINKS, "\n--- %s ---------------------------------------------------- LINKS\n\n", olsr_timer_getWallclockString());
+  OLSR_INFO(LOG_LINKS, "\n--- %s ---------------------------------------------------- LINKS\n\n",
+      olsr_timer_getWallclockString(&timebuf));
   OLSR_INFO_NH(LOG_LINKS, "%-*s  %-6s %s %s\n", addrsize, "IP address", "hyst", totaltxt , olsr_get_linklabel(0));
 
   OLSR_FOR_ALL_LINK_ENTRIES(walker, iterator) {

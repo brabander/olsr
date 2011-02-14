@@ -45,25 +45,28 @@
 
 #include "common/avl.h"
 #include "common/avl_olsr_comp.h"
-#include "olsr_timer.h"
-#include "olsr_socket.h"
-#include "link_set.h"
 #include "olsr.h"
+#include "olsr_logging.h"
 #include "olsr_memcookie.h"
+#include "olsr_timer.h"
 #include "os_net.h"
 #include "os_time.h"
-#include "olsr_logging.h"
+#include "olsr_socket.h"
 
 /* Head of all OLSR used sockets */
 struct list_entity socket_head;
 
+/**
+ * Initialize olsr socket scheduler
+ */
 void
 olsr_socket_init(void) {
   list_init_head(&socket_head);
 }
 
 /**
- * Close and free all sockets.
+ * Cleanup olsr socket scheduler.
+ * This will close and free all sockets.
  */
 void
 olsr_socket_cleanup(void)
@@ -80,10 +83,11 @@ olsr_socket_cleanup(void)
 /**
  * Add a socket and handler to the socketset
  * beeing used in the main select(2) loop
- * in listen_loop
  *
- *@param fd the socket
- *@param pf the processing function
+ * @param fd file descriptor for socket
+ * @param pf_imm processing callback
+ * @param data custom data
+ * @param flags OLSR_SOCKET_READ/OLSR_SOCKET_WRITE (or both)
  */
 void
 olsr_socket_add(int fd, socket_handler_func pf_imm, void *data, unsigned int flags)
@@ -110,10 +114,9 @@ olsr_socket_add(int fd, socket_handler_func pf_imm, void *data, unsigned int fla
 /**
  * Remove a socket and handler to the socketset
  * beeing used in the main select(2) loop
- * in listen_loop
  *
  *@param fd the socket
- *@param pf the processing function
+ *@param pf_imm the processing function
  */
 int
 olsr_socket_remove(int fd, socket_handler_func pf_imm)
@@ -137,6 +140,12 @@ olsr_socket_remove(int fd, socket_handler_func pf_imm)
   return 0;
 }
 
+/**
+ * Enable one or both flags of a socket handler
+ * @param fd file descriptor of socket handler
+ * @param pf_imm process function
+ * @param flags flags to be enabled
+ */
 void
 olsr_socket_enable(int fd, socket_handler_func pf_imm, unsigned int flags)
 {
@@ -149,6 +158,12 @@ olsr_socket_enable(int fd, socket_handler_func pf_imm, unsigned int flags)
   }
 }
 
+/**
+ * Disable one or both flags of a socket handler
+ * @param fd file descriptor of socket handler
+ * @param pf_imm process function
+ * @param flags flags to be disabled
+ */
 void
 olsr_socket_disable(int fd, socket_handler_func pf_imm, unsigned int flags)
 {
@@ -161,12 +176,19 @@ olsr_socket_disable(int fd, socket_handler_func pf_imm, unsigned int flags)
   }
 }
 
+/**
+ * Handle all incoming socket events until a certain time
+ * @param next_interval
+ */
 void
 handle_sockets(uint32_t next_interval)
 {
   struct olsr_socket_entry *entry, *iterator;
   struct timeval tvp;
   int32_t remaining;
+
+  /* Update time since this is much used by the parsing functions */
+  olsr_timer_updateClock();
 
   remaining = olsr_timer_getRelative(next_interval);
   if (remaining <= 0) {
@@ -263,7 +285,6 @@ handle_sockets(uint32_t next_interval)
     }
   }
 }
-
 
 /*
  * Local Variables:

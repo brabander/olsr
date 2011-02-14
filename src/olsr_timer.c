@@ -11,13 +11,11 @@
 
 #include "common/avl.h"
 #include "common/avl_olsr_comp.h"
-#include "olsr_timer.h"
-#include "olsr_socket.h"
-#include "link_set.h"
 #include "olsr.h"
-#include "olsr_memcookie.h"
-#include "os_time.h"
 #include "olsr_logging.h"
+#include "olsr_memcookie.h"
+#include "olsr_socket.h"
+#include "os_time.h"
 #include "olsr_timer.h"
 
 /* Timer data */
@@ -37,7 +35,81 @@ static struct olsr_memcookie_info *timerinfo_cookie = NULL;
 /* Prototypes */
 static void walk_timers(uint32_t *);
 static uint32_t calc_jitter(unsigned int rel_time, uint8_t jitter_pct, unsigned int random_val);
+static int olsr_get_timezone(void);
 
+/**
+ * Init datastructures for maintaining timers.
+ */
+void
+olsr_timer_init(void)
+{
+  int idx;
+
+  OLSR_INFO(LOG_SCHEDULER, "Initializing scheduler.\n");
+
+  /* Grab initial timestamp */
+  if (os_gettimeofday(&first_tv, NULL)) {
+    OLSR_ERROR(LOG_TIMER, "OS clock is not working, have to shut down OLSR (%s)\n", strerror(errno));
+    olsr_exit(1);
+  }
+  last_tv = first_tv;
+  olsr_timer_updateClock();
+
+  /* init lists */
+  list_init_head(&socket_head);
+  for (idx = 0; idx < TIMER_WHEEL_SLOTS; idx++) {
+    list_init_head(&timer_wheel[idx]);
+  }
+
+  /*
+   * Reset the last timer run.
+   */
+  timer_last_run = now_times;
+
+  /* Allocate a cookie for the block based memory manager. */
+  timer_mem_cookie = olsr_memcookie_add("timer_entry", sizeof(struct olsr_timer_entry));
+
+  avl_init(&timerinfo_tree, avl_comp_strcasecmp, false, NULL);
+  timerinfo_cookie = olsr_memcookie_add("timerinfo", sizeof(struct olsr_timer_info));
+}
+
+/**
+ * Cleanup timer scheduler, this stops and deletes all timers
+ */
+void
+olsr_timer_cleanup(void)
+{
+  struct olsr_timer_info *ti, *iterator;
+
+  struct list_entity *timer_head_node;
+  unsigned int wheel_slot = 0;
+
+  for (wheel_slot = 0; wheel_slot < TIMER_WHEEL_SLOTS; wheel_slot++) {
+    timer_head_node = &timer_wheel[wheel_slot & TIMER_WHEEL_MASK];
+
+    /* Kill all entries hanging off this hash bucket. */
+    while (!list_is_empty(timer_head_node)) {
+      struct olsr_timer_entry *timer;
+
+      timer = list_first_element(timer_head_node, timer, timer_list);
+      olsr_timer_stop(timer);
+    }
+  }
+
+  /* free all timerinfos */
+  OLSR_FOR_ALL_TIMERS(ti, iterator) {
+    avl_delete(&timerinfo_tree, &ti->node);
+    free(ti->name);
+    olsr_memcookie_free(timerinfo_cookie, ti);
+  }
+
+  /* release memory cookie for timers */
+  olsr_memcookie_remove(timerinfo_cookie);
+}
+
+/**
+ * Update the internal clock to current system time
+ */
 void
 olsr_timer_updateClock(void)
 {
@@ -75,23 +147,27 @@ olsr_timer_updateClock(void)
 
 /**
  * Returns a timestamp s seconds in the future
+ * @param s milliseconds until timestamp
+ * @return absolute time when event will happen
  */
 uint32_t
-olsr_timer_getAbsolute(uint32_t s)
+olsr_timer_getAbsolute(uint32_t relative)
 {
-  return now_times + s;
+  return now_times + relative;
 }
 
 /**
  * Returns the number of milliseconds until the timestamp will happen
+ * @param absolute timestamp
+ * @return milliseconds until event will happen, negative if it already
+ *   happened.
  */
-
 int32_t
-olsr_timer_getRelative(uint32_t s)
+olsr_timer_getRelative(uint32_t absolute)
 {
   uint32_t diff;
-  if (s > now_times) {
-    diff = s - now_times;
+  if (absolute > now_times) {
+    diff = absolute - now_times;
 
     /* overflow ? */
     if (diff > (1u << 31)) {
@@ -100,7 +176,7 @@ olsr_timer_getRelative(uint32_t s)
     return (int32_t) (diff);
   }
 
-  diff = now_times - s;
+  diff = now_times - absolute;
   /* overflow ? */
   if (diff > (1u << 31)) {
     return (int32_t) (0xffffffff - diff);
@@ -108,16 +184,28 @@ olsr_timer_getRelative(uint32_t s)
   return -(int32_t) (diff);
 }
 
+/**
+ * Checks if a timestamp has already happened
+ * @param absolute timestamp
+ * @return true if the event already happened, false otherwise
+ */
 bool
-olsr_timer_isTimedOut(uint32_t s)
+olsr_timer_isTimedOut(uint32_t absolute)
 {
-  if (s > now_times) {
-    return s - now_times > (1u << 31);
+  if (absolute > now_times) {
+    return absolute - now_times > (1u << 31);
   }
 
-  return now_times - s <= (1u << 31);
+  return now_times - absolute <= (1u << 31);
 }
 
+/**
+ * Add a new group of timers to the scheduler
+ * @param name
+ * @param callback timer event function
+ * @param periodic true if the timer is periodic, false otherwise
+ * @return new timer info
+ */
 struct olsr_timer_info *
 olsr_timer_add(const char *name, timer_cb_func callback, bool periodic) {
   struct olsr_timer_info *ti;
@@ -133,13 +221,8 @@ olsr_timer_add(const char *name, timer_cb_func callback, bool periodic) {
 }
 
 /**
- * Main scheduler event loop. Polls at every
- * sched_poll_interval and calls all functions
- * that are timed out or that are triggered.
- * Also calls the olsr_process_changes()
- * function at every poll.
- *
- * @return nada
+ * Main timer scheduler event loop.
+ * Will call socket scheduler and olsr_process_changes()
  */
 void
 olsr_timer_scheduler(void)
@@ -163,21 +246,207 @@ olsr_timer_scheduler(void)
     /* Update */
     olsr_process_changes();
 
-    /* Check for changes in topology */
-    if (link_changes) {
-      increase_local_ansn_number();
-      OLSR_DEBUG(LOG_SCHEDULER, "ANSN UPDATED %d\n\n", get_local_ansn_number());
-      link_changes = false;
-    }
-
-    /*
-     * Update the global timestamp. We are using a non-wallclock timer here
-     * to avoid any undesired side effects if the system clock changes.
-     */
-    olsr_timer_updateClock();
-
     /* Read incoming data and handle it immediately */
     handle_sockets(next_interval);
+  }
+}
+
+/**
+ * Format an absolute wallclock system time string.
+ * May be called upto 4 times in a single printf() statement.
+ * Displays microsecond resolution.
+ *
+ * @return buffer to a formatted system time string.
+ */
+const char *
+olsr_timer_getWallclockString(struct timeval_buf *buf)
+{
+  struct timeval now;
+  int sec, usec;
+
+  os_gettimeofday(&now, NULL);
+
+  sec = (int)now.tv_sec + olsr_get_timezone();
+  usec = (int)now.tv_usec;
+
+  snprintf(buf->buf, sizeof(buf), "%02d:%02d:%02d.%06d",
+      (sec % 86400) / 3600, (sec % 3600) / 60, sec % 60, usec);
+
+  return buf->buf;
+}
+
+/**
+ * Format an relative non-wallclock system time string.
+ * Displays millisecond resolution.
+ *
+ * @param absolute timestamp
+ * @return buffer to a formatted system time string.
+ */
+const char *
+olsr_timer_getClockString(struct timeval_buf *buf, uint32_t clk)
+{
+  unsigned int msec = clk % 1000;
+  unsigned int sec = clk / 1000;
+
+  snprintf(buf->buf, sizeof(buf),
+      "%02u:%02u:%02u.%03u", sec / 3600, (sec % 3600) / 60, (sec % 60), (msec % MSEC_PER_SEC));
+
+  return buf->buf;
+}
+
+/**
+ * Start a new timer.
+ *
+ * @param relative time expressed in milliseconds
+ * @param jitter expressed in percent
+ * @param timer callback function
+ * @param context for the callback function
+ * @return a pointer to the created entry
+ */
+struct olsr_timer_entry *
+olsr_timer_start(unsigned int rel_time,
+                 uint8_t jitter_pct, void *context, struct olsr_timer_info *ti)
+{
+  struct olsr_timer_entry *timer;
+#if !defined(REMOVE_LOG_DEBUG)
+  struct timeval_buf timebuf;
+#endif
+
+  assert(ti != 0);          /* we want timer cookies everywhere */
+  assert(rel_time);
+  assert(jitter_pct <= 100);
+
+  timer = olsr_memcookie_malloc(timer_mem_cookie);
+
+  /*
+   * Compute random numbers only once.
+   */
+  if (!timer->timer_random) {
+    timer->timer_random = random();
+  }
+
+  /* Fill entry */
+  timer->timer_clock = calc_jitter(rel_time, jitter_pct, timer->timer_random);
+  timer->timer_cb_context = context;
+  timer->timer_jitter_pct = jitter_pct;
+  timer->timer_running = true;
+
+  /* The cookie is used for debugging to traceback the originator */
+  timer->timer_info = ti;
+  ti->usage++;
+  ti->changes++;
+
+  /* Singleshot or periodical timer ? */
+  timer->timer_period = ti->periodic ? rel_time : 0;
+
+  /*
+   * Now insert in the respective timer_wheel slot.
+   */
+  list_add_before(&timer_wheel[timer->timer_clock & TIMER_WHEEL_MASK], &timer->timer_list);
+
+  OLSR_DEBUG(LOG_TIMER, "TIMER: start %s timer %p firing in %s, ctx %p\n",
+             ti->name, timer, olsr_timer_getClockString(&timebuf, timer->timer_clock), context);
+
+  return timer;
+}
+
+/**
+ * Delete a timer.
+ *
+ * @param the olsr_timer_entry that shall be removed
+ * @return nada
+ */
+void
+olsr_timer_stop(struct olsr_timer_entry *timer)
+{
+  /* It's okay to get a NULL here */
+  if (timer == NULL) {
+    return;
+  }
+
+  assert(timer->timer_info);     /* we want timer cookies everywhere */
+  assert(timer->timer_list.next != NULL && timer->timer_list.prev != NULL);
+
+  OLSR_DEBUG(LOG_TIMER, "TIMER: stop %s timer %p, ctx %p\n",
+             timer->timer_info->name, timer, timer->timer_cb_context);
+
+
+  /*
+   * Carve out of the existing wheel_slot and free.
+   */
+  list_remove(&timer->timer_list);
+  timer->timer_running = false;
+  timer->timer_info->usage--;
+  timer->timer_info->changes++;
+
+  if (!timer->timer_in_callback) {
+    olsr_memcookie_free(timer_mem_cookie, timer);
+  }
+}
+
+/**
+ * Change a olsr_timer_entry.
+ *
+ * @param olsr_timer_entry to be changed.
+ * @param new relative time expressed in units of milliseconds.
+ * @param new jitter expressed in percent.
+ * @return nada
+ */
+void
+olsr_timer_change(struct olsr_timer_entry *timer, unsigned int rel_time, uint8_t jitter_pct)
+{
+#if !defined(REMOVE_LOG_DEBUG)
+  struct timeval_buf timebuf;
+#endif
+
+  /* Sanity check. */
+  if (!timer) {
+    return;
+  }
+
+  assert(timer->timer_info);     /* we want timer cookies everywhere */
+
+  /* Singleshot or periodical timer ? */
+  timer->timer_period = timer->timer_info->periodic ? rel_time : 0;
+
+  timer->timer_clock = calc_jitter(rel_time, jitter_pct, timer->timer_random);
+  timer->timer_jitter_pct = jitter_pct;
+
+  /*
+   * Changes are easy: Remove timer from the exisiting timer_wheel slot
+   * and reinsert into the new slot.
+   */
+  list_remove(&timer->timer_list);
+  list_add_before(&timer_wheel[timer->timer_clock & TIMER_WHEEL_MASK], &timer->timer_list);
+
+  OLSR_DEBUG(LOG_TIMER, "TIMER: change %s timer %p, firing to %s, ctx %p\n",
+             timer->timer_info->name, timer,
+             olsr_timer_getClockString(&timebuf, timer->timer_clock), timer->timer_cb_context);
+}
+
+/*
+ * This is the one stop shop for all sort of timer manipulation.
+ * Depending on the paseed in parameters a new timer is started,
+ * or an existing timer is started or an existing timer is
+ * terminated.
+ */
+void
+olsr_timer_set(struct olsr_timer_entry **timer_ptr,
+               unsigned int rel_time,
+               uint8_t jitter_pct, void *context, struct olsr_timer_info *ti)
+{
+  assert(ti);          /* we want timer cookies everywhere */
+  if (rel_time == 0) {
+    /* No good future time provided, kill it. */
+    olsr_timer_stop(*timer_ptr);
+    *timer_ptr = NULL;
+  }
+  else if ((*timer_ptr) == NULL) {
+    /* No timer running, kick it. */
+    *timer_ptr = olsr_timer_start(rel_time, jitter_pct, context, ti);
+  }
+  else {
+    olsr_timer_change(*timer_ptr, rel_time, jitter_pct);
   }
 }
 
@@ -187,7 +456,7 @@ olsr_timer_scheduler(void)
  * @param the relative timer expressed in units of milliseconds.
  * @param the jitter in percent
  * @param cached result of random() at system init.
- * @return the absolute timer in system clock tick units
+ * @return the absolute timer
  */
 static uint32_t
 calc_jitter(unsigned int rel_time, uint8_t jitter_pct, unsigned int random_val)
@@ -211,42 +480,6 @@ calc_jitter(unsigned int rel_time, uint8_t jitter_pct, unsigned int random_val)
   OLSR_DEBUG(LOG_TIMER, "TIMER: jitter %u%% rel_time %ums to %ums\n", jitter_pct, rel_time, rel_time - jitter_time);
 
   return olsr_timer_getAbsolute(rel_time - jitter_time);
-}
-
-/**
- * Init datastructures for maintaining timers.
- */
-void
-olsr_timer_init(void)
-{
-  int idx;
-
-  OLSR_INFO(LOG_SCHEDULER, "Initializing scheduler.\n");
-
-  /* Grab initial timestamp */
-  if (os_gettimeofday(&first_tv, NULL)) {
-    OLSR_ERROR(LOG_TIMER, "OS clock is not working, have to shut down OLSR (%s)\n", strerror(errno));
-    olsr_exit(1);
-  }
-  last_tv = first_tv;
-  olsr_timer_updateClock();
-
-  /* init lists */
-  list_init_head(&socket_head);
-  for (idx = 0; idx < TIMER_WHEEL_SLOTS; idx++) {
-    list_init_head(&timer_wheel[idx]);
-  }
-
-  /*
-   * Reset the last timer run.
-   */
-  timer_last_run = now_times;
-
-  /* Allocate a cookie for the block based memory manager. */
-  timer_mem_cookie = olsr_memcookie_add("timer_entry", sizeof(struct olsr_timer_entry));
-
-  avl_init(&timerinfo_tree, avl_comp_strcasecmp, false, NULL);
-  timerinfo_cookie = olsr_memcookie_add("timerinfo", sizeof(struct olsr_timer_info));
 }
 
 /**
@@ -295,10 +528,14 @@ walk_timers(uint32_t * last_run)
 
       /* Ready to fire ? */
       if (olsr_timer_isTimedOut(timer->timer_clock)) {
+#if !defined(REMOVE_LOG_DEBUG)
+  struct timeval_buf timebuf;
+#endif
         OLSR_DEBUG(LOG_TIMER, "TIMER: fire %s timer %p, ctx %p, "
                    "at clocktick %u (%s)\n",
                    timer->timer_info->name,
-                   timer, timer->timer_cb_context, (unsigned int)*last_run, olsr_timer_getWallclockString());
+                   timer, timer->timer_cb_context, (unsigned int)*last_run,
+                   olsr_timer_getWallclockString(&timebuf));
 
         /* This timer is expired, call into the provided callback function */
         timer->timer_in_callback = true;
@@ -356,40 +593,6 @@ walk_timers(uint32_t * last_run)
 }
 
 /**
- * Stop and delete all timers.
- */
-void
-olsr_timer_cleanup(void)
-{
-  struct olsr_timer_info *ti, *iterator;
-
-  struct list_entity *timer_head_node;
-  unsigned int wheel_slot = 0;
-
-  for (wheel_slot = 0; wheel_slot < TIMER_WHEEL_SLOTS; wheel_slot++) {
-    timer_head_node = &timer_wheel[wheel_slot & TIMER_WHEEL_MASK];
-
-    /* Kill all entries hanging off this hash bucket. */
-    while (!list_is_empty(timer_head_node)) {
-      struct olsr_timer_entry *timer;
-
-      timer = list_first_element(timer_head_node, timer, timer_list);
-      olsr_timer_stop(timer);
-    }
-  }
-
-  /* free all timerinfos */
-  OLSR_FOR_ALL_TIMERS(ti, iterator) {
-    avl_delete(&timerinfo_tree, &ti->node);
-    free(ti->name);
-    olsr_memcookie_free(timerinfo_cookie, ti);
-  }
-
-  /* release memory cookie for timers */
-  olsr_memcookie_remove(timerinfo_cookie);
-}
-
-/**
  * Returns the difference between gmt and local time in seconds.
  * Use gmtime() and localtime() to keep things simple.
  *
@@ -423,197 +626,3 @@ olsr_get_timezone(void)
   return time_diff;
 }
 
-/**
- * Format an absolute wallclock system time string.
- * May be called upto 4 times in a single printf() statement.
- * Displays microsecond resolution.
- *
- * @return buffer to a formatted system time string.
- */
-const char *
-olsr_timer_getWallclockString(void)
-{
-  static char buf[sizeof("00:00:00.000000")];
-  struct timeval now;
-  int sec, usec;
-
-  os_gettimeofday(&now, NULL);
-
-  sec = (int)now.tv_sec + olsr_get_timezone();
-  usec = (int)now.tv_usec;
-
-  snprintf(buf, sizeof(buf), "%02d:%02d:%02d.%06d", (sec % 86400) / 3600, (sec % 3600) / 60, sec % 60, usec);
-
-  return buf;
-}
-
-/**
- * Format an relative non-wallclock system time string.
- * May be called upto 4 times in a single printf() statement.
- * Displays millisecond resolution.
- *
- * @param absolute time expressed in clockticks
- * @return buffer to a formatted system time string.
- */
-const char *
-olsr_timer_getClockString(uint32_t clk)
-{
-  static char buf[sizeof("00:00:00.000")];
-
-  unsigned int msec = clk % 1000;
-  unsigned int sec = clk / 1000;
-
-  snprintf(buf, sizeof(buf), "%02u:%02u:%02u.%03u", sec / 3600, (sec % 3600) / 60, (sec % 60), (msec % MSEC_PER_SEC));
-
-  return buf;
-}
-
-/**
- * Start a new timer.
- *
- * @param relative time expressed in milliseconds
- * @param jitter expressed in percent
- * @param timer callback function
- * @param context for the callback function
- * @return a pointer to the created entry
- */
-struct olsr_timer_entry *
-olsr_timer_start(unsigned int rel_time,
-                 uint8_t jitter_pct, void *context, struct olsr_timer_info *ti)
-{
-  struct olsr_timer_entry *timer;
-
-  assert(ti != 0);          /* we want timer cookies everywhere */
-  assert(rel_time);
-  assert(jitter_pct <= 100);
-
-  timer = olsr_memcookie_malloc(timer_mem_cookie);
-
-  /*
-   * Compute random numbers only once.
-   */
-  if (!timer->timer_random) {
-    timer->timer_random = random();
-  }
-
-  /* Fill entry */
-  timer->timer_clock = calc_jitter(rel_time, jitter_pct, timer->timer_random);
-  timer->timer_cb_context = context;
-  timer->timer_jitter_pct = jitter_pct;
-  timer->timer_running = true;
-
-  /* The cookie is used for debugging to traceback the originator */
-  timer->timer_info = ti;
-  ti->usage++;
-  ti->changes++;
-
-  /* Singleshot or periodical timer ? */
-  timer->timer_period = ti->periodic ? rel_time : 0;
-
-  /*
-   * Now insert in the respective timer_wheel slot.
-   */
-  list_add_before(&timer_wheel[timer->timer_clock & TIMER_WHEEL_MASK], &timer->timer_list);
-
-  OLSR_DEBUG(LOG_TIMER, "TIMER: start %s timer %p firing in %s, ctx %p\n",
-             ti->name, timer, olsr_timer_getClockString(timer->timer_clock), context);
-
-  return timer;
-}
-#include "valgrind/valgrind.h"
-
-/**
- * Delete a timer.
- *
- * @param the olsr_timer_entry that shall be removed
- * @return nada
- */
-void
-olsr_timer_stop(struct olsr_timer_entry *timer)
-{
-  /* It's okay to get a NULL here */
-  if (timer == NULL) {
-    return;
-  }
-
-  assert(timer->timer_info);     /* we want timer cookies everywhere */
-  assert(timer->timer_list.next != NULL && timer->timer_list.prev != NULL);
-
-  OLSR_DEBUG(LOG_TIMER, "TIMER: stop %s timer %p, ctx %p\n",
-             timer->timer_info->name, timer, timer->timer_cb_context);
-
-
-  /*
-   * Carve out of the existing wheel_slot and free.
-   */
-  list_remove(&timer->timer_list);
-  timer->timer_running = false;
-  timer->timer_info->usage--;
-  timer->timer_info->changes++;
-
-  if (!timer->timer_in_callback) {
-    olsr_memcookie_free(timer_mem_cookie, timer);
-  }
-}
-
-/**
- * Change a olsr_timer_entry.
- *
- * @param olsr_timer_entry to be changed.
- * @param new relative time expressed in units of milliseconds.
- * @param new jitter expressed in percent.
- * @return nada
- */
-void
-olsr_timer_change(struct olsr_timer_entry *timer, unsigned int rel_time, uint8_t jitter_pct)
-{
-  /* Sanity check. */
-  if (!timer) {
-    return;
-  }
-
-  assert(timer->timer_info);     /* we want timer cookies everywhere */
-
-  /* Singleshot or periodical timer ? */
-  timer->timer_period = timer->timer_info->periodic ? rel_time : 0;
-
-  timer->timer_clock = calc_jitter(rel_time, jitter_pct, timer->timer_random);
-  timer->timer_jitter_pct = jitter_pct;
-
-  /*
-   * Changes are easy: Remove timer from the exisiting timer_wheel slot
-   * and reinsert into the new slot.
-   */
-  list_remove(&timer->timer_list);
-  list_add_before(&timer_wheel[timer->timer_clock & TIMER_WHEEL_MASK], &timer->timer_list);
-
-  OLSR_DEBUG(LOG_TIMER, "TIMER: change %s timer %p, firing to %s, ctx %p\n",
-             timer->timer_info->name, timer,
-             olsr_timer_getClockString(timer->timer_clock), timer->timer_cb_context);
-}
-
-/*
- * This is the one stop shop for all sort of timer manipulation.
- * Depending on the paseed in parameters a new timer is started,
- * or an existing timer is started or an existing timer is
- * terminated.
- */
-void
-olsr_timer_set(struct olsr_timer_entry **timer_ptr,
-               unsigned int rel_time,
-               uint8_t jitter_pct, void *context, struct olsr_timer_info *ti)
-{
-  assert(ti);          /* we want timer cookies everywhere */
-  if (rel_time == 0) {
-    /* No good future time provided, kill it. */
-    olsr_timer_stop(*timer_ptr);
-    *timer_ptr = NULL;
-  }
-  else if ((*timer_ptr) == NULL) {
-    /* No timer running, kick it. */
-    *timer_ptr = olsr_timer_start(rel_time, jitter_pct, context, ti);
-  }
-  else {
-    olsr_timer_change(*timer_ptr, rel_time, jitter_pct);
-  }
-}

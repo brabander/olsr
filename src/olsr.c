@@ -138,6 +138,13 @@ olsr_process_changes(void)
 {
   struct pcf *tmp_pc_list;
 
+  /* Check for changes in topology */
+  if (link_changes) {
+    increase_local_ansn_number();
+    OLSR_DEBUG(LOG_MAIN, "ANSN UPDATED %d\n\n", get_local_ansn_number());
+    link_changes = false;
+  }
+
   if (changes_neighborhood)
     OLSR_DEBUG(LOG_MAIN, "CHANGES IN NEIGHBORHOOD\n");
   if (changes_topology)
