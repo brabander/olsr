@@ -401,7 +401,9 @@ void
 olsr_calculate_willingness(void)
 {
   struct olsr_apm_info ainfo;
+#if !defined(REMOVE_LOG_INFO)
   struct millitxt_buf tbuf;
+#endif
 
   /* If fixed willingness */
   if (!olsr_cnf->willingness_auto)

@@ -358,9 +358,10 @@ static int olsr_new_netlink_route(int family, int rttable, int if_index, int met
   int err;
 
   if (0) {
+#if !defined(REMOVE_LOG_WARN)
     struct ipaddr_str buf1, buf2;
     struct ipprefix_str bufp;
-
+#endif
     OLSR_WARN(LOG_ROUTING, "new_netlink_route: family=%d,rttable=%d,if_index=%d,metric=%d,protocol=%d,src=%s,gw=%s,dst=%s,set=%s,del_similar=%s",
         family, rttable, if_index, metric, protocol, src == NULL ? "" : olsr_ip_to_string(&buf1, src),
         gw == NULL ? "" : olsr_ip_to_string(&buf2, gw), olsr_ip_prefix_to_string(&bufp, dst),
@@ -430,9 +431,11 @@ static int olsr_new_netlink_route(int family, int rttable, int if_index, int met
 
   err = olsr_netlink_send(&req.n);
   if (err) {
+#if !defined(REMOVE_LOG_ERROR)
     struct ipprefix_str bufp;
+    struct ipaddr_str buf;
+#endif
     if (gw) {
-      struct ipaddr_str buf;
       OLSR_ERROR(LOG_ROUTING, ". error: %s route to %s via %s dev %s (%s %d)",
           set ? "add" : "del",
           olsr_ip_prefix_to_string(&bufp, dst), olsr_ip_to_string(&buf, gw),
@@ -454,7 +457,9 @@ void olsr_os_niit_6to4_route(const struct olsr_ip_prefix *dst_v6, bool set) {
       ip_prefix_is_mappedv4_inetgw(dst_v6) ? olsr_cnf->rt_table_default : olsr_cnf->rt_table,
       olsr_cnf->niit6to4_if_index,
       RT_METRIC_DEFAULT, olsr_cnf->rt_proto, NULL, NULL, dst_v6, set, false)) {
+#if !defined(REMOVE_LOG_ERROR)
     struct ipprefix_str bufp;
+#endif
     OLSR_ERROR(LOG_ROUTING, ". error while %s static niit route to %s",
         set ? "setting" : "removing", olsr_ip_prefix_to_string(&bufp, dst_v6));
   }
@@ -465,7 +470,9 @@ void olsr_os_niit_4to6_route(const struct olsr_ip_prefix *dst_v4, bool set) {
       ip_prefix_is_v4_inetgw(dst_v4) ? olsr_cnf->rt_table_default : olsr_cnf->rt_table,
       olsr_cnf->niit4to6_if_index,
       RT_METRIC_DEFAULT, olsr_cnf->rt_proto, NULL, NULL, dst_v4, set, false)) {
+#if !defined(REMOVE_LOG_ERROR)
     struct ipprefix_str bufp;
+#endif
     OLSR_ERROR(LOG_ROUTING, ". error while %s niit route to %s",
         set ? "setting" : "removing", olsr_ip_prefix_to_string(&bufp, dst_v4));
   }
@@ -480,7 +487,9 @@ void olsr_os_inetgw_tunnel_route(uint32_t if_idx, bool ipv4, bool set) {
 
   if (olsr_new_netlink_route(ipv4 ? AF_INET : AF_INET6, olsr_cnf->rt_table_tunnel,
       if_idx, RT_METRIC_DEFAULT, olsr_cnf->rt_proto, NULL, NULL, dst, set, false)) {
+#if !defined(REMOVE_LOG_ERROR)
     struct ipprefix_str bufp;
+#endif
     OLSR_ERROR(LOG_ROUTING, ". error while %s inetgw tunnel route to %s for if %d",
         set ? "setting" : "removing", olsr_ip_prefix_to_string(&bufp, dst), if_idx);
   }

@@ -139,8 +139,9 @@ static int os_ip4_tunnel(const char *name, in_addr_t *target)
   ifr.ifr_ifru.ifru_data = (void *) &p;
 
   if ((err = ioctl(olsr_cnf->ioctl_s, target != NULL ? SIOCADDTUNNEL : SIOCDELTUNNEL, &ifr))) {
+#if !defined(REMOVE_LOG_WARN)
     char buffer[INET6_ADDRSTRLEN];
-
+#endif
     OLSR_WARN(LOG_TUNNEL, "Cannot %s a tunnel %s to %s: %s (%d)\n",
         target != NULL ? "add" : "remove", name,
         target != NULL ? inet_ntop(olsr_cnf->ip_version, target, buffer, sizeof(buffer)) : "-",
@@ -178,8 +179,9 @@ static int os_ip6_tunnel(const char *name, struct in6_addr *target)
   ifr.ifr_ifru.ifru_data = (void *) &p;
 
   if ((err = ioctl(olsr_cnf->ioctl_s, target != NULL ? SIOCADDTUNNEL : SIOCDELTUNNEL, &ifr))) {
+#if !defined(REMOVE_LOG_WARN)
     char buffer[INET6_ADDRSTRLEN];
-
+#endif
     OLSR_WARN(LOG_TUNNEL, "Cannot %s a tunnel %s to %s: %s (%d)\n",
         target != NULL ? "add" : "remove", name,
         target != NULL ? inet_ntop(olsr_cnf->ip_version, target, buffer, sizeof(buffer)) : "-",

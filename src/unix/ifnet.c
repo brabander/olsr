@@ -99,7 +99,7 @@ os_close(int sock) {
 int
 chk_if_changed(struct olsr_if_config *iface)
 {
-#if !defined REMOVE_LOG_DEBUG || !defined REMOVE_LOG_INFO
+#if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
 #endif
   struct interface *ifp;
@@ -295,7 +295,7 @@ os_init_interface(struct interface *ifp, struct olsr_if_config *iface)
   struct ifreq ifr;
   const char *ifr_basename;
   int int_flags;
-#if !defined REMOVE_LOG_DEBUG || !defined REMOVE_LOG_INFO
+#if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
 #endif
 

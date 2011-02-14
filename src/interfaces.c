@@ -210,8 +210,9 @@ add_interface(struct olsr_if_config *iface) {
    * Set main address if it's not set
    */
   if (olsr_ipcmp(&all_zero, &olsr_cnf->router_id) == 0) {
+#if !defined(REMOVE_LOG_INFO)
     struct ipaddr_str buf;
-
+#endif
     olsr_cnf->router_id = ifp->ip_addr;
     OLSR_INFO(LOG_INTERFACE, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->router_id));
 

@@ -297,7 +297,9 @@ parse_packet(uint8_t *binary, int size, struct interface *in_if, union olsr_ip_a
     }
 
     if (msg.ttl == 0 || (int)msg.ttl + (int)msg.hopcnt > 255) {
+#if !defined(REMOVE_LOG_WARN)
       struct ipaddr_str buf2;
+#endif
       OLSR_WARN(LOG_PACKET_PARSING, "Malformed incoming message type %u from %s with originator %s: ttl=%u and hopcount=%u\n",
           msg.type, olsr_ip_to_string(&buf, from_addr), olsr_ip_to_string(&buf2, &msg.originator), msg.ttl, msg.hopcnt);
       continue;
@@ -336,7 +338,7 @@ olsr_input(int fd, void *data __attribute__ ((unused)), unsigned int flags __att
 #ifndef REMOVE_LOG_DEBUG
   char addrbuf[128];
 #endif
-#ifndef REMOVE_LOG_WARN
+#if !defined(REMOVE_LOG_INFO) || !defined(REMOVE_LOG_WARN)
   struct ipaddr_str buf;
 #endif
 
