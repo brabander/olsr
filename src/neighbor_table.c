@@ -77,7 +77,7 @@ olsr_init_neighbor_table(void)
   avl_init(&nbr_tree, avl_comp_default, false, NULL);
   avl_init(&nbr2_tree, avl_comp_default, false, NULL);
 
-  nbr_connector_timer_info = olsr_alloc_timerinfo("Neighbor connector", &olsr_expire_nbr_con, false);
+  nbr_connector_timer_info = olsr_timer_add("Neighbor connector", &olsr_expire_nbr_con, false);
   nbr_connector_mem_cookie = olsr_memcookie_add("Neighbor connector", sizeof(struct nbr_con));
 
   nbr_mem_cookie = olsr_memcookie_add("1-Hop Neighbor", sizeof(struct nbr_entry));
@@ -357,7 +357,7 @@ olsr_link_nbr_nbr2(struct nbr_entry *nbr, const union olsr_ip_addr *nbr2_addr, u
    */
   connector = olsr_lookup_nbr_con_entry(nbr, nbr2_addr);
   if (connector) {
-    olsr_change_timer(connector->nbr2_con_timer, vtime, OLSR_NBR2_LIST_JITTER);
+    olsr_timer_change(connector->nbr2_con_timer, vtime, OLSR_NBR2_LIST_JITTER);
     return connector;
   }
 
@@ -378,7 +378,7 @@ olsr_link_nbr_nbr2(struct nbr_entry *nbr, const union olsr_ip_addr *nbr2_addr, u
 
   connector->path_linkcost = LINK_COST_BROKEN;
 
-  connector->nbr2_con_timer = olsr_start_timer(vtime, OLSR_NBR2_LIST_JITTER,
+  connector->nbr2_con_timer = olsr_timer_start(vtime, OLSR_NBR2_LIST_JITTER,
       connector, nbr_connector_timer_info);
 
   return connector;
@@ -390,7 +390,7 @@ olsr_link_nbr_nbr2(struct nbr_entry *nbr, const union olsr_ip_addr *nbr2_addr, u
  */
 static void
 internal_delete_nbr_con(struct nbr_con *connector) {
-  olsr_stop_timer(connector->nbr2_con_timer);
+  olsr_timer_stop(connector->nbr2_con_timer);
   connector->nbr2_con_timer = NULL;
 
   avl_delete(&connector->nbr->con_tree, &connector->nbr_tree_node);
@@ -482,7 +482,7 @@ olsr_print_neighbor_table(void)
   bool first;
 
   OLSR_INFO(LOG_NEIGHTABLE, "\n--- %s ------------------------------------------------ NEIGHBORS\n\n"
-            "%-*s\tSYM\tMPR\tMPRS\twill\n", olsr_wallclock_string(), ipwidth, "IP address");
+            "%-*s\tSYM\tMPR\tMPRS\twill\n", olsr_timer_getWallclockString(), ipwidth, "IP address");
 
   OLSR_FOR_ALL_NBR_ENTRIES(nbr, nbr_iterator) {
 
@@ -500,7 +500,7 @@ olsr_print_neighbor_table(void)
   }
 
   OLSR_INFO(LOG_2NEIGH, "\n--- %s ----------------------- TWO-HOP NEIGHBORS\n\n"
-            "IP addr (2-hop)  IP addr (1-hop)  Total cost\n", olsr_wallclock_string());
+            "IP addr (2-hop)  IP addr (1-hop)  Total cost\n", olsr_timer_getWallclockString());
 
   OLSR_FOR_ALL_NBR2_ENTRIES(nbr2, nbr2_iterator) {
     first = true;

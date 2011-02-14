@@ -115,7 +115,7 @@ init_net(void)
     olsr_add_invalid_address(&addr);
   }
 
-  buffer_hold_timer_info = olsr_alloc_timerinfo("Buffer writeback", olsr_expire_buffer_timer, false);
+  buffer_hold_timer_info = olsr_timer_add("Buffer writeback", olsr_expire_buffer_timer, false);
 }
 
 /**
@@ -169,7 +169,7 @@ set_buffer_timer(struct interface *ifn)
    * been drained. Flush the buffer in second or so.
    */
   ifn->buffer_hold_timer =
-    olsr_start_timer(OLSR_BUFFER_HOLD_TIME, OLSR_BUFFER_HOLD_JITTER,
+    olsr_timer_start(OLSR_BUFFER_HOLD_TIME, OLSR_BUFFER_HOLD_JITTER,
                      ifn, buffer_hold_timer_info);
 }
 

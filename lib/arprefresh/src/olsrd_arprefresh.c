@@ -167,7 +167,7 @@ int
 olsrd_plugin_init(void)
 {
   int ret = 0;
-  arp_event_timer_info = olsr_alloc_timerinfo("Arprefresh: event", &olsr_arp_event, true);
+  arp_event_timer_info = olsr_timer_add("Arprefresh: event", &olsr_arp_event, true);
 
   if (AF_INET == olsr_cnf->ip_version) {
     struct sock_fprog filter;
@@ -197,7 +197,7 @@ olsrd_plugin_init(void)
         0 <= os_socket_set_nonblocking(arprefresh_sockfd) &&
         0 <= setsockopt(arprefresh_sockfd, SOL_SOCKET, SO_ATTACH_FILTER, &filter, sizeof(filter))) {
       /* Register the ARP refresh event */
-      olsr_start_timer(2 * MSEC_PER_SEC, 0, NULL, arp_event_timer_info);
+      olsr_timer_start(2 * MSEC_PER_SEC, 0, NULL, arp_event_timer_info);
       ret = 1;
     } else {
       OLSR_WARN(LOG_PLUGINS, "*** ARPREFRESH: Cannot create non-blocking filtering packet socket: %s\n", strerror(errno));

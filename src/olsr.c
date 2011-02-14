@@ -234,8 +234,8 @@ olsr_init_tables(void)
 
   /* Start periodic SPF and RIB recalculation */
   if (olsr_cnf->lq_dinter > 0) {
-    periodic_spf_timer_info = olsr_alloc_timerinfo("Periodic SPF", &olsr_trigger_forced_update, true);
-    olsr_start_timer(olsr_cnf->lq_dinter, 5,
+    periodic_spf_timer_info = olsr_timer_add("Periodic SPF", &olsr_trigger_forced_update, true);
+    olsr_timer_start(olsr_cnf->lq_dinter, 5,
                      NULL, periodic_spf_timer_info);
   }
 }
@@ -384,8 +384,8 @@ olsr_init_willingness(void)
     /* Run it first and then periodic. */
     olsr_update_willingness(NULL);
 
-    willingness_timer_info = olsr_alloc_timerinfo("Update Willingness", &olsr_update_willingness, true);
-    olsr_start_timer(olsr_cnf->will_int, 5, NULL, willingness_timer_info);
+    willingness_timer_info = olsr_timer_add("Update Willingness", &olsr_update_willingness, true);
+    olsr_timer_start(olsr_cnf->will_int, 5, NULL, willingness_timer_info);
   }
 }
 

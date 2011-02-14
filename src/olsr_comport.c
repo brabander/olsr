@@ -97,7 +97,7 @@ olsr_com_init(bool failfast) {
   connection_cookie =
       olsr_memcookie_add("comport connections", sizeof(struct comport_connection));
 
-  connection_timeout = olsr_alloc_timerinfo("comport timout",
+  connection_timeout = olsr_timer_add("comport timout",
       &olsr_com_timeout_handler, false);
 
   connection_http_count = 0;
@@ -115,8 +115,7 @@ olsr_com_init(bool failfast) {
       }
     }
     else {
-      add_olsr_socket(comsocket_http, &olsr_com_parse_request, NULL, NULL,
-          SP_PR_READ);
+      olsr_socket_add(comsocket_http, &olsr_com_parse_request, NULL, OLSR_SOCKET_READ);
     }
   }
   if (olsr_cnf->comport_txt > 0) {
@@ -126,8 +125,7 @@ olsr_com_init(bool failfast) {
       }
     }
     else {
-      add_olsr_socket(comsocket_txt, &olsr_com_parse_request, NULL, NULL,
-          SP_PR_READ);
+      olsr_socket_add(comsocket_txt, &olsr_com_parse_request, NULL, OLSR_SOCKET_READ);
     }
   }
 }
@@ -145,7 +143,7 @@ olsr_com_destroy(void) {
 
 void
 olsr_com_activate_output(struct comport_connection *con) {
-  enable_olsr_socket(con->fd, &olsr_com_parse_connection, NULL, SP_PR_WRITE);
+  olsr_socket_enable(con->fd, &olsr_com_parse_connection, OLSR_SOCKETPOLL_WRITE);
 }
 
 static int
@@ -269,10 +267,9 @@ olsr_com_parse_request(int fd, void *data __attribute__ ((unused)), unsigned int
   OLSR_DEBUG(LOG_COMPORT, "Got connection through socket %d from %s.\n",
       sock, olsr_ip_to_string(&buf, &con->addr));
 
-  con->timeout = olsr_start_timer(con->timeout_value, 0, con, connection_timeout);
+  con->timeout = olsr_timer_start(con->timeout_value, 0, con, connection_timeout);
 
-  add_olsr_socket(sock, &olsr_com_parse_connection, NULL, con, SP_PR_READ
-      | SP_PR_WRITE);
+  olsr_socket_add(sock, &olsr_com_parse_connection, con, OLSR_SOCKET_READ | OLSR_SOCKETPOLL_WRITE);
 
   list_add_after(&olsr_comport_head, &con->node);
 }
@@ -290,7 +287,7 @@ olsr_com_cleanup_session(struct comport_connection *con) {
   if (con->stop_handler) {
     con->stop_handler(con);
   }
-  remove_olsr_socket(con->fd, &olsr_com_parse_connection, NULL);
+  olsr_socket_remove(con->fd, &olsr_com_parse_connection);
   os_close(con->fd);
 
   abuf_free(&con->in);
@@ -314,7 +311,7 @@ olsr_com_parse_connection(int fd, void *data, unsigned int flags) {
 
   OLSR_DEBUG(LOG_COMPORT, "Parsing connection of socket %d\n", fd);
   /* read data if necessary */
-  if (flags & SP_PR_READ) {
+  if (flags & OLSR_SOCKET_READ) {
     char buffer[1024];
     int len;
 
@@ -368,7 +365,7 @@ olsr_com_parse_connection(int fd, void *data, unsigned int flags) {
       con->send_as = PLAIN;
     }
 
-    if (flags & SP_PR_WRITE) {
+    if (flags & OLSR_SOCKETPOLL_WRITE) {
       int len;
 
       len = send(fd, con->out.buf, con->out.len, 0);
@@ -382,12 +379,12 @@ olsr_com_parse_connection(int fd, void *data, unsigned int flags) {
       }
     } else {
       OLSR_DEBUG(LOG_COMPORT, "  activating output in scheduler\n");
-      enable_olsr_socket(fd, &olsr_com_parse_connection, NULL, SP_PR_WRITE);
+      olsr_socket_enable(fd, &olsr_com_parse_connection, OLSR_SOCKETPOLL_WRITE);
     }
   }
   if (con->out.len == 0) {
     OLSR_DEBUG(LOG_COMPORT, "  deactivating output in scheduler\n");
-    disable_olsr_socket(fd, &olsr_com_parse_connection, NULL, SP_PR_WRITE);
+    olsr_socket_disable(fd, &olsr_com_parse_connection, OLSR_SOCKETPOLL_WRITE);
     if (con->state == SEND_AND_QUIT) {
       con->state = CLEANUP;
     }
@@ -397,7 +394,7 @@ olsr_com_parse_connection(int fd, void *data, unsigned int flags) {
   if (con->state == CLEANUP) {
     OLSR_DEBUG(LOG_COMPORT, "  cleanup\n");
     /* clean up connection by calling timeout directly */
-    olsr_stop_timer(con->timeout);
+    olsr_timer_stop(con->timeout);
     con->timeout = NULL;
     olsr_com_cleanup_session(con);
   }

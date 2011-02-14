@@ -126,10 +126,10 @@ struct list_entity latlon_list[HASHSIZE];
 static bool latlon_table_changed = true;
 
 /* backoff timer for writing changes into a file */
-struct timer_entry *write_file_timer = NULL;
+struct olsr_timer_entry *write_file_timer = NULL;
 
 /* periodic message generation */
-struct timer_entry *msg_gen_timer = NULL;
+struct olsr_timer_entry *msg_gen_timer = NULL;
 
 /* regular expression to be matched by valid hostnames, compiled in name_init() */
 static regex_t regex_t_name;
@@ -201,11 +201,11 @@ name_constructor(void)
   }
 
   msg_gen_timer_cookie =
-      olsr_alloc_timerinfo("Nameservice: message gen", &olsr_namesvc_gen, true);
+      olsr_timer_add("Nameservice: message gen", &olsr_namesvc_gen, true);
   write_file_timer_cookie =
-      olsr_alloc_timerinfo("Nameservice: write file", &olsr_expire_write_file_timer, false);
+      olsr_timer_add("Nameservice: write file", &olsr_expire_write_file_timer, false);
   db_timer_cookie =
-      olsr_alloc_timerinfo("Nameservice: DB", &olsr_nameservice_expire_db_timer, false);
+      olsr_timer_add("Nameservice: DB", &olsr_nameservice_expire_db_timer, false);
 }
 
 
@@ -427,7 +427,7 @@ name_init(void)
   olsr_parser_add_function(&olsr_parser, PARSER_TYPE);
 
   /* periodic message generation */
-  msg_gen_timer = olsr_start_timer(my_interval * MSEC_PER_SEC, EMISSION_JITTER,
+  msg_gen_timer = olsr_timer_start(my_interval * MSEC_PER_SEC, EMISSION_JITTER,
                                    NULL, msg_gen_timer_cookie);
 
   mapwrite_init(my_latlon_file);
@@ -511,9 +511,9 @@ name_destructor(void)
   free_all_listold_entries(forwarder_list);
   free_all_listold_entries(latlon_list);
 
-  olsr_stop_timer(write_file_timer);
+  olsr_timer_stop(write_file_timer);
   write_file_timer = NULL;
-  olsr_stop_timer(msg_gen_timer);
+  olsr_timer_stop(msg_gen_timer);
   msg_gen_timer = NULL;
 
   regfree(&regex_t_name);
@@ -569,7 +569,7 @@ olsr_start_write_file_timer(void)
     return;
   }
 
-  write_file_timer = olsr_start_timer(5 * MSEC_PER_SEC, 5, NULL, write_file_timer_cookie);
+  write_file_timer = olsr_timer_start(5 * MSEC_PER_SEC, 5, NULL, write_file_timer_cookie);
 }
 
 /*
@@ -584,7 +584,7 @@ olsr_namesvc_delete_db_entry(struct db_entry *db)
   OLSR_DEBUG(LOG_PLUGINS, "NAME PLUGIN: %s timed out... deleting\n", olsr_ip_to_string(&strbuf, &db->originator));
 
   olsr_start_write_file_timer();
-  olsr_stop_timer(db->db_timer);        /* stop timer if running */
+  olsr_timer_stop(db->db_timer);        /* stop timer if running */
   db->db_timer = NULL;
 
   /* Delete */
@@ -953,7 +953,7 @@ insert_new_name_in_list(union olsr_ip_addr *originator,
       //delegate to function for parsing the packet and linking it to entry->names
       decap_namemsg(from_packet, &entry->names, this_table_changed);
 
-      olsr_set_timer(&entry->db_timer, vtime,
+      olsr_timer_set(&entry->db_timer, vtime,
                      OLSR_NAMESVC_DB_JITTER, entry, db_timer_cookie);
 
       entry_found = true;
@@ -972,7 +972,7 @@ insert_new_name_in_list(union olsr_ip_addr *originator,
 
     entry->originator = *originator;
 
-    olsr_set_timer(&entry->db_timer, vtime,
+    olsr_timer_set(&entry->db_timer, vtime,
                    OLSR_LINK_LOSS_JITTER, entry, db_timer_cookie);
 
     entry->names = NULL;

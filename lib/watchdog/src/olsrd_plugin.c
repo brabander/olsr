@@ -129,11 +129,11 @@ int
 olsrd_plugin_init(void)
 {
   /* create the cookie */
-  watchdog_timer_info = olsr_alloc_timerinfo("Watchdog: write alive-file",
+  watchdog_timer_info = olsr_timer_add("Watchdog: write alive-file",
       &olsr_watchdog_write_alivefile, true);
 
   /* Register the watchdog check */
-  olsr_start_timer(watchdog_interval * MSEC_PER_SEC, 0, NULL, watchdog_timer_info);
+  olsr_timer_start(watchdog_interval * MSEC_PER_SEC, 0, NULL, watchdog_timer_info);
 
   return 1;
 }

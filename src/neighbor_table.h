@@ -61,7 +61,7 @@ struct nbr_con {
   struct nbr_entry *nbr;
   struct nbr2_entry *nbr2;
 
-  struct timer_entry *nbr2_con_timer;
+  struct olsr_timer_entry *nbr2_con_timer;
 
   olsr_linkcost second_hop_linkcost;
   olsr_linkcost path_linkcost;

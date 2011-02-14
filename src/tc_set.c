@@ -139,8 +139,8 @@ olsr_init_tc(void)
   /*
    * Get some cookies for getting stats to ease troubleshooting.
    */
-  tc_edge_gc_timer_info = olsr_alloc_timerinfo("TC edge GC", olsr_expire_tc_edge_gc, false);
-  tc_validity_timer_info = olsr_alloc_timerinfo("TC validity", &olsr_expire_tc_entry, false);
+  tc_edge_gc_timer_info = olsr_timer_add("TC edge GC", olsr_expire_tc_edge_gc, false);
+  tc_validity_timer_info = olsr_timer_add("TC validity", &olsr_expire_tc_entry, false);
 
   tc_mem_cookie = olsr_memcookie_add("tc_entry", sizeof(struct tc_entry));
 }
@@ -230,10 +230,10 @@ olsr_delete_tc_entry(struct tc_entry *tc)
   }
 
   /* Stop running timers */
-  olsr_stop_timer(tc->validity_timer);
+  olsr_timer_stop(tc->validity_timer);
   tc->validity_timer = NULL;
 
-  olsr_stop_timer(tc->edge_gc_timer);
+  olsr_timer_stop(tc->edge_gc_timer);
   tc->edge_gc_timer = NULL;
 
   /* still virtual edges left, node has to stay in database */
@@ -482,7 +482,7 @@ olsr_delete_tc_edge_entry(struct tc_edge_entry *tc_edge)
 
   if (was_real && tc_inv != tc_myself && tc_inv->virtual) {
     /* mark tc_entry to be gone in one ms */
-    olsr_set_timer(&tc_inv->validity_timer, 1, 0, tc, tc_validity_timer_info);
+    olsr_timer_set(&tc_inv->validity_timer, 1, 0, tc, tc_validity_timer_info);
   }
 }
 
@@ -647,7 +647,7 @@ olsr_print_tc_table(void)
   const int ipwidth = olsr_cnf->ip_version == AF_INET ? 15 : 30;
   static char NONE[] = "-";
 
-  OLSR_INFO(LOG_TC, "\n--- %s ------------------------------------------------- TOPOLOGY\n\n", olsr_wallclock_string());
+  OLSR_INFO(LOG_TC, "\n--- %s ------------------------------------------------- TOPOLOGY\n\n", olsr_timer_getWallclockString());
   OLSR_INFO_NH(LOG_TC, "%-*s %-*s %-7s      %8s %12s %5s\n", ipwidth,
                "Source IP addr", ipwidth, "Dest IP addr", "", olsr_get_linklabel(0), "vtime", "ansn");
 
@@ -657,7 +657,7 @@ olsr_print_tc_table(void)
     char *vtime = NONE;
 
     if (tc->validity_timer) {
-      olsr_milli_to_txt(&tbuf, olsr_getTimeDue(tc->validity_timer->timer_clock));
+      olsr_milli_to_txt(&tbuf, olsr_timer_getRelative(tc->validity_timer->timer_clock));
       vtime = tbuf.buf;
     }
 
@@ -831,7 +831,7 @@ olsr_input_tc(struct olsr_message * msg,
    * Set or change the expiration timer accordingly.
    */
   assert(msg);
-  olsr_set_timer(&tc->validity_timer, msg->vtime,
+  olsr_timer_set(&tc->validity_timer, msg->vtime,
                  OLSR_TC_VTIME_JITTER, tc, tc_validity_timer_info);
 
   if (borderSet) {
@@ -846,7 +846,7 @@ olsr_input_tc(struct olsr_message * msg,
      * Kick the the edge garbage collection timer. In the meantime hopefully
      * all edges belonging to a multipart neighbor set will arrive.
      */
-    olsr_set_timer(&tc->edge_gc_timer, OLSR_TC_EDGE_GC_TIME,
+    olsr_timer_set(&tc->edge_gc_timer, OLSR_TC_EDGE_GC_TIME,
                    OLSR_TC_EDGE_GC_JITTER, tc, tc_edge_gc_timer_info);
   }
 }

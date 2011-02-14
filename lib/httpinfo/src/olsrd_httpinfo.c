@@ -344,7 +344,7 @@ olsrd_plugin_init(void)
   }
 
   /* Register socket */
-  add_olsr_socket(http_socket, &parse_http_request, NULL, NULL, SP_PR_READ);
+  olsr_socket_add(http_socket, &parse_http_request, NULL, OLSR_SOCKET_READ);
 
   return 1;
 }

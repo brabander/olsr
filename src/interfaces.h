@@ -145,10 +145,10 @@ struct interface {
   uint16_t olsr_seqnum;                /* Olsr message seqno */
 
   /* Periodic message generation timers */
-  struct timer_entry *hello_gen_timer;
+  struct olsr_timer_entry *hello_gen_timer;
 
   /* Message build related  */
-  struct timer_entry *buffer_hold_timer;        /* Timer for message batching */
+  struct olsr_timer_entry *buffer_hold_timer;        /* Timer for message batching */
   struct olsr_netbuf netbuf;           /* the build buffer */
 
 #ifdef linux

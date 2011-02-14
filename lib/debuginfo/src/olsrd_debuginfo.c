@@ -189,8 +189,8 @@ debuginfo_enable(void)
     commands[i].cmd->acl = &allowed_nets;
   }
 
-  statistics_timer = olsr_alloc_timerinfo("debuginfo timer", &update_statistics_ptr, true);
-  olsr_start_timer(traffic_interval * 1000, 0, NULL, statistics_timer);
+  statistics_timer = olsr_timer_add("debuginfo timer", &update_statistics_ptr, true);
+  olsr_timer_start(traffic_interval * 1000, 0, NULL, statistics_timer);
 
   statistics_msg_mem = olsr_memcookie_add("debuginfo msgstat",
       sizeof(struct debug_msgtraffic) + sizeof(struct debug_msgtraffic_count) * traffic_slots);

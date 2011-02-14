@@ -56,7 +56,7 @@
 #define OLSR_FOR_EACH_TXTCMD_ENTRY(cmd, iterator) avl_for_each_element_safe(&txt_normal_tree, cmd, node, iterator)
 
 struct txt_repeat_data {
-  struct timer_entry *timer;
+  struct olsr_timer_entry *timer;
   struct autobuf *buf;
   char *cmd;
   char *param;
@@ -136,7 +136,7 @@ olsr_com_init_txt(void) {
 
   txtcommand_cookie = olsr_memcookie_add("comport txt commands", sizeof(struct olsr_txtcommand));
 
-  txt_repeat_timerinfo = olsr_alloc_timerinfo("txt repeat timer", olsr_txt_repeat_timer, true);
+  txt_repeat_timerinfo = olsr_timer_add("txt repeat timer", olsr_txt_repeat_timer, true);
 
   for (i=0; i < ARRAYSIZE(txt_internal_names); i++) {
     txt_internal_normalcmd[i] = olsr_com_add_normal_txtcommand(txt_internal_names[i], txt_internal_handlers[i]);
@@ -318,7 +318,7 @@ void olsr_com_parse_txt(struct comport_connection *con,
   }
 
   /* reset timeout */
-  olsr_change_timer(con->timeout, con->timeout_value, 0);
+  olsr_timer_change(con->timeout, con->timeout_value, 0);
 
   /* print prompt */
   if (processedCommand && con->state == INTERACTIVE && con->show_echo) {
@@ -408,7 +408,7 @@ olsr_txtcmd_timeout(struct comport_connection *con,
 }
 
 static void olsr_txt_repeat_stophandler(struct comport_connection *con) {
-  olsr_stop_timer((struct timer_entry *)con->stop_data[0]);
+  olsr_timer_stop((struct olsr_timer_entry *)con->stop_data[0]);
   free(con->stop_data[1]);
 
   con->stop_handler = NULL;
@@ -431,7 +431,7 @@ olsr_txtcmd_repeat(struct comport_connection *con,
     const char *cmd __attribute__ ((unused)), const char *param) {
   int interval = 0;
   char *ptr;
-  struct timer_entry *timer;
+  struct olsr_timer_entry *timer;
 
   if (con->stop_handler) {
     abuf_puts(&con->out, "Error, you cannot stack continous output commands\n");
@@ -447,7 +447,7 @@ olsr_txtcmd_repeat(struct comport_connection *con,
 
   interval = atoi(param);
 
-  timer = olsr_start_timer(interval * 1000, 0, con, txt_repeat_timerinfo);
+  timer = olsr_timer_start(interval * 1000, 0, con, txt_repeat_timerinfo);
   con->stop_handler = olsr_txt_repeat_stophandler;
   con->stop_data[0] = timer;
   con->stop_data[1] = strdup(ptr);

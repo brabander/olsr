@@ -107,7 +107,7 @@ int rtnetlink_register_socket(int rtnl_mgrp)
     return -1;
   }
 
-  add_olsr_socket(sock, NULL, &rtnetlink_read, NULL, SP_IMM_READ);
+  olsr_socket_add(sock, &rtnetlink_read, NULL, OLSR_SOCKET_READ);
   return sock;
 }
 

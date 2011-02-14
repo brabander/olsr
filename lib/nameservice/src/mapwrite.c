@@ -233,8 +233,8 @@ mapwrite_init(const char *fifoname)
       OLSR_WARN(LOG_PLUGINS, "mkfifo(%s): %s", fifoname, strerror(errno));
       return false;
     } else {
-      map_poll_timer_info = olsr_alloc_timerinfo("Nameservice: mapwrite", &mapwrite_poll, true);
-      olsr_start_timer(800, 5, NULL, map_poll_timer_info);
+      map_poll_timer_info = olsr_timer_add("Nameservice: mapwrite", &mapwrite_poll, true);
+      olsr_timer_start(800, 5, NULL, map_poll_timer_info);
     }
   }
   return true;

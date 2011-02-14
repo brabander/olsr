@@ -103,8 +103,8 @@ init_interfaces(void)
 
   interface_lost_mem_cookie = olsr_memcookie_add("Interface lost", sizeof(struct interface_lost));
 
-  interface_poll_timerinfo = olsr_alloc_timerinfo("Interface Polling", &check_interface_updates, true);
-  hello_gen_timerinfo = olsr_alloc_timerinfo("Hello Generation", &generate_hello, true);
+  interface_poll_timerinfo = olsr_timer_add("Interface Polling", &check_interface_updates, true);
+  hello_gen_timerinfo = olsr_timer_add("Hello Generation", &generate_hello, true);
 
   OLSR_INFO(LOG_INTERFACE, "\n ---- Interface configuration ---- \n\n");
 
@@ -114,7 +114,7 @@ init_interfaces(void)
   }
 
   /* Kick a periodic timer for the network interface update function */
-  olsr_start_timer(olsr_cnf->nic_chgs_pollrate, 5,
+  olsr_timer_start(olsr_cnf->nic_chgs_pollrate, 5,
                    NULL, interface_poll_timerinfo);
 
   return (!list_is_empty(&interface_head));
@@ -140,7 +140,7 @@ static void add_lost_interface_ip(union olsr_ip_addr *ip, uint32_t hello_timeout
   lost = olsr_memcookie_malloc(interface_lost_mem_cookie);
   lost->node.key = &lost->ip;
   lost->ip = *ip;
-  lost->valid_until = olsr_getTimestamp(hello_timeout * 2);
+  lost->valid_until = olsr_timer_getAbsolute(hello_timeout * 2);
   avl_insert(&interface_lost_tree, &lost->node);
 
   OLSR_DEBUG(LOG_INTERFACE, "Added %s to lost interface list for %d ms\n",
@@ -195,8 +195,8 @@ add_interface(struct olsr_if_config *iface) {
   set_buffer_timer(ifp);
 
   /* Register sockets */
-  add_olsr_socket(ifp->olsr_socket, &olsr_input, NULL, NULL, SP_PR_READ);
-  add_olsr_socket(ifp->send_socket, &olsr_input, NULL, NULL, SP_PR_READ);
+  olsr_socket_add(ifp->olsr_socket, &olsr_input, NULL, OLSR_SOCKET_READ);
+  olsr_socket_add(ifp->send_socket, &olsr_input, NULL, OLSR_SOCKET_READ);
 
   os_socket_set_olsr_options(ifp, ifp->olsr_socket, &ifp->int_multicast);
   os_socket_set_olsr_options(ifp, ifp->send_socket, &ifp->int_multicast);
@@ -227,7 +227,7 @@ add_interface(struct olsr_if_config *iface) {
    * Register functions for periodic message generation
    */
   ifp->hello_gen_timer =
-    olsr_start_timer(iface->cnf->hello_params.emission_interval,
+    olsr_timer_start(iface->cnf->hello_params.emission_interval,
                      HELLO_JITTER, ifp, hello_gen_timerinfo);
   ifp->hello_interval = iface->cnf->hello_params.emission_interval;
   ifp->hello_validity = iface->cnf->hello_params.validity_time;
@@ -289,7 +289,7 @@ check_interface_updates(void *foo __attribute__ ((unused)))
 
   /* clean up lost interface tree */
   OLSR_FOR_ALL_LOSTIF_ENTRIES(lost, iterator) {
-    if (olsr_isTimedOut(lost->valid_until)) {
+    if (olsr_timer_isTimedOut(lost->valid_until)) {
       remove_lost_interface_ip(lost);
     }
   }
@@ -325,13 +325,13 @@ remove_interface(struct interface *ifp)
   /*
    * Deregister functions for periodic message generation
    */
-  olsr_stop_timer(ifp->hello_gen_timer);
+  olsr_timer_stop(ifp->hello_gen_timer);
   ifp->hello_gen_timer = NULL;
 
   /*
    * Stop interface pacing.
    */
-  olsr_stop_timer(ifp->buffer_hold_timer);
+  olsr_timer_stop(ifp->buffer_hold_timer);
   ifp->buffer_hold_timer = NULL;
 
   /*
@@ -345,7 +345,7 @@ remove_interface(struct interface *ifp)
   unlock_interface(ifp);
 
   /* Close olsr socket */
-  remove_olsr_socket(ifp->olsr_socket, &olsr_input, NULL);
+  olsr_socket_remove(ifp->olsr_socket, &olsr_input);
   os_close(ifp->olsr_socket);
   os_close(ifp->send_socket);
   ifp->olsr_socket = -1;

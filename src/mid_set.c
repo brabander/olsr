@@ -78,7 +78,7 @@ olsr_init_mid_set(void)
   /*
    * Get some cookies for getting stats to ease troubleshooting.
    */
-  mid_validity_timer_info = olsr_alloc_timerinfo("MID validity", &olsr_expire_mid_entries, false);
+  mid_validity_timer_info = olsr_timer_add("MID validity", &olsr_expire_mid_entries, false);
 
   mid_address_mem_cookie = olsr_memcookie_add("MID address", sizeof(struct mid_entry));
 }
@@ -108,7 +108,7 @@ olsr_expire_mid_entries(void *context)
 static void
 olsr_set_mid_timer(struct mid_entry *mid, uint32_t rel_timer)
 {
-  olsr_set_timer(&mid->mid_timer, rel_timer, OLSR_MID_JITTER, mid, mid_validity_timer_info);
+  olsr_timer_set(&mid->mid_timer, rel_timer, OLSR_MID_JITTER, mid, mid_validity_timer_info);
 }
 
 /**
@@ -374,7 +374,7 @@ olsr_delete_mid_entry(struct mid_entry *alias)
   tc = alias->mid_tc;
 
   /* kill timer */
-  olsr_stop_timer(alias->mid_timer);
+  olsr_timer_stop(alias->mid_timer);
   alias->mid_timer = NULL;
 
   /*
@@ -421,7 +421,7 @@ olsr_print_mid_set(void)
   struct mid_entry *alias, *mid_iterator;
   struct ipaddr_str buf1, buf2;
 
-  OLSR_INFO(LOG_MID, "\n--- %s ------------------------------------------------- MID\n\n", olsr_wallclock_string());
+  OLSR_INFO(LOG_MID, "\n--- %s ------------------------------------------------- MID\n\n", olsr_timer_getWallclockString());
 
   OLSR_FOR_ALL_TC_ENTRIES(tc, tc_iterator) {
     OLSR_FOR_ALL_TC_MID_ENTRIES(tc, alias, mid_iterator) {

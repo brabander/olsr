@@ -50,7 +50,7 @@
 #include "olsr_logging.h"
 
 struct olsr_timer_info *spf_backoff_timer_info = NULL;
-struct timer_entry *spf_backoff_timer = NULL;
+struct olsr_timer_entry *spf_backoff_timer = NULL;
 
 /*
  * avl_comp_etx
@@ -276,7 +276,7 @@ olsr_expire_spf_backoff(void *context __attribute__ ((unused)))
 
 void
 olsr_init_spf(void) {
-  spf_backoff_timer_info = olsr_alloc_timerinfo("SPF backoff", olsr_expire_spf_backoff, false);
+  spf_backoff_timer_info = olsr_timer_add("SPF backoff", olsr_expire_spf_backoff, false);
 }
 
 void
@@ -299,7 +299,7 @@ olsr_calculate_routing_table(bool force)
     return;
   }
 
-  olsr_set_timer(&spf_backoff_timer, OLSR_SPF_BACKOFF_TIME, OLSR_SPF_BACKOFF_JITTER,
+  olsr_timer_set(&spf_backoff_timer, OLSR_SPF_BACKOFF_TIME, OLSR_SPF_BACKOFF_JITTER,
       NULL, spf_backoff_timer_info);
 
 #ifdef SPF_PROFILING
@@ -368,7 +368,7 @@ olsr_calculate_routing_table(bool force)
    */
   olsr_spf_run_full(&cand_tree, &path_list, &path_count);
 
-  OLSR_DEBUG(LOG_ROUTING, "\n--- %s ------------------------------------------------- DIJKSTRA\n\n", olsr_wallclock_string());
+  OLSR_DEBUG(LOG_ROUTING, "\n--- %s ------------------------------------------------- DIJKSTRA\n\n", olsr_timer_getWallclockString());
 
 #ifdef SPF_PROFILING
   gettimeofday(&t3, NULL);

@@ -53,7 +53,7 @@ struct mid_entry {
   struct avl_node mid_node;            /* node in the global mid tree */
   union olsr_ip_addr mid_alias_addr;   /* key for both trees */
   struct tc_entry *mid_tc;             /* backpointer to owning tc entry */
-  struct timer_entry *mid_timer;       /* Vtime */
+  struct olsr_timer_entry *mid_timer;       /* Vtime */
 };
 
 #define OLSR_FOR_ALL_MID_ENTRIES(mid_alias, iterator) avl_for_each_element_safe(&mid_tree, mid_alias, mid_node, iterator)

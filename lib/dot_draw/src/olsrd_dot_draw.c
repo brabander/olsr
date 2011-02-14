@@ -228,7 +228,7 @@ dotdraw_enable(void) {
   }
 
   /* Register socket with olsrd */
-  add_olsr_socket(ipc_socket, &ipc_action, NULL, NULL, SP_PR_READ);
+  olsr_socket_add(ipc_socket, &ipc_action, NULL, OLSR_SOCKET_READ);
 
   return 0;
 }

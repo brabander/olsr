@@ -50,7 +50,7 @@
 #include "plugin_loader.h"
 #include "plugin_util.h"
 #include "defs.h"               /* uint8_t, olsr_cnf */
-#include "scheduler.h"          /* olsr_start_timer() */
+#include "scheduler.h"          /* olsr_timer_start() */
 #include "olsr_cfg.h"           /* olsr_cnf() */
 #include "olsr_memcookie.h"        /* olsr_memcookie_add() */
 

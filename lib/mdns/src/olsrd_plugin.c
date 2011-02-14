@@ -46,7 +46,7 @@
 #include "plugin.h"
 #include "plugin_util.h"
 #include "defs.h"               /* uint8_t, olsr_cnf */
-#include "scheduler.h"          /* olsr_start_timer() */
+#include "scheduler.h"          /* olsr_timer_start() */
 #include "olsr_cfg.h"           /* olsr_cnf() */
 #include "olsr_memcookie.h"        /* olsr_memcookie_add() */
 
@@ -100,7 +100,7 @@ olsrd_plugin_init(void)
   //prune_packet_history_timer_cookie = olsr_memcookie_add("BMF: Prune Packet History", OLSR_COOKIE_TYPE_TIMER);
 
   /* Register the duplicate registration pruning process */
-  //olsr_start_timer(3 * MSEC_PER_SEC, 0, OLSR_TIMER_PERIODIC,
+  //olsr_timer_start(3 * MSEC_PER_SEC, 0, OLSR_TIMER_PERIODIC,
   //                 &PrunePacketHistory, NULL, prune_packet_history_timer_cookie->ci_id);
 
 

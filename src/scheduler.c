@@ -53,10 +53,10 @@
 #include "os_time.h"
 #include "olsr_logging.h"
 
-/* Timer data, global. Externed in scheduler.h */
-uint32_t now_times;                    /* relative time compared to startup (in milliseconds */
-struct timeval first_tv;               /* timevalue during startup */
-struct timeval last_tv;                /* timevalue used for last olsr_times() calculation */
+/* Timer data */
+static uint32_t now_times;             /* relative time compared to startup (in milliseconds */
+static struct timeval first_tv;        /* timevalue during startup */
+static struct timeval last_tv;         /* timevalue used for last olsr_times() calculation */
 
 /* Hashed root of all timers */
 static struct list_entity timer_wheel[TIMER_WHEEL_SLOTS];
@@ -68,11 +68,10 @@ static struct olsr_memcookie_info *timer_mem_cookie = NULL;
 static struct olsr_memcookie_info *timerinfo_cookie = NULL;
 
 /* Head of all OLSR used sockets */
-static struct list_entity socket_head;
+struct list_entity socket_head;
 
 /* Prototypes */
 static void walk_timers(uint32_t *);
-static void poll_sockets(void);
 static uint32_t calc_jitter(unsigned int rel_time, uint8_t jitter_pct, unsigned int random_val);
 
 /*
@@ -121,7 +120,7 @@ olsr_times(void)
  * Returns a timestamp s seconds in the future
  */
 uint32_t
-olsr_getTimestamp(uint32_t s)
+olsr_timer_getAbsolute(uint32_t s)
 {
   return now_times + s;
 }
@@ -131,7 +130,7 @@ olsr_getTimestamp(uint32_t s)
  */
 
 int32_t
-olsr_getTimeDue(uint32_t s)
+olsr_timer_getRelative(uint32_t s)
 {
   uint32_t diff;
   if (s > now_times) {
@@ -153,7 +152,7 @@ olsr_getTimeDue(uint32_t s)
 }
 
 bool
-olsr_isTimedOut(uint32_t s)
+olsr_timer_isTimedOut(uint32_t s)
 {
   if (s > now_times) {
     return s - now_times > (1u << 31);
@@ -163,7 +162,7 @@ olsr_isTimedOut(uint32_t s)
 }
 
 struct olsr_timer_info *
-olsr_alloc_timerinfo(const char *name, timer_cb_func callback, bool periodic) {
+olsr_timer_add(const char *name, timer_cb_func callback, bool periodic) {
   struct olsr_timer_info *ti;
 
   ti = olsr_memcookie_malloc(timerinfo_cookie);
@@ -185,11 +184,11 @@ olsr_alloc_timerinfo(const char *name, timer_cb_func callback, bool periodic) {
  *@param pf the processing function
  */
 void
-add_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, void *data, unsigned int flags)
+olsr_socket_add(int fd, socket_handler_func pf_imm, void *data, unsigned int flags)
 {
   struct olsr_socket_entry *new_entry;
 
-  if (fd < 0 || (pf_pr == NULL && pf_imm == NULL)) {
+  if (fd < 0 || pf_imm == NULL) {
     OLSR_WARN(LOG_SCHEDULER, "Bogus socket entry - not registering...");
     return;
   }
@@ -199,7 +198,6 @@ add_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, v
 
   new_entry->fd = fd;
   new_entry->process_immediate = pf_imm;
-  new_entry->process_pollrate = pf_pr;
   new_entry->data = data;
   new_entry->flags = flags;
 
@@ -216,46 +214,46 @@ add_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, v
  *@param pf the processing function
  */
 int
-remove_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm)
+olsr_socket_remove(int fd, socket_handler_func pf_imm)
 {
   struct olsr_socket_entry *entry, *iterator;
 
-  if (fd < 0 || (pf_pr == NULL && pf_imm == NULL)) {
+  if (fd < 0 || pf_imm == NULL) {
     OLSR_WARN(LOG_SCHEDULER, "Bogus socket entry - not processing...");
     return 0;
   }
   OLSR_DEBUG(LOG_SCHEDULER, "Removing OLSR socket entry %d\n", fd);
 
   OLSR_FOR_ALL_SOCKETS(entry, iterator) {
-    if (entry->fd == fd && entry->process_immediate == pf_imm && entry->process_pollrate == pf_pr) {
+    if (entry->fd == fd && entry->process_immediate == pf_imm) {
       /* just mark this node as "deleted", it will be cleared later at the end of handle_fds() */
       entry->process_immediate = NULL;
-      entry->process_pollrate = NULL;
-      entry->flags = 0;      return 1;
+      entry->flags = 0;
+      return 1;
     }
   }
   return 0;
 }
 
 void
-enable_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, unsigned int flags)
+olsr_socket_enable(int fd, socket_handler_func pf_imm, unsigned int flags)
 {
   struct olsr_socket_entry *entry, *iterator;
 
   OLSR_FOR_ALL_SOCKETS(entry, iterator) {
-    if (entry->fd == fd && entry->process_immediate == pf_imm && entry->process_pollrate == pf_pr) {
+    if (entry->fd == fd && entry->process_immediate == pf_imm) {
       entry->flags |= flags;
     }
   }
 }
 
 void
-disable_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, unsigned int flags)
+olsr_socket_disable(int fd, socket_handler_func pf_imm, unsigned int flags)
 {
   struct olsr_socket_entry *entry, *iterator;
 
   OLSR_FOR_ALL_SOCKETS(entry, iterator) {
-    if (entry->fd == fd && entry->process_immediate == pf_imm && entry->process_pollrate == pf_pr) {
+    if (entry->fd == fd && entry->process_immediate == pf_imm) {
       entry->flags &= ~flags;
     }
   }
@@ -265,7 +263,7 @@ disable_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_im
  * Close and free all sockets.
  */
 void
-olsr_flush_sockets(void)
+olsr_socket_cleanup(void)
 {
   struct olsr_socket_entry *entry, *iterator;
 
@@ -273,81 +271,6 @@ olsr_flush_sockets(void)
     os_close(entry->fd);
     list_remove(&entry->socket_node);
     free(entry);
-  }
-}
-
-static void
-poll_sockets(void)
-{
-  int n;
-  struct olsr_socket_entry *entry, *iterator;
-  fd_set ibits, obits;
-  struct timeval tvp = { 0, 0 };
-  int hfd = 0, fdsets = 0;
-
-  /* If there are no registered sockets we
-   * do not call select(2)
-   */
-  if (list_is_empty(&socket_head)) {
-    return;
-  }
-
-  FD_ZERO(&ibits);
-  FD_ZERO(&obits);
-
-  /* Adding file-descriptors to FD set */
-  OLSR_FOR_ALL_SOCKETS(entry, iterator) {
-    if (entry->process_pollrate == NULL) {
-      continue;
-    }
-    if ((entry->flags & SP_PR_READ) != 0) {
-      fdsets |= SP_PR_READ;
-      FD_SET((unsigned int)entry->fd, &ibits);  /* And we cast here since we get a warning on Win32 */
-    }
-    if ((entry->flags & SP_PR_WRITE) != 0) {
-      fdsets |= SP_PR_WRITE;
-      FD_SET((unsigned int)entry->fd, &obits);  /* And we cast here since we get a warning on Win32 */
-    }
-    if ((entry->flags & (SP_PR_READ | SP_PR_WRITE)) != 0 && entry->fd >= hfd) {
-      hfd = entry->fd + 1;
-    }
-  }
-
-  /* Running select on the FD set */
-  do {
-    n = os_select(hfd, fdsets & SP_PR_READ ? &ibits : NULL, fdsets & SP_PR_WRITE ? &obits : NULL, NULL, &tvp);
-  } while (n == -1 && errno == EINTR);
-
-  if (n == 0) {
-    return;
-  }
-  if (n == -1) {                /* Did something go wrong? */
-    OLSR_WARN(LOG_SCHEDULER, "select error: %s", strerror(errno));
-    return;
-  }
-
-  /* Update time since this is much used by the parsing functions */
-  now_times = olsr_times();
-  OLSR_FOR_ALL_SOCKETS(entry, iterator) {
-    int flags;
-    if (entry->process_pollrate == NULL) {
-      continue;
-    }
-    flags = 0;
-    if (FD_ISSET(entry->fd, &ibits)) {
-      flags |= SP_PR_READ;
-    }
-    if (FD_ISSET(entry->fd, &obits)) {
-      flags |= SP_PR_WRITE;
-    }
-
-    if (flags) {
-      OLSR_DEBUG(LOG_SCHEDULER, "Event from socket %d (%d)", entry->fd, flags);
-    }
-
-    if (flags != 0) {
-      entry->process_pollrate(entry->fd, entry->data, flags);
-    }
   }
 }
 
@@ -361,7 +284,7 @@ handle_fds(uint32_t next_interval)
   /* calculate the first timeout */
   now_times = olsr_times();
 
-  remaining = TIME_DUE(next_interval);
+  remaining = olsr_timer_getRelative(next_interval);
   if (remaining <= 0) {
     /* we are already over the interval */
     if (list_is_empty(&socket_head)) {
@@ -388,15 +311,15 @@ handle_fds(uint32_t next_interval)
       if (entry->process_immediate == NULL) {
         continue;
       }
-      if ((entry->flags & SP_IMM_READ) != 0) {
-        fdsets |= SP_IMM_READ;
+      if ((entry->flags & OLSR_SOCKET_READ) != 0) {
+        fdsets |= OLSR_SOCKET_READ;
         FD_SET((unsigned int)entry->fd, &ibits);        /* And we cast here since we get a warning on Win32 */
       }
-      if ((entry->flags & SP_IMM_WRITE) != 0) {
-        fdsets |= SP_IMM_WRITE;
+      if ((entry->flags & OLSR_SOCKETPOLL_WRITE) != 0) {
+        fdsets |= OLSR_SOCKETPOLL_WRITE;
         FD_SET((unsigned int)entry->fd, &obits);        /* And we cast here since we get a warning on Win32 */
       }
-      if ((entry->flags & (SP_IMM_READ | SP_IMM_WRITE)) != 0 && entry->fd >= hfd) {
+      if ((entry->flags & (OLSR_SOCKET_READ | OLSR_SOCKETPOLL_WRITE)) != 0 && entry->fd >= hfd) {
         hfd = entry->fd + 1;
       }
     }
@@ -407,7 +330,7 @@ handle_fds(uint32_t next_interval)
     }
 
     do {
-      n = os_select(hfd, fdsets & SP_IMM_READ ? &ibits : NULL, fdsets & SP_IMM_WRITE ? &obits : NULL, NULL, &tvp);
+      n = os_select(hfd, fdsets & OLSR_SOCKET_READ ? &ibits : NULL, fdsets & OLSR_SOCKETPOLL_WRITE ? &obits : NULL, NULL, &tvp);
     } while (n == -1 && errno == EINTR);
 
     if (n == 0) {               /* timeout! */
@@ -427,10 +350,10 @@ handle_fds(uint32_t next_interval)
       }
       flags = 0;
       if (FD_ISSET(entry->fd, &ibits)) {
-        flags |= SP_IMM_READ;
+        flags |= OLSR_SOCKET_READ;
       }
       if (FD_ISSET(entry->fd, &obits)) {
-        flags |= SP_IMM_WRITE;
+        flags |= OLSR_SOCKETPOLL_WRITE;
       }
       if (flags != 0) {
         entry->process_immediate(entry->fd, entry->data, flags);
@@ -438,7 +361,7 @@ handle_fds(uint32_t next_interval)
     }
 
     /* calculate the next timeout */
-    remaining = TIME_DUE(next_interval);
+    remaining = olsr_timer_getRelative(next_interval);
     if (remaining <= 0) {
       /* we are already over the interval */
       break;
@@ -449,7 +372,7 @@ handle_fds(uint32_t next_interval)
   }
 
   OLSR_FOR_ALL_SOCKETS(entry, iterator) {
-    if (entry->process_immediate == NULL && entry->process_pollrate == NULL) {
+    if (entry->process_immediate == NULL) {
       /* clean up socket handler */
       list_remove(&entry->socket_node);
       free(entry);
@@ -480,10 +403,7 @@ olsr_scheduler(void)
      * to avoid any undesired side effects if the system clock changes.
      */
     now_times = olsr_times();
-    next_interval = GET_TIMESTAMP(olsr_cnf->pollrate);
-
-    /* Read incoming data */
-    poll_sockets();
+    next_interval = olsr_timer_getAbsolute(olsr_cnf->pollrate);
 
     /* Process timers */
     walk_timers(&timer_last_run);
@@ -498,7 +418,7 @@ olsr_scheduler(void)
       link_changes = false;
     }
 
-    /* Read incoming data and handle it immediiately */
+    /* Read incoming data and handle it immediately */
     handle_fds(next_interval);
   }
 }
@@ -521,7 +441,7 @@ calc_jitter(unsigned int rel_time, uint8_t jitter_pct, unsigned int random_val)
    * Also protect against overflows resulting from > 25 bit timers.
    */
   if (jitter_pct == 0 || jitter_pct > 99 || rel_time > (1 << 24)) {
-    return GET_TIMESTAMP(rel_time);
+    return olsr_timer_getAbsolute(rel_time);
   }
 
   /*
@@ -532,7 +452,7 @@ calc_jitter(unsigned int rel_time, uint8_t jitter_pct, unsigned int random_val)
 
   OLSR_DEBUG(LOG_TIMER, "TIMER: jitter %u%% rel_time %ums to %ums\n", jitter_pct, rel_time, rel_time - jitter_time);
 
-  return GET_TIMESTAMP(rel_time - jitter_time);
+  return olsr_timer_getAbsolute(rel_time - jitter_time);
 }
 
 /**
@@ -565,7 +485,7 @@ olsr_init_timers(void)
   timer_last_run = now_times;
 
   /* Allocate a cookie for the block based memory manager. */
-  timer_mem_cookie = olsr_memcookie_add("timer_entry", sizeof(struct timer_entry));
+  timer_mem_cookie = olsr_memcookie_add("timer_entry", sizeof(struct olsr_timer_entry));
 
   avl_init(&timerinfo_tree, avl_comp_strcasecmp, false, NULL);
   timerinfo_cookie = olsr_memcookie_add("timerinfo", sizeof(struct olsr_timer_info));
@@ -602,7 +522,7 @@ walk_timers(uint32_t * last_run)
     list_init_head(&tmp_head_node);
     while (!list_is_empty(timer_head_node)) {
       /* the top element */
-      struct timer_entry *timer;
+      struct olsr_timer_entry *timer;
 
       timer = list_first_element(timer_head_node, timer, timer_list);
 
@@ -616,11 +536,11 @@ walk_timers(uint32_t * last_run)
       timers_walked++;
 
       /* Ready to fire ? */
-      if (TIMED_OUT(timer->timer_clock)) {
+      if (olsr_timer_isTimedOut(timer->timer_clock)) {
         OLSR_DEBUG(LOG_TIMER, "TIMER: fire %s timer %p, ctx %p, "
                    "at clocktick %u (%s)\n",
                    timer->timer_info->name,
-                   timer, timer->timer_cb_context, (unsigned int)*last_run, olsr_wallclock_string());
+                   timer, timer->timer_cb_context, (unsigned int)*last_run, olsr_timer_getWallclockString());
 
         /* This timer is expired, call into the provided callback function */
         timer->timer_in_callback = true;
@@ -637,10 +557,10 @@ walk_timers(uint32_t * last_run)
           if (timer->timer_period) {
             /* For periodical timers, rehash the random number and restart */
             timer->timer_random = random();
-            olsr_change_timer(timer, timer->timer_period, timer->timer_jitter_pct);
+            olsr_timer_change(timer, timer->timer_period, timer->timer_jitter_pct);
           } else {
             /* Singleshot timers are stopped */
-            olsr_stop_timer(timer);
+            olsr_timer_stop(timer);
           }
         }
         else {
@@ -693,10 +613,10 @@ olsr_flush_timers(void)
 
     /* Kill all entries hanging off this hash bucket. */
     while (!list_is_empty(timer_head_node)) {
-      struct timer_entry *timer;
+      struct olsr_timer_entry *timer;
 
       timer = list_first_element(timer_head_node, timer, timer_list);
-      olsr_stop_timer(timer);
+      olsr_timer_stop(timer);
     }
   }
 
@@ -753,7 +673,7 @@ olsr_get_timezone(void)
  * @return buffer to a formatted system time string.
  */
 const char *
-olsr_wallclock_string(void)
+olsr_timer_getWallclockString(void)
 {
   static char buf[sizeof("00:00:00.000000")];
   struct timeval now;
@@ -778,11 +698,10 @@ olsr_wallclock_string(void)
  * @return buffer to a formatted system time string.
  */
 const char *
-olsr_clock_string(uint32_t clk)
+olsr_timer_getClockString(uint32_t clk)
 {
   static char buf[sizeof("00:00:00.000")];
 
-  /* On most systems a clocktick is a 10ms quantity. */
   unsigned int msec = clk % 1000;
   unsigned int sec = clk / 1000;
 
@@ -800,11 +719,11 @@ olsr_clock_string(uint32_t clk)
  * @param context for the callback function
  * @return a pointer to the created entry
  */
-struct timer_entry *
-olsr_start_timer(unsigned int rel_time,
+struct olsr_timer_entry *
+olsr_timer_start(unsigned int rel_time,
                  uint8_t jitter_pct, void *context, struct olsr_timer_info *ti)
 {
-  struct timer_entry *timer;
+  struct olsr_timer_entry *timer;
 
   assert(ti != 0);          /* we want timer cookies everywhere */
   assert(rel_time);
@@ -839,7 +758,7 @@ olsr_start_timer(unsigned int rel_time,
   list_add_before(&timer_wheel[timer->timer_clock & TIMER_WHEEL_MASK], &timer->timer_list);
 
   OLSR_DEBUG(LOG_TIMER, "TIMER: start %s timer %p firing in %s, ctx %p\n",
-             ti->name, timer, olsr_clock_string(timer->timer_clock), context);
+             ti->name, timer, olsr_timer_getClockString(timer->timer_clock), context);
 
   return timer;
 }
@@ -848,11 +767,11 @@ olsr_start_timer(unsigned int rel_time,
 /**
  * Delete a timer.
  *
- * @param the timer_entry that shall be removed
+ * @param the olsr_timer_entry that shall be removed
  * @return nada
  */
 void
-olsr_stop_timer(struct timer_entry *timer)
+olsr_timer_stop(struct olsr_timer_entry *timer)
 {
   /* It's okay to get a NULL here */
   if (timer == NULL) {
@@ -880,15 +799,15 @@ olsr_stop_timer(struct timer_entry *timer)
 }
 
 /**
- * Change a timer_entry.
+ * Change a olsr_timer_entry.
  *
- * @param timer_entry to be changed.
+ * @param olsr_timer_entry to be changed.
  * @param new relative time expressed in units of milliseconds.
  * @param new jitter expressed in percent.
  * @return nada
  */
 void
-olsr_change_timer(struct timer_entry *timer, unsigned int rel_time, uint8_t jitter_pct)
+olsr_timer_change(struct olsr_timer_entry *timer, unsigned int rel_time, uint8_t jitter_pct)
 {
   /* Sanity check. */
   if (!timer) {
@@ -912,7 +831,7 @@ olsr_change_timer(struct timer_entry *timer, unsigned int rel_time, uint8_t jitt
 
   OLSR_DEBUG(LOG_TIMER, "TIMER: change %s timer %p, firing to %s, ctx %p\n",
              timer->timer_info->name, timer,
-             olsr_clock_string(timer->timer_clock), timer->timer_cb_context);
+             olsr_timer_getClockString(timer->timer_clock), timer->timer_cb_context);
 }
 
 /*
@@ -922,22 +841,22 @@ olsr_change_timer(struct timer_entry *timer, unsigned int rel_time, uint8_t jitt
  * terminated.
  */
 void
-olsr_set_timer(struct timer_entry **timer_ptr,
+olsr_timer_set(struct olsr_timer_entry **timer_ptr,
                unsigned int rel_time,
                uint8_t jitter_pct, void *context, struct olsr_timer_info *ti)
 {
   assert(ti);          /* we want timer cookies everywhere */
   if (rel_time == 0) {
     /* No good future time provided, kill it. */
-    olsr_stop_timer(*timer_ptr);
+    olsr_timer_stop(*timer_ptr);
     *timer_ptr = NULL;
   }
   else if ((*timer_ptr) == NULL) {
     /* No timer running, kick it. */
-    *timer_ptr = olsr_start_timer(rel_time, jitter_pct, context, ti);
+    *timer_ptr = olsr_timer_start(rel_time, jitter_pct, context, ti);
   }
   else {
-    olsr_change_timer(*timer_ptr, rel_time, jitter_pct);
+    olsr_timer_change(*timer_ptr, rel_time, jitter_pct);
   }
 }
 

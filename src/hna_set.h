@@ -51,7 +51,7 @@
 struct hna_net {
   struct avl_node hna_tc_node;         /* node in the per-tc hna tree */
   struct olsr_ip_prefix hna_prefix;    /* the prefix, key */
-  struct timer_entry *hna_net_timer;   /* expiration timer */
+  struct olsr_timer_entry *hna_net_timer;   /* expiration timer */
   struct tc_entry *hna_tc;             /* backpointer to the owning tc entry */
   uint16_t tc_entry_seqno;             /* sequence number for cleanup */
 };

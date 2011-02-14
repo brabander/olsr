@@ -60,8 +60,8 @@ struct link_entry {
   union olsr_ip_addr neighbor_iface_addr;
   struct interface *inter;
   char *if_name;
-  struct timer_entry *link_timer;
-  struct timer_entry *link_sym_timer;
+  struct olsr_timer_entry *link_timer;
+  struct olsr_timer_entry *link_sym_timer;
   uint32_t ASYM_time;
   uint32_t vtime;
   struct nbr_entry *neighbor;
@@ -76,7 +76,7 @@ struct link_entry {
    * packet loss
    */
   uint32_t loss_helloint;
-  struct timer_entry *link_loss_timer;
+  struct olsr_timer_entry *link_loss_timer;
 
   /* user defined multiplies for link quality, multiplied with 65536 */
   uint32_t loss_link_multiplier;

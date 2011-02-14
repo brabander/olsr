@@ -57,7 +57,7 @@ struct dup_entry {
   uint16_t seqnr;
   uint16_t too_low_counter;
   uint32_t array;
-  struct timer_entry *validity_timer;
+  struct olsr_timer_entry *validity_timer;
   struct avl_tree *tree;               /* backpointer to owning tree */
 };
 

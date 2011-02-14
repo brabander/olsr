@@ -102,9 +102,9 @@ static char copyright_string[] __attribute__ ((unused)) =
 static char pulsedata[] = "\\|/-";
 static uint8_t pulse_state = 0;
 
-static struct timer_entry *hna_gen_timer;
-static struct timer_entry *mid_gen_timer;
-static struct timer_entry *tc_gen_timer;
+static struct olsr_timer_entry *hna_gen_timer;
+static struct olsr_timer_entry *mid_gen_timer;
+static struct olsr_timer_entry *tc_gen_timer;
 
 static void
 generate_stdout_pulse(void *foo __attribute__ ((unused)))
@@ -248,10 +248,10 @@ main(int argc, char *argv[])
   olsr_callback_init();
 
   /* generate global timers */
-  pulse_timer_info = olsr_alloc_timerinfo("Stdout pulse", &generate_stdout_pulse, true);
-  tc_gen_timer_info = olsr_alloc_timerinfo("TC generation", &olsr_output_lq_tc, true);
-  mid_gen_timer_info = olsr_alloc_timerinfo("MID generation", &generate_mid, true);
-  hna_gen_timer_info = olsr_alloc_timerinfo("HNA generation", &generate_hna, true);
+  pulse_timer_info = olsr_timer_add("Stdout pulse", &generate_stdout_pulse, true);
+  tc_gen_timer_info = olsr_timer_add("TC generation", &olsr_output_lq_tc, true);
+  mid_gen_timer_info = olsr_timer_add("MID generation", &generate_mid, true);
+  hna_gen_timer_info = olsr_timer_add("HNA generation", &generate_hna, true);
 
   /* initialize plugin system */
   olsr_init_pluginsystem();
@@ -352,7 +352,7 @@ main(int argc, char *argv[])
 
 #if !defined WINCE
   if (olsr_cnf->log_target_stderr > 0 && isatty(STDOUT_FILENO)) {
-    olsr_start_timer(STDOUT_PULSE_INT, 0, NULL, pulse_timer_info);
+    olsr_timer_start(STDOUT_PULSE_INT, 0, NULL, pulse_timer_info);
   }
 #endif
 
@@ -409,11 +409,11 @@ main(int argc, char *argv[])
   link_changes = false;
 
   tc_gen_timer =
-    olsr_start_timer(olsr_cnf->tc_params.emission_interval, TC_JITTER, NULL, tc_gen_timer_info);
+    olsr_timer_start(olsr_cnf->tc_params.emission_interval, TC_JITTER, NULL, tc_gen_timer_info);
   mid_gen_timer =
-    olsr_start_timer(olsr_cnf->mid_params.emission_interval, MID_JITTER, NULL, mid_gen_timer_info);
+    olsr_timer_start(olsr_cnf->mid_params.emission_interval, MID_JITTER, NULL, mid_gen_timer_info);
   hna_gen_timer =
-    olsr_start_timer(olsr_cnf->hna_params.emission_interval, HNA_JITTER, NULL, hna_gen_timer_info);
+    olsr_timer_start(olsr_cnf->hna_params.emission_interval, HNA_JITTER, NULL, hna_gen_timer_info);
 
   /* enable default plugins */
   olsr_plugins_enable(PLUGIN_TYPE_DEFAULT, true);
@@ -422,13 +422,13 @@ main(int argc, char *argv[])
   app_state = STATE_RUNNING;
   olsr_scheduler();
 
-  olsr_stop_timer(tc_gen_timer);
+  olsr_timer_stop(tc_gen_timer);
   tc_gen_timer = NULL;
 
-  olsr_stop_timer(mid_gen_timer);
+  olsr_timer_stop(mid_gen_timer);
   mid_gen_timer = NULL;
 
-  olsr_stop_timer(hna_gen_timer);
+  olsr_timer_stop(hna_gen_timer);
   hna_gen_timer = NULL;
 
   exitcode = olsr_cnf->exit_value;
@@ -578,7 +578,7 @@ olsr_shutdown(void)
 #endif
 
   /* Close and delete all sockets */
-  olsr_flush_sockets();
+  olsr_socket_cleanup();
 
   /* Stop and delete all timers. */
   olsr_flush_timers();

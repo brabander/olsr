@@ -54,8 +54,13 @@
 #define TIMER_WHEEL_SLOTS 1024
 #define TIMER_WHEEL_MASK (TIMER_WHEEL_SLOTS - 1)
 
-typedef void (*timer_cb_func) (void *); /* callback function */
+/* prototype for timer callback */
+typedef void (*timer_cb_func) (void *);
 
+/*
+ * This struct defines a class of timers which have the same
+ * type (periodic/non-periodic) and callback.
+ */
 struct olsr_timer_info {
   /* node of timerinfo tree */
   struct avl_node node;
@@ -76,19 +81,15 @@ struct olsr_timer_info {
   uint32_t changes;
 };
 
-#define OLSR_FOR_ALL_TIMERS(ti, iterator) avl_for_each_element_safe(&timerinfo_tree, ti, node, iterator)
 
 /*
  * Our timer implementation is a based on individual timers arranged in
  * a double linked list hanging of hash containers called a timer wheel slot.
- * For every timer a timer_entry is created and attached to the timer wheel slot.
+ * For every timer a olsr_timer_entry is created and attached to the timer wheel slot.
  * When the timer fires, the timer_cb function is called with the
  * context pointer.
- * The implementation supports periodic and oneshot timers.
- * For a periodic timer the timer_period field is set to non zero,
- * which causes the timer to run forever until manually stopped.
  */
-struct timer_entry {
+struct olsr_timer_entry {
   /* Wheel membership */
   struct list_entity timer_list;
 
@@ -99,7 +100,7 @@ struct timer_entry {
   uint32_t timer_clock;
 
   /* timeperiod between two timer events for periodical timers */
-  uint32_t timer_period;           /* set for periodical timers (relative time) */
+  uint32_t timer_period;
 
   /* the jitter expressed in percent */
   uint8_t timer_jitter_pct;
@@ -119,73 +120,75 @@ struct timer_entry {
 
 /* Timers */
 extern struct avl_tree EXPORT(timerinfo_tree);
+#define OLSR_FOR_ALL_TIMERS(ti, iterator) avl_for_each_element_safe(&timerinfo_tree, ti, node, iterator)
 
 void olsr_init_timers(void);
 void olsr_flush_timers(void);
 
-uint32_t EXPORT(olsr_getTimestamp) (uint32_t s);
-int32_t EXPORT(olsr_getTimeDue) (uint32_t s);
-bool EXPORT(olsr_isTimedOut) (uint32_t s);
+uint32_t EXPORT(olsr_timer_getAbsolute) (uint32_t relative);
+int32_t EXPORT(olsr_timer_getRelative) (uint32_t absolute);
+bool EXPORT(olsr_timer_isTimedOut) (uint32_t s);
 
-void EXPORT(olsr_set_timer) (struct timer_entry **, uint32_t, uint8_t,
-    void *, struct olsr_timer_info *);
-struct timer_entry *EXPORT(olsr_start_timer) (uint32_t, uint8_t,
-    void *, struct olsr_timer_info *);
-void EXPORT(olsr_change_timer)(struct timer_entry *, uint32_t, uint8_t);
-void EXPORT(olsr_stop_timer) (struct timer_entry *);
+/**
+ * Calculates the current time in the internal OLSR representation
+ * @return current time
+ */
+static inline uint32_t olsr_timer_getNow(void) {
+  return olsr_timer_getAbsolute(0);
+}
 
-struct olsr_timer_info *EXPORT(olsr_alloc_timerinfo)(const char *name, timer_cb_func callback, bool periodic);
+void EXPORT(olsr_timer_set) (struct olsr_timer_entry **, uint32_t, uint8_t,
+    void *, struct olsr_timer_info *);
+struct olsr_timer_entry *EXPORT(olsr_timer_start) (uint32_t, uint8_t,
+    void *, struct olsr_timer_info *);
+void EXPORT(olsr_timer_change)(struct olsr_timer_entry *, uint32_t, uint8_t);
+void EXPORT(olsr_timer_stop) (struct olsr_timer_entry *);
+
+struct olsr_timer_info *EXPORT(olsr_timer_add)(const char *name, timer_cb_func callback, bool periodic);
 
 /* Printing timestamps */
-const char *EXPORT(olsr_clock_string)(uint32_t);
-const char *EXPORT(olsr_wallclock_string)(void);
+const char *EXPORT(olsr_timer_getClockString)(uint32_t);
+const char *EXPORT(olsr_timer_getWallclockString)(void);
 
 /* Main scheduler loop */
 void olsr_scheduler(void);
 
-/*
- * Provides a timestamp s1 milliseconds in the future
- */
-#define GET_TIMESTAMP(s1)	olsr_getTimestamp(s1)
+/* flags for socket handler */
+static const unsigned int OLSR_SOCKET_READ = 0x04;
+static const unsigned int OLSR_SOCKETPOLL_WRITE = 0x08;
 
-/* Compute the time in milliseconds when a timestamp will expire. */
-#define TIME_DUE(s1)    olsr_getTimeDue(s1)
-
-/* Returns TRUE if a timestamp is expired */
-#define TIMED_OUT(s1)	  olsr_isTimedOut(s1)
-
-/* Timer data */
-extern uint32_t EXPORT(now_times);     /* current idea of times(2) reported uptime */
-
-
-#define SP_PR_READ		0x01
-#define SP_PR_WRITE		0x02
-
-#define SP_IMM_READ		0x04
-#define SP_IMM_WRITE		0x08
-
-
+/* prototype for socket handler */
 typedef void (*socket_handler_func) (int fd, void *data, unsigned int flags);
 
-
+/* This struct represents a single registered socket handler */
 struct olsr_socket_entry {
-  int fd;
-  socket_handler_func process_immediate;
-  socket_handler_func process_pollrate;
-  void *data;
-  unsigned int flags;
+  /* list of socket handlers */
   struct list_entity socket_node;
+
+  /* file descriptor of the socket */
+  int fd;
+
+  /* socket handler */
+  socket_handler_func process_immediate;
+
+  /* custom data pointer for sockets */
+  void *data;
+
+  /* flags (OLSR_SOCKET_READ and OLSR_SOCKET_WRITE) */
+  unsigned int flags;
 };
 
 /* deletion safe macro for socket list traversal */
-
+extern struct list_entity EXPORT(socket_head);
 #define OLSR_FOR_ALL_SOCKETS(socket, iterator) list_for_each_element_safe(&socket_head, socket, socket_node, iterator)
 
-void EXPORT(add_olsr_socket) (int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, void *data, unsigned int flags);
-int EXPORT(remove_olsr_socket) (int fd, socket_handler_func pf_pr, socket_handler_func pf_imm);
-void olsr_flush_sockets(void);
-void EXPORT(enable_olsr_socket) (int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, unsigned int flags);
-void EXPORT(disable_olsr_socket) (int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, unsigned int flags);
+void olsr_socket_cleanup(void);
+
+void EXPORT(olsr_socket_add) (int fd, socket_handler_func pf_imm, void *data, unsigned int flags);
+int EXPORT(olsr_socket_remove) (int fd, socket_handler_func pf_imm);
+
+void EXPORT(olsr_socket_enable) (int fd, socket_handler_func pf_imm, unsigned int flags);
+void EXPORT(olsr_socket_disable) (int fd, socket_handler_func pf_imm, unsigned int flags);
 
 #endif
 

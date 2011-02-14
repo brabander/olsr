@@ -102,10 +102,10 @@ olsrd_plugin_init(void)
   }
 
   /* create the cookie */
-  event_timer_info = olsr_alloc_timerinfo("DynGW Plain: Event", &olsr_event, true);
+  event_timer_info = olsr_timer_add("DynGW Plain: Event", &olsr_event, true);
 
   /* Register the GW check */
-  olsr_start_timer(3 * MSEC_PER_SEC, 0, NULL, event_timer_info);
+  olsr_timer_start(3 * MSEC_PER_SEC, 0, NULL, event_timer_info);
 
   return 1;
 }
