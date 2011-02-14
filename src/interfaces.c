@@ -41,7 +41,8 @@
 
 #include "defs.h"
 #include "interfaces.h"
-#include "scheduler.h"
+#include "olsr_timer.h"
+#include "olsr_socket.h"
 #include "olsr.h"
 #include "parser.h"
 #include "net_olsr.h"

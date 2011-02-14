@@ -50,7 +50,8 @@
 #include "common/avl_olsr_comp.h"
 #include "olsr.h"
 #include "ipcalc.h"
-#include "scheduler.h"
+#include "olsr_timer.h"
+#include "olsr_socket.h"
 #include "parser.h"
 #include "plugin_loader.h"
 #include "os_apm.h"
@@ -242,7 +243,8 @@ main(int argc, char *argv[])
   olsr_memcookie_init();
 
   /* Initialize timers and scheduler part */
-  olsr_init_timers();
+  olsr_timer_init();
+  olsr_socket_init();
 
   /* initialize callback system */
   olsr_callback_init();
@@ -420,7 +422,7 @@ main(int argc, char *argv[])
 
   /* Starting scheduler */
   app_state = STATE_RUNNING;
-  olsr_scheduler();
+  olsr_timer_scheduler();
 
   olsr_timer_stop(tc_gen_timer);
   tc_gen_timer = NULL;
@@ -581,7 +583,7 @@ olsr_shutdown(void)
   olsr_socket_cleanup();
 
   /* Stop and delete all timers. */
-  olsr_flush_timers();
+  olsr_timer_cleanup();
 
   /* Remove parser hooks */
   olsr_deinit_parser();

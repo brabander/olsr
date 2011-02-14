@@ -52,7 +52,8 @@
 /* OLSRD includes */
 #include "defs.h"               /* GET_TIMESTAMP, TIMED_OUT */
 #include "olsr.h"
-#include "scheduler.h"          /* now_times */
+#include "olsr_timer.h"
+#include "olsr_socket.h"          /* now_times */
 
 /* Plugin includes */
 #include "Packet.h"

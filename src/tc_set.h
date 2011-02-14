@@ -46,7 +46,8 @@
 #include "common/list.h"
 #include "olsr_protocol.h"
 #include "lq_packet.h"
-#include "scheduler.h"
+#include "olsr_timer.h"
+#include "olsr_socket.h"
 #include "olsr_memcookie.h"
 #include "duplicate_set.h"
 

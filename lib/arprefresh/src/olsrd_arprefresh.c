@@ -62,7 +62,8 @@
 #include <unistd.h>
 
 #include "olsrd_arprefresh.h"
-#include "scheduler.h"
+#include "olsr_timer.h"
+#include "olsr_socket.h"
 #include "os_net.h"
 #include "olsr_logging.h"
 #include "olsr_cfg.h"

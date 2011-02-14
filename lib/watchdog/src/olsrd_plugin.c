@@ -49,7 +49,8 @@
 #include "olsrd_plugin.h"
 #include "olsr.h"
 #include "defs.h"
-#include "scheduler.h"
+#include "olsr_timer.h"
+#include "olsr_socket.h"
 #include "olsr_memcookie.h"
 #include "olsr_logging.h"
 

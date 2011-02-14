@@ -49,7 +49,8 @@
 #include <sys/stat.h>
 
 #include "defs.h"
-#include "scheduler.h"
+#include "olsr_timer.h"
+#include "olsr_socket.h"
 #include "nameservice.h"
 #include "mid_set.h"
 #include "tc_set.h"
