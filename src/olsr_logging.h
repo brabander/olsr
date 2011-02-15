@@ -49,6 +49,19 @@
 #define MAX_LOG_HANDLER 8
 
 /**
+ * defines the severity of a logging event
+ */
+enum log_severity {
+  SEVERITY_DEBUG,                      //!< SEVERITY_DEBUG
+  SEVERITY_INFO,                       //!< SEVERITY_INFO
+  SEVERITY_WARN,                       //!< SEVERITY_WARN
+  SEVERITY_ERR,                        //!< SEVERITY_ERR
+
+  /* this one must be the last of the enums ! */
+  LOG_SEVERITY_COUNT                   //!< LOG_SEVERITY_COUNT
+};
+
+/**
  * these four macros should be used to generate OLSR logging output
  *
  * OLSR_DEBUG should be used for all output that is only usefull for debugging a specific

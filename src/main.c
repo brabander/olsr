@@ -94,7 +94,7 @@ static void signal_reconfigure(int);
 /* Global stuff externed in olsr_cfg.h */
 struct olsr_config *olsr_cnf;          /* The global configuration */
 
-volatile enum app_state app_state = STATE_INIT;
+enum app_state app_state = STATE_INIT;
 
 static char copyright_string[] __attribute__ ((unused)) =
   "The olsr.org Optimized Link-State Routing daemon(olsrd) Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org) All rights reserved.";
