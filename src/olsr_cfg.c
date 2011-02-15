@@ -813,17 +813,6 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
     }
     PARSER_DEBUG_PRINTF("IpVersion: %d\n", rcfg->ip_version);
     break;
-  case 'J':                    /* LinkQualityDijkstraLimit (i,f) */
-    {
-      int limit = -1;
-      char t[10] = {0};
-      sscanf(argstr, "%d %10s", &limit, t);
-      if (0 <= limit && limit < (1 << (8 * sizeof(rcfg->lq_dlimit))))
-        rcfg->lq_dlimit = limit;
-      rcfg->lq_dinter = olsr_txt_to_milli(t);
-      PARSER_DEBUG_PRINTF("Link quality dijkstra limit %d, %u ms\n", rcfg->lq_dlimit, rcfg->lq_dinter);
-    }
-    break;
   case 'E':                    /* LinkQualityFishEye (i) */
     {
       int arg = -1;
@@ -1359,12 +1348,6 @@ olsr_sanity_check_cfg(struct olsr_config *cfg)
     return -1;
   }
 
-  /* Check Link quality dijkstra limit */
-  if (cfg->lq_dinter < cfg->pollrate && cfg->lq_dlimit != 255) {
-    fprintf(stderr, "Link quality dijkstra limit must be higher than pollrate\n");
-    return -1;
-  }
-
   /* NIC Changes Pollrate */
   if (cfg->nic_chgs_pollrate < MIN_NICCHGPOLLRT || cfg->nic_chgs_pollrate > MAX_NICCHGPOLLRT) {
     fprintf(stderr, "NIC Changes Pollrate %u ms is not allowed\n", cfg->nic_chgs_pollrate);
@@ -1571,7 +1554,6 @@ olsr_get_default_cfg(void)
   cfg->tc_redundancy = TC_REDUNDANCY;
   cfg->mpr_coverage = MPR_COVERAGE;
   cfg->lq_fish = DEF_LQ_FISH;
-  cfg->lq_dinter = DEF_LQ_DIJK_INTER;
   cfg->lq_dlimit = DEF_LQ_DIJK_LIMIT;
   assert(cfg->willingness == 0);
 

@@ -257,8 +257,26 @@ main(int argc, char *argv[])
   olsr_init_pluginsystem();
   olsr_plugins_init(true);
 
-  /* initialisation of different tables to be used. */
-  olsr_init_tables();
+  /* Initialize link set */
+  olsr_init_link_set();
+
+  /* Initialize duplicate table */
+  olsr_init_duplicate_set();
+
+  /* Initialize neighbor table */
+  olsr_init_neighbor_table();
+
+  /* Initialize routing table */
+  olsr_init_routing_table();
+
+  /* Initialize topology */
+  olsr_init_tc();
+
+  /* Initialize MID set */
+  olsr_init_mid_set();
+
+  /* Initialize HNA set */
+  olsr_init_hna_set();
 
   /* enable lq-plugins */
   olsr_plugins_enable(PLUGIN_TYPE_LQ, true);

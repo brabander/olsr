@@ -60,8 +60,6 @@ uint16_t EXPORT(get_msg_seqno) (void);
 
 uint8_t *EXPORT(olsr_put_msg_hdr)(uint8_t **curr, struct olsr_message *msg);
 
-void olsr_init_tables(void);
-
 void olsr_init_willingness(void);
 
 void olsr_calculate_willingness(void);

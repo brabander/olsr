@@ -67,12 +67,11 @@
 #include <stdlib.h>
 
 static void olsr_update_willingness(void *);
-static void olsr_trigger_forced_update(void *);
 
-bool changes_topology;
-bool changes_neighborhood;
-bool changes_hna;
-bool changes_force;
+bool changes_topology = false;
+bool changes_neighborhood = false;
+bool changes_hna = false;
+bool changes_force = false;
 
 static uint16_t message_seqno;
 
@@ -145,65 +144,6 @@ olsr_process_changes(void)
   changes_topology = false;
   changes_hna = false;
   changes_force = false;
-}
-
-/*
- * Callback for the periodic route calculation.
- */
-static void
-olsr_trigger_forced_update(void *unused __attribute__ ((unused)))
-{
-
-  changes_force = true;
-  changes_neighborhood = true;
-  changes_topology = true;
-  changes_hna = true;
-
-  olsr_process_changes();
-}
-
-/**
- *Initialize all the tables used(neighbor,
- *topology, MID,  HNA, MPR, dup).
- *Also initalizes other variables
- */
-void
-olsr_init_tables(void)
-{
-  /* Some cookies for stats keeping */
-  static struct olsr_timer_info *periodic_spf_timer_info = NULL;
-
-  changes_topology = false;
-  changes_neighborhood = false;
-  changes_hna = false;
-
-  /* Initialize link set */
-  olsr_init_link_set();
-
-  /* Initialize duplicate table */
-  olsr_init_duplicate_set();
-
-  /* Initialize neighbor table */
-  olsr_init_neighbor_table();
-
-  /* Initialize routing table */
-  olsr_init_routing_table();
-
-  /* Initialize topology */
-  olsr_init_tc();
-
-  /* Initialize MID set */
-  olsr_init_mid_set();
-
-  /* Initialize HNA set */
-  olsr_init_hna_set();
-
-  /* Start periodic SPF and RIB recalculation */
-  if (olsr_cnf->lq_dinter > 0) {
-    periodic_spf_timer_info = olsr_alloc_timerinfo("Periodic SPF", &olsr_trigger_forced_update, true);
-    olsr_start_timer(olsr_cnf->lq_dinter, 5,
-                     NULL, periodic_spf_timer_info);
-  }
 }
 
 /**
