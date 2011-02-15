@@ -28,7 +28,7 @@ static struct list_entity timer_wheel[TIMER_WHEEL_SLOTS];
 static uint32_t timer_last_run;        /* remember the last timeslot walk */
 
 /* Memory cookie for the timer manager */
-struct avl_tree timerinfo_tree;
+struct list_entity timerinfo_list;
 static struct olsr_memcookie_info *timer_mem_cookie = NULL;
 static struct olsr_memcookie_info *timerinfo_cookie = NULL;
 
@@ -56,7 +56,6 @@ olsr_timer_init(void)
   olsr_timer_updateClock();
 
   /* init lists */
-  list_init_head(&socket_head);
   for (idx = 0; idx < TIMER_WHEEL_SLOTS; idx++) {
     list_init_head(&timer_wheel[idx]);
   }
@@ -69,7 +68,7 @@ olsr_timer_init(void)
   /* Allocate a cookie for the block based memory manager. */
   timer_mem_cookie = olsr_memcookie_add("timer_entry", sizeof(struct olsr_timer_entry));
 
-  avl_init(&timerinfo_tree, avl_comp_strcasecmp, false, NULL);
+  list_init_head(&timerinfo_list);
   timerinfo_cookie = olsr_memcookie_add("timerinfo", sizeof(struct olsr_timer_info));
 }
 
@@ -98,7 +97,7 @@ olsr_timer_cleanup(void)
 
   /* free all timerinfos */
   OLSR_FOR_ALL_TIMERS(ti, iterator) {
-    avl_delete(&timerinfo_tree, &ti->node);
+    list_remove(&ti->node);
     free(ti->name);
     olsr_memcookie_free(timerinfo_cookie, ti);
   }
@@ -212,11 +211,10 @@ olsr_timer_add(const char *name, timer_cb_func callback, bool periodic) {
 
   ti = olsr_memcookie_malloc(timerinfo_cookie);
   ti->name = strdup(name);
-  ti->node.key = ti->name;
   ti->callback = callback;
   ti->periodic = periodic;
 
-  avl_insert(&timerinfo_tree, &ti->node);
+  list_add_tail(&timerinfo_list, &ti->node);
   return ti;
 }
 

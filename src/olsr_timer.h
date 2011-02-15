@@ -25,8 +25,8 @@ typedef void (*timer_cb_func) (void *);
  * type (periodic/non-periodic) and callback.
  */
 struct olsr_timer_info {
-  /* node of timerinfo tree */
-  struct avl_node node;
+  /* node of timerinfo list */
+  struct list_entity node;
 
   /* name of this timer class */
   char *name;
@@ -87,8 +87,8 @@ struct timeval_buf {
 };
 
 /* Timers */
-extern struct avl_tree EXPORT(timerinfo_tree);
-#define OLSR_FOR_ALL_TIMERS(ti, iterator) avl_for_each_element_safe(&timerinfo_tree, ti, node, iterator)
+extern struct list_entity EXPORT(timerinfo_list);
+#define OLSR_FOR_ALL_TIMERS(ti, iterator) list_for_each_element_safe(&timerinfo_list, ti, node, iterator)
 
 void olsr_timer_init(void);
 void olsr_timer_cleanup(void);
