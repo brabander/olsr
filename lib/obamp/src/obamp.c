@@ -234,7 +234,11 @@ CreateCaptureSocket(const char *ifName)
     return -1;
   }
 
-  olsr_socket_add(skfd, &EncapFlowInObamp, NULL, OLSR_SOCKET_READ);
+  if (NULL == olsr_socket_add(skfd, &EncapFlowInObamp, NULL, OLSR_SOCKET_READ)) {
+    OLSR_DEBUG(LOG_PLUGINS, "Could not register socket with scheduler");
+    close(skfd);
+    return -1;
+  }
 
   return skfd;
 }                               /* CreateCaptureSocket */

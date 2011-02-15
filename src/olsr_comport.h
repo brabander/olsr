@@ -91,7 +91,7 @@ struct comport_connection {
    * internal part of the server
    */
   struct list_entity node;
-  int fd;
+  struct olsr_socket_entry *sock;
   enum connection_state state;
   enum http_header_type send_as;
   const char *http_contenttype;
@@ -100,7 +100,7 @@ struct comport_connection {
   struct autobuf in;
 };
 
-void olsr_com_init(bool);
+void olsr_com_init(void);
 void olsr_com_destroy(void);
 
 void EXPORT(olsr_com_activate_output) (struct comport_connection *con);

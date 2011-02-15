@@ -43,7 +43,6 @@
 #ifndef _OLSR_SCHEDULER
 #define _OLSR_SCHEDULER
 
-#include "olsr_time.h"
 #include "common/list.h"
 #include "common/avl.h"
 
@@ -51,7 +50,7 @@
 
 /* flags for socket handler */
 static const unsigned int OLSR_SOCKET_READ = 0x04;
-static const unsigned int OLSR_SOCKETPOLL_WRITE = 0x08;
+static const unsigned int OLSR_SOCKET_WRITE = 0x08;
 
 /* prototype for socket handler */
 typedef void (*socket_handler_func) (int fd, void *data, unsigned int flags);
@@ -59,13 +58,13 @@ typedef void (*socket_handler_func) (int fd, void *data, unsigned int flags);
 /* This struct represents a single registered socket handler */
 struct olsr_socket_entry {
   /* list of socket handlers */
-  struct list_entity socket_node;
+  struct list_entity node;
 
   /* file descriptor of the socket */
   int fd;
 
   /* socket handler */
-  socket_handler_func process_immediate;
+  socket_handler_func process;
 
   /* custom data pointer for sockets */
   void *data;
@@ -76,17 +75,36 @@ struct olsr_socket_entry {
 
 /* deletion safe macro for socket list traversal */
 extern struct list_entity EXPORT(socket_head);
-#define OLSR_FOR_ALL_SOCKETS(socket, iterator) list_for_each_element_safe(&socket_head, socket, socket_node, iterator)
+#define OLSR_FOR_ALL_SOCKETS(socket, iterator) list_for_each_element_safe(&socket_head, socket, node, iterator)
 
 void olsr_socket_init(void);
 void olsr_socket_cleanup(void);
 
-void EXPORT(olsr_socket_add) (int fd, socket_handler_func pf_imm, void *data, unsigned int flags);
-int EXPORT(olsr_socket_remove) (int fd, socket_handler_func pf_imm);
+struct olsr_socket_entry *EXPORT(olsr_socket_add) (int fd,
+    socket_handler_func pf_imm, void *data, unsigned int flags);
+void EXPORT(olsr_socket_remove) (struct olsr_socket_entry *);
 
-void EXPORT(olsr_socket_enable) (int fd, socket_handler_func pf_imm, unsigned int flags);
-void EXPORT(olsr_socket_disable) (int fd, socket_handler_func pf_imm, unsigned int flags);
+/**
+ * Enable one or both flags of a socket handler
+ * @param sock pointer to socket entry
+ */
+static inline void
+olsr_socket_enable(struct olsr_socket_entry *entry, unsigned int flags)
+{
+  entry->flags |= flags;
+}
 
+/**
+ * Disable one or both flags of a socket handler
+ * @param sock pointer to socket entry
+ */
+static inline void
+olsr_socket_disable(struct olsr_socket_entry *entry, unsigned int flags)
+{
+  entry->flags &= ~flags;
+}
+
+/* used by timer scheduler */
 void handle_sockets(uint32_t next_interval);
 
 #endif

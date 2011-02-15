@@ -75,8 +75,8 @@
 struct list_entity olsr_comport_head;
 
 /* server socket */
-static int comsocket_http = 0;
-static int comsocket_txt = 0;
+static struct olsr_socket_entry *comsocket_http;
+static struct olsr_socket_entry *comsocket_txt;
 
 static struct olsr_memcookie_info *connection_cookie;
 static struct olsr_timer_info *connection_timeout;
@@ -94,7 +94,9 @@ static void olsr_com_cleanup_session(struct comport_connection *con);
 static void olsr_com_timeout_handler(void *);
 
 void
-olsr_com_init(bool failfast) {
+olsr_com_init(void) {
+  int sock_http, sock_txt;
+
   connection_cookie =
       olsr_memcookie_add("comport connections", sizeof(struct comport_connection));
 
@@ -110,23 +112,21 @@ olsr_com_init(bool failfast) {
   olsr_com_init_txt();
 
   if (olsr_cnf->comport_http > 0) {
-    if ((comsocket_http = olsr_com_openport(olsr_cnf->comport_http)) == -1) {
-      if (failfast) {
-        olsr_exit(1);
-      }
-    }
-    else {
-      olsr_socket_add(comsocket_http, &olsr_com_parse_request, NULL, OLSR_SOCKET_READ);
+    sock_http = olsr_com_openport(olsr_cnf->comport_http);
+
+    if (NULL == (comsocket_http =
+        olsr_socket_add(sock_http, &olsr_com_parse_request, NULL, OLSR_SOCKET_READ))) {
+      OLSR_ERROR(LOG_COMPORT, "Cannot http-register socket with scheduler");
+      olsr_exit(1);
     }
   }
   if (olsr_cnf->comport_txt > 0) {
-    if ((comsocket_txt = olsr_com_openport(olsr_cnf->comport_txt)) == -1) {
-      if (failfast) {
-        olsr_exit(1);
-      }
-    }
-    else {
-      olsr_socket_add(comsocket_txt, &olsr_com_parse_request, NULL, OLSR_SOCKET_READ);
+    sock_txt = olsr_com_openport(olsr_cnf->comport_txt);
+
+    if (NULL == (comsocket_txt =
+        olsr_socket_add(sock_txt, &olsr_com_parse_request, NULL, OLSR_SOCKET_READ))) {
+      OLSR_ERROR(LOG_COMPORT, "Cannot register txt-socket with scheduler");
+      olsr_exit(1);
     }
   }
 }
@@ -144,7 +144,7 @@ olsr_com_destroy(void) {
 
 void
 olsr_com_activate_output(struct comport_connection *con) {
-  olsr_socket_enable(con->fd, &olsr_com_parse_connection, OLSR_SOCKETPOLL_WRITE);
+  olsr_socket_enable(con->sock, OLSR_SOCKET_WRITE);
 }
 
 static int
@@ -160,14 +160,14 @@ olsr_com_openport(int port) {
   /* Init ipc socket */
   int s = socket(olsr_cnf->ip_version, SOCK_STREAM, 0);
   if (s == -1) {
-    OLSR_WARN(LOG_COMPORT, "Cannot open %d com-socket for IPv%c: %s\n", port, ipchar, strerror(errno));
-    return -1;
+    OLSR_ERROR(LOG_COMPORT, "Cannot open %d com-socket for IPv%c: %s\n", port, ipchar, strerror(errno));
+    olsr_exit(1);
   }
 
   if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char *) &yes, sizeof(yes)) < 0) {
-    OLSR_WARN(LOG_COMPORT, "Com-port %d SO_REUSEADDR for IPv%c failed: %s\n", port, ipchar, strerror(errno));
+    OLSR_ERROR(LOG_COMPORT, "Com-port %d SO_REUSEADDR for IPv%c failed: %s\n", port, ipchar, strerror(errno));
     os_close(s);
-    return -1;
+    olsr_exit(1);
   }
 
   /* Bind the socket */
@@ -196,16 +196,16 @@ olsr_com_openport(int port) {
 
   /* bind the socket to the port number */
   if (bind(s, (struct sockaddr *) &sst, addrlen) == -1) {
-    OLSR_WARN(LOG_COMPORT, "Com-port %d bind failed for IPv%c: %s\n", port, ipchar, strerror(errno));
+    OLSR_ERROR(LOG_COMPORT, "Com-port %d bind failed for IPv%c: %s\n", port, ipchar, strerror(errno));
     os_close(s);
-    return -1;
+    olsr_exit(1);
   }
 
   /* show that we are willing to listen */
   if (listen(s, 1) == -1) {
-    OLSR_WARN(LOG_COMPORT, "Com-port %d listen for IPv%c failed %s\n", port, ipchar, strerror(errno));
+    OLSR_ERROR(LOG_COMPORT, "Com-port %d listen for IPv%c failed %s\n", port, ipchar, strerror(errno));
     os_close(s);
-    return -1;
+    olsr_exit(1);
   }
 
   return s;
@@ -231,8 +231,7 @@ olsr_com_parse_request(int fd, void *data __attribute__ ((unused)), unsigned int
   abuf_init(&con->in, 1024);
   abuf_init(&con->out, 0);
 
-  con->is_http = fd == comsocket_http;
-  con->fd = sock;
+  con->is_http = fd == comsocket_http->fd;
 
   if (olsr_cnf->ip_version == AF_INET6) {
     struct sockaddr_in6 *addr6 = (struct sockaddr_in6 *) &addr;
@@ -270,7 +269,8 @@ olsr_com_parse_request(int fd, void *data __attribute__ ((unused)), unsigned int
 
   con->timeout = olsr_timer_start(con->timeout_value, 0, con, connection_timeout);
 
-  olsr_socket_add(sock, &olsr_com_parse_connection, con, OLSR_SOCKET_READ | OLSR_SOCKETPOLL_WRITE);
+  con->sock = olsr_socket_add(sock, &olsr_com_parse_connection, con,
+      OLSR_SOCKET_READ | OLSR_SOCKET_WRITE);
 
   list_add_after(&olsr_comport_head, &con->node);
 }
@@ -288,8 +288,9 @@ olsr_com_cleanup_session(struct comport_connection *con) {
   if (con->stop_handler) {
     con->stop_handler(con);
   }
-  olsr_socket_remove(con->fd, &olsr_com_parse_connection);
-  os_close(con->fd);
+
+  os_close(con->sock->fd);
+  olsr_socket_remove(con->sock);
 
   abuf_free(&con->in);
   abuf_free(&con->out);
@@ -366,7 +367,7 @@ olsr_com_parse_connection(int fd, void *data, unsigned int flags) {
       con->send_as = PLAIN;
     }
 
-    if (flags & OLSR_SOCKETPOLL_WRITE) {
+    if (flags & OLSR_SOCKET_WRITE) {
       int len;
 
       len = send(fd, con->out.buf, con->out.len, 0);
@@ -380,12 +381,12 @@ olsr_com_parse_connection(int fd, void *data, unsigned int flags) {
       }
     } else {
       OLSR_DEBUG(LOG_COMPORT, "  activating output in scheduler\n");
-      olsr_socket_enable(fd, &olsr_com_parse_connection, OLSR_SOCKETPOLL_WRITE);
+      olsr_socket_enable(con->sock, OLSR_SOCKET_WRITE);
     }
   }
   if (con->out.len == 0) {
     OLSR_DEBUG(LOG_COMPORT, "  deactivating output in scheduler\n");
-    olsr_socket_disable(fd, &olsr_com_parse_connection, OLSR_SOCKETPOLL_WRITE);
+    olsr_socket_disable(con->sock, OLSR_SOCKET_WRITE);
     if (con->state == SEND_AND_QUIT) {
       con->state = CLEANUP;
     }

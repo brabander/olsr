@@ -266,7 +266,7 @@ main(int argc, char *argv[])
   olsr_plugins_enable(PLUGIN_TYPE_LQ, true);
 
   /* initialize built in server services */
-  olsr_com_init(true);
+  olsr_com_init();
 
   /* Initialize net */
   init_net();

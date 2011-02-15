@@ -42,19 +42,27 @@
 #include <unistd.h>
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
+#include <errno.h>
 
 #include "common/avl.h"
 #include "common/avl_olsr_comp.h"
-#include "olsr.h"
 #include "olsr_logging.h"
 #include "olsr_memcookie.h"
 #include "olsr_timer.h"
 #include "os_net.h"
-#include "os_time.h"
 #include "olsr_socket.h"
 
 /* Head of all OLSR used sockets */
 struct list_entity socket_head;
+
+static struct olsr_memcookie_info *socket_memcookie;
+
+/* helper function to free socket entry */
+static inline void olsr_socket_intfree(struct olsr_socket_entry *sock) {
+  list_remove(&sock->node);
+  olsr_memcookie_free(socket_memcookie, sock);
+}
 
 /**
  * Initialize olsr socket scheduler
@@ -62,6 +70,8 @@ struct list_entity socket_head;
 void
 olsr_socket_init(void) {
   list_init_head(&socket_head);
+
+  socket_memcookie = olsr_memcookie_add("socket entry", sizeof(struct olsr_socket_entry));
 }
 
 /**
@@ -75,8 +85,7 @@ olsr_socket_cleanup(void)
 
   OLSR_FOR_ALL_SOCKETS(entry, iterator) {
     os_close(entry->fd);
-    list_remove(&entry->socket_node);
-    free(entry);
+    olsr_socket_intfree(entry);
   }
 }
 
@@ -88,92 +97,43 @@ olsr_socket_cleanup(void)
  * @param pf_imm processing callback
  * @param data custom data
  * @param flags OLSR_SOCKET_READ/OLSR_SOCKET_WRITE (or both)
+ * @return pointer to socket_entry
  */
-void
+struct olsr_socket_entry *
 olsr_socket_add(int fd, socket_handler_func pf_imm, void *data, unsigned int flags)
 {
   struct olsr_socket_entry *new_entry;
 
   if (fd < 0 || pf_imm == NULL) {
     OLSR_WARN(LOG_SCHEDULER, "Bogus socket entry - not registering...");
-    return;
+    return NULL;
   }
   OLSR_DEBUG(LOG_SCHEDULER, "Adding OLSR socket entry %d\n", fd);
 
-  new_entry = olsr_malloc(sizeof(*new_entry), "Socket entry");
+  new_entry = olsr_memcookie_malloc(socket_memcookie);
 
   new_entry->fd = fd;
-  new_entry->process_immediate = pf_imm;
+  new_entry->process = pf_imm;
   new_entry->data = data;
   new_entry->flags = flags;
 
   /* Queue */
-  list_add_before(&socket_head, &new_entry->socket_node);
+  list_add_before(&socket_head, &new_entry->node);
+
+  return new_entry;
 }
 
 /**
- * Remove a socket and handler to the socketset
- * beeing used in the main select(2) loop
- *
- *@param fd the socket
- *@param pf_imm the processing function
- */
-int
-olsr_socket_remove(int fd, socket_handler_func pf_imm)
-{
-  struct olsr_socket_entry *entry, *iterator;
-
-  if (fd < 0 || pf_imm == NULL) {
-    OLSR_WARN(LOG_SCHEDULER, "Bogus socket entry - not processing...");
-    return 0;
-  }
-  OLSR_DEBUG(LOG_SCHEDULER, "Removing OLSR socket entry %d\n", fd);
-
-  OLSR_FOR_ALL_SOCKETS(entry, iterator) {
-    if (entry->fd == fd && entry->process_immediate == pf_imm) {
-      /* just mark this node as "deleted", it will be cleared later at the end of handle_fds() */
-      entry->process_immediate = NULL;
-      entry->flags = 0;
-      return 1;
-    }
-  }
-  return 0;
-}
-
-/**
- * Enable one or both flags of a socket handler
- * @param fd file descriptor of socket handler
- * @param pf_imm process function
- * @param flags flags to be enabled
+ * Remove a socket and handler from the socket scheduler
+ * @param sock pointer to socket entry
  */
 void
-olsr_socket_enable(int fd, socket_handler_func pf_imm, unsigned int flags)
+olsr_socket_remove(struct olsr_socket_entry *entry)
 {
-  struct olsr_socket_entry *entry, *iterator;
+  OLSR_DEBUG(LOG_SCHEDULER, "Removing OLSR socket entry %d\n", entry->fd);
 
-  OLSR_FOR_ALL_SOCKETS(entry, iterator) {
-    if (entry->fd == fd && entry->process_immediate == pf_imm) {
-      entry->flags |= flags;
-    }
-  }
-}
-
-/**
- * Disable one or both flags of a socket handler
- * @param fd file descriptor of socket handler
- * @param pf_imm process function
- * @param flags flags to be disabled
- */
-void
-olsr_socket_disable(int fd, socket_handler_func pf_imm, unsigned int flags)
-{
-  struct olsr_socket_entry *entry, *iterator;
-
-  OLSR_FOR_ALL_SOCKETS(entry, iterator) {
-    if (entry->fd == fd && entry->process_immediate == pf_imm) {
-      entry->flags &= ~flags;
-    }
-  }
+  entry->process = NULL;
+  entry->flags = 0;
 }
 
 /**
@@ -214,18 +174,18 @@ handle_sockets(uint32_t next_interval)
 
     /* Adding file-descriptors to FD set */
     OLSR_FOR_ALL_SOCKETS(entry, iterator) {
-      if (entry->process_immediate == NULL) {
+      if (entry->process == NULL) {
         continue;
       }
       if ((entry->flags & OLSR_SOCKET_READ) != 0) {
         fdsets |= OLSR_SOCKET_READ;
         FD_SET((unsigned int)entry->fd, &ibits);        /* And we cast here since we get a warning on Win32 */
       }
-      if ((entry->flags & OLSR_SOCKETPOLL_WRITE) != 0) {
-        fdsets |= OLSR_SOCKETPOLL_WRITE;
+      if ((entry->flags & OLSR_SOCKET_WRITE) != 0) {
+        fdsets |= OLSR_SOCKET_WRITE;
         FD_SET((unsigned int)entry->fd, &obits);        /* And we cast here since we get a warning on Win32 */
       }
-      if ((entry->flags & (OLSR_SOCKET_READ | OLSR_SOCKETPOLL_WRITE)) != 0 && entry->fd >= hfd) {
+      if ((entry->flags & (OLSR_SOCKET_READ | OLSR_SOCKET_WRITE)) != 0 && entry->fd >= hfd) {
         hfd = entry->fd + 1;
       }
     }
@@ -236,14 +196,17 @@ handle_sockets(uint32_t next_interval)
     }
 
     do {
-      n = os_select(hfd, fdsets & OLSR_SOCKET_READ ? &ibits : NULL, fdsets & OLSR_SOCKETPOLL_WRITE ? &obits : NULL, NULL, &tvp);
+      n = os_select(hfd,
+          fdsets & OLSR_SOCKET_READ ? &ibits : NULL,
+          fdsets & OLSR_SOCKET_WRITE ? &obits : NULL,
+          NULL, &tvp);
     } while (n == -1 && errno == EINTR);
 
     if (n == 0) {               /* timeout! */
       break;
     }
     if (n == -1) {              /* Did something go wrong? */
-      OLSR_WARN(LOG_SCHEDULER, "select error: %s", strerror(errno));
+      OLSR_WARN(LOG_SCHEDULER, "select error: %s (%d)", strerror(errno), errno);
       break;
     }
 
@@ -251,7 +214,7 @@ handle_sockets(uint32_t next_interval)
     olsr_timer_updateClock();
     OLSR_FOR_ALL_SOCKETS(entry, iterator) {
       int flags;
-      if (entry->process_immediate == NULL) {
+      if (entry->process == NULL) {
         continue;
       }
       flags = 0;
@@ -259,10 +222,10 @@ handle_sockets(uint32_t next_interval)
         flags |= OLSR_SOCKET_READ;
       }
       if (FD_ISSET(entry->fd, &obits)) {
-        flags |= OLSR_SOCKETPOLL_WRITE;
+        flags |= OLSR_SOCKET_WRITE;
       }
       if (flags != 0) {
-        entry->process_immediate(entry->fd, entry->data, flags);
+        entry->process(entry->fd, entry->data, flags);
       }
     }
 
@@ -278,10 +241,8 @@ handle_sockets(uint32_t next_interval)
   }
 
   OLSR_FOR_ALL_SOCKETS(entry, iterator) {
-    if (entry->process_immediate == NULL) {
-      /* clean up socket handler */
-      list_remove(&entry->socket_node);
-      free(entry);
+    if (entry->process == NULL) {
+      olsr_socket_intfree(entry);
     }
   }
 }

@@ -177,6 +177,7 @@ void destroy_interfaces(void) {
 struct interface *
 add_interface(struct olsr_if_config *iface) {
   struct interface *ifp;
+  int sock_rcv, sock_send;
 
   ifp = olsr_memcookie_malloc(interface_mem_cookie);
   ifp->int_name = iface->name;
@@ -186,9 +187,9 @@ add_interface(struct olsr_if_config *iface) {
     return NULL;
   }
 
-  ifp->olsr_socket = os_getsocket46(olsr_cnf->ip_version, ifp->int_name, olsr_cnf->olsr_port, BUFSPACE, NULL);
-  ifp->send_socket = os_getsocket46(olsr_cnf->ip_version, ifp->int_name, olsr_cnf->olsr_port, BUFSPACE, &ifp->int_multicast);
-  if (ifp->olsr_socket < 0 || ifp->send_socket < 0) {
+  sock_rcv = os_getsocket46(olsr_cnf->ip_version, ifp->int_name, olsr_cnf->olsr_port, BUFSPACE, NULL);
+  sock_send = os_getsocket46(olsr_cnf->ip_version, ifp->int_name, olsr_cnf->olsr_port, BUFSPACE, &ifp->int_multicast);
+  if (sock_rcv < 0 || sock_send < 0) {
     OLSR_ERROR(LOG_INTERFACE, "Could not initialize socket... exiting!\n\n");
     olsr_exit(EXIT_FAILURE);
   }
@@ -196,11 +197,11 @@ add_interface(struct olsr_if_config *iface) {
   set_buffer_timer(ifp);
 
   /* Register sockets */
-  olsr_socket_add(ifp->olsr_socket, &olsr_input, NULL, OLSR_SOCKET_READ);
-  olsr_socket_add(ifp->send_socket, &olsr_input, NULL, OLSR_SOCKET_READ);
+  ifp->olsr_socket = olsr_socket_add(sock_rcv, &olsr_input, NULL, OLSR_SOCKET_READ);
+  ifp->send_socket = olsr_socket_add(sock_send, &olsr_input, NULL, OLSR_SOCKET_READ);
 
-  os_socket_set_olsr_options(ifp, ifp->olsr_socket, &ifp->int_multicast);
-  os_socket_set_olsr_options(ifp, ifp->send_socket, &ifp->int_multicast);
+  os_socket_set_olsr_options(ifp, ifp->olsr_socket->fd, &ifp->int_multicast);
+  os_socket_set_olsr_options(ifp, ifp->send_socket->fd, &ifp->int_multicast);
 
   /*
    *Initialize packet sequencenumber as a random 16bit value
@@ -346,10 +347,11 @@ remove_interface(struct interface *ifp)
   unlock_interface(ifp);
 
   /* Close olsr socket */
-  olsr_socket_remove(ifp->olsr_socket, &olsr_input);
-  os_close(ifp->olsr_socket);
-  os_close(ifp->send_socket);
-  ifp->olsr_socket = -1;
+  os_close(ifp->olsr_socket->fd);
+  os_close(ifp->send_socket->fd);
+
+  olsr_socket_remove(ifp->olsr_socket);
+  olsr_socket_remove(ifp->send_socket);
 
   ifp->int_name = NULL;
   unlock_interface(ifp);
@@ -405,10 +407,10 @@ if_ifwithsock(int fd)
   struct interface *ifp, *iterator;
 
   OLSR_FOR_ALL_INTERFACES(ifp, iterator) {
-    if (ifp->olsr_socket == fd) {
+    if (ifp->olsr_socket->fd == fd) {
       return ifp;
     }
-    if (ifp->send_socket == fd) {
+    if (ifp->send_socket->fd == fd) {
       return ifp;
     }
   }

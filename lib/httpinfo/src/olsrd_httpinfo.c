@@ -329,7 +329,7 @@ olsrd_plugin_init(void)
 
   if (http_socket < 0) {
     OLSR_ERROR(LOG_PLUGINS, "(HTTPINFO) could not initialize HTTP socket\n");
-    olsr_exit(0);
+    olsr_exit(1);
   }
 
   /* always allow localhost */
@@ -344,7 +344,10 @@ olsrd_plugin_init(void)
   }
 
   /* Register socket */
-  olsr_socket_add(http_socket, &parse_http_request, NULL, OLSR_SOCKET_READ);
+  if (NULL == olsr_socket_add(http_socket, &parse_http_request, NULL, OLSR_SOCKET_READ)) {
+    OLSR_ERROR(LOG_PLUGINS, "(HTTPINFO) Could not register socket with scheduler\n");
+    olsr_exit(1);
+  }
 
   return 1;
 }

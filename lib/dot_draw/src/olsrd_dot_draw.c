@@ -200,7 +200,7 @@ dotdraw_enable(void) {
 #if defined __FreeBSD__ && defined SO_NOSIGPIPE
   if (setsockopt(ipc_socket, SOL_SOCKET, SO_NOSIGPIPE, (char *)&yes, sizeof(yes)) < 0) {
     OLSR_WARN(LOG_PLUGINS, "SO_REUSEADDR failed %s\n", strerror(errno));
-    CLOSESOCKET(ipc_socket);
+    os_close(ipc_socket);
     return 1;
   }
 #endif
@@ -228,7 +228,11 @@ dotdraw_enable(void) {
   }
 
   /* Register socket with olsrd */
-  olsr_socket_add(ipc_socket, &ipc_action, NULL, OLSR_SOCKET_READ);
+  if (NULL == olsr_socket_add(ipc_socket, &ipc_action, NULL, OLSR_SOCKET_READ)) {
+    OLSR_WARN(LOG_PLUGINS, "(DOT DRAW)Could not register socket with scheduler\n");
+    os_close(ipc_socket);
+    return 1;
+  }
 
   return 0;
 }

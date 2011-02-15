@@ -104,10 +104,15 @@ int rtnetlink_register_socket(int rtnl_mgrp)
 
   if (bind(sock,(struct sockaddr *)&addr,sizeof(addr))<0) {
     OLSR_ERROR(LOG_ROUTING,"could not bind rtnetlink socket! %s (%d)",strerror(errno), errno);
+    os_close(sock);
     return -1;
   }
 
-  olsr_socket_add(sock, &rtnetlink_read, NULL, OLSR_SOCKET_READ);
+  if (NULL == olsr_socket_add(sock, &rtnetlink_read, NULL, OLSR_SOCKET_READ)) {
+    OLSR_ERROR(LOG_ROUTING, "Could not register socket with scheduler");
+    os_close(sock);
+    return -1;
+  }
   return sock;
 }
 

@@ -137,12 +137,19 @@ struct interface {
   /* source IP of interface */
   union olsr_ip_addr ip_addr;
 
-  int olsr_socket;                     /* The broadcast socket for this interface */
-  int send_socket;                     /* The send socket for this interface */
+  /* The broadcast socket for this interface */
+  struct olsr_socket_entry *olsr_socket;
+
+  /* The send socket for this interface */
+  struct olsr_socket_entry *send_socket;
+
+  /* interface data */
   int int_mtu;                         /* MTU of interface */
   int if_index;                        /* Kernels index of this interface */
   char *int_name;                      /* from kernel if structure */
-  uint16_t olsr_seqnum;                /* Olsr message seqno */
+
+  /* current packet sequence number for this interface */
+  uint16_t olsr_seqnum;
 
   /* Periodic message generation timers */
   struct olsr_timer_entry *hello_gen_timer;
@@ -162,11 +169,8 @@ struct interface {
 
   uint32_t hello_interval;
   uint32_t hello_validity;
-#if 0
-  struct if_gen_property *gen_properties;       /* Generic interface properties */
-#endif
 
-  uint32_t refcount;                   /* Refcount */
+  uint32_t refcount;
 };
 
 /* deletion safe macro for interface list traversal */
