@@ -606,10 +606,8 @@ olsr_tc_update_edge(struct tc_entry *tc, uint16_t ansn, const unsigned char **cu
      * Update the etx.
      */
     tc_edge->cost = olsr_calc_tc_cost(tc_edge);
-    if (tc->msg_hops <= olsr_cnf->lq_dlimit) {
-      edge_change = 1;
-      OLSR_DEBUG(LOG_TC, "TC:   chg edge entry %s\n", olsr_tc_edge_to_string(tc_edge));
-    }
+    edge_change = 1;
+    OLSR_DEBUG(LOG_TC, "TC:   chg edge entry %s\n", olsr_tc_edge_to_string(tc_edge));
   }
 
   /* set edge and tc as non-virtual */

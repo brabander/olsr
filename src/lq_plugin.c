@@ -216,11 +216,9 @@ olsr_neighbor_cost_may_changed(struct nbr_entry *nbr) {
   if (edge->cost != cost) {
     edge->cost = cost;
 
-    if (olsr_cnf->lq_dlimit > 0) {
-      changes_neighborhood = true;
-      changes_topology = true;
-      signal_link_changes(true);
-    }
+    changes_neighborhood = true;
+    changes_topology = true;
+    signal_link_changes(true);
   }
 }
 

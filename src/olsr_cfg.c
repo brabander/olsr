@@ -1554,7 +1554,6 @@ olsr_get_default_cfg(void)
   cfg->tc_redundancy = TC_REDUNDANCY;
   cfg->mpr_coverage = MPR_COVERAGE;
   cfg->lq_fish = DEF_LQ_FISH;
-  cfg->lq_dlimit = DEF_LQ_DIJK_LIMIT;
   assert(cfg->willingness == 0);
 
   cfg->olsr_port = OLSRPORT;

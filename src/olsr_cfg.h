@@ -53,8 +53,6 @@
 #define DEF_FIB_METRIC         FIBM_FLAT
 #define DEF_LQ_ALWAYS_SEND_TC  true
 #define DEF_LQ_FISH            0
-#define DEF_LQ_DIJK_LIMIT      255
-#define DEF_LQ_DIJK_INTER      0
 #define DEF_LQ_NAT_THRESH      1000
 #define DEF_CLEAR_SCREEN       false
 #define DEF_HTTPPORT           8080
@@ -212,7 +210,6 @@ struct olsr_config {
   uint8_t tc_redundancy;               /* TC anncoument mode, 0=only MPR, 1=MPR+MPRS, 2=All sym neighs */
   uint8_t mpr_coverage;                /* How many additional MPRs should be selected */
   uint8_t lq_fish;                     /* 0==Fisheye off, 1=Fisheye on */
-  uint8_t lq_dlimit;                   /* Dijkstra Calculation limit */
   uint8_t willingness;                 /* Manual Configured Willingness value */
 
   uint16_t olsr_port;                  /* port number used for OLSR packages */

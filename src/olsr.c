@@ -113,9 +113,6 @@ olsr_process_changes(void)
   if (changes_hna)
     OLSR_DEBUG(LOG_MAIN, "CHANGES IN HNA\n");
 
-  if (!changes_force && 0 >= olsr_cnf->lq_dlimit)
-    return;
-
   if (!changes_neighborhood && !changes_topology && !changes_hna)
     return;
 
