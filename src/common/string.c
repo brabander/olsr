@@ -82,6 +82,35 @@ strscat(char *dest, const char *src, size_t size)
   return strscpy(dest + l, src, size > l ? size - l : 0);
 }
 
+/**
+ * Check if a string starts with a certain word. The function
+ * is not case sensitive.
+ * @param buffer pointer to string
+ * @param word pointer to the word
+ * @return pointer to the string behind the word, NULL if no match
+ */
+const char *
+str_hasnextword (const char *buffer, const char *word) {
+  /* skip whitespaces first */
+  while (isblank(*buffer)) {
+    buffer++;
+  }
+
+  while (*word != 0 && *buffer != 0 && !isblank(*buffer) && tolower(*word) == tolower(*buffer)) {
+    word++;
+    buffer++;
+  }
+
+  /* complete match ? */
+  if (*word == 0) {
+    while (isblank(*buffer)) {
+      buffer++;
+    }
+    return buffer;
+  }
+  return NULL;
+}
+
 /*
  * Local Variables:
  * c-basic-offset: 2

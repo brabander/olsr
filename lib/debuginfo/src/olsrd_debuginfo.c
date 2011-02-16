@@ -67,20 +67,24 @@
 
 struct debuginfo_cmd {
   const char *name;
+  const char *help;
   olsr_txthandler handler;
-  struct olsr_txtcommand *cmd;
+  struct olsr_txtcommand *cmd, *cmdhelp;
 };
 
 static int debuginfo_init(void);
 static int debuginfo_enable(void);
-static int debuginfo_exit(void);
-
+static int debuginfo_disable(void);
 
 static enum olsr_txtcommand_result debuginfo_msgstat(struct comport_connection *con,
     const char *cmd, const char *param);
 static enum olsr_txtcommand_result debuginfo_pktstat(struct comport_connection *con,
     const char *cmd, const char *param);
 static enum olsr_txtcommand_result debuginfo_cookies(struct comport_connection *con,
+    const char *cmd, const char *param);
+static enum olsr_txtcommand_result debuginfo_log(struct comport_connection *con,
+    const char *cmd, const char *param);
+static enum olsr_txtcommand_result olsr_debuginfo_displayhelp(struct comport_connection *con,
     const char *cmd, const char *param);
 
 static void update_statistics_ptr(void *);
@@ -110,15 +114,20 @@ OLSR_PLUGIN6(plugin_parameters) {
   .author = PLUGIN_AUTHOR,
   .init = debuginfo_init,
   .enable = debuginfo_enable,
-  .exit = debuginfo_exit,
+  .disable = debuginfo_disable,
   .deactivate = false
 };
 
 /* command callbacks and names */
 static struct debuginfo_cmd commands[] = {
-    {"msgstat", &debuginfo_msgstat, NULL},
-    {"pktstat", &debuginfo_pktstat, NULL},
-    {"cookies", &debuginfo_cookies, NULL}
+    {"msgstat", "Displays statistics about the incoming OLSR messages\n", &debuginfo_msgstat, NULL, NULL},
+    {"pktstat", "Displays statistics about the incoming OLSR packets\n", &debuginfo_pktstat, NULL, NULL},
+    {"cookies", "Displays statistics about memory and timer cookies\n", &debuginfo_cookies, NULL, NULL},
+    {"log",     "\"log\":      continuous output of logging to this console\n"
+                "\"log show\": show configured logging option for debuginfo output\n"
+                "\"log add <severity> <source1> <source2> ...\": Add one or more sources of a defined severity for logging\n"
+                "\"log remove <severity> <source1> <source2> ...\": Remove one or more sources of a defined severity for logging\n",
+        &debuginfo_log, NULL, NULL}
 };
 
 /* variables for statistics */
@@ -134,13 +143,18 @@ static struct olsr_timer_info *statistics_timer = NULL;
 
 static union olsr_ip_addr total_ip_addr;
 
-
+/* variables for log access */
+static bool log_debuginfo_mask[LOG_SEVERITY_COUNT][LOG_SOURCE_COUNT];
+static int log_source_maxlen, log_severity_maxlen;
+static struct comport_connection *log_connection;
+static struct log_handler_entry *log_handler;
 /**
  *Constructor
  */
 static int
 debuginfo_init(void)
 {
+  int i;
   ip_acl_init(&allowed_nets);
 
   traffic_interval = 5; /* seconds */
@@ -148,6 +162,29 @@ debuginfo_init(void)
   current_slot = 0;
 
   memset(&total_ip_addr, 255, sizeof(total_ip_addr));
+
+  /* calculate maximum length of log source names */
+  log_source_maxlen = 0;
+  for (i=1; i<LOG_SOURCE_COUNT; i++) {
+    int len = strlen(LOG_SOURCE_NAMES[i]);
+
+    if (len > log_source_maxlen) {
+      log_source_maxlen = len;
+    }
+  }
+
+  /* calculate maximum length of log severity names */
+  log_severity_maxlen = 0;
+  for (i=1; i<LOG_SEVERITY_COUNT; i++) {
+    int len = strlen(LOG_SEVERITY_NAMES[i]);
+
+    if (len > log_severity_maxlen) {
+      log_severity_maxlen = len;
+    }
+  }
+
+  memcpy(log_debuginfo_mask, log_global_mask, sizeof(log_global_mask));
+  log_connection = NULL;
   return 0;
 }
 
@@ -155,12 +192,13 @@ debuginfo_init(void)
  *Destructor
  */
 static int
-debuginfo_exit(void)
+debuginfo_disable(void)
 {
   size_t i;
 
   for (i=0; i<ARRAYSIZE(commands); i++) {
     olsr_com_remove_normal_txtcommand(commands[i].cmd);
+    olsr_com_remove_help_txtcommand(commands[i].cmdhelp);
   }
   olsr_parser_remove_function(&olsr_msg_statistics);
   olsr_preprocessor_remove_function(&olsr_packet_statistics);
@@ -186,6 +224,7 @@ debuginfo_enable(void)
 
   for (i=0; i<ARRAYSIZE(commands); i++) {
     commands[i].cmd = olsr_com_add_normal_txtcommand(commands[i].name, commands[i].handler);
+    commands[i].cmdhelp = olsr_com_add_help_txtcommand(commands[i].name, olsr_debuginfo_displayhelp);
     commands[i].cmd->acl = &allowed_nets;
   }
 
@@ -573,6 +612,128 @@ debuginfo_cookies(struct comport_connection *con,
     return ABUF_ERROR;
   }
   return CONTINUE;
+}
+
+static enum olsr_txtcommand_result
+debuginfo_update_logfilter(struct comport_connection *con,
+    const char *cmd, const char *param, const char *current, bool value) {
+  const char *next;
+  int src, sev;
+
+  for (sev = 0; sev < LOG_SEVERITY_COUNT; sev++) {
+    if ((next = str_hasnextword(current, LOG_SEVERITY_NAMES[sev])) != NULL) {
+      break;
+    }
+  }
+  if (sev == LOG_SEVERITY_COUNT) {
+    abuf_appendf(&con->out, "Error, unknown severity in command: %s %s\n", cmd, param);
+    return CONTINUE;
+  }
+
+  current = next;
+  while (current && *current) {
+    for (src = 0; src < LOG_SOURCE_COUNT; src++) {
+      if ((next = str_hasnextword(current, LOG_SOURCE_NAMES[src])) != NULL) {
+        log_debuginfo_mask[sev][src] = value;
+        break;
+      }
+    }
+    if (src == LOG_SOURCE_COUNT) {
+      abuf_appendf(&con->out, "Error, unknown source in command: %s %s\n", cmd, param);
+      return CONTINUE;
+    }
+    current = next;
+  }
+  return CONTINUE;
+}
+
+static void
+debuginfo_print_log(enum log_severity severity __attribute__ ((unused)),
+              enum log_source source __attribute__ ((unused)),
+              bool no_header __attribute__ ((unused)),
+              const char *file __attribute__ ((unused)),
+              int line __attribute__ ((unused)),
+              char *buffer,
+              int timeLength __attribute__ ((unused)),
+              int prefixLength __attribute__ ((unused)))
+{
+  abuf_puts(&log_connection->out, buffer);
+  abuf_puts(&log_connection->out, "\n");
+
+  olsr_com_activate_output(log_connection);
+}
+
+static void
+debuginfo_stop_logging(struct comport_connection *con) {
+  con->stop_handler = NULL;
+  log_connection = NULL;
+  olsr_log_removehandler(log_handler);
+}
+
+static enum olsr_txtcommand_result
+debuginfo_log(struct comport_connection *con, const char *cmd, const char *param) {
+  const char *next;
+  int src;
+
+  if (param == NULL) {
+    if (con->stop_handler) {
+      abuf_puts(&con->out, "Error, you cannot stack continous output commands\n");
+      return CONTINUE;
+    }
+    if (log_connection != NULL) {
+      abuf_puts(&con->out, "Error, debuginfo cannot handle concurrent logging\n");
+      return CONTINUE;
+    }
+
+    log_connection = con;
+    con->stop_handler = debuginfo_stop_logging;
+
+    log_handler = olsr_log_addhandler(debuginfo_print_log, &log_debuginfo_mask);
+    return CONTINOUS;
+  }
+
+  if (strcasecmp(param, "show") == 0) {
+    abuf_appendf(&con->out, "%*s %6s %6s %6s %6s\n",
+        log_source_maxlen, "",
+        LOG_SEVERITY_NAMES[SEVERITY_DEBUG],
+        LOG_SEVERITY_NAMES[SEVERITY_INFO],
+        LOG_SEVERITY_NAMES[SEVERITY_WARN],
+        LOG_SEVERITY_NAMES[SEVERITY_ERR]);
+
+    for (src=0; src<LOG_SOURCE_COUNT; src++) {
+      abuf_appendf(&con->out, "%*s %*s %*s %*s %*s\n",
+        log_source_maxlen, LOG_SOURCE_NAMES[src],
+        log_severity_maxlen, log_debuginfo_mask[SEVERITY_DEBUG][src] ? "*" : "",
+        log_severity_maxlen, log_debuginfo_mask[SEVERITY_INFO][src] ? "*" : "",
+        log_severity_maxlen, log_debuginfo_mask[SEVERITY_WARN][src] ? "*" : "",
+        log_severity_maxlen, log_debuginfo_mask[SEVERITY_ERR][src] ? "*" : "");
+    }
+    return CONTINUE;
+  }
+
+  if ((next = str_hasnextword(param, "add")) != NULL) {
+    return debuginfo_update_logfilter(con, cmd, param, next, true);
+  }
+
+  if ((next = str_hasnextword(param, "remove")) != NULL) {
+    return debuginfo_update_logfilter(con, cmd, param, next, false);
+  }
+
+  return UNKNOWN;
+}
+
+static enum olsr_txtcommand_result
+olsr_debuginfo_displayhelp(struct comport_connection *con,
+    const char *cmd __attribute__ ((unused)), const char *param __attribute__ ((unused))) {
+  size_t i;
+
+  for (i=0; i<ARRAYSIZE(commands); i++) {
+    if (strcasecmp(commands[i].name, cmd) == 0) {
+      abuf_puts(&con->out, commands[i].help);
+      return CONTINUE;
+    }
+  }
+  return UNKNOWN;
 }
 
 /*

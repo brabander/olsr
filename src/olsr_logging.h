@@ -46,7 +46,6 @@
 #include "olsr_cfg_data.h"
 
 #define LOGBUFFER_SIZE 1024
-#define MAX_LOG_HANDLER 8
 
 /**
  * these four macros should be used to generate OLSR logging output
@@ -97,13 +96,24 @@
 #define OLSR_ERROR_NH(source, format, args...) do { if (log_global_mask[SEVERITY_ERR][source]) olsr_log(SEVERITY_ERR, source, true, __FILE__, __LINE__, format, ##args); } while(0)
 #endif
 
+struct log_handler_entry {
+  struct list_entity node;
+  void (*handler)(enum log_severity, enum log_source,
+      bool, const char *, int, char *, int, int);
+
+  /* pointer to handlers own bitmask */
+  bool(*bitmask_ptr)[LOG_SEVERITY_COUNT][LOG_SOURCE_COUNT];
+
+  /* internal bitmask copy */
+  bool int_bitmask[LOG_SEVERITY_COUNT][LOG_SOURCE_COUNT];
+};
+
 void EXPORT(olsr_log_init) (void);
 void EXPORT(olsr_log_cleanup) (void);
-void EXPORT(olsr_log_addhandler) (void (*handler) (enum log_severity, enum log_source, bool,
+struct log_handler_entry * EXPORT(olsr_log_addhandler) (void (*handler) (enum log_severity, enum log_source, bool,
                                                    const char *, int, char *, int, int),
                                   bool(*mask)[LOG_SEVERITY_COUNT][LOG_SOURCE_COUNT]);
-void EXPORT(olsr_log_removehandler) (void (*handler) (enum log_severity, enum log_source, bool,
-    const char *, int, char *, int, int));
+void EXPORT(olsr_log_removehandler) (struct log_handler_entry *);
 void EXPORT(olsr_log_updatemask) (void);
 
 void EXPORT(olsr_log) (enum log_severity, enum log_source, bool, const char *, int, const char *, ...)
