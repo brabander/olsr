@@ -45,16 +45,16 @@
 /* Default values not declared in olsr_protocol.h */
 #define DEF_POLLRATE           50
 #define DEF_NICCHGPOLLRT       2500
-#define DEF_WILL_AUTO          true
+#define DEF_WILL_AUTO          false
 #define DEF_ALLOW_NO_INTS      true
 #define DEF_TOS                16
-#define DEF_DEBUGLVL           "0"
+#define DEF_DEBUGLVL           "1"
 #define DEF_IPC_CONNECTIONS    0
 #define DEF_FIB_METRIC         FIBM_FLAT
 #define DEF_LQ_ALWAYS_SEND_TC  true
-#define DEF_LQ_FISH            0
+#define DEF_LQ_FISH            1
 #define DEF_LQ_NAT_THRESH      1000
-#define DEF_CLEAR_SCREEN       false
+#define DEF_CLEAR_SCREEN       true
 #define DEF_HTTPPORT           8080
 #define DEF_HTTPLIMIT          3
 #define DEF_TXTPORT            2006
