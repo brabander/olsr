@@ -87,11 +87,11 @@
  *Holding Time
  */
 
-#define NEIGHB_HOLD_TIME      3 * REFRESH_INTERVAL
-#define TOP_HOLD_TIME         3 * TC_INTERVAL
+#define NEIGHB_HOLD_TIME      10 * REFRESH_INTERVAL
+#define TOP_HOLD_TIME         60 * TC_INTERVAL
 #define DUP_HOLD_TIME         30000
-#define MID_HOLD_TIME         3 * MID_INTERVAL
-#define HNA_HOLD_TIME         3 * HNA_INTERVAL
+#define MID_HOLD_TIME         60 * MID_INTERVAL
+#define HNA_HOLD_TIME         60 * HNA_INTERVAL
 
 /*
  *Message Types
