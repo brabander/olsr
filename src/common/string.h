@@ -45,10 +45,13 @@
 
 #include "defs.h"
 #include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
 
 char *EXPORT(strscpy) (char *dest, const char *src, size_t size);
-
 char *EXPORT(strscat) (char *dest, const char *src, size_t size);
+
+const char *EXPORT(str_hasnextword) (const char *buffer, const char *word);
 
 extern const char *EXPORT(OLSR_YES);
 extern const char *EXPORT(OLSR_NO);

@@ -42,27 +42,23 @@
 #include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
+#include "common/list.h"
+#include "olsr.h"
 #include "olsr_cfg.h"
 #include "olsr_cfg_data.h"
 #include "olsr_logging.h"
 #include "os_system.h"
 #include "os_time.h"
 
-struct log_handler_entry {
-  void (*handler)
-    (enum log_severity, enum log_source, bool, const char *, int, char *, int, int);
-    bool(*bitmask)[LOG_SEVERITY_COUNT][LOG_SOURCE_COUNT];
-};
+#define FOR_ALL_LOGHANDLERS(handler, iterator) list_for_each_element_safe(&log_handler_list, handler, node, iterator)
 
 bool log_global_mask[LOG_SEVERITY_COUNT][LOG_SOURCE_COUNT];
 
-static struct log_handler_entry log_handler[MAX_LOG_HANDLER];
-static int log_handler_count = 0;
-
-
+static struct list_entity log_handler_list;
 static bool log_initialized = false;
 static FILE *log_fileoutput = NULL;
 
@@ -84,19 +80,16 @@ olsr_log_init(void)
 {
   char error[256];
   bool printError = false;
-  int i, j;
+
+  list_init_head(&log_handler_list);
 
   /* clear global mask */
-  for (j = 0; j < LOG_SEVERITY_COUNT; j++) {
-    for (i = 0; i < LOG_SOURCE_COUNT; i++) {
-      log_global_mask[j][i] = false;
-    }
-  }
+  memset(&log_global_mask, 0, sizeof(log_global_mask));
 
   if (olsr_cnf->log_target_file) {
     log_fileoutput = fopen(olsr_cnf->log_target_file, "a");
     if (log_fileoutput) {
-      olsr_log_addhandler(&olsr_log_file, NULL);
+      olsr_log_addhandler(&olsr_log_file, &olsr_cnf->log_event);
     } else {
       /* handle file error for logging output */
       bool otherLog = olsr_cnf->log_target_stderr || olsr_cnf->log_target_syslog;
@@ -113,10 +106,10 @@ olsr_log_init(void)
     }
   }
   if (olsr_cnf->log_target_syslog) {
-    olsr_log_addhandler(&olsr_log_syslog, NULL);
+    olsr_log_addhandler(&olsr_log_syslog, &olsr_cnf->log_event);
   }
   if (olsr_cnf->log_target_stderr) {
-    olsr_log_addhandler(&olsr_log_stderr, NULL);
+    olsr_log_addhandler(&olsr_log_stderr, &olsr_cnf->log_event);
   }
   log_initialized = true;
 
@@ -133,6 +126,14 @@ olsr_log_init(void)
 void
 olsr_log_cleanup(void)
 {
+  struct log_handler_entry *h, *iterator;
+
+  /* remove all handlers */
+  FOR_ALL_LOGHANDLERS(h, iterator) {
+    olsr_log_removehandler(h);
+  }
+
+  /* close file output if necessary */
   if (log_fileoutput) {
     fflush(log_fileoutput);
     fclose(log_fileoutput);
@@ -140,24 +141,31 @@ olsr_log_cleanup(void)
 }
 
 /**
- * Call this function to register a custom logevent handler
+ * Registers a custom logevent handler
  * @param handler pointer to handler function
  * @param mask pointer to custom event filter or NULL if handler use filter
  *   from olsr_cnf
  */
-void
+struct log_handler_entry *
 olsr_log_addhandler(void (*handler) (enum log_severity, enum log_source, bool,
                                      const char *, int, char *, int, int),
                     bool(*mask)[LOG_SEVERITY_COUNT][LOG_SOURCE_COUNT])
 {
+  struct log_handler_entry *h;
 
-  assert(log_handler_count < MAX_LOG_HANDLER);
+  /*
+   * The logging system is used in the memory cookie manager, so the logging
+   * system has to allocate its memory directly. Do not try to use
+   * olsr_memcookie_malloc() here.
+   */
+  h = olsr_malloc(sizeof(*h), "Log handler");
+  h->handler = handler;
+  h->bitmask_ptr = mask;
 
-  log_handler[log_handler_count].handler = handler;
-  log_handler[log_handler_count].bitmask = mask;
-  log_handler_count++;
-
+  list_add_tail(&log_handler_list, &h->node);
   olsr_log_updatemask();
+
+  return h;
 }
 
 /**
@@ -165,19 +173,12 @@ olsr_log_addhandler(void (*handler) (enum log_severity, enum log_source, bool,
  * @param handler pointer to handler function
  */
 void
-olsr_log_removehandler(void (*handler) (enum log_severity, enum log_source, bool, const char *, int, char *, int, int))
+olsr_log_removehandler(struct log_handler_entry *h)
 {
-  int i;
-  for (i = 0; i < log_handler_count; i++) {
-    if (handler == log_handler[i].handler) {
-      if (i < log_handler_count - 1) {
-        memmove(&log_handler[i], &log_handler[i + 1], (log_handler_count - i - 1) * sizeof(*log_handler));
-      }
-      log_handler_count--;
-    }
-  }
-
+  list_remove(&h->node);
   olsr_log_updatemask();
+
+  free(h);
 }
 
 /**
@@ -188,17 +189,44 @@ olsr_log_removehandler(void (*handler) (enum log_severity, enum log_source, bool
 void
 olsr_log_updatemask(void)
 {
-  int i, j, k;
+  int i, j;
+  struct log_handler_entry *h, *iterator;
 
-  for (k = 0; k < LOG_SEVERITY_COUNT; k++) {
-    for (j = 0; j < LOG_SOURCE_COUNT; j++) {
-      log_global_mask[k][j] = olsr_cnf->log_event[k][j];
+  /* first copy bitmasks to internal memory */
+  FOR_ALL_LOGHANDLERS(h, iterator) {
+    memcpy (&h->int_bitmask, h->bitmask_ptr, sizeof(h->int_bitmask));
+  }
 
-      for (i = 0; i < log_handler_count; i++) {
-        if (log_handler[i].bitmask != NULL && (*(log_handler[i].bitmask))[k][j]) {
-          log_global_mask[k][j] = true;
-          break;
+  /* second propagate source ALL to all other sources for each logger */
+  FOR_ALL_LOGHANDLERS(h, iterator) {
+    for (j = 0; j < LOG_SEVERITY_COUNT; j++) {
+      if (h->int_bitmask[j][LOG_ALL]) {
+        for (i = 0; i < LOG_SOURCE_COUNT; i++) {
+          h->int_bitmask[j][i] = true;
         }
+      }
+    }
+  }
+
+  /* third, propagate events from debug to info to warn to error */
+  FOR_ALL_LOGHANDLERS(h, iterator) {
+    for (j = 0; j < LOG_SOURCE_COUNT; j++) {
+      bool active = false;
+
+      for (i = 0; i < LOG_SEVERITY_COUNT; i++) {
+        active |= h->int_bitmask[i][j];
+        h->int_bitmask[i][j] = active;
+      }
+    }
+  }
+
+  /* finally calculate the global logging bitmask */
+  for (j = 0; j < LOG_SEVERITY_COUNT; j++) {
+    for (i = 0; i < LOG_SOURCE_COUNT; i++) {
+      log_global_mask[j][i] = false;
+
+      FOR_ALL_LOGHANDLERS(h, iterator) {
+        log_global_mask[j][i] |= h->int_bitmask[j][i];
       }
     }
   }
@@ -219,8 +247,9 @@ void
 olsr_log(enum log_severity severity, enum log_source source, bool no_header, const char *file, int line, const char *format, ...)
 {
   static char logbuffer[LOGBUFFER_SIZE];
+  struct log_handler_entry *h, *iterator;
   va_list ap;
-  int p1 = 0, p2 = 0, p3 = 0, i;
+  int p1 = 0, p2 = 0, p3 = 0;
   struct tm now, *tm_ptr;
   struct timeval timeval;
 
@@ -264,46 +293,45 @@ olsr_log(enum log_severity severity, enum log_source source, bool no_header, con
   }
 
   /* call all log handlers */
-  for (i = 0; i < log_handler_count; i++) {
-    log_handler[i].handler(severity, source, no_header, file, line, logbuffer, p1, p2-p1);
+  FOR_ALL_LOGHANDLERS(h, iterator) {
+    if (h->int_bitmask[severity][source]) {
+      h->handler(severity, source, no_header, file, line, logbuffer, p1, p2-p1);
+    }
   }
   va_end(ap);
 }
 
 static void
-olsr_log_stderr(enum log_severity severity, enum log_source source,
+olsr_log_stderr(enum log_severity severity __attribute__ ((unused)),
+                enum log_source source __attribute__ ((unused)),
                 bool no_header __attribute__ ((unused)),
                 const char *file __attribute__ ((unused)), int line __attribute__ ((unused)),
                 char *buffer,
                 int timeLength __attribute__ ((unused)),
                 int prefixLength __attribute__ ((unused)))
 {
-  if (olsr_cnf->log_event[severity][source]) {
-    fprintf(stderr, "%s\n", buffer);
-  }
+  fprintf(stderr, "%s\n", buffer);
 }
 
 static void
-olsr_log_file(enum log_severity severity, enum log_source source,
+olsr_log_file(enum log_severity severity __attribute__ ((unused)),
+              enum log_source source __attribute__ ((unused)),
               bool no_header __attribute__ ((unused)),
               const char *file __attribute__ ((unused)), int line __attribute__ ((unused)),
               char *buffer,
               int timeLength __attribute__ ((unused)),
               int prefixLength __attribute__ ((unused)))
 {
-  if (olsr_cnf->log_event[severity][source]) {
-    fprintf(log_fileoutput, "%s\n", buffer);
-  }
+  fprintf(log_fileoutput, "%s\n", buffer);
 }
 
 static void
-olsr_log_syslog(enum log_severity severity, enum log_source source,
+olsr_log_syslog(enum log_severity severity __attribute__ ((unused)),
+                enum log_source source __attribute__ ((unused)),
                 bool no_header __attribute__ ((unused)),
                 const char *file __attribute__ ((unused)), int line __attribute__ ((unused)),
                 char *buffer, int timeLength,
                 int prefixLength __attribute__ ((unused)))
 {
-  if (olsr_cnf->log_event[severity][source]) {
-    os_printline(severity, &buffer[timeLength]);
-  }
+  os_printline(severity, &buffer[timeLength]);
 }
