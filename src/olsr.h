@@ -52,38 +52,19 @@ extern bool changes_neighborhood;
 extern bool changes_hna;
 extern bool changes_force;             /* Maybe static */
 
-void
-  register_pcf(int (*)(int, int, int));
+void olsr_process_changes(void);
 
-void
-  olsr_process_changes(void);
-
-void
-  init_msg_seqno(void);
+void init_msg_seqno(void);
 
 uint16_t EXPORT(get_msg_seqno) (void);
 
 uint8_t *EXPORT(olsr_put_msg_hdr)(uint8_t **curr, struct olsr_message *msg);
 
-int
-  olsr_forward_message(struct olsr_message *, uint8_t *binary, struct interface *, union olsr_ip_addr *);
-
-void
-  olsr_init_tables(void);
-
-void
-  olsr_init_willingness(void);
+void olsr_init_willingness(void);
 
 void olsr_calculate_willingness(void);
 
-const char *olsr_msgtype_to_string(uint8_t);
-
-const char *olsr_link_to_string(uint8_t);
-
-const char *olsr_status_to_string(uint8_t);
-
-void
-  EXPORT(olsr_exit) (int);
+void EXPORT(olsr_exit) (int);
 
 void *EXPORT(olsr_malloc) (size_t, const char *);
 

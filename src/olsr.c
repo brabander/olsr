@@ -68,23 +68,11 @@
 #include <stdlib.h>
 
 static void olsr_update_willingness(void *);
-static void olsr_trigger_forced_update(void *);
 
-bool changes_topology;
-bool changes_neighborhood;
-bool changes_hna;
-bool changes_force;
-
-/**
- * Process changes functions
- */
-
-struct pcf {
-  int (*function) (int, int, int);
-  struct pcf *next;
-};
-
-static struct pcf *pcf_list;
+bool changes_topology = false;
+bool changes_neighborhood = false;
+bool changes_hna = false;
+bool changes_force = false;
 
 static uint16_t message_seqno;
 
@@ -109,23 +97,6 @@ get_msg_seqno(void)
   return message_seqno++;
 }
 
-
-void
-register_pcf(int (*f) (int, int, int))
-{
-  struct pcf *new_pcf;
-
-  OLSR_DEBUG(LOG_MAIN, "Registering pcf function\n");
-
-  new_pcf = olsr_malloc(sizeof(struct pcf), "New PCF");
-
-  new_pcf->function = f;
-  new_pcf->next = pcf_list;
-  pcf_list = new_pcf;
-
-}
-
-
 /**
  *Process changes in neighborhood or/and topology.
  *Re-calculates the neighborhood/topology if there
@@ -136,24 +107,12 @@ register_pcf(int (*f) (int, int, int))
 void
 olsr_process_changes(void)
 {
-  struct pcf *tmp_pc_list;
-
-  /* Check for changes in topology */
-  if (link_changes) {
-    increase_local_ansn_number();
-    OLSR_DEBUG(LOG_MAIN, "ANSN UPDATED %d\n\n", get_local_ansn_number());
-    link_changes = false;
-  }
-
   if (changes_neighborhood)
     OLSR_DEBUG(LOG_MAIN, "CHANGES IN NEIGHBORHOOD\n");
   if (changes_topology)
     OLSR_DEBUG(LOG_MAIN, "CHANGES IN TOPOLOGY\n");
   if (changes_hna)
     OLSR_DEBUG(LOG_MAIN, "CHANGES IN HNA\n");
-
-  if (!changes_force && 0 >= olsr_cnf->lq_dlimit)
-    return;
 
   if (!changes_neighborhood && !changes_topology && !changes_hna)
     return;
@@ -179,79 +138,17 @@ olsr_process_changes(void)
   olsr_print_duplicate_table();
   olsr_print_hna_set();
 
-  for (tmp_pc_list = pcf_list; tmp_pc_list != NULL; tmp_pc_list = tmp_pc_list->next) {
-    tmp_pc_list->function(changes_neighborhood, changes_topology, changes_hna);
-  }
-
   changes_neighborhood = false;
   changes_topology = false;
   changes_hna = false;
   changes_force = false;
 }
 
-/*
- * Callback for the periodic route calculation.
- */
-static void
-olsr_trigger_forced_update(void *unused __attribute__ ((unused)))
-{
-
-  changes_force = true;
-  changes_neighborhood = true;
-  changes_topology = true;
-  changes_hna = true;
-
-  olsr_process_changes();
-}
-
-/**
- *Initialize all the tables used(neighbor,
- *topology, MID,  HNA, MPR, dup).
- *Also initalizes other variables
- */
-void
-olsr_init_tables(void)
-{
-  /* Some cookies for stats keeping */
-  static struct olsr_timer_info *periodic_spf_timer_info = NULL;
-
-  changes_topology = false;
-  changes_neighborhood = false;
-  changes_hna = false;
-
-  /* Initialize link set */
-  olsr_init_link_set();
-
-  /* Initialize duplicate table */
-  olsr_init_duplicate_set();
-
-  /* Initialize neighbor table */
-  olsr_init_neighbor_table();
-
-  /* Initialize routing table */
-  olsr_init_routing_table();
-
-  /* Initialize topology */
-  olsr_init_tc();
-
-  /* Initialize MID set */
-  olsr_init_mid_set();
-
-  /* Initialize HNA set */
-  olsr_init_hna_set();
-
-  /* Start periodic SPF and RIB recalculation */
-  if (olsr_cnf->lq_dinter > 0) {
-    periodic_spf_timer_info = olsr_timer_add("Periodic SPF", &olsr_trigger_forced_update, true);
-    olsr_timer_start(olsr_cnf->lq_dinter, 5,
-                     NULL, periodic_spf_timer_info);
-  }
-}
-
 /**
  * Shared code to write the message header
  */
-uint8_t *olsr_put_msg_hdr(uint8_t **curr, struct olsr_message *msg)
+uint8_t *
+olsr_put_msg_hdr(uint8_t **curr, struct olsr_message *msg)
 {
   uint8_t *sizeptr;
 
@@ -268,104 +165,6 @@ uint8_t *olsr_put_msg_hdr(uint8_t **curr, struct olsr_message *msg)
   pkt_put_u16(curr, msg->seqno);
 
   return sizeptr;
-}
-
-/**
- *Check if a message is to be forwarded and forward
- *it if necessary.
- *
- *@param m the OLSR message recieved
- *
- *@returns positive if forwarded
- */
-int
-olsr_forward_message(struct olsr_message *msg, uint8_t *binary, struct interface *in_if, union olsr_ip_addr *from_addr)
-{
-  union olsr_ip_addr *src;
-  struct nbr_entry *neighbor;
-  struct interface *ifn, *iterator;
-  uint8_t *tmp;
-#if !defined REMOVE_LOG_DEBUG
-  struct ipaddr_str buf;
-#endif
-
-  /* Lookup sender address */
-  src = olsr_lookup_main_addr_by_alias(from_addr);
-  if (!src)
-    src = from_addr;
-
-  neighbor = olsr_lookup_nbr_entry(src, true);
-  if (!neighbor) {
-    OLSR_DEBUG(LOG_PACKET_PARSING, "Not forwarding message type %d because no nbr entry found for %s\n",
-        msg->type, olsr_ip_to_string(&buf, src));
-    return 0;
-  }
-  if (!neighbor->is_sym) {
-    OLSR_DEBUG(LOG_PACKET_PARSING, "Not forwarding message type %d because received by non-symmetric neighbor %s\n",
-        msg->type, olsr_ip_to_string(&buf, src));
-    return 0;
-  }
-
-  /* Check MPR */
-  if (neighbor->mprs_count == 0) {
-    OLSR_DEBUG(LOG_PACKET_PARSING, "Not forwarding message type %d because we are no MPR for %s\n",
-        msg->type, olsr_ip_to_string(&buf, src));
-    /* don't forward packages if not a MPR */
-    return 0;
-  }
-
-  /* check if we already forwarded this message */
-  if (olsr_is_duplicate_message(msg, true, NULL)) {
-    OLSR_DEBUG(LOG_PACKET_PARSING, "Not forwarding message type %d from %s because we already forwarded it.\n",
-        msg->type, olsr_ip_to_string(&buf, src));
-    return 0;                   /* it's a duplicate, forget about it */
-  }
-
-  /* Treat TTL hopcnt */
-  msg->hopcnt++;
-  msg->ttl--;
-  tmp = binary;
-  olsr_put_msg_hdr(&tmp, msg);
-
-  if (msg->ttl == 0) {
-    OLSR_DEBUG(LOG_PACKET_PARSING, "Not forwarding message type %d from %s because TTL is 0.\n",
-        msg->type, olsr_ip_to_string(&buf, src));
-    return 0;                   /* TTL 0, forget about it */
-  }
-  OLSR_DEBUG(LOG_PACKET_PARSING, "Forwarding message type %d from %s.\n",
-      msg->type, olsr_ip_to_string(&buf, src));
-
-  /* looping trough interfaces */
-  OLSR_FOR_ALL_INTERFACES(ifn, iterator) {
-    if (net_output_pending(ifn)) {
-      /* dont forward to incoming interface if interface is mode ether */
-      if (in_if->mode == IF_MODE_ETHER && ifn == in_if)
-        continue;
-
-      /*
-       * Check if message is to big to be piggybacked
-       */
-      if (net_outbuffer_push(ifn, binary, msg->size) != msg->size) {
-        /* Send */
-        net_output(ifn);
-        /* Buffer message */
-        set_buffer_timer(ifn);
-
-        if (net_outbuffer_push(ifn, binary, msg->size) != msg->size) {
-          OLSR_WARN(LOG_NETWORKING, "Received message to big to be forwarded in %s(%d bytes)!", ifn->int_name, msg->size);
-        }
-      }
-    } else {
-      /* No forwarding pending */
-      set_buffer_timer(ifn);
-
-      if (net_outbuffer_push(ifn, binary, msg->size) != msg->size) {
-        OLSR_WARN(LOG_NETWORKING, "Received message to big to be forwarded in %s(%d bytes)!", ifn->int_name, msg->size);
-      }
-    }
-  }
-
-  return 1;
 }
 
 static void
@@ -442,77 +241,6 @@ olsr_calculate_willingness(void)
   OLSR_INFO(LOG_MAIN, "Willingness set to %d - next update in %s secs\n",
       olsr_cnf->willingness, olsr_milli_to_txt(&tbuf, olsr_cnf->will_int));
 }
-
-const char *
-olsr_msgtype_to_string(uint8_t msgtype)
-{
-  static char type[20];
-
-  switch (msgtype) {
-  case (HELLO_MESSAGE):
-    return "HELLO";
-  case (TC_MESSAGE):
-    return "TC";
-  case (MID_MESSAGE):
-    return "MID";
-  case (HNA_MESSAGE):
-    return "HNA";
-  case (LQ_HELLO_MESSAGE):
-    return ("LQ-HELLO");
-  case (LQ_TC_MESSAGE):
-    return ("LQ-TC");
-  default:
-    break;
-  }
-
-  snprintf(type, sizeof(type), "UNKNOWN(%d)", msgtype);
-  return type;
-}
-
-
-const char *
-olsr_link_to_string(uint8_t linktype)
-{
-  static char type[20];
-
-  switch (linktype) {
-  case (UNSPEC_LINK):
-    return "UNSPEC";
-  case (ASYM_LINK):
-    return "ASYM";
-  case (SYM_LINK):
-    return "SYM";
-  case (LOST_LINK):
-    return "LOST";
-  default:
-    break;
-  }
-
-  snprintf(type, sizeof(type), "UNKNOWN(%d)", linktype);
-  return type;
-}
-
-
-const char *
-olsr_status_to_string(uint8_t status)
-{
-  static char type[20];
-
-  switch (status) {
-  case (NOT_NEIGH):
-    return "NOT NEIGH";
-  case (SYM_NEIGH):
-    return "NEIGHBOR";
-  case (MPR_NEIGH):
-    return "MPR";
-  default:
-    break;
-  }
-
-  snprintf(type, sizeof(type), "UNKNOWN(%d)", status);
-  return type;
-}
-
 
 /**
  *Termination function to be called whenever a error occures

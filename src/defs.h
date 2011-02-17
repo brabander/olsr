@@ -64,10 +64,6 @@ extern const char EXPORT(build_host)[];
 #define UDP_IPV4_HDRSIZE        28
 #define UDP_IPV6_HDRSIZE        62
 
-#if __GNUC__
-extern FILE *EXPORT(debug_handle);
-#endif
-
 #define ARRAYSIZE(x)	(sizeof(x)/sizeof(*(x)))
 #ifndef MAX
 #define MAX(x,y)	((x) > (y) ? (x) : (y))
@@ -108,20 +104,7 @@ enum app_state {
 #endif
 };
 
-/**
- * defines the severity of a logging event
- */
-enum log_severity {
-  SEVERITY_DEBUG,                      //!< SEVERITY_DEBUG
-  SEVERITY_INFO,                       //!< SEVERITY_INFO
-  SEVERITY_WARN,                       //!< SEVERITY_WARN
-  SEVERITY_ERR,                        //!< SEVERITY_ERR
-
-  /* this one must be the last of the enums ! */
-  LOG_SEVERITY_COUNT                   //!< LOG_SEVERITY_COUNT
-};
-
-extern volatile enum app_state app_state;
+extern enum app_state app_state;
 
 #endif
 

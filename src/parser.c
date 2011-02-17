@@ -66,6 +66,9 @@ static struct parse_function_entry *parse_functions = NULL;
 static struct preprocessor_function_entry *preprocessor_functions = NULL;
 static struct packetparser_function_entry *packetparser_functions = NULL;
 
+static int olsr_forward_message(struct olsr_message *msg,
+    uint8_t *binary, struct interface *in_if, union olsr_ip_addr *from_addr);
+
 /**
  *Initialize the parser.
  *
@@ -418,6 +421,104 @@ olsr_input(int fd, void *data __attribute__ ((unused)), unsigned int flags __att
      */
     parse_packet(packet, size, olsr_in_if, &from_addr);
   }
+}
+
+/**
+ *Check if a message is to be forwarded and forward
+ *it if necessary.
+ *
+ *@param m the OLSR message recieved
+ *
+ *@returns positive if forwarded
+ */
+static int
+olsr_forward_message(struct olsr_message *msg, uint8_t *binary, struct interface *in_if, union olsr_ip_addr *from_addr)
+{
+  union olsr_ip_addr *src;
+  struct nbr_entry *neighbor;
+  struct interface *ifn, *iterator;
+  uint8_t *tmp;
+#if !defined REMOVE_LOG_DEBUG
+  struct ipaddr_str buf;
+#endif
+
+  /* Lookup sender address */
+  src = olsr_lookup_main_addr_by_alias(from_addr);
+  if (!src)
+    src = from_addr;
+
+  neighbor = olsr_lookup_nbr_entry(src, true);
+  if (!neighbor) {
+    OLSR_DEBUG(LOG_PACKET_PARSING, "Not forwarding message type %d because no nbr entry found for %s\n",
+        msg->type, olsr_ip_to_string(&buf, src));
+    return 0;
+  }
+  if (!neighbor->is_sym) {
+    OLSR_DEBUG(LOG_PACKET_PARSING, "Not forwarding message type %d because received by non-symmetric neighbor %s\n",
+        msg->type, olsr_ip_to_string(&buf, src));
+    return 0;
+  }
+
+  /* Check MPR */
+  if (neighbor->mprs_count == 0) {
+    OLSR_DEBUG(LOG_PACKET_PARSING, "Not forwarding message type %d because we are no MPR for %s\n",
+        msg->type, olsr_ip_to_string(&buf, src));
+    /* don't forward packages if not a MPR */
+    return 0;
+  }
+
+  /* check if we already forwarded this message */
+  if (olsr_is_duplicate_message(msg, true, NULL)) {
+    OLSR_DEBUG(LOG_PACKET_PARSING, "Not forwarding message type %d from %s because we already forwarded it.\n",
+        msg->type, olsr_ip_to_string(&buf, src));
+    return 0;                   /* it's a duplicate, forget about it */
+  }
+
+  /* Treat TTL hopcnt */
+  msg->hopcnt++;
+  msg->ttl--;
+  tmp = binary;
+  olsr_put_msg_hdr(&tmp, msg);
+
+  if (msg->ttl == 0) {
+    OLSR_DEBUG(LOG_PACKET_PARSING, "Not forwarding message type %d from %s because TTL is 0.\n",
+        msg->type, olsr_ip_to_string(&buf, src));
+    return 0;                   /* TTL 0, forget about it */
+  }
+  OLSR_DEBUG(LOG_PACKET_PARSING, "Forwarding message type %d from %s.\n",
+      msg->type, olsr_ip_to_string(&buf, src));
+
+  /* looping trough interfaces */
+  OLSR_FOR_ALL_INTERFACES(ifn, iterator) {
+    if (net_output_pending(ifn)) {
+      /* dont forward to incoming interface if interface is mode ether */
+      if (in_if->mode == IF_MODE_ETHER && ifn == in_if)
+        continue;
+
+      /*
+       * Check if message is to big to be piggybacked
+       */
+      if (net_outbuffer_push(ifn, binary, msg->size) != msg->size) {
+        /* Send */
+        net_output(ifn);
+        /* Buffer message */
+        set_buffer_timer(ifn);
+
+        if (net_outbuffer_push(ifn, binary, msg->size) != msg->size) {
+          OLSR_WARN(LOG_NETWORKING, "Received message to big to be forwarded in %s(%d bytes)!", ifn->int_name, msg->size);
+        }
+      }
+    } else {
+      /* No forwarding pending */
+      set_buffer_timer(ifn);
+
+      if (net_outbuffer_push(ifn, binary, msg->size) != msg->size) {
+        OLSR_WARN(LOG_NETWORKING, "Received message to big to be forwarded in %s(%d bytes)!", ifn->int_name, msg->size);
+      }
+    }
+  }
+
+  return 1;
 }
 
 /*

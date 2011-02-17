@@ -95,7 +95,7 @@ static void signal_reconfigure(int);
 /* Global stuff externed in olsr_cfg.h */
 struct olsr_config *olsr_cnf;          /* The global configuration */
 
-volatile enum app_state app_state = STATE_INIT;
+enum app_state app_state = STATE_INIT;
 
 static char copyright_string[] __attribute__ ((unused)) =
   "The olsr.org Optimized Link-State Routing daemon(olsrd) Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org) All rights reserved.";
@@ -259,8 +259,26 @@ main(int argc, char *argv[])
   olsr_init_pluginsystem();
   olsr_plugins_init(true);
 
-  /* initialisation of different tables to be used. */
-  olsr_init_tables();
+  /* Initialize link set */
+  olsr_init_link_set();
+
+  /* Initialize duplicate table */
+  olsr_init_duplicate_set();
+
+  /* Initialize neighbor table */
+  olsr_init_neighbor_table();
+
+  /* Initialize routing table */
+  olsr_init_routing_table();
+
+  /* Initialize topology */
+  olsr_init_tc();
+
+  /* Initialize MID set */
+  olsr_init_mid_set();
+
+  /* Initialize HNA set */
+  olsr_init_hna_set();
 
   /* enable lq-plugins */
   olsr_plugins_enable(PLUGIN_TYPE_LQ, true);

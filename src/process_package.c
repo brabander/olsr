@@ -143,9 +143,7 @@ process_message_neighbors(struct nbr_entry *neighbor, const struct lq_hello_mess
         connector->second_hop_linkcost = new_second_hop_linkcost;
         connector->path_linkcost = new_path_linkcost;
 
-        if (olsr_cnf->lq_dlimit > 0) {
-          changes_neighborhood = true;
-        }
+        changes_neighborhood = true;
       }
     }
   }
