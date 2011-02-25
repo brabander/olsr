@@ -502,10 +502,10 @@ parse_cfg_interface(char *argstr, struct olsr_config *rcfg, char *rmsg)
             new_if->cnf->ipv6_multi_glbl = ipaddr;
             PARSER_DEBUG_PRINTF("\tIPv6 global multicast: %s\n", ip6_to_string(&buf, &new_if->cnf->ipv6_multi_glbl.v6));
           } else if (0 == strcasecmp("HelloInterval", p_next[0])) {
-            new_if->cnf->hello_params.emission_interval = olsr_txt_to_milli(p_next[1]);
+            new_if->cnf->hello_params.emission_interval = olsr_clock_parse_string(p_next[1]);
             PARSER_DEBUG_PRINTF("\tHELLO interval1: %u ms\n", new_if->cnf->hello_params.emission_interval);
           } else if (0 == strcasecmp("HelloValidityTime", p_next[0])) {
-            new_if->cnf->hello_params.validity_time = olsr_txt_to_milli(p_next[1]);
+            new_if->cnf->hello_params.validity_time = olsr_clock_parse_string(p_next[1]);
             PARSER_DEBUG_PRINTF("\tHELLO validity: %u ms\n", new_if->cnf->hello_params.validity_time);
           } else if ((0 == strcasecmp("Tcinterval", p_next[0])) || (0 == strcasecmp("TcValidityTime", p_next[0])) ||
                      (0 == strcasecmp("Midinterval", p_next[0])) || (0 == strcasecmp("MidValidityTime", p_next[0])) ||
@@ -840,17 +840,17 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
       struct millitxt_buf tbuf;
 #endif
 
-      rcfg->lq_nat_thresh = olsr_txt_to_milli(argstr);
-      PARSER_DEBUG_PRINTF("NAT threshold %s\n", olsr_milli_to_txt(&tbuf, rcfg->lq_nat_thresh));
+      rcfg->lq_nat_thresh = olsr_clock_parse_string(argstr);
+      PARSER_DEBUG_PRINTF("NAT threshold %s\n", olsr_clock_to_string(&tbuf, rcfg->lq_nat_thresh));
     }
     break;
   case 'Y':                    /* NicChgsPollInt (f) */
-    rcfg->nic_chgs_pollrate = olsr_txt_to_milli(argstr);
+    rcfg->nic_chgs_pollrate = olsr_clock_parse_string(argstr);
     PARSER_DEBUG_PRINTF("NIC Changes Pollrate %u ms\n", rcfg->nic_chgs_pollrate);
     break;
   case 'T':                    /* Pollrate (f) */
     {
-      rcfg->pollrate = olsr_txt_to_milli(argstr);
+      rcfg->pollrate = olsr_clock_parse_string(argstr);
       PARSER_DEBUG_PRINTF("Pollrate %u ms\n", rcfg->pollrate);
     }
     break;
@@ -991,27 +991,27 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
     }
     break;
   case CFG_HNA_HTIME:
-    rcfg->hna_params.emission_interval = olsr_txt_to_milli(argstr);
+    rcfg->hna_params.emission_interval = olsr_clock_parse_string(argstr);
     PARSER_DEBUG_PRINTF("HNA interval1: %u ms\n", rcfg->hna_params.emission_interval);
     break;
   case CFG_HNA_VTIME:
-    rcfg->hna_params.validity_time = olsr_txt_to_milli(argstr);
+    rcfg->hna_params.validity_time = olsr_clock_parse_string(argstr);
     PARSER_DEBUG_PRINTF("HNA validity: %u ms\n", rcfg->hna_params.validity_time);
     break;
   case CFG_MID_HTIME:
-    rcfg->mid_params.emission_interval = olsr_txt_to_milli(argstr);
+    rcfg->mid_params.emission_interval = olsr_clock_parse_string(argstr);
     PARSER_DEBUG_PRINTF("MID interval1: %u ms\n", rcfg->mid_params.emission_interval);
     break;
   case CFG_MID_VTIME:
-    rcfg->mid_params.validity_time = olsr_txt_to_milli(argstr);
+    rcfg->mid_params.validity_time = olsr_clock_parse_string(argstr);
     PARSER_DEBUG_PRINTF("MID validity: %u ms\n", rcfg->mid_params.validity_time);
     break;
   case CFG_TC_HTIME:
-    rcfg->tc_params.emission_interval = olsr_txt_to_milli(argstr);
+    rcfg->tc_params.emission_interval = olsr_clock_parse_string(argstr);
     PARSER_DEBUG_PRINTF("TC interval1: %u ms\n", rcfg->tc_params.emission_interval);
     break;
   case CFG_TC_VTIME:
-    rcfg->tc_params.validity_time = olsr_txt_to_milli(argstr);
+    rcfg->tc_params.validity_time = olsr_clock_parse_string(argstr);
     PARSER_DEBUG_PRINTF("TC validity: %u ms\n", rcfg->tc_params.validity_time);
     break;
 
@@ -1368,7 +1368,7 @@ olsr_sanity_check_cfg(struct olsr_config *cfg)
 
   /* NAT threshold value */
   if (cfg->lq_nat_thresh < 100 || cfg->lq_nat_thresh > 1000) {
-    fprintf(stderr, "NAT threshold %s is not allowed\n", olsr_milli_to_txt(&tbuf, cfg->lq_nat_thresh));
+    fprintf(stderr, "NAT threshold %s is not allowed\n", olsr_clock_to_string(&tbuf, cfg->lq_nat_thresh));
     return -1;
   }
 

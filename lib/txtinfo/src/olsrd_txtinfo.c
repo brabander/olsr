@@ -432,7 +432,7 @@ txtinfo_link(struct comport_connection *con,
     olsr_ip_to_string(&buf_neighip, &lnk->neighbor_iface_addr);
     strscpy(buf_sym, lnk->status == SYM_LINK ? OLSR_YES : OLSR_NO, sizeof(buf_sym));
     strscpy(buf_mrp, lnk->is_mpr ? OLSR_YES : OLSR_NO, sizeof(buf_mrp));
-    olsr_milli_to_txt(&buf_vtime, lnk->link_sym_timer == NULL ? 0 : lnk->link_sym_timer->timer_clock - olsr_timer_getNow());
+    olsr_clock_to_string(&buf_vtime, lnk->link_sym_timer == NULL ? 0 : lnk->link_sym_timer->timer_clock - olsr_clock_getNow());
     snprintf(buf_rawlinkcost, sizeof(buf_rawlinkcost), "%ud", lnk->linkcost);
 
     olsr_get_linkcost_text(lnk->linkcost, false, buf_linkcost, sizeof(buf_linkcost));
@@ -528,7 +528,7 @@ txtinfo_topology(struct comport_connection *con,
     struct tc_edge_entry *tc_edge, *edge_iterator;
     olsr_ip_to_string(&buf_localip, &tc->addr);
     if (tc->validity_timer) {
-      olsr_milli_to_txt(&buf_vtime, tc->validity_timer->timer_clock - olsr_timer_getNow());
+      olsr_clock_to_string(&buf_vtime, tc->validity_timer->timer_clock - olsr_clock_getNow());
     }
     else {
       strscpy(buf_vtime.buf, "0.0", sizeof(buf_vtime));
@@ -654,7 +654,7 @@ txtinfo_hna(struct comport_connection *con,
 
     olsr_ip_to_string(&buf_localip, &tc->addr);
     if (tc->validity_timer) {
-      olsr_milli_to_txt(&buf_vtime, tc->validity_timer->timer_clock - olsr_timer_getNow());
+      olsr_clock_to_string(&buf_vtime, tc->validity_timer->timer_clock - olsr_clock_getNow());
     }
     else {
       strscpy(buf_vtime.buf, "0.0", sizeof(buf_vtime));
@@ -717,7 +717,7 @@ txtinfo_mid(struct comport_connection *con,
     olsr_ip_to_string(&buf_localip, &tc->addr);
     if (tc->validity_timer) {
       if (tc->validity_timer) {
-        olsr_milli_to_txt(&buf_vtime, tc->validity_timer->timer_clock - olsr_timer_getNow());
+        olsr_clock_to_string(&buf_vtime, tc->validity_timer->timer_clock - olsr_clock_getNow());
       }
       else {
         strscpy(buf_vtime.buf, "0.0", sizeof(buf_vtime));

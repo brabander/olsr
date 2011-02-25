@@ -239,7 +239,7 @@ olsr_calculate_willingness(void)
     olsr_cnf->willingness = (ainfo.battery_percentage / 26);
   }
   OLSR_INFO(LOG_MAIN, "Willingness set to %d - next update in %s secs\n",
-      olsr_cnf->willingness, olsr_milli_to_txt(&tbuf, olsr_cnf->will_int));
+      olsr_cnf->willingness, olsr_clock_to_string(&tbuf, olsr_cnf->will_int));
 }
 
 /**

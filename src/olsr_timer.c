@@ -50,7 +50,7 @@ olsr_timer_init(void)
   /*
    * Reset the last timer run.
    */
-  timer_last_run = olsr_timer_getNow();
+  timer_last_run = olsr_clock_getNow();
 
   /* Allocate a cookie for the block based memory manager. */
   timer_mem_cookie = olsr_memcookie_add("timer_entry", sizeof(struct olsr_timer_entry));
@@ -130,8 +130,8 @@ olsr_timer_scheduler(void)
      * Update the global timestamp. We are using a non-wallclock timer here
      * to avoid any undesired side effects if the system clock changes.
      */
-    olsr_timer_updateClock();
-    next_interval = olsr_timer_getAbsolute(olsr_cnf->pollrate);
+    olsr_clock_update();
+    next_interval = olsr_clock_getAbsolute(olsr_cnf->pollrate);
 
     /* Process timers */
     walk_timers(&timer_last_run);
@@ -361,7 +361,7 @@ calc_jitter(unsigned int rel_time, uint8_t jitter_pct, unsigned int random_val)
    * Also protect against overflows resulting from > 25 bit timers.
    */
   if (jitter_pct == 0 || jitter_pct > 99 || rel_time > (1 << 24)) {
-    return olsr_timer_getAbsolute(rel_time);
+    return olsr_clock_getAbsolute(rel_time);
   }
 
   /*
@@ -372,7 +372,7 @@ calc_jitter(unsigned int rel_time, uint8_t jitter_pct, unsigned int random_val)
 
   OLSR_DEBUG(LOG_TIMER, "TIMER: jitter %u%% rel_time %ums to %ums\n", jitter_pct, rel_time, rel_time - jitter_time);
 
-  return olsr_timer_getAbsolute(rel_time - jitter_time);
+  return olsr_clock_getAbsolute(rel_time - jitter_time);
 }
 
 /**
@@ -390,7 +390,7 @@ walk_timers(uint32_t * last_run)
    * or check *all* the wheel slots, whatever is less work.
    * The latter is meant as a safety belt if the scheduler falls behind.
    */
-  while ((*last_run <= olsr_timer_getNow()) && (wheel_slot_walks < TIMER_WHEEL_SLOTS)) {
+  while ((*last_run <= olsr_clock_getNow()) && (wheel_slot_walks < TIMER_WHEEL_SLOTS)) {
     struct list_entity tmp_head_node;
     /* keep some statistics */
     unsigned int timers_walked = 0, timers_fired = 0;
@@ -420,7 +420,7 @@ walk_timers(uint32_t * last_run)
       timers_walked++;
 
       /* Ready to fire ? */
-      if (olsr_timer_isTimedOut(timer->timer_clock)) {
+      if (olsr_clock_isPast(timer->timer_clock)) {
 #if !defined(REMOVE_LOG_DEBUG)
   struct timeval_buf timebuf;
 #endif
@@ -482,7 +482,7 @@ walk_timers(uint32_t * last_run)
    * If the scheduler has slipped and we have walked all wheel slots,
    * reset the last timer run.
    */
-  *last_run = olsr_timer_getNow();
+  *last_run = olsr_clock_getNow();
 }
 
 /**

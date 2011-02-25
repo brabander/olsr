@@ -117,7 +117,7 @@ lookup_link_status(const struct link_entry *entry)
     return SYM_LINK;
   }
 
-  if (!olsr_timer_isTimedOut(entry->ASYM_time)) {
+  if (!olsr_clock_isPast(entry->ASYM_time)) {
     return ASYM_LINK;
   }
 
@@ -528,7 +528,7 @@ update_link_entry(const union olsr_ip_addr *local,
 
   /* Update ASYM_time */
   entry->vtime = message->comm->vtime;
-  entry->ASYM_time = olsr_timer_getAbsolute(message->comm->vtime);
+  entry->ASYM_time = olsr_clock_getAbsolute(message->comm->vtime);
 
   entry->status = check_link_status(message, in_if);
 
@@ -552,7 +552,7 @@ update_link_entry(const union olsr_ip_addr *local,
 
   /* L_time = max(L_time, L_ASYM_time) */
   if (entry->link_timer && (entry->link_timer->timer_clock < entry->ASYM_time)) {
-    olsr_set_link_timer(entry, olsr_timer_getRelative(entry->ASYM_time));
+    olsr_set_link_timer(entry, olsr_clock_getRelative(entry->ASYM_time));
   }
 
   /* Update neighbor */

@@ -52,6 +52,9 @@ static uint32_t now_times;             /* relative time compared to startup (in 
 static struct timeval first_tv;        /* timevalue during startup */
 static struct timeval last_tv;         /* timevalue used for last olsr_times() calculation */
 
+/**
+ * Initialize olsr clock system
+ */
 void
 olsr_clock_init(void) {
   /* Grab initial timestamp */
@@ -60,14 +63,14 @@ olsr_clock_init(void) {
     olsr_exit(1);
   }
   last_tv = first_tv;
-  olsr_timer_updateClock();
+  olsr_clock_update();
 }
 
 /**
  * Update the internal clock to current system time
  */
 void
-olsr_timer_updateClock(void)
+olsr_clock_update(void)
 {
   struct timeval tv;
   uint32_t t;
@@ -106,7 +109,7 @@ olsr_timer_updateClock(void)
  * @return current time
  */
 uint32_t
-olsr_timer_getNow(void) {
+olsr_clock_getNow(void) {
   return now_times;
 }
 
@@ -117,7 +120,7 @@ olsr_timer_getNow(void) {
  *   happened.
  */
 int32_t
-olsr_timer_getRelative(uint32_t absolute)
+olsr_clock_getRelative(uint32_t absolute)
 {
   uint32_t diff;
   if (absolute > now_times) {
@@ -144,7 +147,7 @@ olsr_timer_getRelative(uint32_t absolute)
  * @return true if the event already happened, false otherwise
  */
 bool
-olsr_timer_isTimedOut(uint32_t absolute)
+olsr_clock_isPast(uint32_t absolute)
 {
   if (absolute > now_times) {
     return absolute - now_times > (1u << 31);
@@ -168,7 +171,7 @@ olsr_timer_isTimedOut(uint32_t absolute)
  *@return a 8-bit mantissa/exponent product
  */
 uint8_t
-reltime_to_me(const uint32_t interval)
+olsr_clock_encode_olsrv1(const uint32_t interval)
 {
   uint8_t a = 0, b = 0;                /* Underflow defaults */
 
@@ -238,7 +241,7 @@ reltime_to_me(const uint32_t interval)
  *           = ((16 + a) * 1000) >> (8-b)
  */
 uint32_t
-me_to_reltime(const uint8_t me)
+olsr_clock_decode_olsrv1(const uint8_t me)
 {
   const uint8_t a = me >> 4;
   const uint8_t b = me & 0x0F;
@@ -246,7 +249,7 @@ me_to_reltime(const uint8_t me)
   if (b >= 8) {
     return ((16 + a) << (b - 8)) * 1000;
   }
-  assert(me == reltime_to_me(((16 + a) * 1000) >> (8 - b)));
+  assert(me == olsr_clock_encode_olsrv1(((16 + a) * 1000) >> (8 - b)));
   return ((16 + a) * 1000) >> (8 - b);
 }
 
@@ -255,7 +258,7 @@ me_to_reltime(const uint8_t me)
  * (divided by 1000)
  */
 char *
-olsr_milli_to_txt(struct millitxt_buf *buffer, uint32_t t) {
+olsr_clock_to_string(struct millitxt_buf *buffer, uint32_t t) {
   sprintf(buffer->buf, "%u.%03u", t/1000, t%1000);
   return buffer->buf;
 }
@@ -264,7 +267,7 @@ olsr_milli_to_txt(struct millitxt_buf *buffer, uint32_t t) {
  * converts a floating point text into a unsigned integer representation
  * (multiplied by 1000)
  */
-uint32_t olsr_txt_to_milli(char *txt) {
+uint32_t olsr_clock_parse_string(char *txt) {
   uint32_t t = 0;
   int fractionDigits = 0;
   bool frac = false;

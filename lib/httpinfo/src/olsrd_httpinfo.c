@@ -845,10 +845,10 @@ build_config_body(struct autobuf *abuf)
 
   abuf_puts(abuf, "</tr>\n<tr>\n");
 
-  abuf_appendf(abuf, "<td>Pollrate: %s</td>\n", olsr_milli_to_txt(&tbuf, olsr_cnf->pollrate));
+  abuf_appendf(abuf, "<td>Pollrate: %s</td>\n", olsr_clock_to_string(&tbuf, olsr_cnf->pollrate));
   abuf_appendf(abuf, "<td>TC redundancy: %d</td>\n", olsr_cnf->tc_redundancy);
   abuf_appendf(abuf, "<td>MPR coverage: %d</td>\n", olsr_cnf->mpr_coverage);
-  abuf_appendf(abuf, "<td>NAT threshold: %s</td>\n", olsr_milli_to_txt(&tbuf, olsr_cnf->lq_nat_thresh));
+  abuf_appendf(abuf, "<td>NAT threshold: %s</td>\n", olsr_clock_to_string(&tbuf, olsr_cnf->lq_nat_thresh));
 
   abuf_puts(abuf, "</tr>\n<tr>\n");
 

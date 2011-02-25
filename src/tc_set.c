@@ -657,7 +657,7 @@ olsr_print_tc_table(void)
     char *vtime = NONE;
 
     if (tc->validity_timer) {
-      olsr_milli_to_txt(&tbuf, olsr_timer_getRelative(tc->validity_timer->timer_clock));
+      olsr_clock_to_string(&tbuf, olsr_clock_getRelative(tc->validity_timer->timer_clock));
       vtime = tbuf.buf;
     }
 

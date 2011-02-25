@@ -141,7 +141,7 @@ static void add_lost_interface_ip(union olsr_ip_addr *ip, uint32_t hello_timeout
   lost = olsr_memcookie_malloc(interface_lost_mem_cookie);
   lost->node.key = &lost->ip;
   lost->ip = *ip;
-  lost->valid_until = olsr_timer_getAbsolute(hello_timeout * 2);
+  lost->valid_until = olsr_clock_getAbsolute(hello_timeout * 2);
   avl_insert(&interface_lost_tree, &lost->node);
 
   OLSR_DEBUG(LOG_INTERFACE, "Added %s to lost interface list for %d ms\n",
@@ -291,7 +291,7 @@ check_interface_updates(void *foo __attribute__ ((unused)))
 
   /* clean up lost interface tree */
   OLSR_FOR_ALL_LOSTIF_ENTRIES(lost, iterator) {
-    if (olsr_timer_isTimedOut(lost->valid_until)) {
+    if (olsr_clock_isPast(lost->valid_until)) {
       remove_lost_interface_ip(lost);
     }
   }

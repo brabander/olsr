@@ -148,9 +148,9 @@ handle_sockets(uint32_t next_interval)
   int32_t remaining;
 
   /* Update time since this is much used by the parsing functions */
-  olsr_timer_updateClock();
+  olsr_clock_update();
 
-  remaining = olsr_timer_getRelative(next_interval);
+  remaining = olsr_clock_getRelative(next_interval);
   if (remaining <= 0) {
     /* we are already over the interval */
     if (list_is_empty(&socket_head)) {
@@ -211,7 +211,7 @@ handle_sockets(uint32_t next_interval)
     }
 
     /* Update time since this is much used by the parsing functions */
-    olsr_timer_updateClock();
+    olsr_clock_update();
     OLSR_FOR_ALL_SOCKETS(entry, iterator) {
       int flags;
       if (entry->process == NULL) {
@@ -230,7 +230,7 @@ handle_sockets(uint32_t next_interval)
     }
 
     /* calculate the next timeout */
-    remaining = olsr_timer_getRelative(next_interval);
+    remaining = olsr_clock_getRelative(next_interval);
     if (remaining <= 0) {
       /* we are already over the interval */
       break;
