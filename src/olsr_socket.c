@@ -49,7 +49,6 @@
 #include "common/avl_olsr_comp.h"
 #include "olsr_logging.h"
 #include "olsr_memcookie.h"
-#include "olsr_timer.h"
 #include "os_net.h"
 #include "olsr_socket.h"
 

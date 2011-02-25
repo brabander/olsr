@@ -8,7 +8,6 @@
 #ifndef OLSR_TIMER_H_
 #define OLSR_TIMER_H_
 
-#include "olsr_clock.h"
 #include "common/list.h"
 #include "common/avl.h"
 
@@ -92,6 +91,7 @@ extern struct list_entity EXPORT(timerinfo_list);
 
 void olsr_timer_init(void);
 void olsr_timer_cleanup(void);
+void walk_timers(void);
 
 void EXPORT(olsr_timer_set) (struct olsr_timer_entry **, uint32_t, uint8_t,
     void *, struct olsr_timer_info *);
@@ -104,8 +104,5 @@ struct olsr_timer_info *EXPORT(olsr_timer_add)(const char *name, timer_cb_func c
 
 const char *EXPORT(olsr_timer_getClockString)(struct timeval_buf *, uint32_t);
 const char *EXPORT(olsr_timer_getWallclockString)(struct timeval_buf *);
-
-/* Main scheduler loop */
-void olsr_timer_scheduler(void);
 
 #endif /* OLSR_TIMER_H_ */

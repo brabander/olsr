@@ -443,7 +443,25 @@ main(int argc, char *argv[])
 
   /* Starting scheduler */
   app_state = STATE_RUNNING;
-  olsr_timer_scheduler();
+  while (app_state == STATE_RUNNING) {
+    uint32_t next_interval;
+
+    /*
+     * Update the global timestamp. We are using a non-wallclock timer here
+     * to avoid any undesired side effects if the system clock changes.
+     */
+    olsr_clock_update();
+    next_interval = olsr_clock_getAbsolute(olsr_cnf->pollrate);
+
+    /* Process timers */
+    walk_timers();
+
+    /* Update */
+    olsr_process_changes();
+
+    /* Read incoming data and handle it immediately */
+    handle_sockets(next_interval);
+  }
 
   olsr_timer_stop(tc_gen_timer);
   tc_gen_timer = NULL;

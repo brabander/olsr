@@ -14,7 +14,6 @@
 #include "olsr.h"
 #include "olsr_logging.h"
 #include "olsr_memcookie.h"
-#include "olsr_socket.h"
 #include "os_time.h"
 #include "olsr_timer.h"
 
@@ -28,7 +27,6 @@ static struct olsr_memcookie_info *timer_mem_cookie = NULL;
 static struct olsr_memcookie_info *timerinfo_cookie = NULL;
 
 /* Prototypes */
-static void walk_timers(uint32_t *);
 static uint32_t calc_jitter(unsigned int rel_time, uint8_t jitter_pct, unsigned int random_val);
 static int olsr_get_timezone(void);
 
@@ -111,37 +109,6 @@ olsr_timer_add(const char *name, timer_cb_func callback, bool periodic) {
 
   list_add_tail(&timerinfo_list, &ti->node);
   return ti;
-}
-
-/**
- * Main timer scheduler event loop.
- * Will call socket scheduler and olsr_process_changes()
- */
-void
-olsr_timer_scheduler(void)
-{
-  OLSR_INFO(LOG_SCHEDULER, "Scheduler started - polling every %u ms\n", olsr_cnf->pollrate);
-
-  /* Main scheduler loop */
-  while (app_state == STATE_RUNNING) {
-    uint32_t next_interval;
-
-    /*
-     * Update the global timestamp. We are using a non-wallclock timer here
-     * to avoid any undesired side effects if the system clock changes.
-     */
-    olsr_clock_update();
-    next_interval = olsr_clock_getAbsolute(olsr_cnf->pollrate);
-
-    /* Process timers */
-    walk_timers(&timer_last_run);
-
-    /* Update */
-    olsr_process_changes();
-
-    /* Read incoming data and handle it immediately */
-    handle_sockets(next_interval);
-  }
 }
 
 /**
@@ -379,8 +346,8 @@ calc_jitter(unsigned int rel_time, uint8_t jitter_pct, unsigned int random_val)
  * Walk through the timer list and check if any timer is ready to fire.
  * Callback the provided function with the context pointer.
  */
-static void
-walk_timers(uint32_t * last_run)
+void
+walk_timers(void)
 {
   unsigned int total_timers_walked = 0, total_timers_fired = 0;
   unsigned int wheel_slot_walks = 0;
@@ -390,7 +357,7 @@ walk_timers(uint32_t * last_run)
    * or check *all* the wheel slots, whatever is less work.
    * The latter is meant as a safety belt if the scheduler falls behind.
    */
-  while ((*last_run <= olsr_clock_getNow()) && (wheel_slot_walks < TIMER_WHEEL_SLOTS)) {
+  while ((timer_last_run <= olsr_clock_getNow()) && (wheel_slot_walks < TIMER_WHEEL_SLOTS)) {
     struct list_entity tmp_head_node;
     /* keep some statistics */
     unsigned int timers_walked = 0, timers_fired = 0;
@@ -398,7 +365,7 @@ walk_timers(uint32_t * last_run)
     /* Get the hash slot for this clocktick */
     struct list_entity *timer_head_node;
 
-    timer_head_node = &timer_wheel[*last_run & TIMER_WHEEL_MASK];
+    timer_head_node = &timer_wheel[timer_last_run & TIMER_WHEEL_MASK];
 
     /* Walk all entries hanging off this hash bucket. We treat this basically as a stack
      * so that we always know if and where the next element is.
@@ -427,7 +394,7 @@ walk_timers(uint32_t * last_run)
         OLSR_DEBUG(LOG_TIMER, "TIMER: fire %s timer %p, ctx %p, "
                    "at clocktick %u (%s)\n",
                    timer->timer_info->name,
-                   timer, timer->timer_cb_context, (unsigned int)*last_run,
+                   timer, timer->timer_cb_context, timer_last_run,
                    olsr_timer_getWallclockString(&timebuf));
 
         /* This timer is expired, call into the provided callback function */
@@ -470,7 +437,7 @@ walk_timers(uint32_t * last_run)
     total_timers_fired += timers_fired;
 
     /* Increment the time slot and wheel slot walk iteration */
-    (*last_run)++;
+    timer_last_run++;
     wheel_slot_walks++;
   }
 
@@ -482,7 +449,7 @@ walk_timers(uint32_t * last_run)
    * If the scheduler has slipped and we have walked all wheel slots,
    * reset the last timer run.
    */
-  *last_run = olsr_clock_getNow();
+  timer_last_run = olsr_clock_getNow();
 }
 
 /**
