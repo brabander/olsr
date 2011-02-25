@@ -39,6 +39,16 @@
  *
  */
 
+#include <arpa/inet.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <assert.h>
+#include <errno.h>
+#include <getopt.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+
 #include "olsr_cfg.h"
 #include "olsr_cfg_data.h"
 
@@ -51,15 +61,6 @@
 #include "olsr_clock.h"
 #include "os_net.h"
 #include "os_system.h"
-
-#include <unistd.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <getopt.h>
-#include <errno.h>
-#include <assert.h>
 
 #ifdef DEBUG
 #define PARSER_DEBUG_PRINTF(x, args...)   printf(x, ##args)

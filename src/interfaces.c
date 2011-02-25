@@ -39,6 +39,10 @@
  *
  */
 
+#include "common/avl_olsr_comp.h"
+#include "common/avl.h"
+#include "common/string.h"
+
 #include "defs.h"
 #include "interfaces.h"
 #include "olsr_timer.h"
@@ -47,8 +51,6 @@
 #include "parser.h"
 #include "net_olsr.h"
 #include "ipcalc.h"
-#include "common/string.h"
-#include "common/avl.h"
 #include "olsr_logging.h"
 #include "os_net.h"
 

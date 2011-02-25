@@ -42,7 +42,9 @@
 #ifndef OLSR_LOGGING_H_
 #define OLSR_LOGGING_H_
 
+#include "common/list.h"
 #include "defs.h"
+#include "olsr_types.h"
 #include "olsr_cfg_data.h"
 
 #define LOGBUFFER_SIZE 1024

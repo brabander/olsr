@@ -39,9 +39,10 @@
  *
  */
 
+#include "common/avl.h"
+#include "common/avl_olsr_comp.h"
 #include "duplicate_set.h"
 #include "ipcalc.h"
-#include "common/avl.h"
 #include "olsr.h"
 #include "mid_set.h"
 #include "olsr_timer.h"

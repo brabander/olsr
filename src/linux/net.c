@@ -43,6 +43,19 @@
  * Linux spesific code
  */
 
+#include <net/if.h>
+#include <netinet/ip.h>
+
+#include <sys/ioctl.h>
+#include <sys/utsname.h>
+
+#include <errno.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <string.h>
+#include <syslog.h>
+#include <unistd.h>
+
 #include "ipcalc.h"
 #include "common/string.h"
 #include "olsr_protocol.h"
@@ -51,18 +64,6 @@
 #include "os_kernel_tunnel.h"
 #include "os_net.h"
 #include "linux/linux_net.h"
-
-#include <net/if.h>
-#include <netinet/ip.h>
-
-#include <sys/ioctl.h>
-#include <sys/utsname.h>
-
-#include <fcntl.h>
-#include <string.h>
-#include <stdio.h>
-#include <syslog.h>
-#include <unistd.h>
 
 /**
  * Fix bug in GLIBC, see https://bugzilla.redhat.com/show_bug.cgi?id=635260

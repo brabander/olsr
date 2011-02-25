@@ -45,6 +45,8 @@
 
 #include <stdlib.h>
 
+#include "common/avl.h"
+#include "common/avl_olsr_comp.h"
 #include "olsr.h"
 #include "ipcalc.h"
 #include "neighbor_table.h"

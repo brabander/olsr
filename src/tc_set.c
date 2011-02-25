@@ -39,7 +39,10 @@
  *
  */
 #include <assert.h>
+#include <stdio.h>
 
+#include "common/avl.h"
+#include "common/avl_olsr_comp.h"
 #include "tc_set.h"
 #include "olsr.h"
 #include "lq_packet.h"

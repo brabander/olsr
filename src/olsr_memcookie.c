@@ -39,15 +39,17 @@
  *
  */
 
+#include <assert.h>
+#include <errno.h>
+#include <stdlib.h>
+
+#include "common/list.h"
+#include "common/avl.h"
+#include "common/avl_olsr_comp.h"
 #include "olsr.h"
 #include "defs.h"
 #include "olsr_memcookie.h"
 #include "olsr_logging.h"
-#include "common/list.h"
-
-#include <assert.h>
-#include <errno.h>
-#include <stdlib.h>
 
 struct avl_tree olsr_cookie_tree;
 

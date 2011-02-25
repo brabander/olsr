@@ -57,6 +57,7 @@
 #include <netinet/ip.h>         /* struct ip */
 #include <netinet/udp.h>        /* SOL_UDP */
 #include <stdlib.h>             /* atoi, malloc */
+#include <stdio.h>
 
 /* OLSRD includes */
 #include "olsr.h"

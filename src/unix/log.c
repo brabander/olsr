@@ -43,11 +43,12 @@
  * System logging interface for GNU/Linux systems
  */
 
+#include <stdio.h>
+#include <syslog.h>
+
 #include "olsr_logging.h"
 #include "os_system.h"
 #include "unix/unix_log.h"
-
-#include <syslog.h>
 
 void
 os_syslog_init(const char *ident)

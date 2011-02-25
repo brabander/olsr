@@ -54,6 +54,8 @@
 #include "olsr_ip_prefix_list.h"
 #include "olsr_logging.h"
 
+#include <errno.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <net/route.h>
 #include <arpa/inet.h>

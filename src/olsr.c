@@ -43,6 +43,13 @@
  * All these functions are global
  */
 
+#include <assert.h>
+#include <errno.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
 #include "defs.h"
 #include "olsr.h"
 #include "link_set.h"
@@ -61,11 +68,6 @@
 #include "olsr_logging.h"
 #include "os_system.h"
 #include "os_apm.h"
-
-#include <assert.h>
-#include <stdarg.h>
-#include <unistd.h>
-#include <stdlib.h>
 
 static void olsr_update_willingness(void *);
 

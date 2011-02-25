@@ -39,6 +39,11 @@
  *
  */
 
+#include <assert.h>
+#include <stdlib.h>
+
+#include "common/avl.h"
+#include "common/avl_olsr_comp.h"
 #include "ipcalc.h"
 #include "defs.h"
 #include "mid_set.h"
@@ -49,9 +54,6 @@
 #include "link_set.h"
 #include "net_olsr.h"
 #include "olsr_logging.h"
-
-#include <assert.h>
-#include <stdlib.h>
 
 /* Root of the one hop and two hop neighbor trees */
 struct avl_tree nbr_tree;

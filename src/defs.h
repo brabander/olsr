@@ -42,13 +42,6 @@
 #ifndef _OLSR_DEFS
 #define _OLSR_DEFS
 
-#include "olsr_types.h"
-
-#include <stdio.h>
-#include <errno.h>
-
-#include "common/list.h"
-
 #ifdef WIN32
 #define IF_NAMESIZE 32
 #endif

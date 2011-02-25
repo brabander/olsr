@@ -39,6 +39,8 @@
  *
  */
 
+#include "common/avl.h"
+#include "common/avl_olsr_comp.h"
 #include "ipcalc.h"
 #include "defs.h"
 #include "mid_set.h"

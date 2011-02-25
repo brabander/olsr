@@ -39,17 +39,6 @@
  *
  */
 
-#include "defs.h"
-#include "olsr_types.h"
-#include "olsr_memcookie.h"
-#include "olsr_logging.h"
-#include "ipcalc.h"
-#include "os_net.h"
-#include "os_kernel_tunnel.h"
-#include "os_kernel_routes.h"
-
-#include <assert.h>
-
 //ipip includes
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -67,6 +56,21 @@
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <net/if.h>
+
+#include <assert.h>
+#include <errno.h>
+#include <stdio.h>
+
+#include "common/avl.h"
+#include "common/avl_olsr_comp.h"
+#include "defs.h"
+#include "olsr_types.h"
+#include "olsr_memcookie.h"
+#include "olsr_logging.h"
+#include "ipcalc.h"
+#include "os_net.h"
+#include "os_kernel_tunnel.h"
+#include "os_kernel_routes.h"
 
 static const char DEV_IPV4_TUNNEL[IFNAMSIZ] = TUNNEL_ENDPOINT_IF;
 static const char DEV_IPV6_TUNNEL[IFNAMSIZ] = TUNNEL_ENDPOINT_IF6;

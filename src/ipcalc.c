@@ -46,6 +46,8 @@
  *
  */
 
+#include <stdio.h>
+
 #include "ipcalc.h"
 
 #define IN6ADDR_V4MAPPED_LOOPBACK_INIT \

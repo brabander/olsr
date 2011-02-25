@@ -37,8 +37,8 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <unistd.h>
 #include <time.h>
+#include <unistd.h>
 #include <malloc.h>
 #include <net/if_arp.h>
 #include <netinet/in.h>
@@ -47,6 +47,7 @@
 #include <arpa/inet.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
+#include <errno.h>
 
 #include "olsr.h"
 #include "defs.h"

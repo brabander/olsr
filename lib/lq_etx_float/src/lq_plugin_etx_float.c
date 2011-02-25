@@ -39,6 +39,8 @@
  *
  */
 
+#include <stdio.h>
+
 #include "tc_set.h"
 #include "link_set.h"
 #include "olsr_spf.h"

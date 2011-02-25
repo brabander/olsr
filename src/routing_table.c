@@ -39,6 +39,12 @@
  *
  */
 
+#include <assert.h>
+#include <stdio.h>
+#include <limits.h>
+
+#include "common/avl.h"
+#include "common/avl_olsr_comp.h"
 #include "routing_table.h"
 #include "ipcalc.h"
 #include "defs.h"
@@ -47,13 +53,9 @@
 #include "neighbor_table.h"
 #include "olsr.h"
 #include "link_set.h"
-#include "common/avl.h"
 #include "olsr_spf.h"
 #include "net_olsr.h"
 #include "olsr_logging.h"
-
-#include <limits.h>
-#include <assert.h>
 
 /* Cookies */
 struct olsr_memcookie_info *rt_mem_cookie = NULL;

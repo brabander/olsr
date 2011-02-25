@@ -39,15 +39,6 @@
  *
  */
 
-#include "interfaces.h"
-#include "olsr_logging.h"
-#include "os_net.h"
-#include "os_kernel_routes.h"
-
-#include <assert.h>
-#include <linux/types.h>
-#include <linux/rtnetlink.h>
-
 //ipip includes
 #include <netinet/in.h>
 #include <sys/ioctl.h>
@@ -60,6 +51,16 @@
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <net/if.h>
+
+#include <linux/types.h>
+#include <linux/rtnetlink.h>
+#include <assert.h>
+#include <errno.h>
+
+#include "interfaces.h"
+#include "olsr_logging.h"
+#include "os_net.h"
+#include "os_kernel_routes.h"
 
 /*
  * This file contains the linux routing code. (rtnetlink based)

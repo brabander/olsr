@@ -41,6 +41,8 @@
 
 #include <assert.h>
 #include <ctype.h>
+#include <errno.h>
+#include <stdio.h>
 
 #include "os_time.h"
 #include "olsr_logging.h"

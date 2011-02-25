@@ -39,11 +39,12 @@
  *
  */
 
-#include <unistd.h>
-#include <signal.h>
 #include <sys/stat.h>
 #include <assert.h>
 #include <errno.h>
+#include <stdio.h>
+#include <signal.h>
+#include <unistd.h>
 
 #include "defs.h"
 #include "common/avl.h"

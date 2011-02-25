@@ -43,16 +43,6 @@
  * Dynamic linked library for the olsr.org olsr daemon
  */
 
-#include "olsr.h"
-#include "ipcalc.h"
-#include "neighbor_table.h"
-#include "tc_set.h"
-#include "hna_set.h"
-#include "link_set.h"
-#include "olsr_ip_prefix_list.h"
-#include "olsr_logging.h"
-#include "os_net.h"
-#include "plugin_util.h"
 
 #ifdef _WRS_KERNEL
 #include <vxWorks.h>
@@ -63,6 +53,18 @@
 #include <errno.h>
 #include <stdarg.h>
 #endif
+#include <stdio.h>
+
+#include "olsr.h"
+#include "ipcalc.h"
+#include "neighbor_table.h"
+#include "tc_set.h"
+#include "hna_set.h"
+#include "link_set.h"
+#include "olsr_ip_prefix_list.h"
+#include "olsr_logging.h"
+#include "os_net.h"
+#include "plugin_util.h"
 
 #define PLUGIN_DESCR    "OLSRD dot draw plugin"
 #define PLUGIN_AUTHOR   "Andreas Tonnesen"

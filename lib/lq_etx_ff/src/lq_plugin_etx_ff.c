@@ -39,13 +39,14 @@
  *
  */
 
+#include <stdio.h>
+
 #include "tc_set.h"
 #include "link_set.h"
 #include "lq_plugin.h"
 #include "olsr_spf.h"
 #include "lq_packet.h"
 #include "olsr.h"
-#include "lq_plugin_etx_ff.h"
 #include "parser.h"
 #include "mid_set.h"
 #include "olsr_timer.h"
@@ -53,6 +54,7 @@
 #include "olsr_logging.h"
 #include "common/string.h"
 #include "neighbor_table.h"
+#include "lq_plugin_etx_ff.h"
 
 #define PLUGIN_DESCR "Freifunk ETX metric based on the original design of Elektra and Thomas Lopatic"
 #define PLUGIN_AUTHOR "Henning Rogge"

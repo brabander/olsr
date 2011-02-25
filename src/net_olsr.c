@@ -39,6 +39,8 @@
  *
  */
 
+#include "common/avl.h"
+#include "common/avl_olsr_comp.h"
 #include "net_olsr.h"
 #include "ipcalc.h"
 #include "olsr.h"

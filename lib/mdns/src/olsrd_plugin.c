@@ -41,6 +41,7 @@
 /* System includes */
 #include <assert.h>             /* assert() */
 #include <stddef.h>             /* NULL */
+#include <stdio.h>
 
 /* OLSRD includes */
 #include "plugin.h"
