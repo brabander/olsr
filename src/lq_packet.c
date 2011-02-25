@@ -47,7 +47,7 @@
 #include "link_set.h"
 #include "neighbor_table.h"
 #include "mid_set.h"
-#include "olsr_time.h"
+#include "olsr_clock.h"
 #include "process_package.h"    // XXX - remove
 #include "olsr.h"
 #include "net_olsr.h"

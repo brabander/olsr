@@ -43,7 +43,7 @@
 #include "ipcalc.h"
 #include "defs.h"
 #include "process_package.h"
-#include "olsr_time.h"
+#include "olsr_clock.h"
 #include "duplicate_set.h"
 #include "mid_set.h"
 #include "olsr.h"

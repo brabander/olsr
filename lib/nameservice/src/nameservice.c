@@ -60,7 +60,7 @@
 #include "ipcalc.h"
 #include "net_olsr.h"
 #include "routing_table.h"
-#include "olsr_time.h"
+#include "olsr_clock.h"
 #include "olsr_timer.h"
 #include "olsr_socket.h"
 #include "parser.h"

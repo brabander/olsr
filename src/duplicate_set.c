@@ -46,7 +46,7 @@
 #include "mid_set.h"
 #include "olsr_timer.h"
 #include "olsr_socket.h"
-#include "olsr_time.h"
+#include "olsr_clock.h"
 #include "olsr_memcookie.h"
 #include "olsr_logging.h"
 

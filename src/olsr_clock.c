@@ -42,7 +42,7 @@
 #include <assert.h>
 #include <ctype.h>
 
-#include "olsr_time.h"
+#include "olsr_clock.h"
 
 /**
  *Function that converts a double to a mantissa/exponent

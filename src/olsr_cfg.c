@@ -48,7 +48,7 @@
 #include "olsr_ip_prefix_list.h"
 #include "olsr_protocol.h"
 #include "common/string.h"
-#include "olsr_time.h"
+#include "olsr_clock.h"
 #include "os_net.h"
 #include "os_system.h"
 

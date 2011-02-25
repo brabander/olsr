@@ -58,7 +58,7 @@
 #include "nameservice_msg.h"
 #include "hashing.h"
 #include "mapwrite.h"
-#include "olsr_time.h"
+#include "olsr_clock.h"
 
 #define PLUGIN_NAME	"OLSRD nameservice plugin"
 #define PLUGIN_VERSION	"0.3"

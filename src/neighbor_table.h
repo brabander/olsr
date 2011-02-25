@@ -44,7 +44,7 @@
 #define _OLSR_NEIGH_TBL
 
 #include "defs.h"
-#include "olsr_time.h"
+#include "olsr_clock.h"
 #include "olsr_types.h"
 #include "common/avl.h"
 #include "tc_set.h"

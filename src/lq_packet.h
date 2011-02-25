@@ -43,7 +43,7 @@
 #define _OLSR_LQ_PACKET_H
 
 #include "olsr_types.h"
-#include "olsr_time.h"
+#include "olsr_clock.h"
 #include "ipcalc.h"
 #include "olsr_protocol.h"
 

@@ -49,7 +49,7 @@
 #include "os_net.h"
 #include "olsr_timer.h"
 #include "olsr_socket.h"
-#include "olsr_time.h"
+#include "olsr_clock.h"
 #include "lq_packet.h"
 #include "net_olsr.h"
 #include "common/string.h"

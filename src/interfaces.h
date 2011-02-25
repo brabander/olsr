@@ -58,7 +58,7 @@ struct interface;
 #include "olsr_types.h"
 #include "olsr_cfg_data.h"
 #include "olsr_cfg.h"
-#include "olsr_time.h"
+#include "olsr_clock.h"
 #include "common/list.h"
 #include "common/avl.h"
 

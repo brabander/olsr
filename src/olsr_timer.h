@@ -8,7 +8,7 @@
 #ifndef OLSR_TIMER_H_
 #define OLSR_TIMER_H_
 
-#include "olsr_time.h"
+#include "olsr_clock.h"
 #include "common/list.h"
 #include "common/avl.h"
 

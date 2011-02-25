@@ -43,7 +43,7 @@
 #include "olsr_protocol.h"
 #include "ipcalc.h"
 #include "olsr_ip_prefix_list.h"
-#include "olsr_time.h"
+#include "olsr_clock.h"
 
 #include <errno.h>
 

@@ -53,7 +53,7 @@
 #include "parser.h"
 #include "olsr_timer.h"
 #include "olsr_socket.h"
-#include "olsr_time.h"
+#include "olsr_clock.h"
 #include "lq_packet.h"
 #include "link_set.h"
 #include "mid_set.h"
