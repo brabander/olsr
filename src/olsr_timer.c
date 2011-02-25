@@ -5,16 +5,16 @@
  *      Author: rogge
  */
 
-#include <unistd.h>
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 #include "common/avl.h"
 #include "common/avl_olsr_comp.h"
-#include "olsr.h"
+#include "olsr_clock.h"
 #include "olsr_logging.h"
 #include "olsr_memcookie.h"
-#include "os_time.h"
 #include "olsr_timer.h"
 
 /* Hashed root of all timers */
@@ -28,7 +28,6 @@ static struct olsr_memcookie_info *timerinfo_cookie = NULL;
 
 /* Prototypes */
 static uint32_t calc_jitter(unsigned int rel_time, uint8_t jitter_pct, unsigned int random_val);
-static int olsr_get_timezone(void);
 
 /**
  * Init datastructures for maintaining timers.
@@ -112,49 +111,6 @@ olsr_timer_add(const char *name, timer_cb_func callback, bool periodic) {
 }
 
 /**
- * Format an absolute wallclock system time string.
- * May be called upto 4 times in a single printf() statement.
- * Displays microsecond resolution.
- *
- * @return buffer to a formatted system time string.
- */
-const char *
-olsr_timer_getWallclockString(struct timeval_buf *buf)
-{
-  struct timeval now;
-  int sec, usec;
-
-  os_gettimeofday(&now, NULL);
-
-  sec = (int)now.tv_sec + olsr_get_timezone();
-  usec = (int)now.tv_usec;
-
-  snprintf(buf->buf, sizeof(buf), "%02d:%02d:%02d.%06d",
-      (sec % 86400) / 3600, (sec % 3600) / 60, sec % 60, usec);
-
-  return buf->buf;
-}
-
-/**
- * Format an relative non-wallclock system time string.
- * Displays millisecond resolution.
- *
- * @param absolute timestamp
- * @return buffer to a formatted system time string.
- */
-const char *
-olsr_timer_getClockString(struct timeval_buf *buf, uint32_t clk)
-{
-  unsigned int msec = clk % 1000;
-  unsigned int sec = clk / 1000;
-
-  snprintf(buf->buf, sizeof(buf),
-      "%02u:%02u:%02u.%03u", sec / 3600, (sec % 3600) / 60, (sec % 60), (msec % MSEC_PER_SEC));
-
-  return buf->buf;
-}
-
-/**
  * Start a new timer.
  *
  * @param relative time expressed in milliseconds
@@ -205,7 +161,7 @@ olsr_timer_start(unsigned int rel_time,
   list_add_before(&timer_wheel[timer->timer_clock & TIMER_WHEEL_MASK], &timer->timer_list);
 
   OLSR_DEBUG(LOG_TIMER, "TIMER: start %s timer %p firing in %s, ctx %p\n",
-             ti->name, timer, olsr_timer_getClockString(&timebuf, timer->timer_clock), context);
+             ti->name, timer, olsr_clock_toClockString(&timebuf, timer->timer_clock), context);
 
   return timer;
 }
@@ -281,7 +237,7 @@ olsr_timer_change(struct olsr_timer_entry *timer, unsigned int rel_time, uint8_t
 
   OLSR_DEBUG(LOG_TIMER, "TIMER: change %s timer %p, firing to %s, ctx %p\n",
              timer->timer_info->name, timer,
-             olsr_timer_getClockString(&timebuf, timer->timer_clock), timer->timer_cb_context);
+             olsr_clock_toClockString(&timebuf, timer->timer_clock), timer->timer_cb_context);
 }
 
 /*
@@ -395,7 +351,7 @@ walk_timers(void)
                    "at clocktick %u (%s)\n",
                    timer->timer_info->name,
                    timer, timer->timer_cb_context, timer_last_run,
-                   olsr_timer_getWallclockString(&timebuf));
+                   olsr_clock_getWallclockString(&timebuf));
 
         /* This timer is expired, call into the provided callback function */
         timer->timer_in_callback = true;
@@ -451,38 +407,3 @@ walk_timers(void)
    */
   timer_last_run = olsr_clock_getNow();
 }
-
-/**
- * Returns the difference between gmt and local time in seconds.
- * Use gmtime() and localtime() to keep things simple.
- *
- * taken and slightly modified from www.tcpdump.org.
- */
-static int
-olsr_get_timezone(void)
-{
-#define OLSR_TIMEZONE_UNINITIALIZED -1
-  static int time_diff = OLSR_TIMEZONE_UNINITIALIZED;
-  if (time_diff == OLSR_TIMEZONE_UNINITIALIZED) {
-    int dir;
-    const time_t t = time(NULL);
-    const struct tm gmt = *gmtime(&t);
-    const struct tm *loc = localtime(&t);
-
-    time_diff = (loc->tm_hour - gmt.tm_hour) * 60 * 60 + (loc->tm_min - gmt.tm_min) * 60;
-
-    /*
-     * If the year or julian day is different, we span 00:00 GMT
-     * and must add or subtract a day. Check the year first to
-     * avoid problems when the julian day wraps.
-     */
-    dir = loc->tm_year - gmt.tm_year;
-    if (!dir) {
-      dir = loc->tm_yday - gmt.tm_yday;
-    }
-
-    time_diff += dir * 24 * 60 * 60;
-  }
-  return time_diff;
-}
-

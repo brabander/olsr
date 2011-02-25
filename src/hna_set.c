@@ -244,7 +244,7 @@ olsr_print_hna_set(void)
   struct hna_net *hna_net, *hna_iterator;
 
   OLSR_INFO(LOG_HNA, "\n--- %s ------------------------------------------------- HNA\n\n",
-      olsr_timer_getWallclockString(&timebuf));
+      olsr_clock_getWallclockString(&timebuf));
 
   OLSR_FOR_ALL_TC_ENTRIES(tc, tc_iterator) {
     OLSR_INFO_NH(LOG_HNA, "HNA-gw %s:\n", olsr_ip_to_string(&buf, &tc->addr));

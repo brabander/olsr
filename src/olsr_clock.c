@@ -52,6 +52,8 @@ static uint32_t now_times;             /* relative time compared to startup (in 
 static struct timeval first_tv;        /* timevalue during startup */
 static struct timeval last_tv;         /* timevalue used for last olsr_times() calculation */
 
+static int olsr_get_timezone(void);
+
 /**
  * Initialize olsr clock system
  */
@@ -292,6 +294,84 @@ uint32_t olsr_clock_parse_string(char *txt) {
     t *= 10;
   }
   return t;
+}
+
+
+/**
+ * Format an absolute wallclock system time string.
+ * May be called upto 4 times in a single printf() statement.
+ * Displays microsecond resolution.
+ *
+ * @return buffer to a formatted system time string.
+ */
+const char *
+olsr_clock_getWallclockString(struct timeval_buf *buf)
+{
+  struct timeval now;
+  int sec, usec;
+
+  os_gettimeofday(&now, NULL);
+
+  sec = (int)now.tv_sec + olsr_get_timezone();
+  usec = (int)now.tv_usec;
+
+  snprintf(buf->buf, sizeof(buf), "%02d:%02d:%02d.%06d",
+      (sec % 86400) / 3600, (sec % 3600) / 60, sec % 60, usec);
+
+  return buf->buf;
+}
+
+/**
+ * Format an relative non-wallclock system time string.
+ * Displays millisecond resolution.
+ *
+ * @param absolute timestamp
+ * @return buffer to a formatted system time string.
+ */
+const char *
+olsr_clock_toClockString(struct timeval_buf *buf, uint32_t clk)
+{
+  unsigned int msec = clk % 1000;
+  unsigned int sec = clk / 1000;
+
+  snprintf(buf->buf, sizeof(buf),
+      "%02u:%02u:%02u.%03u", sec / 3600, (sec % 3600) / 60, (sec % 60), (msec % MSEC_PER_SEC));
+
+  return buf->buf;
+}
+
+/**
+ * Returns the difference between gmt and local time in seconds.
+ * Use gmtime() and localtime() to keep things simple.
+ *
+ * taken and slightly modified from www.tcpdump.org.
+ */
+static int
+olsr_get_timezone(void)
+{
+#define OLSR_TIMEZONE_UNINITIALIZED -1
+  static int time_diff = OLSR_TIMEZONE_UNINITIALIZED;
+  if (time_diff == OLSR_TIMEZONE_UNINITIALIZED) {
+    int dir;
+    const time_t t = time(NULL);
+    const struct tm gmt = *gmtime(&t);
+    const struct tm *loc = localtime(&t);
+
+    time_diff = (loc->tm_hour - gmt.tm_hour) * 60 * 60 + (loc->tm_min - gmt.tm_min) * 60;
+
+    /*
+     * If the year or julian day is different, we span 00:00 GMT
+     * and must add or subtract a day. Check the year first to
+     * avoid problems when the julian day wraps.
+     */
+    dir = loc->tm_year - gmt.tm_year;
+    if (!dir) {
+      dir = loc->tm_yday - gmt.tm_yday;
+    }
+
+    time_diff += dir * 24 * 60 * 60;
+  }
+  return time_diff;
 }
 
 /*

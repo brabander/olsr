@@ -372,7 +372,7 @@ olsr_calculate_routing_table(bool force)
   olsr_spf_run_full(&cand_tree, &path_list, &path_count);
 
   OLSR_DEBUG(LOG_ROUTING, "\n--- %s ------------------------------------------------- DIJKSTRA\n\n",
-      olsr_timer_getWallclockString(&timebuf));
+      olsr_clock_getWallclockString(&timebuf));
 
 #ifdef SPF_PROFILING
   gettimeofday(&t3, NULL);

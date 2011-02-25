@@ -53,7 +53,12 @@
 #define USEC_PER_MSEC 1000
 
 struct millitxt_buf {
-  char buf[16];
+  char buf[sizeof("4000000.000")];
+};
+
+/* buffer for displaying absolute timestamps */
+struct timeval_buf {
+  char buf[sizeof("00:00:00.000000")];
 };
 
 void olsr_clock_init(void);
@@ -79,6 +84,9 @@ uint8_t EXPORT(olsr_clock_encode_olsrv1) (const uint32_t);
 
 char *EXPORT(olsr_clock_to_string)(struct millitxt_buf *buffer, uint32_t t);
 uint32_t EXPORT(olsr_clock_parse_string)(char *txt);
+
+const char *EXPORT(olsr_clock_toClockString)(struct timeval_buf *, uint32_t);
+const char *EXPORT(olsr_clock_getWallclockString)(struct timeval_buf *);
 
 #endif
 

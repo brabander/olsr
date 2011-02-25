@@ -667,7 +667,7 @@ olsr_print_link_set(void)
   totaltxt[totaltxt_len] = 0;
 
   OLSR_INFO(LOG_LINKS, "\n--- %s ---------------------------------------------------- LINKS\n\n",
-      olsr_timer_getWallclockString(&timebuf));
+      olsr_clock_getWallclockString(&timebuf));
   OLSR_INFO_NH(LOG_LINKS, "%-*s  %-6s %s %s\n", addrsize, "IP address", "hyst", totaltxt , olsr_get_linklabel(0));
 
   OLSR_FOR_ALL_LINK_ENTRIES(walker, iterator) {
