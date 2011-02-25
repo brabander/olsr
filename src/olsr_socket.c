@@ -140,7 +140,7 @@ olsr_socket_remove(struct olsr_socket_entry *entry)
  * @param next_interval
  */
 void
-handle_sockets(uint32_t next_interval)
+olsr_socket_handle(uint32_t until_time)
 {
   struct olsr_socket_entry *entry, *iterator;
   struct timeval tvp;
@@ -149,7 +149,7 @@ handle_sockets(uint32_t next_interval)
   /* Update time since this is much used by the parsing functions */
   olsr_clock_update();
 
-  remaining = olsr_clock_getRelative(next_interval);
+  remaining = olsr_clock_getRelative(until_time);
   if (remaining <= 0) {
     /* we are already over the interval */
     if (list_is_empty(&socket_head)) {
@@ -229,7 +229,7 @@ handle_sockets(uint32_t next_interval)
     }
 
     /* calculate the next timeout */
-    remaining = olsr_clock_getRelative(next_interval);
+    remaining = olsr_clock_getRelative(until_time);
     if (remaining <= 0) {
       /* we are already over the interval */
       break;

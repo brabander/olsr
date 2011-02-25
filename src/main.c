@@ -460,7 +460,7 @@ main(int argc, char *argv[])
     olsr_process_changes();
 
     /* Read incoming data and handle it immediately */
-    handle_sockets(next_interval);
+    olsr_socket_handle(next_interval);
   }
 
   olsr_timer_stop(tc_gen_timer);

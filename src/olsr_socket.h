@@ -104,8 +104,7 @@ olsr_socket_disable(struct olsr_socket_entry *entry, unsigned int flags)
   entry->flags &= ~flags;
 }
 
-/* used by timer scheduler */
-void handle_sockets(uint32_t next_interval);
+void olsr_socket_handle(uint32_t until_time);
 
 #endif
 
