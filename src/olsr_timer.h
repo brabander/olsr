@@ -92,19 +92,6 @@ extern struct list_entity EXPORT(timerinfo_list);
 
 void olsr_timer_init(void);
 void olsr_timer_cleanup(void);
-void olsr_timer_updateClock(void);
-
-uint32_t EXPORT(olsr_timer_getAbsolute) (uint32_t relative);
-int32_t EXPORT(olsr_timer_getRelative) (uint32_t absolute);
-bool EXPORT(olsr_timer_isTimedOut) (uint32_t s);
-
-/**
- * Calculates the current time in the internal OLSR representation
- * @return current time
- */
-static inline uint32_t olsr_timer_getNow(void) {
-  return olsr_timer_getAbsolute(0);
-}
 
 void EXPORT(olsr_timer_set) (struct olsr_timer_entry **, uint32_t, uint8_t,
     void *, struct olsr_timer_info *);

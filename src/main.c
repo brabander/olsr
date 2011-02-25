@@ -239,6 +239,9 @@ main(int argc, char *argv[])
   }
 #endif
 
+  /* initialize olsr clock */
+  olsr_clock_init();
+
   /* initialize cookie system */
   olsr_memcookie_init();
 

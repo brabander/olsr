@@ -18,11 +18,6 @@
 #include "os_time.h"
 #include "olsr_timer.h"
 
-/* Timer data */
-static uint32_t now_times;             /* relative time compared to startup (in milliseconds */
-static struct timeval first_tv;        /* timevalue during startup */
-static struct timeval last_tv;         /* timevalue used for last olsr_times() calculation */
-
 /* Hashed root of all timers */
 static struct list_entity timer_wheel[TIMER_WHEEL_SLOTS];
 static uint32_t timer_last_run;        /* remember the last timeslot walk */
@@ -47,14 +42,6 @@ olsr_timer_init(void)
 
   OLSR_INFO(LOG_SCHEDULER, "Initializing scheduler.\n");
 
-  /* Grab initial timestamp */
-  if (os_gettimeofday(&first_tv, NULL)) {
-    OLSR_ERROR(LOG_TIMER, "OS clock is not working, have to shut down OLSR (%s)\n", strerror(errno));
-    olsr_exit(1);
-  }
-  last_tv = first_tv;
-  olsr_timer_updateClock();
-
   /* init lists */
   for (idx = 0; idx < TIMER_WHEEL_SLOTS; idx++) {
     list_init_head(&timer_wheel[idx]);
@@ -63,7 +50,7 @@ olsr_timer_init(void)
   /*
    * Reset the last timer run.
    */
-  timer_last_run = now_times;
+  timer_last_run = olsr_timer_getNow();
 
   /* Allocate a cookie for the block based memory manager. */
   timer_mem_cookie = olsr_memcookie_add("timer_entry", sizeof(struct olsr_timer_entry));
@@ -104,98 +91,6 @@ olsr_timer_cleanup(void)
 
   /* release memory cookie for timers */
   olsr_memcookie_remove(timerinfo_cookie);
-}
-
-/**
- * Update the internal clock to current system time
- */
-void
-olsr_timer_updateClock(void)
-{
-  struct timeval tv;
-  uint32_t t;
-
-  if (os_gettimeofday(&tv, NULL) != 0) {
-    OLSR_ERROR(LOG_SCHEDULER, "OS clock is not working, have to shut down OLSR (%s)\n", strerror(errno));
-    olsr_exit(1);
-  }
-
-  /* test if time jumped backward or more than 60 seconds forward */
-  if (tv.tv_sec < last_tv.tv_sec || (tv.tv_sec == last_tv.tv_sec && tv.tv_usec < last_tv.tv_usec)
-      || tv.tv_sec - last_tv.tv_sec > 60) {
-    OLSR_WARN(LOG_SCHEDULER, "Time jump (%d.%06d to %d.%06d)\n",
-              (int32_t) (last_tv.tv_sec), (int32_t) (last_tv.tv_usec), (int32_t) (tv.tv_sec), (int32_t) (tv.tv_usec));
-
-    t = (last_tv.tv_sec - first_tv.tv_sec) * 1000 + (last_tv.tv_usec - first_tv.tv_usec) / 1000;
-    t++;                        /* advance time by one millisecond */
-
-    first_tv = tv;
-    first_tv.tv_sec -= (t / 1000);
-    first_tv.tv_usec -= ((t % 1000) * 1000);
-
-    if (first_tv.tv_usec < 0) {
-      first_tv.tv_sec--;
-      first_tv.tv_usec += 1000000;
-    }
-    last_tv = tv;
-    now_times =  t;
-  }
-  last_tv = tv;
-  now_times = (tv.tv_sec - first_tv.tv_sec) * 1000 + (tv.tv_usec - first_tv.tv_usec) / 1000;
-}
-
-/**
- * Returns a timestamp s seconds in the future
- * @param s milliseconds until timestamp
- * @return absolute time when event will happen
- */
-uint32_t
-olsr_timer_getAbsolute(uint32_t relative)
-{
-  return now_times + relative;
-}
-
-/**
- * Returns the number of milliseconds until the timestamp will happen
- * @param absolute timestamp
- * @return milliseconds until event will happen, negative if it already
- *   happened.
- */
-int32_t
-olsr_timer_getRelative(uint32_t absolute)
-{
-  uint32_t diff;
-  if (absolute > now_times) {
-    diff = absolute - now_times;
-
-    /* overflow ? */
-    if (diff > (1u << 31)) {
-      return -(int32_t) (0xffffffff - diff);
-    }
-    return (int32_t) (diff);
-  }
-
-  diff = now_times - absolute;
-  /* overflow ? */
-  if (diff > (1u << 31)) {
-    return (int32_t) (0xffffffff - diff);
-  }
-  return -(int32_t) (diff);
-}
-
-/**
- * Checks if a timestamp has already happened
- * @param absolute timestamp
- * @return true if the event already happened, false otherwise
- */
-bool
-olsr_timer_isTimedOut(uint32_t absolute)
-{
-  if (absolute > now_times) {
-    return absolute - now_times > (1u << 31);
-  }
-
-  return now_times - absolute <= (1u << 31);
 }
 
 /**
@@ -495,7 +390,7 @@ walk_timers(uint32_t * last_run)
    * or check *all* the wheel slots, whatever is less work.
    * The latter is meant as a safety belt if the scheduler falls behind.
    */
-  while ((*last_run <= now_times) && (wheel_slot_walks < TIMER_WHEEL_SLOTS)) {
+  while ((*last_run <= olsr_timer_getNow()) && (wheel_slot_walks < TIMER_WHEEL_SLOTS)) {
     struct list_entity tmp_head_node;
     /* keep some statistics */
     unsigned int timers_walked = 0, timers_fired = 0;
@@ -587,7 +482,7 @@ walk_timers(uint32_t * last_run)
    * If the scheduler has slipped and we have walked all wheel slots,
    * reset the last timer run.
    */
-  *last_run = now_times;
+  *last_run = olsr_timer_getNow();
 }
 
 /**

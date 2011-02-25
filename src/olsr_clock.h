@@ -56,6 +56,24 @@ struct millitxt_buf {
   char buf[16];
 };
 
+void olsr_clock_init(void);
+void olsr_timer_updateClock(void);
+
+int32_t EXPORT(olsr_timer_getRelative) (uint32_t absolute);
+bool EXPORT(olsr_timer_isTimedOut) (uint32_t s);
+uint32_t EXPORT(olsr_timer_getNow)(void);
+
+/**
+ * Returns a timestamp s seconds in the future
+ * @param s milliseconds until timestamp
+ * @return absolute time when event will happen
+ */
+static inline uint32_t
+olsr_timer_getAbsolute(uint32_t relative)
+{
+  return olsr_timer_getNow() + relative;
+}
+
 uint32_t EXPORT(me_to_reltime) (const uint8_t);
 uint8_t EXPORT(reltime_to_me) (const uint32_t);
 
