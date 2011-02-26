@@ -333,7 +333,7 @@ olsr_com_parse_connection(int fd, void *data, unsigned int flags) {
         }
         con->state = SEND_AND_QUIT;
       }
-    } else if (len < 0) {
+    } else if (len < 0 && errno != EINTR) {
       OLSR_WARN(LOG_COMPORT, "Error while reading from communication stream with %s: %s\n",
           olsr_ip_to_string(&buf, &con->addr), strerror(errno));
       con->state = CLEANUP;
@@ -375,7 +375,7 @@ olsr_com_parse_connection(int fd, void *data, unsigned int flags) {
       if (len > 0) {
         OLSR_DEBUG(LOG_COMPORT, "  send returned %d\n", len);
         abuf_pull(&con->out, len);
-      } else if (len < 0) {
+      } else if (len < 0 && errno != EINTR) {
         OLSR_WARN(LOG_COMPORT, "Error while writing to communication stream with %s: %s\n",
             olsr_ip_to_string(&buf, &con->addr), strerror(errno));
         con->state = CLEANUP;
