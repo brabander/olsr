@@ -184,20 +184,7 @@ main(int argc, char *argv[])
   /*
    * set up configuration prior to processing commandline options
    */
-  switch (olsr_parse_cfg(argc, argv, conf_file_name, &olsr_cnf)) {
-  case CFG_ERROR:
-    os_exit(EXIT_FAILURE);
-    break;
-  case CFG_WARN:
-    /* No exit */
-    break;
-  case CFG_EXIT:
-    os_exit(EXIT_SUCCESS);
-    break;
-  case CFG_OK:
-    /* Continue */
-    break;
-  }
+  olsr_parse_cfg(argc, argv, conf_file_name, &olsr_cnf);
 
   /* Set avl tree comparator */
   if (olsr_cnf->ipsize == 4) {
