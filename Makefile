@@ -57,7 +57,10 @@ endif
 TAG_SRCS =	$(SRCS) $(HDRS)
 
 .PHONY: default_target
-default_target: $(EXENAME)
+default_target: clean_bin $(EXENAME)
+
+clean_bin:
+	@$(RM) -f $(EXENAME)
 
 $(EXENAME):	$(OBJS) src/builddata.o
 ifeq ($(LD_HAS_DYN), yes)
