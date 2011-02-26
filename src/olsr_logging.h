@@ -125,6 +125,9 @@ struct log_handler_entry {
 
 void EXPORT(olsr_log_init) (void);
 void EXPORT(olsr_log_cleanup) (void);
+
+void EXPORT(olsr_log_applyconfig) (void);
+
 struct log_handler_entry * EXPORT(olsr_log_addhandler) (void (*handler) (enum log_severity, enum log_source, bool,
                                                    const char *, int, char *, int, int),
                                   bool(*mask)[LOG_SEVERITY_COUNT][LOG_SOURCE_COUNT]);

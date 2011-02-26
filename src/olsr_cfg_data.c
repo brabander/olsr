@@ -50,7 +50,7 @@
 const char *LOG_SOURCE_NAMES[] = {
   "all",
   "logging",
-  "ipc",
+  "config",
   "main",
   "interface",
   "networking",

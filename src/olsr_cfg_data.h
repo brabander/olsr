@@ -46,38 +46,38 @@
  * defines the source of a logging event
  */
 enum log_source {
-  LOG_ALL,                             //!< LOG_ALL
-  LOG_LOGGING,                         //!< LOG_LOGGING
-  LOG_IPC,                             //!< LOG_IPC
-  LOG_MAIN,                            //!< LOG_MAIN
-  LOG_INTERFACE,                       //!< LOG_INTERFACE
-  LOG_NETWORKING,                      //!< LOG_NETWORKING
-  LOG_PACKET_CREATION,                 //!< LOG_PACKET_CREATION
-  LOG_PACKET_PARSING,                  //!< LOG_PACKET_PARSING
-  LOG_ROUTING,                         //!< LOG_ROUTING
-  LOG_SCHEDULER,                       //!< LOG_SCHEDULER
-  LOG_TIMER,                           //!< LOG_TIMER
-  LOG_PLUGINS,                         //!< LOG_PLUGINS
-  LOG_LQ_PLUGINS,                      //!< LOG_LQ_PLUGINS
-  LOG_LL_PLUGINS,                      //!< LOG_LL_PLUGINS
-  LOG_LINKS,                           //!< LOG_LINKS
-  LOG_NEIGHTABLE,                      //!< LOG_NEIGHTABLE
-  LOG_MPR,                             //!< LOG_MPR
-  LOG_MPRS,                            //!< LOG_MPRS
-  LOG_2NEIGH,                          //!< LOG_2NEIGH
-  LOG_TC,                              //!< LOG_TC
-  LOG_HNA,                             //!< LOG_HNA
-  LOG_MID,                             //!< LOG_MID
-  LOG_DUPLICATE_SET,                   //!< LOG_DUPLICATE_SET
-  LOG_COOKIE,                          //!< LOG_COOKIE
-  LOG_COMPORT,                         //!< LOG_COMPORT
-  LOG_APM,                             //!< LOG_APM
-  LOG_RTNETLINK,                       //!< LOG_RTNETLINK
-  LOG_TUNNEL,                          //!< LOG_TUNNEL
-  LOG_CALLBACK,                        //!< LOG_CALLBACK
+  LOG_ALL,
+  LOG_LOGGING,
+  LOG_CONFIG,
+  LOG_MAIN,
+  LOG_INTERFACE,
+  LOG_NETWORKING,
+  LOG_PACKET_CREATION,
+  LOG_PACKET_PARSING,
+  LOG_ROUTING,
+  LOG_SCHEDULER,
+  LOG_TIMER,
+  LOG_PLUGINS,
+  LOG_LQ_PLUGINS,
+  LOG_LL_PLUGINS,
+  LOG_LINKS,
+  LOG_NEIGHTABLE,
+  LOG_MPR,
+  LOG_MPRS,
+  LOG_2NEIGH,
+  LOG_TC,
+  LOG_HNA,
+  LOG_MID,
+  LOG_DUPLICATE_SET,
+  LOG_COOKIE,
+  LOG_COMPORT,
+  LOG_APM,
+  LOG_RTNETLINK,
+  LOG_TUNNEL,
+  LOG_CALLBACK,
 
   /* this one must be the last of the enums ! */
-  LOG_SOURCE_COUNT                     //!< LOG_SOURCE_COUNT
+  LOG_SOURCE_COUNT
 };
 
 /**
@@ -89,11 +89,11 @@ enum log_source {
  *   to be forwarded through the interface again.
  */
 enum interface_mode {
-  IF_MODE_MESH,                        //!< IF_MODE_MESH
-  IF_MODE_ETHER,                       //!< IF_MODE_ETHER
+  IF_MODE_MESH,
+  IF_MODE_ETHER,
 
   /* this must be the last entry */
-  IF_MODE_COUNT                        //!< IF_MODE_COUNT
+  IF_MODE_COUNT
 };
 
 

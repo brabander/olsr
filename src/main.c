@@ -131,7 +131,6 @@ main(int argc, char *argv[])
   static struct olsr_timer_info *hna_gen_timer_info = NULL;
 
   char conf_file_name[FILENAME_MAX];
-  char parse_msg[FILENAME_MAX + 256];
   int exitcode = 0;
 #if !defined(REMOVE_LOG_INFO) || !defined(REMOVE_LOG_ERROR)
   struct ipaddr_str buf;
@@ -179,18 +178,17 @@ main(int argc, char *argv[])
   strscpy(conf_file_name, OLSRD_GLOBAL_CONF_FILE, sizeof(conf_file_name));
 #endif
 
+  /* initialize logging early */
+  olsr_log_init();
+
   /*
    * set up configuration prior to processing commandline options
    */
-  switch (olsr_parse_cfg(argc, argv, conf_file_name, parse_msg, &olsr_cnf)) {
+  switch (olsr_parse_cfg(argc, argv, conf_file_name, &olsr_cnf)) {
   case CFG_ERROR:
-    if (parse_msg[0])
-      fprintf(stderr, "Error: %s\n", parse_msg);
     os_exit(EXIT_FAILURE);
     break;
   case CFG_WARN:
-    if (parse_msg[0])
-      fprintf(stderr, "Warning: %s\n", parse_msg);
     /* No exit */
     break;
   case CFG_EXIT:
@@ -214,8 +212,8 @@ main(int argc, char *argv[])
     avl_comp_prefix_origin_default = avl_comp_ipv6_prefix_origin;
   }
 
-  /* initialize logging */
-  olsr_log_init();
+  /* initialize logging according to configuration */
+  olsr_log_applyconfig();
 
   OLSR_INFO(LOG_MAIN, "\n *** %s ***\n Build date: %s on %s\n http://www.olsr.org\n\n", olsrd_version, build_date, build_host);
 

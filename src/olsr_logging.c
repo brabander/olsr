@@ -50,16 +50,15 @@
 #include "olsr.h"
 #include "olsr_cfg.h"
 #include "olsr_cfg_data.h"
-#include "olsr_logging.h"
 #include "os_system.h"
 #include "os_time.h"
+#include "olsr_logging.h"
 
 #define FOR_ALL_LOGHANDLERS(handler, iterator) list_for_each_element_safe(&log_handler_list, handler, node, iterator)
 
 bool log_global_mask[LOG_SEVERITY_COUNT][LOG_SOURCE_COUNT];
 
 static struct list_entity log_handler_list;
-static bool log_initialized = false;
 static FILE *log_fileoutput = NULL;
 
 static void olsr_log_stderr(enum log_severity severity, enum log_source source,
@@ -78,45 +77,19 @@ static void olsr_log_file(enum log_severity severity, enum log_source source,
 void
 olsr_log_init(void)
 {
-  char error[256];
-  bool printError = false;
+  int i,j;
 
   list_init_head(&log_handler_list);
 
   /* clear global mask */
-  memset(&log_global_mask, 0, sizeof(log_global_mask));
-
-  if (olsr_cnf->log_target_file) {
-    log_fileoutput = fopen(olsr_cnf->log_target_file, "a");
-    if (log_fileoutput) {
-      olsr_log_addhandler(&olsr_log_file, &olsr_cnf->log_event);
-    } else {
-      /* handle file error for logging output */
-      bool otherLog = olsr_cnf->log_target_stderr || olsr_cnf->log_target_syslog;
-
-      /* delay output of error until other loggers are initialized */
-      snprintf(error, sizeof(error), "Cannot open log output file %s. %s\n",
-               olsr_cnf->log_target_file, otherLog ? "" : "Falling back to stderr logging.");
-      printError = true;
-
-      /* activate stderr logger if no other logger is chosen by user */
-      if (!otherLog) {
-        olsr_cnf->log_target_stderr = true;
-      }
+  for (j = 0; j < LOG_SEVERITY_COUNT; j++) {
+    for (i = 0; i < LOG_SOURCE_COUNT; i++) {
+#ifdef DEBUG
+      log_global_mask[j][i] = j >= SEVERITY_INFO;
+#else
+      log_global_mask[j][i] = j >= SEVERITY_WARN;
+#endif
     }
-  }
-  if (olsr_cnf->log_target_syslog) {
-    olsr_log_addhandler(&olsr_log_syslog, &olsr_cnf->log_event);
-  }
-  if (olsr_cnf->log_target_stderr) {
-    olsr_log_addhandler(&olsr_log_stderr, &olsr_cnf->log_event);
-  }
-  log_initialized = true;
-
-  if (printError) {
-    OLSR_WARN(LOG_LOGGING, "%s", error);
-  } else {
-    OLSR_INFO(LOG_LOGGING, "Initialized Logger...\n");
   }
 }
 
@@ -137,6 +110,27 @@ olsr_log_cleanup(void)
   if (log_fileoutput) {
     fflush(log_fileoutput);
     fclose(log_fileoutput);
+  }
+}
+
+/**
+ * Configure logger according to olsr settings
+ */
+void
+olsr_log_applyconfig(void) {
+  if (olsr_cnf->log_target_file) {
+    log_fileoutput = fopen(olsr_cnf->log_target_file, "a");
+    if (log_fileoutput) {
+      olsr_log_addhandler(&olsr_log_file, &olsr_cnf->log_event);
+    } else {
+      OLSR_WARN(LOG_LOGGING, "Cannot open log output file %s.", olsr_cnf->log_target_file);
+    }
+  }
+  if (olsr_cnf->log_target_syslog) {
+    olsr_log_addhandler(&olsr_log_syslog, &olsr_cnf->log_event);
+  }
+  if (olsr_cnf->log_target_stderr) {
+    olsr_log_addhandler(&olsr_log_stderr, &olsr_cnf->log_event);
   }
 }
 
@@ -284,11 +278,9 @@ olsr_log(enum log_severity severity, enum log_source source, bool no_header, con
     p3--;
   }
 
-  /* output all events to stderr if logsystem has not been initialized */
-  if (!log_initialized) {
-#if DEBUG
-    fputs(logbuffer, stderr);
-#endif
+  /* use stderr logger if nothing has been configured */
+  if (list_is_empty(&log_handler_list)) {
+    olsr_log_stderr(severity, source, no_header, file, line, logbuffer, p1, p2-p1);
     return;
   }
 
