@@ -303,7 +303,7 @@ calc_jitter(unsigned int rel_time, uint8_t jitter_pct, unsigned int random_val)
  * Callback the provided function with the context pointer.
  */
 void
-walk_timers(void)
+olsr_timer_walk(void)
 {
   unsigned int total_timers_walked = 0, total_timers_fired = 0;
   unsigned int wheel_slot_walks = 0;

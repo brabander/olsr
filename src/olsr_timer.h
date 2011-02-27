@@ -86,7 +86,7 @@ extern struct list_entity EXPORT(timerinfo_list);
 
 void olsr_timer_init(void);
 void olsr_timer_cleanup(void);
-void walk_timers(void);
+void olsr_timer_walk(void);
 
 void EXPORT(olsr_timer_set) (struct olsr_timer_entry **, uint32_t, uint8_t,
     void *, struct olsr_timer_info *);

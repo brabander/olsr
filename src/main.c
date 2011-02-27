@@ -440,7 +440,7 @@ main(int argc, char *argv[])
     next_interval = olsr_clock_getAbsolute(olsr_cnf->pollrate);
 
     /* Process timers */
-    walk_timers();
+    olsr_timer_walk();
 
     /* Update */
     olsr_process_changes();
