@@ -50,6 +50,7 @@
 #include "olsr_logging.h"
 #include "olsr_memcookie.h"
 #include "os_net.h"
+#include "olsr_clock.h"
 #include "olsr_socket.h"
 
 /* Head of all OLSR used sockets */
