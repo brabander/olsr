@@ -60,6 +60,11 @@
 
 #define BUFSPACE  (127*1024)    /* max. input buffer size to request */
 
+const char *INTERFACE_MODE_NAMES[] = {
+  "mesh",
+  "ether"
+};
+
 /* The interface list head */
 struct list_entity interface_head;
 
@@ -73,7 +78,6 @@ struct ifchgf {
 };
 
 static struct ifchgf *ifchgf_list = NULL;
-
 
 /* Some cookies for stats keeping */
 static struct olsr_memcookie_info *interface_mem_cookie = NULL;

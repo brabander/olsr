@@ -49,7 +49,6 @@
 #include "common/list.h"
 #include "olsr.h"
 #include "olsr_cfg.h"
-#include "olsr_cfg_data.h"
 #include "os_system.h"
 #include "os_time.h"
 #include "olsr_logging.h"
@@ -60,6 +59,51 @@ bool log_global_mask[LOG_SEVERITY_COUNT][LOG_SOURCE_COUNT];
 
 static struct list_entity log_handler_list;
 static FILE *log_fileoutput = NULL;
+
+const char *LOG_SEVERITY_NAMES[] = {
+  "DEBUG",
+  "INFO",
+  "WARN",
+  "ERROR"
+};
+
+/*
+ * String constants for olsr_log_* and if_mode as used in olsrd.conf.
+ * Keep this in the same order as the log_source and
+ * log_severity enums (see olsr_logging.h).
+ */
+
+const char *LOG_SOURCE_NAMES[] = {
+  "all",
+  "logging",
+  "config",
+  "main",
+  "interface",
+  "networking",
+  "packet_creation",
+  "packet_parsing",
+  "routing",
+  "scheduler",
+  "timer",
+  "plugins",
+  "lq-plugins",
+  "ll-plugins",
+  "links",
+  "neighbors",
+  "mpr",
+  "mprset",
+  "2-hop",
+  "tc",
+  "hna",
+  "mid",
+  "duplicate-set",
+  "cookie",
+  "comport",
+  "apm",
+  "rtnetlink",
+  "tunnel",
+  "callback"
+};
 
 static void olsr_log_stderr(enum log_severity severity, enum log_source source,
                             bool no_header, const char *file, int line, char *buffer,

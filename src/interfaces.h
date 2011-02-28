@@ -55,8 +55,23 @@
 /* prototype declaration to break loop with olsr_cnf.h */
 struct interface;
 
+/**
+ * defines the mode of the interface.
+ *
+ * - Mesh: default behavior
+ * - Ether: an interface with nearly no packet loss and a "closed" broadcast
+ *   domain. This means packages received through this interface does not need
+ *   to be forwarded through the interface again.
+ */
+enum interface_mode {
+  IF_MODE_MESH,
+  IF_MODE_ETHER,
+
+  /* this must be the last entry */
+  IF_MODE_COUNT
+};
+
 #include "olsr_types.h"
-#include "olsr_cfg_data.h"
 #include "olsr_cfg.h"
 #include "olsr_clock.h"
 #include "common/list.h"
@@ -108,6 +123,8 @@ struct if_gen_property {
   struct if_gen_property *next;
 };
 #endif
+
+extern const char *INTERFACE_MODE_NAMES[];
 
 /*
  * Output buffer structure. This should actually be in net_olsr.h

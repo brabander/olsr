@@ -50,7 +50,6 @@
 #include <unistd.h>
 
 #include "olsr_cfg.h"
-#include "olsr_cfg_data.h"
 #include "olsr_logging.h"
 
 #include "olsr.h"

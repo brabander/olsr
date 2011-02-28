@@ -109,7 +109,6 @@ struct olsr_if_config;
 
 #include "interfaces.h"
 #include "olsr_ip_acl.h"
-#include "olsr_cfg_data.h"
 #include "olsr_logging.h"
 
 enum smart_gw_uplinktype {
