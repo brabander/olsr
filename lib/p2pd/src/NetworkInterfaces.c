@@ -274,6 +274,7 @@ CreateInterface(const char *ifName, struct interface *olsrIntf)
    * added at the front of the list, non-OLSR interfaces at the back. */
   if (nonOlsrInterfaces == NULL) {
     /* First NonOlsrInterface object in list */
+    newIf->next = NULL;
     nonOlsrInterfaces = newIf;
     lastNonOlsrInterface = newIf;
   } else if (olsrIntf != NULL) {
