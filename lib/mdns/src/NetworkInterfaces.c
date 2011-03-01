@@ -285,6 +285,7 @@ CreateInterface(const char *ifName, struct interface *olsrIntf)
    * added at the front of the list, non-OLSR interfaces at the back. */
   if (BmfInterfaces == NULL) {
     /* First TBmfInterface object in list */
+    newIf->next = NULL;
     BmfInterfaces = newIf;
     LastBmfInterface = newIf;
   } else if (olsrIntf != NULL) {
