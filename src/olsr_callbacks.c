@@ -11,7 +11,7 @@
 
 #include "common/list.h"
 #include "common/avl.h"
-#include "common/avl_olsr_comp.h"
+#include "common/avl_comp.h"
 #include "olsr_logging.h"
 #include "olsr_callbacks.h"
 

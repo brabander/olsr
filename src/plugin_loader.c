@@ -47,7 +47,7 @@
 
 #include "common/list.h"
 #include "common/avl.h"
-#include "common/avl_olsr_comp.h"
+#include "common/avl_comp.h"
 #include "plugin_loader.h"
 #include "plugin.h"
 #include "plugin_util.h"

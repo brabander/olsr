@@ -41,14 +41,12 @@
 #ifndef AVL_COMP_H_
 #define AVL_COMP_H_
 
-#include "common/avl.h"
-
-/* Support for OLSR.org linker symbol export */
-#define EXPORT(sym) sym
+#include "common/common_types.h"
 
 int EXPORT(avl_comp_uint32)(const void *k1, const void *k2, void *ptr);
 int EXPORT(avl_comp_uint16)(const void *k1, const void *k2, void *ptr);
 int EXPORT(avl_comp_uint8)(const void *k1, const void *k2, void *ptr);
 int EXPORT(avl_comp_mem)(const void *k1, const void *k2, void *ptr);
+int EXPORT(avl_comp_strcasecmp)(const void *, const void *, void *);
 
 #endif /* AVL_COMP_H_ */

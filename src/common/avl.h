@@ -42,13 +42,10 @@
 #define _AVL_H
 
 #include <stddef.h>
-#include <stdbool.h>
 
+#include "common/common_types.h"
 #include "list.h"
 #include "container_of.h"
-
-/* Support for OLSR.org linker symbol export */
-#define EXPORT(sym) sym
 
 /**
  * This element is a member of a avl-tree. It must be contained in all
@@ -150,7 +147,7 @@ struct avl_node *EXPORT(avl_find)(const struct avl_tree *, const void *);
 struct avl_node *EXPORT(avl_find_greaterequal)(const struct avl_tree *tree, const void *key);
 struct avl_node *EXPORT(avl_find_lessequal)(const struct avl_tree *tree, const void *key);
 int EXPORT(avl_insert)(struct avl_tree *, struct avl_node *);
-void EXPORT(avl_delete)(struct avl_tree *, struct avl_node *);
+void EXPORT(avl_remove)(struct avl_tree *, struct avl_node *);
 
 /**
  * @param tree pointer to avl-tree
@@ -179,6 +176,21 @@ avl_is_last(struct avl_tree *tree, struct avl_node *node) {
 static inline bool
 avl_is_empty(struct avl_tree *tree) {
   return tree->count == 0;
+}
+
+/**
+ * Legacy function for code that still use the old avl_delete
+ * function instead of the new avl_remove one.
+ *
+ * Use avl_remove() !
+ *
+ * Remove a node from an avl tree
+ * @param tree pointer to tree
+ * @param node pointer to node
+ */
+static inline void
+avl_delete(struct avl_tree *tree, struct avl_node *node) {
+  avl_remove(tree, node);
 }
 
 /**

@@ -47,7 +47,9 @@
 #endif
 
 /* Export symbol for use in plugins. See ../olsrd-exports.sh */
-#define EXPORT(sym) sym
+#ifndef EXPORT
+#  define EXPORT(x) x
+#endif
 
 extern const char EXPORT(olsrd_version)[];
 extern const char EXPORT(build_date)[];

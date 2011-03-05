@@ -45,7 +45,7 @@
 
 #include "common/list.h"
 #include "common/avl.h"
-#include "common/avl_olsr_comp.h"
+#include "common/avl_comp.h"
 #include "olsr.h"
 #include "defs.h"
 #include "olsr_memcookie.h"

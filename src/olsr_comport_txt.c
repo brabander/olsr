@@ -43,7 +43,7 @@
 #include <stdlib.h>
 
 #include "common/avl.h"
-#include "common/avl_olsr_comp.h"
+#include "common/avl_comp.h"
 #include "olsr_cfg.h"
 #include "olsr_logging.h"
 #include "olsr_memcookie.h"

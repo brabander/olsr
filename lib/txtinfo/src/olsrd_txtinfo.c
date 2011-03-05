@@ -232,6 +232,10 @@ static char *values_interface[] = {
   buf_srcip.buf, buf_dstip.buf
 };
 
+/* String constants for later use */
+static const char *OLSR_YES = "yes";
+static const char *OLSR_NO  = "no";
+
 /**
  * Constructor of plugin, called before parameters are initialized
  */
