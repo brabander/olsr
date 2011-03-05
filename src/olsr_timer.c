@@ -111,6 +111,32 @@ olsr_timer_add(const char *name, timer_cb_func callback, bool periodic) {
 }
 
 /**
+ * Removes a group of timers from the scheduler
+ * All pointers to timers of this timer_info will be invalid after this.
+ * @param info pointer to timer info
+ */
+void
+olsr_timer_remove(struct olsr_timer_info *info) {
+  struct olsr_timer_entry *timer, *iterator;
+  int slot;
+
+  for (slot=0; slot < TIMER_WHEEL_SLOTS; slot++) {
+    list_for_each_element_safe(&timer_wheel[slot], timer, timer_list, iterator) {
+      /* remove all timers of this timer_info */
+      if (timer->timer_info == info) {
+        olsr_timer_stop(timer);
+      }
+    }
+  }
+
+  list_remove(&info->node);
+  free (info->name);
+
+  olsr_memcookie_free(timerinfo_cookie, info);
+}
+
+
+/**
  * Start a new timer.
  *
  * @param relative time expressed in milliseconds
@@ -240,11 +266,16 @@ olsr_timer_change(struct olsr_timer_entry *timer, unsigned int rel_time, uint8_t
              olsr_clock_toClockString(&timebuf, timer->timer_clock), timer->timer_cb_context);
 }
 
-/*
+/**
  * This is the one stop shop for all sort of timer manipulation.
- * Depending on the paseed in parameters a new timer is started,
+ * Depending on the passed in parameters a new timer is started,
  * or an existing timer is started or an existing timer is
  * terminated.
+ * @param timer_ptr pointer to timer_entry pointer
+ * @param rel_time time until the new timer should fire, 0 to stop timer
+ * @param jitter_pct jitter of timer in percent
+ * @param context context pointer of timer
+ * @param ti timer_info of timer
  */
 void
 olsr_timer_set(struct olsr_timer_entry **timer_ptr,

@@ -88,13 +88,15 @@ void olsr_timer_init(void);
 void olsr_timer_cleanup(void);
 void olsr_timer_walk(void);
 
+struct olsr_timer_info *EXPORT(olsr_timer_add)(
+    const char *name, timer_cb_func callback, bool periodic) __attribute__((warn_unused_result));
+void olsr_timer_remove(struct olsr_timer_info *);
+
 void EXPORT(olsr_timer_set) (struct olsr_timer_entry **, uint32_t, uint8_t,
     void *, struct olsr_timer_info *);
 struct olsr_timer_entry *EXPORT(olsr_timer_start) (uint32_t, uint8_t,
     void *, struct olsr_timer_info *);
 void EXPORT(olsr_timer_change)(struct olsr_timer_entry *, uint32_t, uint8_t);
 void EXPORT(olsr_timer_stop) (struct olsr_timer_entry *);
-
-struct olsr_timer_info *EXPORT(olsr_timer_add)(const char *name, timer_cb_func callback, bool periodic);
 
 #endif /* OLSR_TIMER_H_ */

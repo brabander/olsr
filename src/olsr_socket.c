@@ -59,7 +59,8 @@ struct list_entity socket_head;
 static struct olsr_memcookie_info *socket_memcookie;
 
 /* helper function to free socket entry */
-static inline void olsr_socket_intfree(struct olsr_socket_entry *sock) {
+static inline void
+olsr_socket_intfree(struct olsr_socket_entry *sock) {
   list_remove(&sock->node);
   olsr_memcookie_free(socket_memcookie, sock);
 }
