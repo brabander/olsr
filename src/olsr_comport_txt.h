@@ -60,6 +60,8 @@ typedef enum olsr_txtcommand_result (*olsr_txthandler)
 
 struct olsr_txtcommand {
   struct avl_node node;
+  char *command;
+
   struct ip_acl *acl;
 
   olsr_txthandler handler;

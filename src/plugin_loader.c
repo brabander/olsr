@@ -79,7 +79,7 @@ olsr_hookup_plugin(struct olsr_plugin *pl_def) {
     avl_init(&plugin_tree, avl_comp_strcasecmp, false, NULL);
     plugin_tree_initialized = true;
   }
-  pl_def->p_node.key = strdup(pl_def->name);
+  pl_def->p_node.key = pl_def->name;
   avl_insert(&plugin_tree, &pl_def->p_node);
 }
 
@@ -324,7 +324,6 @@ olsr_internal_unload_plugin(struct olsr_plugin *plugin, bool cleanup) {
 
   /* remove first from tree */
   avl_delete(&plugin_tree, &plugin->p_node);
-  free(plugin->p_node.key);
 
   legacy = plugin->internal_version == 5;
 

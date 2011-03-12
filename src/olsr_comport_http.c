@@ -168,7 +168,8 @@ olsr_com_add_htmlsite(const char *path, const char *content, size_t length) {
   struct olsr_html_site *site;
 
   site = olsr_memcookie_malloc(htmlsite_cookie);
-  site->node.key = strdup(path);
+  site->path = strdup(path);
+  site->node.key = site->path;
 
   site->static_site = true;
   site->site_data = content;
@@ -196,7 +197,7 @@ olsr_com_add_htmlhandler(void(*sitehandler)(struct comport_connection *con, stru
 void
 olsr_com_remove_htmlsite(struct olsr_html_site *site) {
   avl_delete(&http_handler_tree, &site->node);
-  free(site->node.key);
+  free(site->path);
   olsr_memcookie_free(htmlsite_cookie, site);
 }
 

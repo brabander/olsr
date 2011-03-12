@@ -78,6 +78,7 @@ struct http_request {
 /* it is stored in an AVL tree */
 struct olsr_html_site {
   struct avl_node node;
+  char *path;
 
   bool static_site;   /* is this a static site y/n? */
 

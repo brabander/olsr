@@ -57,8 +57,8 @@ olsr_callback_prv_create(struct olsr_callback_provider *prv, const char *name) {
 
   OLSR_DEBUG(LOG_CALLBACK, "Create callback provider '%s'\n", name);
 
-  prv->node.key = strdup(name);
-  prv->name = prv->node.key;
+  prv->name = strdup(name);
+  prv->node.key = prv->name;
   avl_insert(&callback_provider_tree, &prv->node);
 
   prv->getKey = unknown_key;

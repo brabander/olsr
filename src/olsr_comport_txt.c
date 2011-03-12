@@ -157,7 +157,8 @@ olsr_com_add_normal_txtcommand (const char *command, olsr_txthandler handler) {
   struct olsr_txtcommand *txt;
 
   txt = olsr_memcookie_malloc(txtcommand_cookie);
-  txt->node.key = strdup(command);
+  txt->command = strdup(command);
+  txt->node.key = txt->command;
   txt->handler = handler;
 
   avl_insert(&txt_normal_tree, &txt->node);
@@ -169,7 +170,8 @@ olsr_com_add_help_txtcommand (const char *command, olsr_txthandler handler) {
   struct olsr_txtcommand *txt;
 
   txt = olsr_memcookie_malloc(txtcommand_cookie);
-  txt->node.key = strdup(command);
+  txt->command = strdup(command);
+  txt->node.key = txt->command;
   txt->handler = handler;
 
   avl_insert(&txt_help_tree, &txt->node);
@@ -178,13 +180,13 @@ olsr_com_add_help_txtcommand (const char *command, olsr_txthandler handler) {
 
 void olsr_com_remove_normal_txtcommand (struct olsr_txtcommand *cmd) {
   avl_delete(&txt_normal_tree, &cmd->node);
-  free(cmd->node.key);
+  free(cmd->command);
   olsr_memcookie_free(txtcommand_cookie, cmd);
 }
 
 void olsr_com_remove_help_txtcommand (struct olsr_txtcommand *cmd) {
   avl_delete(&txt_help_tree, &cmd->node);
-  free(cmd->node.key);
+  free(cmd->command);
   olsr_memcookie_free(txtcommand_cookie, cmd);
 }
 
@@ -365,7 +367,7 @@ olsr_txtcmd_help(struct comport_connection *con,
   }
 
   OLSR_FOR_EACH_TXTCMD_ENTRY(ptr, iterator) {
-    if (abuf_appendf(&con->out, "  %s\n", (char *)ptr->node.key) < 0) {
+    if (abuf_appendf(&con->out, "  %s\n", ptr->command) < 0) {
       return ABUF_ERROR;
     }
   }
