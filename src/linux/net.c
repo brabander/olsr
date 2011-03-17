@@ -321,7 +321,7 @@ bind_socket_to_device(int sock, const char *dev_name)
    *Bind to device using the SO_BINDTODEVICE flag
    */
   OLSR_DEBUG(LOG_NETWORKING, "Binding socket %d to device %s\n", sock, dev_name);
-  return setsockopt(sock, SOL_SOCKET, SO_BINDTODEVICE, ptr, strlen(ptr) + 1);
+  return setsockopt(sock, SOL_SOCKET, SO_BINDTODEVICE, if_buf, strlen(if_buf) + 1);
 }
 
 
