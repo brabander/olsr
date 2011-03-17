@@ -65,6 +65,16 @@ olsr_calculate_lq_mpr(void)
     neigh->was_mpr = neigh->is_mpr;
 
     /* Clear current MPR status. */
+    neigh->is_mpr = true;
+  }
+  return;
+
+  OLSR_FOR_ALL_NBR_ENTRIES(neigh, neigh_iterator) {
+
+    /* Memorize previous MPR status. */
+    neigh->was_mpr = neigh->is_mpr;
+
+    /* Clear current MPR status. */
     neigh->is_mpr = false;
 
     /* In this pass we are only interested in WILL_ALWAYS neighbours */

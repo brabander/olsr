@@ -146,6 +146,9 @@ olsr_init_tc(void)
   tc_validity_timer_info = olsr_timer_add("TC validity", &olsr_expire_tc_entry, false);
 
   tc_mem_cookie = olsr_memcookie_add("tc_entry", sizeof(struct tc_entry));
+
+  /* start with a random answer set number */
+  local_ansn_number = random() & 0xffff;
 }
 
 /**
@@ -298,10 +301,11 @@ olsr_tc_edge_to_string(struct tc_edge_entry *tc_edge)
   char lqbuffer[LQTEXT_MAXLENGTH];
 
   snprintf(buf, sizeof(buf),
-           "%s > %s, cost %s",
+           "%s > %s, cost %s, ansn %04x",
            olsr_ip_to_string(&addrbuf, &tc_edge->tc->addr),
            olsr_ip_to_string(&dstbuf, &tc_edge->T_dest_addr),
-           olsr_get_linkcost_text(tc_edge->cost, false, lqbuffer, sizeof(lqbuffer)));
+           olsr_get_linkcost_text(tc_edge->cost, false, lqbuffer, sizeof(lqbuffer)),
+           tc_edge->ansn);
   return buf;
 }
 #endif
@@ -557,7 +561,6 @@ olsr_delete_revoked_tc_edges(struct tc_entry *tc, uint16_t ansn, union olsr_ip_a
     changes_topology = true;
   return retval;
 }
-
 
 /**
  * Update an edge registered on an entry.

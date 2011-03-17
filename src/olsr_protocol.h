@@ -141,7 +141,7 @@ enum olsr_neigh_types {
  *Redundancy defaults
  */
 #define TC_REDUNDANCY         2
-#define MPR_COVERAGE          1
+#define MPR_COVERAGE          5
 
 /*
  *Misc. Constants

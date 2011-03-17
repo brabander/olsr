@@ -125,6 +125,7 @@ olsr_process_changes(void)
   }
 
   if (changes_neighborhood) {
+    increase_local_ansn_number();
     olsr_calculate_lq_mpr();
   }
 
