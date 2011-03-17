@@ -308,11 +308,20 @@ os_cleanup_global_ifoptions(void)
 static int
 bind_socket_to_device(int sock, const char *dev_name)
 {
+  char if_buf[IF_NAMESIZE];
+  char *ptr;
+
+  strscpy(if_buf, dev_name, sizeof(if_buf));
+  ptr = strchr(if_buf, ':');
+  if (ptr) {
+    *ptr = 0;
+  }
+
   /*
    *Bind to device using the SO_BINDTODEVICE flag
    */
   OLSR_DEBUG(LOG_NETWORKING, "Binding socket %d to device %s\n", sock, dev_name);
-  return setsockopt(sock, SOL_SOCKET, SO_BINDTODEVICE, dev_name, strlen(dev_name) + 1);
+  return setsockopt(sock, SOL_SOCKET, SO_BINDTODEVICE, ptr, strlen(ptr) + 1);
 }
 
 
