@@ -18,7 +18,6 @@ extern avl_tree_comp avl_comp_prefix_origin_default;
 extern int avl_comp_ipv4(const void *, const void *, void *);
 extern int avl_comp_ipv6(const void *, const void *, void *);
 extern int avl_comp_mac(const void *, const void *, void *);
-extern int avl_comp_strcasecmp(const void *, const void *, void *);
 extern int avl_comp_int(const void *, const void *, void *);
 extern int avl_comp_interface_id(const void *, const void *, void *);
 

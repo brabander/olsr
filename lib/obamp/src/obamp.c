@@ -234,7 +234,11 @@ CreateCaptureSocket(const char *ifName)
     return -1;
   }
 
-  add_olsr_socket(skfd, &EncapFlowInObamp, NULL, NULL, SP_PR_READ);
+  if (NULL == olsr_socket_add(skfd, &EncapFlowInObamp, NULL, OLSR_SOCKET_READ)) {
+    OLSR_DEBUG(LOG_PLUGINS, "Could not register socket with scheduler");
+    close(skfd);
+    return -1;
+  }
 
   return skfd;
 }                               /* CreateCaptureSocket */
@@ -715,7 +719,7 @@ UdpServer(void)
     return (-1);
   }
 
-  add_olsr_socket(sdudp, &ObampSignalling, NULL, NULL, SP_PR_READ);
+  olsr_socket_add(sdudp, &ObampSignalling, NULL, OLSR_SOCKET_READ);
 
   return 0;
 
@@ -1590,12 +1594,12 @@ InitOBAMP(void)
 
 //Structs necessary for timers
 
-  struct timer_entry *OBAMP_alive_timer;
-  struct timer_entry *purge_nodes_timer;
-  struct timer_entry *mesh_create_timer;
-  struct timer_entry *tree_create_timer;
-  struct timer_entry *outer_tree_create_timer;
-  struct timer_entry *unsolicited_tree_destroy_timer;
+  struct olsr_timer_entry *OBAMP_alive_timer;
+  struct olsr_timer_entry *purge_nodes_timer;
+  struct olsr_timer_entry *mesh_create_timer;
+  struct olsr_timer_entry *tree_create_timer;
+  struct olsr_timer_entry *outer_tree_create_timer;
+  struct olsr_timer_entry *unsolicited_tree_destroy_timer;
 
 
 
@@ -1632,17 +1636,17 @@ InitOBAMP(void)
 
 //OLSR cookies stuff for timers
   OBAMP_alive_gen_timer_cookie =
-      olsr_alloc_timerinfo("OBAMP Alive Generation", &obamp_alive_gen, true);
+      olsr_timer_add("OBAMP Alive Generation", &obamp_alive_gen, true);
   purge_nodes_timer_cookie =
-      olsr_alloc_timerinfo("purge nodes Generation", &purge_nodes, true);
+      olsr_timer_add("purge nodes Generation", &purge_nodes, true);
   mesh_create_timer_cookie =
-      olsr_alloc_timerinfo("mesh create Generation", &mesh_create, true);
+      olsr_timer_add("mesh create Generation", &mesh_create, true);
   tree_create_timer_cookie =
-      olsr_alloc_timerinfo("tree create Generation", &tree_create, true);
+      olsr_timer_add("tree create Generation", &tree_create, true);
   outer_tree_create_timer_cookie =
-      olsr_alloc_timerinfo("outer tree create Generation", &outer_tree_create, true);
+      olsr_timer_add("outer tree create Generation", &outer_tree_create, true);
   unsolicited_tree_destroy_timer_cookie =
-      olsr_alloc_timerinfo("tree destroy Generation", &unsolicited_tree_destroy, true);
+      olsr_timer_add("tree destroy Generation", &unsolicited_tree_destroy, true);
 
 
 //Tells OLSR to launch olsr_parser when the packets for this plugin arrive
@@ -1650,32 +1654,32 @@ InitOBAMP(void)
 
 // start to send alive messages to appear in other joined lists
   OBAMP_alive_timer =
-    olsr_start_timer(OBAMP_ALIVE_EIVAL * MSEC_PER_SEC, OBAMP_JITTER, NULL,
+    olsr_timer_start(OBAMP_ALIVE_EIVAL * MSEC_PER_SEC, OBAMP_JITTER, NULL,
                      OBAMP_alive_gen_timer_cookie);
 
 // start timer to purge nodes from list in softstate fashion
   purge_nodes_timer =
-    olsr_start_timer(_Texpire_timer_ * MSEC_PER_SEC, OBAMP_JITTER, NULL,
+    olsr_timer_start(_Texpire_timer_ * MSEC_PER_SEC, OBAMP_JITTER, NULL,
                      purge_nodes_timer_cookie);
 
 //start timer to create mesh
   mesh_create_timer =
-    olsr_start_timer(OBAMP_MESH_CREATE_IVAL * MSEC_PER_SEC, OBAMP_JITTER, NULL,
+    olsr_timer_start(OBAMP_MESH_CREATE_IVAL * MSEC_PER_SEC, OBAMP_JITTER, NULL,
                      mesh_create_timer_cookie);
 
 //start timer for tree create procedure
   tree_create_timer =
-    olsr_start_timer(OBAMP_TREE_CREATE_IVAL * MSEC_PER_SEC, OBAMP_JITTER, NULL,
+    olsr_timer_start(OBAMP_TREE_CREATE_IVAL * MSEC_PER_SEC, OBAMP_JITTER, NULL,
                      tree_create_timer_cookie);
 
 //start timer for tree create procedure
   outer_tree_create_timer =
-    olsr_start_timer(OBAMP_OUTER_TREE_CREATE_IVAL * MSEC_PER_SEC, OBAMP_JITTER, NULL,
+    olsr_timer_start(OBAMP_OUTER_TREE_CREATE_IVAL * MSEC_PER_SEC, OBAMP_JITTER, NULL,
                      tree_create_timer_cookie);
 
 //start timer for tree create procedure
   unsolicited_tree_destroy_timer =
-    olsr_start_timer(30 * MSEC_PER_SEC, OBAMP_JITTER, NULL,
+    olsr_timer_start(30 * MSEC_PER_SEC, OBAMP_JITTER, NULL,
                      unsolicited_tree_destroy_timer_cookie);
 
 //Create udp server socket for OBAMP signalling and register it to the scheduler

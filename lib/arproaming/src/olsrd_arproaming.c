@@ -37,8 +37,8 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <unistd.h>
 #include <time.h>
+#include <unistd.h>
 #include <malloc.h>
 #include <net/if_arp.h>
 #include <netinet/in.h>
@@ -47,12 +47,14 @@
 #include <arpa/inet.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
+#include <errno.h>
 
 #include "olsr.h"
 #include "defs.h"
 #include "olsr_types.h"
 #include "olsr_logging.h"
-#include "scheduler.h"
+#include "olsr_timer.h"
+#include "olsr_socket.h"
 #include "plugin_util.h"
 #include "olsr_ip_prefix_list.h"
 #include "net_olsr.h"
@@ -84,7 +86,7 @@ struct arproaming_nodes {
 };
 
 static struct olsr_timer_info *timer_info;
-static struct timer_entry *event_timer;
+static struct olsr_timer_entry *event_timer;
 
 static char arproaming_parameter_interface[25];
 static int arproaming_parameter_timeout;
@@ -403,8 +405,8 @@ arproaming_init(void)
 
 	arproaming_systemconf(arproaming_socketfd_system);
 
-  timer_info = olsr_alloc_timerinfo("arproaming", &arproaming_schedule_event, true);
-  event_timer = olsr_start_timer(MSEC_PER_SEC/3, 0, NULL, timer_info);
+  timer_info = olsr_timer_add("arproaming", &arproaming_schedule_event, true);
+  event_timer = olsr_timer_start(MSEC_PER_SEC/3, 0, NULL, timer_info);
 
 	close(arproaming_socketfd_system);
 	return 0;
@@ -413,7 +415,7 @@ arproaming_init(void)
 static int
 arproaming_exit(void)
 {
-  olsr_stop_timer(event_timer);
+  olsr_timer_stop(event_timer);
 
 	if (arproaming_socketfd_netlink >= 0) {
 		OLSR_DEBUG(LOG_PLUGINS, "[ARPROAMING] Closing netlink socket.\n");

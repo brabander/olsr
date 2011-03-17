@@ -39,6 +39,8 @@
  *
  */
 
+#include "common/avl.h"
+#include "common/avl_olsr_comp.h"
 #include "net_olsr.h"
 #include "ipcalc.h"
 #include "olsr.h"
@@ -115,7 +117,7 @@ init_net(void)
     olsr_add_invalid_address(&addr);
   }
 
-  buffer_hold_timer_info = olsr_alloc_timerinfo("Buffer writeback", olsr_expire_buffer_timer, false);
+  buffer_hold_timer_info = olsr_timer_add("Buffer writeback", olsr_expire_buffer_timer, false);
 }
 
 /**
@@ -169,7 +171,7 @@ set_buffer_timer(struct interface *ifn)
    * been drained. Flush the buffer in second or so.
    */
   ifn->buffer_hold_timer =
-    olsr_start_timer(OLSR_BUFFER_HOLD_TIME, OLSR_BUFFER_HOLD_JITTER,
+    olsr_timer_start(OLSR_BUFFER_HOLD_TIME, OLSR_BUFFER_HOLD_JITTER,
                      ifn, buffer_hold_timer_info);
 }
 
@@ -398,7 +400,7 @@ net_output(struct interface *ifp)
     tmp_ptf->function(ifp->netbuf.buff, &ifp->netbuf.pending);
   }
 
-  if (os_sendto(ifp->send_socket, ifp->netbuf.buff, ifp->netbuf.pending,
+  if (os_sendto(ifp->send_socket->fd, ifp->netbuf.buff, ifp->netbuf.pending,
       MSG_DONTROUTE, &ifp->int_multicast) < 0) {
 #if !defined REMOVE_LOG_WARN
     const int save_errno = errno;

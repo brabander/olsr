@@ -39,14 +39,12 @@
  *
  */
 
-#include <stdint.h>
+#ifndef _OLSR_MEMCOOKIE_H
+#define _OLSR_MEMCOOKIE_H
 
 #include "olsr_types.h"
 #include "common/list.h"
 #include "common/avl.h"
-
-#ifndef _OLSR_COOKIE_H
-#define _OLSR_COOKIE_H
 
 extern struct avl_tree EXPORT(olsr_cookie_tree);
 
@@ -189,7 +187,7 @@ olsr_memcookie_set_minfree(struct olsr_memcookie_info *ci, uint32_t min_free)
   ci->ci_min_free_count = min_free;
 }
 
-#endif /* _OLSR_COOKIE_H */
+#endif /* _OLSR_MEMCOOKIE_H */
 
 /*
  * Local Variables:

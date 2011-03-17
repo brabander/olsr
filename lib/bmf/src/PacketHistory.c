@@ -52,7 +52,8 @@
 /* OLSRD includes */
 #include "defs.h"               /* GET_TIMESTAMP, TIMED_OUT */
 #include "olsr.h"
-#include "scheduler.h"          /* now_times */
+#include "olsr_timer.h"
+#include "olsr_socket.h"          /* now_times */
 
 /* Plugin includes */
 #include "Packet.h"
@@ -247,7 +248,7 @@ CheckAndMarkRecentPacket(u_int32_t crc32)
       /* Found duplicate entry */
 
       /* Always mark as "seen recently": refresh time-out */
-      walker->timeOut = GET_TIMESTAMP(HISTORY_HOLD_TIME);
+      walker->timeOut = olsr_clock_getAbsolute(HISTORY_HOLD_TIME);
 
       return 1;
     }                           /* if */
@@ -257,7 +258,7 @@ CheckAndMarkRecentPacket(u_int32_t crc32)
   newEntry = malloc(sizeof(struct TDupEntry));
   if (newEntry != NULL) {
     newEntry->crc32 = crc32;
-    newEntry->timeOut = GET_TIMESTAMP(HISTORY_HOLD_TIME);
+    newEntry->timeOut = olsr_clock_getAbsolute(HISTORY_HOLD_TIME);
 
     /* Add new entry at the front of the list */
     newEntry->next = PacketHistory[idx];
@@ -287,7 +288,7 @@ PrunePacketHistory(void *useless __attribute__ ((unused)))
         struct TDupEntry *entry = nextEntry;
         nextEntry = entry->next;
 
-        if (TIMED_OUT(entry->timeOut)) {
+        if (olsr_clock_isPast(entry->timeOut)) {
           /* De-queue */
           if (prevEntry != NULL) {
             prevEntry->next = entry->next;

@@ -162,7 +162,11 @@ CreateCaptureSocket(const char *ifName)
     return -1;
   }
   //AddDescriptorToInputSet(skfd);
-  add_olsr_socket(skfd, &DoMDNS, NULL, NULL, SP_PR_READ);
+  if (NULL == olsr_socket_add(skfd, &DoMDNS, NULL, OLSR_SOCKET_READ)) {
+    BmfPError("Cannot bind socket to scheduler");
+    close(skfd);
+    return -1;
+  }
 
   return skfd;
 }                               /* CreateCaptureSocket */

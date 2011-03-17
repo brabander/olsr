@@ -55,10 +55,25 @@
 /* prototype declaration to break loop with olsr_cnf.h */
 struct interface;
 
+/**
+ * defines the mode of the interface.
+ *
+ * - Mesh: default behavior
+ * - Ether: an interface with nearly no packet loss and a "closed" broadcast
+ *   domain. This means packages received through this interface does not need
+ *   to be forwarded through the interface again.
+ */
+enum interface_mode {
+  IF_MODE_MESH,
+  IF_MODE_ETHER,
+
+  /* this must be the last entry */
+  IF_MODE_COUNT
+};
+
 #include "olsr_types.h"
-#include "olsr_cfg_data.h"
 #include "olsr_cfg.h"
-#include "olsr_time.h"
+#include "olsr_clock.h"
 #include "common/list.h"
 #include "common/avl.h"
 
@@ -109,6 +124,8 @@ struct if_gen_property {
 };
 #endif
 
+extern const char *INTERFACE_MODE_NAMES[];
+
 /*
  * Output buffer structure. This should actually be in net_olsr.h
  * but we have circular references then.
@@ -137,18 +154,25 @@ struct interface {
   /* source IP of interface */
   union olsr_ip_addr ip_addr;
 
-  int olsr_socket;                     /* The broadcast socket for this interface */
-  int send_socket;                     /* The send socket for this interface */
+  /* The broadcast socket for this interface */
+  struct olsr_socket_entry *olsr_socket;
+
+  /* The send socket for this interface */
+  struct olsr_socket_entry *send_socket;
+
+  /* interface data */
   int int_mtu;                         /* MTU of interface */
   int if_index;                        /* Kernels index of this interface */
   char *int_name;                      /* from kernel if structure */
-  uint16_t olsr_seqnum;                /* Olsr message seqno */
+
+  /* current packet sequence number for this interface */
+  uint16_t olsr_seqnum;
 
   /* Periodic message generation timers */
-  struct timer_entry *hello_gen_timer;
+  struct olsr_timer_entry *hello_gen_timer;
 
   /* Message build related  */
-  struct timer_entry *buffer_hold_timer;        /* Timer for message batching */
+  struct olsr_timer_entry *buffer_hold_timer;        /* Timer for message batching */
   struct olsr_netbuf netbuf;           /* the build buffer */
 
 #ifdef linux
@@ -162,11 +186,8 @@ struct interface {
 
   uint32_t hello_interval;
   uint32_t hello_validity;
-#if 0
-  struct if_gen_property *gen_properties;       /* Generic interface properties */
-#endif
 
-  uint32_t refcount;                   /* Refcount */
+  uint32_t refcount;
 };
 
 /* deletion safe macro for interface list traversal */

@@ -39,8 +39,18 @@
  *
  */
 
+#include <arpa/inet.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <assert.h>
+#include <errno.h>
+#include <getopt.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+
 #include "olsr_cfg.h"
-#include "olsr_cfg_data.h"
+#include "olsr_logging.h"
 
 #include "olsr.h"
 #include "parser.h"
@@ -48,24 +58,9 @@
 #include "olsr_ip_prefix_list.h"
 #include "olsr_protocol.h"
 #include "common/string.h"
-#include "olsr_time.h"
+#include "olsr_clock.h"
 #include "os_net.h"
 #include "os_system.h"
-
-#include <unistd.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <getopt.h>
-#include <errno.h>
-#include <assert.h>
-
-#ifdef DEBUG
-#define PARSER_DEBUG_PRINTF(x, args...)   printf(x, ##args)
-#else
-#define PARSER_DEBUG_PRINTF(x, ...)   do { } while (0)
-#endif
 
 /* options that have no short command line variant */
 enum cfg_long_options {
@@ -352,68 +347,67 @@ queue_if(const char *name, struct olsr_config *cfg)
  * @rmsg:       a buf[FILENAME_MAX + 256] to sprint err msgs
  * @returns configuration status as defined in olsr_parse_cfg_result
  */
-static olsr_parse_cfg_result
-parse_cfg_hna(char *argstr, const int ip_version, struct olsr_config *rcfg, char *rmsg)
+static void
+parse_cfg_hna(char *argstr, const int ip_version, struct olsr_config *rcfg)
 {
   char **tok;
 #ifdef DEBUG
   struct ipaddr_str buf;
 #endif
   if ('{' != *argstr) {
-    sprintf(rmsg, "No {}\n");
-    return CFG_ERROR;
+    OLSR_ERROR(LOG_CONFIG, "No {}\n");
+    olsr_exit(1);
   }
   if (NULL != (tok = parse_tok(argstr + 1, NULL))) {
     char **p = tok;
     if (ip_version != rcfg->ip_version) {
-      sprintf(rmsg, "IPv%d addresses can only be used if \"IpVersion\" == %d\n",
+      OLSR_ERROR(LOG_CONFIG, "IPv%d addresses can only be used if \"IpVersion\" == %d\n",
               AF_INET == ip_version ? 4 : 6, AF_INET == ip_version ? 4 : 6);
       parse_tok_free(tok);
-      return CFG_ERROR;
+      olsr_exit(1);
     }
     while (p[0]) {
       union olsr_ip_addr ipaddr;
       if (!p[1]) {
-        sprintf(rmsg, "Odd args in %s\n", argstr);
+        OLSR_ERROR(LOG_CONFIG, "Odd args in %s\n", argstr);
         parse_tok_free(tok);
-        return CFG_ERROR;
+        olsr_exit(1);
       }
       if (inet_pton(ip_version, p[0], &ipaddr) <= 0) {
-        sprintf(rmsg, "Failed converting IP address %s\n", p[0]);
+        OLSR_ERROR(LOG_CONFIG, "Failed converting IP address %s\n", p[0]);
         parse_tok_free(tok);
-        return CFG_ERROR;
+        olsr_exit(1);
       }
       if (AF_INET == ip_version) {
         union olsr_ip_addr netmask;
         if (inet_pton(AF_INET, p[1], &netmask) <= 0) {
-          sprintf(rmsg, "Failed converting IP address %s\n", p[1]);
+          OLSR_ERROR(LOG_CONFIG, "Failed converting IP address %s\n", p[1]);
           parse_tok_free(tok);
-          return CFG_ERROR;
+          olsr_exit(1);
         }
         if ((ipaddr.v4.s_addr & ~netmask.v4.s_addr) != 0) {
-          sprintf(rmsg, "The IP address %s/%s is not a network address!\n", p[0], p[1]);
+          OLSR_ERROR(LOG_CONFIG, "The IP address %s/%s is not a network address!\n", p[0], p[1]);
           parse_tok_free(tok);
-          return CFG_ERROR;
+          olsr_exit(1);
         }
         ip_prefix_list_add(&rcfg->hna_entries, &ipaddr, netmask_to_prefix((uint8_t *) & netmask, rcfg->ipsize));
-        PARSER_DEBUG_PRINTF("Hna4 %s/%d\n", ip_to_string(rcfg->ip_version, &buf, &ipaddr),
+        OLSR_INFO_NH(LOG_CONFIG, "Hna4 %s/%d\n", ip_to_string(rcfg->ip_version, &buf, &ipaddr),
                             netmask_to_prefix((uint8_t *) & netmask, rcfg->ipsize));
       } else {
         int prefix = -1;
         sscanf('/' == *p[1] ? p[1] + 1 : p[1], "%d", &prefix);
         if (0 > prefix || 128 < prefix) {
-          sprintf(rmsg, "Illegal IPv6 prefix %s\n", p[1]);
+          OLSR_ERROR(LOG_CONFIG, "Illegal IPv6 prefix %s\n", p[1]);
           parse_tok_free(tok);
-          return CFG_ERROR;
+          olsr_exit(1);
         }
         ip_prefix_list_add(&rcfg->hna_entries, &ipaddr, prefix);
-        PARSER_DEBUG_PRINTF("Hna6 %s/%d\n", ip_to_string(rcfg->ip_version, &buf, &ipaddr), prefix);
+        OLSR_INFO_NH(LOG_CONFIG, "Hna6 %s/%d\n", ip_to_string(rcfg->ip_version, &buf, &ipaddr), prefix);
       }
       p += 2;
     }
     parse_tok_free(tok);
   }
-  return CFG_OK;
 }
 
 /*
@@ -423,8 +417,8 @@ parse_cfg_hna(char *argstr, const int ip_version, struct olsr_config *rcfg, char
  * @rmsg:   a buf[FILENAME_MAX + 256] to sprint err msgs
  * @returns configuration status as defined in olsr_parse_cfg_result
  */
-static olsr_parse_cfg_result
-parse_cfg_interface(char *argstr, struct olsr_config *rcfg, char *rmsg)
+static void
+parse_cfg_interface(char *argstr, struct olsr_config *rcfg)
 {
   char **tok;
   const char *nxt;
@@ -433,22 +427,22 @@ parse_cfg_interface(char *argstr, struct olsr_config *rcfg, char *rmsg)
 #endif
   if (NULL != (tok = parse_tok(argstr, &nxt))) {
     if ('{' != *nxt) {
-      sprintf(rmsg, "No {}\n");
+      OLSR_ERROR(LOG_CONFIG, "No {}\n");
       parse_tok_free(tok);
-      return CFG_ERROR;
+      olsr_exit(1);
     } else {
       char **tok_next = parse_tok(nxt + 1, NULL);
       char **p = tok;
       while (p[0]) {
         char **p_next = tok_next;
         struct olsr_if_config *new_if = queue_if(p[0], rcfg);
-        PARSER_DEBUG_PRINTF("Interface %s\n", p[0]);
+        OLSR_INFO_NH(LOG_CONFIG, "Interface %s\n", p[0]);
         while (new_if && p_next && p_next[0]) {
           if (!p_next[1]) {
-            sprintf(rmsg, "Odd args in %s\n", nxt);
+            OLSR_ERROR(LOG_CONFIG, "Odd args in %s\n", nxt);
             parse_tok_free(tok_next);
             parse_tok_free(tok);
-            return CFG_ERROR;
+            olsr_exit(1);
           }
           if (0 == strcasecmp("Mode", p_next[0])) {
             if (0 == strcasecmp("Ether", p_next[1])) {
@@ -456,20 +450,20 @@ parse_cfg_interface(char *argstr, struct olsr_config *rcfg, char *rmsg)
             } else {
               new_if->cnf->mode = IF_MODE_MESH;
             }
-            PARSER_DEBUG_PRINTF("\tMode: %s\n", INTERFACE_MODE_NAMES[new_if->cnf->mode]);
+            OLSR_INFO_NH(LOG_CONFIG, "\tMode: %s\n", INTERFACE_MODE_NAMES[new_if->cnf->mode]);
           } else if (0 == strcasecmp("AutoDetectChanges", p_next[0])) {
             new_if->cnf->autodetect_chg = (0 == strcasecmp("yes", p_next[1]));
-            PARSER_DEBUG_PRINTF("\tAutodetect changes: %d\n", new_if->cnf->autodetect_chg);
+            OLSR_INFO_NH(LOG_CONFIG, "\tAutodetect changes: %d\n", new_if->cnf->autodetect_chg);
           } else if (0 == strcasecmp("Ip4Broadcast", p_next[0])) {
             union olsr_ip_addr ipaddr;
             if (inet_pton(AF_INET, p_next[1], &ipaddr) <= 0) {
-              sprintf(rmsg, "Failed converting IP address %s\n", p_next[1]);
+              OLSR_ERROR(LOG_CONFIG, "Failed converting IP address %s\n", p_next[1]);
               parse_tok_free(tok_next);
               parse_tok_free(tok);
-              return CFG_ERROR;
+              olsr_exit(1);
             }
             new_if->cnf->ipv4_broadcast = ipaddr;
-            PARSER_DEBUG_PRINTF("\tIPv4 broadcast: %s\n", ip4_to_string(&buf, new_if->cnf->ipv4_broadcast.v4));
+            OLSR_INFO_NH(LOG_CONFIG, "\tIPv4 broadcast: %s\n", ip4_to_string(&buf, new_if->cnf->ipv4_broadcast.v4));
           } else if (0 == strcasecmp("Ip6AddrType", p_next[0])) {
             if (0 == strcasecmp("site-local", p_next[1])) {
               new_if->cnf->ipv6_addrtype = OLSR_IP6T_SITELOCAL;
@@ -480,57 +474,59 @@ parse_cfg_interface(char *argstr, struct olsr_config *rcfg, char *rmsg)
             } else {
               new_if->cnf->ipv6_addrtype = OLSR_IP6T_AUTO;
             }
-            PARSER_DEBUG_PRINTF("\tIPv6 addrtype: %d\n", new_if->cnf->ipv6_addrtype);
+            OLSR_INFO_NH(LOG_CONFIG, "\tIPv6 addrtype: %d\n", new_if->cnf->ipv6_addrtype);
           } else if (0 == strcasecmp("Ip6MulticastSite", p_next[0])) {
             union olsr_ip_addr ipaddr;
             if (inet_pton(AF_INET6, p_next[1], &ipaddr) <= 0) {
-              sprintf(rmsg, "Failed converting IP address %s\n", p_next[1]);
+              OLSR_ERROR(LOG_CONFIG, "Failed converting IP address %s\n", p_next[1]);
               parse_tok_free(tok_next);
               parse_tok_free(tok);
-              return CFG_ERROR;
+              olsr_exit(1);
             }
             new_if->cnf->ipv6_multi_site = ipaddr;
-            PARSER_DEBUG_PRINTF("\tIPv6 site-local multicast: %s\n", ip6_to_string(&buf, &new_if->cnf->ipv6_multi_site.v6));
+            OLSR_INFO_NH(LOG_CONFIG, "\tIPv6 site-local multicast: %s\n", ip6_to_string(&buf, &new_if->cnf->ipv6_multi_site.v6));
           } else if (0 == strcasecmp("Ip6MulticastGlobal", p_next[0])) {
             union olsr_ip_addr ipaddr;
             if (inet_pton(AF_INET6, p_next[1], &ipaddr) <= 0) {
-              sprintf(rmsg, "Failed converting IP address %s\n", p_next[1]);
+              OLSR_ERROR(LOG_CONFIG, "Failed converting IP address %s\n", p_next[1]);
               parse_tok_free(tok_next);
               parse_tok_free(tok);
-              return CFG_ERROR;
+              olsr_exit(1);
             }
             new_if->cnf->ipv6_multi_glbl = ipaddr;
-            PARSER_DEBUG_PRINTF("\tIPv6 global multicast: %s\n", ip6_to_string(&buf, &new_if->cnf->ipv6_multi_glbl.v6));
+            OLSR_INFO_NH(LOG_CONFIG, "\tIPv6 global multicast: %s\n", ip6_to_string(&buf, &new_if->cnf->ipv6_multi_glbl.v6));
           } else if (0 == strcasecmp("HelloInterval", p_next[0])) {
-            new_if->cnf->hello_params.emission_interval = olsr_txt_to_milli(p_next[1]);
-            PARSER_DEBUG_PRINTF("\tHELLO interval1: %u ms\n", new_if->cnf->hello_params.emission_interval);
+            new_if->cnf->hello_params.emission_interval = olsr_clock_parse_string(p_next[1]);
+            OLSR_INFO_NH(LOG_CONFIG, "\tHELLO interval1: %u ms\n", new_if->cnf->hello_params.emission_interval);
           } else if (0 == strcasecmp("HelloValidityTime", p_next[0])) {
-            new_if->cnf->hello_params.validity_time = olsr_txt_to_milli(p_next[1]);
-            PARSER_DEBUG_PRINTF("\tHELLO validity: %u ms\n", new_if->cnf->hello_params.validity_time);
+            new_if->cnf->hello_params.validity_time = olsr_clock_parse_string(p_next[1]);
+            OLSR_INFO_NH(LOG_CONFIG, "\tHELLO validity: %u ms\n", new_if->cnf->hello_params.validity_time);
           } else if ((0 == strcasecmp("Tcinterval", p_next[0])) || (0 == strcasecmp("TcValidityTime", p_next[0])) ||
                      (0 == strcasecmp("Midinterval", p_next[0])) || (0 == strcasecmp("MidValidityTime", p_next[0])) ||
                      (0 == strcasecmp("Hnainterval", p_next[0])) || (0 == strcasecmp("HnaValidityTime", p_next[0]))) {
-            fprintf(stderr,"ERROR: %s is deprecated within the interface section. All message intervals/validities except Hellos are global!\n",p_next[0]);
-            os_exit(1);
+            OLSR_ERROR(LOG_CONFIG, "ERROR: %s is deprecated within the interface section. All message intervals/validities except Hellos are global!\n",p_next[0]);
+            parse_tok_free(tok_next);
+            parse_tok_free(tok);
+            olsr_exit(1);
           } else if (0 == strcasecmp("Weight", p_next[0])) {
             new_if->cnf->weight.fixed = true;
-            PARSER_DEBUG_PRINTF("\tFixed willingness: %d\n", new_if->cnf->weight.value);
+            OLSR_INFO_NH(LOG_CONFIG, "\tFixed willingness: %d\n", new_if->cnf->weight.value);
           } else if (0 == strcasecmp("LinkQualityMult", p_next[0])) {
             float f;
             struct olsr_lq_mult *mult = olsr_malloc(sizeof(*mult), "lqmult");
             if (!p_next[2]) {
-              sprintf(rmsg, "Odd args in %s\n", nxt);
+              OLSR_ERROR(LOG_CONFIG, "Odd args in %s\n", nxt);
               parse_tok_free(tok_next);
               parse_tok_free(tok);
-              return CFG_ERROR;
+              olsr_exit(1);
             }
             memset(&mult->addr, 0, sizeof(mult->addr));
             if (0 != strcasecmp("default", p_next[1])) {
               if (inet_pton(rcfg->ip_version, p_next[1], &mult->addr) <= 0) {
-                sprintf(rmsg, "Failed converting IP address %s\n", p_next[1]);
+                OLSR_ERROR(LOG_CONFIG, "Failed converting IP address %s\n", p_next[1]);
                 parse_tok_free(tok_next);
                 parse_tok_free(tok);
-                return CFG_ERROR;
+                olsr_exit(1);
               }
             }
             f = 0;
@@ -538,14 +534,14 @@ parse_cfg_interface(char *argstr, struct olsr_config *rcfg, char *rmsg)
             mult->value = (uint32_t) (f * LINK_LOSS_MULTIPLIER);
             mult->next = new_if->cnf->lq_mult;
             new_if->cnf->lq_mult = mult;
-            PARSER_DEBUG_PRINTF("\tLinkQualityMult %s %0.2f\n", ip_to_string(rcfg->ip_version, &buf, &mult->addr),
+            OLSR_INFO_NH(LOG_CONFIG, "\tLinkQualityMult %s %0.2f\n", ip_to_string(rcfg->ip_version, &buf, &mult->addr),
                                 (float)mult->value / LINK_LOSS_MULTIPLIER);
             p_next++;
           } else {
-            sprintf(rmsg, "Unknown arg: %s %s\n", p_next[0], p_next[1]);
+            OLSR_ERROR(LOG_CONFIG, "Unknown arg: %s %s\n", p_next[0], p_next[1]);
             parse_tok_free(tok_next);
             parse_tok_free(tok);
-            return CFG_ERROR;
+            olsr_exit(1);
           }
           p_next += 2;
         }
@@ -555,10 +551,9 @@ parse_cfg_interface(char *argstr, struct olsr_config *rcfg, char *rmsg)
     }
     parse_tok_free(tok);
   } else {
-    sprintf(rmsg, "Error in %s\n", argstr);
-    return CFG_ERROR;
+    OLSR_ERROR(LOG_CONFIG, "Error in %s\n", argstr);
+    olsr_exit(1);
   }
-  return CFG_OK;
 }
 
 /*
@@ -568,16 +563,16 @@ parse_cfg_interface(char *argstr, struct olsr_config *rcfg, char *rmsg)
  * @rmsg:   a buf[FILENAME_MAX + 256] to sprint err msgs
  * @returns configuration status as defined in olsr_parse_cfg_result
  */
-static olsr_parse_cfg_result
-parse_cfg_loadplugin(char *argstr, struct olsr_config *rcfg, char *rmsg)
+static void
+parse_cfg_loadplugin(char *argstr, struct olsr_config *rcfg)
 {
   char **tok;
   const char *nxt;
   if (NULL != (tok = parse_tok(argstr, &nxt))) {
     if ('{' != *nxt) {
-      sprintf(rmsg, "No {}\n");
+      OLSR_ERROR(LOG_CONFIG, "No {}\n");
       parse_tok_free(tok);
-      return CFG_ERROR;
+      olsr_exit(1);
     } else {
       char **tok_next = parse_tok(nxt + 1, NULL);
       struct plugin_entry *pe = olsr_malloc(sizeof(*pe), "plugin");
@@ -585,22 +580,22 @@ parse_cfg_loadplugin(char *argstr, struct olsr_config *rcfg, char *rmsg)
       pe->params = NULL;
       pe->next = rcfg->plugins;
       rcfg->plugins = pe;
-      PARSER_DEBUG_PRINTF("Plugin: %s\n", pe->name);
+      OLSR_INFO_NH(LOG_CONFIG, "Plugin: %s\n", pe->name);
       if (tok_next) {
         char **p_next = tok_next;
         while (p_next[0]) {
           struct plugin_param *pp = olsr_malloc(sizeof(*pp), "plparam");
           if (0 != strcasecmp("PlParam", p_next[0]) || !p_next[1] || !p_next[2]) {
-            sprintf(rmsg, "Odd args in %s\n", nxt);
+            OLSR_ERROR(LOG_CONFIG, "Odd args in %s\n", nxt);
             parse_tok_free(tok_next);
             parse_tok_free(tok);
-            return CFG_ERROR;
+            olsr_exit(1);
           }
           pp->key = olsr_strdup(p_next[1]);
           pp->value = olsr_strdup(p_next[2]);
           pp->next = pe->params;
           pe->params = pp;
-          PARSER_DEBUG_PRINTF("\tPlParam: %s %s\n", pp->key, pp->value);
+          OLSR_INFO_NH(LOG_CONFIG, "\tPlParam: %s %s\n", pp->key, pp->value);
           p_next += 3;
         }
         parse_tok_free(tok_next);
@@ -608,10 +603,9 @@ parse_cfg_loadplugin(char *argstr, struct olsr_config *rcfg, char *rmsg)
     }
     parse_tok_free(tok);
   } else {
-    sprintf(rmsg, "Error in %s\n", argstr);
-    return CFG_ERROR;
+    OLSR_ERROR(LOG_CONFIG, "Error in %s\n", argstr);
+    olsr_exit(1);
   }
-  return CFG_OK;
 }
 
 /*
@@ -621,15 +615,15 @@ parse_cfg_loadplugin(char *argstr, struct olsr_config *rcfg, char *rmsg)
  * @rmsg:   a buf[FILENAME_MAX + 256] to sprint err msgs
  * @returns configuration status as defined in olsr_parse_cfg_result
  */
-static olsr_parse_cfg_result
-parse_cfg_debug(char *argstr, struct olsr_config *rcfg, char *rmsg)
+static void
+parse_cfg_debug(char *argstr, struct olsr_config *rcfg)
 {
   int dlevel, i;
   dlevel = atoi(argstr);
 
   if (dlevel < MIN_DEBUGLVL || dlevel > MAX_DEBUGLVL) {
-    sprintf(rmsg, "Error, debug level must be between -2 and 3\n");
-    return CFG_ERROR;
+    OLSR_ERROR(LOG_CONFIG, "Error, debug level must be between -2 and 3\n");
+    olsr_exit(1);
   }
 
   switch (dlevel) {
@@ -666,7 +660,7 @@ parse_cfg_debug(char *argstr, struct olsr_config *rcfg, char *rmsg)
     break;
   }
 
-  PARSER_DEBUG_PRINTF("Debug level: %d\n", dlevel);
+  OLSR_INFO_NH(LOG_CONFIG, "Debug level: %d\n", dlevel);
 
   if (dlevel > 0) {
     rcfg->no_fork = 1;
@@ -674,7 +668,6 @@ parse_cfg_debug(char *argstr, struct olsr_config *rcfg, char *rmsg)
 
   /* prevent fallback to default 0 */
   cfg_has_log[SEVERITY_ERR] = true;
-  return CFG_OK;
 }
 
 /*
@@ -684,12 +677,11 @@ parse_cfg_debug(char *argstr, struct olsr_config *rcfg, char *rmsg)
  * @rmsg:   a buf[FILENAME_MAX + 256] to sprint err msgs
  * @returns configuration status as defined in olsr_parse_cfg_result
  */
-static olsr_parse_cfg_result
-parse_cfg_log(char *argstr, struct olsr_config *rcfg, char *rmsg, enum log_severity sev)
+static void
+parse_cfg_log(char *argstr, struct olsr_config *rcfg, enum log_severity sev)
 {
   char *p = (char *)argstr, *next;
   int i;
-  bool first;
 
   while (p != NULL) {
     /* split at ',' */
@@ -705,8 +697,8 @@ parse_cfg_log(char *argstr, struct olsr_config *rcfg, char *rmsg, enum log_sever
     }
 
     if (i == LOG_SOURCE_COUNT) {
-      sprintf(rmsg, "Error, unknown logging source: %s\n", p);
-      return CFG_ERROR;
+      OLSR_ERROR(LOG_CONFIG, "Error, unknown logging source: %s\n", p);
+      olsr_exit(1);
     }
 
     /* handle "all" keyword */
@@ -722,16 +714,12 @@ parse_cfg_log(char *argstr, struct olsr_config *rcfg, char *rmsg, enum log_sever
   }
 
 
-  PARSER_DEBUG_PRINTF("Log_%s:", LOG_SEVERITY_NAMES[sev]);
-  for (i = 0, first = true; i < LOG_SOURCE_COUNT; i++) {
+  for (i = 0; i < LOG_SOURCE_COUNT; i++) {
     if (rcfg->log_event[sev][i]) {
-      PARSER_DEBUG_PRINTF("%c%s", first ? ' ' : ',', LOG_SOURCE_NAMES[i]);
-      first = false;
+      OLSR_INFO_NH(LOG_CONFIG, "Log_%s %s", LOG_SEVERITY_NAMES[sev], LOG_SOURCE_NAMES[i]);
     }
   }
-  PARSER_DEBUG_PRINTF("\n");
   cfg_has_log[sev] = true;
-  return CFG_OK;
 }
 
 /*
@@ -743,8 +731,8 @@ parse_cfg_log(char *argstr, struct olsr_config *rcfg, char *rmsg, enum log_sever
  * @rmsg:   a buf[FILENAME_MAX + 256] to sprint err msgs
  * @returns configuration status as defined in olsr_parse_cfg_result
  */
-static olsr_parse_cfg_result
-parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_config *rcfg, char *rmsg)
+static void
+parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_config *rcfg)
 {
   switch (optint) {
   case 'i':                    /* iface */
@@ -752,18 +740,18 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
     break;
   case 'n':                    /* nofork */
     rcfg->no_fork = true;
-    PARSER_DEBUG_PRINTF("no_fork set to %d\n", rcfg->no_fork);
+    OLSR_INFO_NH(LOG_CONFIG, "no_fork set to %d\n", rcfg->no_fork);
     break;
   case 'A':                    /* AllowNoInt (yes/no) */
     rcfg->allow_no_interfaces = (0 == strcasecmp("yes", argstr));
-    PARSER_DEBUG_PRINTF("Noint set to %d\n", rcfg->allow_no_interfaces);
+    OLSR_INFO_NH(LOG_CONFIG, "Noint set to %d\n", rcfg->allow_no_interfaces);
     break;
   case 'C':                    /* ClearScreen (yes/no) */
     rcfg->clear_screen = (0 == strcasecmp("yes", argstr));
-    PARSER_DEBUG_PRINTF("Clear screen %s\n", rcfg->clear_screen ? "enabled" : "disabled");
+    OLSR_INFO_NH(LOG_CONFIG, "Clear screen %s\n", rcfg->clear_screen ? "enabled" : "disabled");
     break;
   case 'd':                    /* DebugLevel (i) */
-    return parse_cfg_debug(argstr, rcfg, rmsg);
+    return parse_cfg_debug(argstr, rcfg);
     break;
   case 'F':                    /* FIBMetric (str) */
     {
@@ -776,25 +764,25 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
         } else if (strcasecmp(*tok, CFG_FIBM_APPROX) == 0) {
           rcfg->fib_metric = FIBM_APPROX;
         } else {
-          sprintf(rmsg, "FIBMetric must be \"%s\", \"%s\", or \"%s\"!\n", CFG_FIBM_FLAT, CFG_FIBM_CORRECT, CFG_FIBM_APPROX);
-          return CFG_ERROR;
+          OLSR_ERROR(LOG_CONFIG, "FIBMetric must be \"%s\", \"%s\", or \"%s\"!\n", CFG_FIBM_FLAT, CFG_FIBM_CORRECT, CFG_FIBM_APPROX);
+          olsr_exit(1);
         }
         parse_tok_free(tok);
       } else {
-        sprintf(rmsg, "Error in %s\n", argstr);
-        return CFG_ERROR;
+        OLSR_ERROR(LOG_CONFIG, "Error in %s\n", argstr);
+        olsr_exit(1);
       }
-      PARSER_DEBUG_PRINTF("FIBMetric: %d=%s\n", rcfg->fib_metric, argstr);
+      OLSR_INFO_NH(LOG_CONFIG, "FIBMetric: %d=%s\n", rcfg->fib_metric, argstr);
     }
     break;
   case '4':                    /* Hna4 (4body) */
-    return parse_cfg_hna(argstr, AF_INET, rcfg, rmsg);
+    return parse_cfg_hna(argstr, AF_INET, rcfg);
     break;
   case '6':                    /* Hna6 (6body) */
-    return parse_cfg_hna(argstr, AF_INET6, rcfg, rmsg);
+    return parse_cfg_hna(argstr, AF_INET6, rcfg);
     break;
   case 'I':                    /* Interface if1 if2 { ifbody } */
-    return parse_cfg_interface(argstr, rcfg, rmsg);
+    return parse_cfg_interface(argstr, rcfg);
     break;
   case 'V':                    /* IpVersion (i) */
     {
@@ -807,11 +795,11 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
         rcfg->ip_version = AF_INET6;
         rcfg->ipsize = sizeof(struct in6_addr);
       } else {
-        sprintf(rmsg, "IpVersion must be 4 or 6!\n");
-        return CFG_ERROR;
+        OLSR_ERROR(LOG_CONFIG, "IpVersion must be 4 or 6!\n");
+        olsr_exit(1);
       }
     }
-    PARSER_DEBUG_PRINTF("IpVersion: %d\n", rcfg->ip_version);
+    OLSR_INFO_NH(LOG_CONFIG, "IpVersion: %d\n", rcfg->ip_version);
     break;
   case 'E':                    /* LinkQualityFishEye (i) */
     {
@@ -819,11 +807,11 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
       sscanf(argstr, "%d", &arg);
       if (0 <= arg && arg < (1 << (8 * sizeof(rcfg->lq_fish))))
         rcfg->lq_fish = arg;
-      PARSER_DEBUG_PRINTF("Link quality fish eye %d\n", rcfg->lq_fish);
+      OLSR_INFO_NH(LOG_CONFIG, "Link quality fish eye %d\n", rcfg->lq_fish);
     }
     break;
   case 'p':                    /* LoadPlugin (soname {PlParams}) */
-    return parse_cfg_loadplugin(argstr, rcfg, rmsg);
+    return parse_cfg_loadplugin(argstr, rcfg);
     break;
   case 'M':                    /* MprCoverage (i) */
     {
@@ -831,7 +819,7 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
       sscanf(argstr, "%d", &arg);
       if (0 <= arg && arg < (1 << (8 * sizeof(rcfg->mpr_coverage))))
         rcfg->mpr_coverage = arg;
-      PARSER_DEBUG_PRINTF("MPR coverage %d\n", rcfg->mpr_coverage);
+      OLSR_INFO_NH(LOG_CONFIG, "MPR coverage %d\n", rcfg->mpr_coverage);
     }
     break;
   case 'N':                    /* NatThreshold (f) */
@@ -840,18 +828,18 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
       struct millitxt_buf tbuf;
 #endif
 
-      rcfg->lq_nat_thresh = olsr_txt_to_milli(argstr);
-      PARSER_DEBUG_PRINTF("NAT threshold %s\n", olsr_milli_to_txt(&tbuf, rcfg->lq_nat_thresh));
+      rcfg->lq_nat_thresh = olsr_clock_parse_string(argstr);
+      OLSR_INFO_NH(LOG_CONFIG, "NAT threshold %s\n", olsr_clock_to_string(&tbuf, rcfg->lq_nat_thresh));
     }
     break;
   case 'Y':                    /* NicChgsPollInt (f) */
-    rcfg->nic_chgs_pollrate = olsr_txt_to_milli(argstr);
-    PARSER_DEBUG_PRINTF("NIC Changes Pollrate %u ms\n", rcfg->nic_chgs_pollrate);
+    rcfg->nic_chgs_pollrate = olsr_clock_parse_string(argstr);
+    OLSR_INFO_NH(LOG_CONFIG, "NIC Changes Pollrate %u ms\n", rcfg->nic_chgs_pollrate);
     break;
   case 'T':                    /* Pollrate (f) */
     {
-      rcfg->pollrate = olsr_txt_to_milli(argstr);
-      PARSER_DEBUG_PRINTF("Pollrate %u ms\n", rcfg->pollrate);
+      rcfg->pollrate = olsr_clock_parse_string(argstr);
+      OLSR_INFO_NH(LOG_CONFIG, "Pollrate %u ms\n", rcfg->pollrate);
     }
     break;
   case 'q':                    /* RtProto (i) */
@@ -860,7 +848,7 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
       sscanf(argstr, "%d", &arg);
       if (0 <= arg && arg < (1 << (8 * sizeof(rcfg->rt_proto))))
         rcfg->rt_proto = arg;
-      PARSER_DEBUG_PRINTF("RtProto: %d\n", rcfg->rt_proto);
+      OLSR_INFO_NH(LOG_CONFIG, "RtProto: %d\n", rcfg->rt_proto);
     }
     break;
   case 'R':                    /* RtTableDefault (i) */
@@ -869,7 +857,7 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
       sscanf(argstr, "%d", &arg);
       if (0 <= arg && arg < (1 << (8 * sizeof(rcfg->rt_table_default))))
         rcfg->rt_table_default = arg;
-      PARSER_DEBUG_PRINTF("RtTableDefault: %d\n", rcfg->rt_table_default);
+      OLSR_INFO_NH(LOG_CONFIG, "RtTableDefault: %d\n", rcfg->rt_table_default);
     }
     break;
   case 'r':                    /* RtTable (i) */
@@ -878,7 +866,7 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
       sscanf(argstr, "%d", &arg);
       if (0 <= arg && arg < (1 << (8 * sizeof(rcfg->rt_table))))
         rcfg->rt_table = arg;
-      PARSER_DEBUG_PRINTF("RtTable: %d\n", rcfg->rt_table);
+      OLSR_INFO_NH(LOG_CONFIG, "RtTable: %d\n", rcfg->rt_table);
     }
     break;
   case 't':                    /* TcRedundancy (i) */
@@ -887,7 +875,7 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
       sscanf(argstr, "%d", &arg);
       if (0 <= arg && arg < (1 << (8 * sizeof(rcfg->tc_redundancy))))
         rcfg->tc_redundancy = arg;
-      PARSER_DEBUG_PRINTF("TC redundancy %d\n", rcfg->tc_redundancy);
+      OLSR_INFO_NH(LOG_CONFIG, "TC redundancy %d\n", rcfg->tc_redundancy);
     }
     break;
   case 'Z':                    /* TosValue (i) */
@@ -896,7 +884,7 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
       sscanf(argstr, "%d", &arg);
       if (0 <= arg && arg < (1 << (8 * sizeof(rcfg->tos))))
         rcfg->tos = arg;
-      PARSER_DEBUG_PRINTF("TOS: %d\n", rcfg->tos);
+      OLSR_INFO_NH(LOG_CONFIG, "TOS: %d\n", rcfg->tos);
     }
     break;
   case 'w':                    /* Willingness (i) */
@@ -906,20 +894,20 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
       if (0 <= arg && arg < (1 << (8 * sizeof(rcfg->willingness))))
         rcfg->willingness = arg;
       rcfg->willingness_auto = false;
-      PARSER_DEBUG_PRINTF("Willingness: %d (no auto)\n", rcfg->willingness);
+      OLSR_INFO_NH(LOG_CONFIG, "Willingness: %d (no auto)\n", rcfg->willingness);
     }
     break;
   case CFG_LOG_DEBUG:          /* Log (string) */
-    return parse_cfg_log(argstr, rcfg, rmsg, SEVERITY_DEBUG);
+    return parse_cfg_log(argstr, rcfg, SEVERITY_DEBUG);
     break;
   case CFG_LOG_INFO:           /* Log (string) */
-    return parse_cfg_log(argstr, rcfg, rmsg, SEVERITY_INFO);
+    return parse_cfg_log(argstr, rcfg, SEVERITY_INFO);
     break;
   case CFG_LOG_WARN:           /* Log (string) */
-    return parse_cfg_log(argstr, rcfg, rmsg, SEVERITY_WARN);
+    return parse_cfg_log(argstr, rcfg, SEVERITY_WARN);
     break;
   case CFG_LOG_ERROR:          /* Log (string) */
-    return parse_cfg_log(argstr, rcfg, rmsg, SEVERITY_ERR);
+    return parse_cfg_log(argstr, rcfg, SEVERITY_ERR);
     break;
   case CFG_LOG_STDERR:
     rcfg->log_target_stderr = true;
@@ -933,12 +921,12 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
 
   case 's':                    /* SourceIpMode (string) */
     rcfg->source_ip_mode = (0 == strcasecmp("yes", argstr)) ? 1 : 0;
-    PARSER_DEBUG_PRINTF("Source IP mode %s\n", rcfg->source_ip_mode ? "enabled" : "disabled");
+    OLSR_INFO_NH(LOG_CONFIG, "Source IP mode %s\n", rcfg->source_ip_mode ? "enabled" : "disabled");
     break;
   case 'o':                    /* Originator Address (ip) */
     if (inet_pton(AF_INET, argstr, &rcfg->router_id) <= 0) {
-      sprintf(rmsg, "Failed converting IP address %s for originator address\n", argstr);
-      return CFG_ERROR;
+      OLSR_ERROR(LOG_CONFIG, "Failed converting IP address %s for originator address\n", argstr);
+      olsr_exit(1);
     }
     break;
   case CFG_OLSRPORT:           /* port (i) */
@@ -947,12 +935,12 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
       sscanf(argstr, "%d", &arg);
       if (0 <= arg && arg < (1 << (8 * sizeof(rcfg->olsr_port))))
         rcfg->olsr_port = arg;
-      PARSER_DEBUG_PRINTF("OLSR port: %d\n", rcfg->olsr_port);
+      OLSR_INFO_NH(LOG_CONFIG, "OLSR port: %d\n", rcfg->olsr_port);
     }
     break;
   case CFG_DLPATH:
     rcfg->dlPath = strdup(argstr);
-    PARSER_DEBUG_PRINTF("Dynamic library path: %s\n", rcfg->dlPath);
+    OLSR_INFO_NH(LOG_CONFIG, "Dynamic library path: %s\n", rcfg->dlPath);
     break;
   case CFG_HTTPPORT:
     {
@@ -960,7 +948,7 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
       sscanf(argstr, "%d", &arg);
       if (0 <= arg && arg < (1 << (8 * sizeof(rcfg->comport_http))))
         rcfg->comport_http = arg;
-      PARSER_DEBUG_PRINTF("HTTP port: %d\n", rcfg->comport_http);
+      OLSR_INFO_NH(LOG_CONFIG, "HTTP port: %d\n", rcfg->comport_http);
     }
     break;
   case CFG_HTTPLIMIT:
@@ -969,7 +957,7 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
       sscanf(argstr, "%d", &arg);
       if (0 <= arg && arg < (1 << (8 * sizeof(rcfg->comport_http_limit))))
         rcfg->comport_http_limit = arg;
-      PARSER_DEBUG_PRINTF("HTTP connection limit: %d\n", rcfg->comport_http_limit);
+      OLSR_INFO_NH(LOG_CONFIG, "HTTP connection limit: %d\n", rcfg->comport_http_limit);
     }
     break;
   case CFG_TXTPORT:
@@ -978,7 +966,7 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
       sscanf(argstr, "%d", &arg);
       if (0 <= arg && arg < (1 << (8 * sizeof(rcfg->comport_txt))))
         rcfg->comport_txt = arg;
-      PARSER_DEBUG_PRINTF("TXT port: %d\n", rcfg->comport_txt);
+      OLSR_INFO_NH(LOG_CONFIG, "TXT port: %d\n", rcfg->comport_txt);
     }
     break;
   case CFG_TXTLIMIT:
@@ -987,39 +975,38 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
       sscanf(argstr, "%d", &arg);
       if (0 <= arg && arg < (1 << (8 * sizeof(rcfg->comport_txt_limit))))
         rcfg->comport_txt_limit = arg;
-      PARSER_DEBUG_PRINTF("TXT connection limit: %d\n", rcfg->comport_txt_limit);
+      OLSR_INFO_NH(LOG_CONFIG, "TXT connection limit: %d\n", rcfg->comport_txt_limit);
     }
     break;
   case CFG_HNA_HTIME:
-    rcfg->hna_params.emission_interval = olsr_txt_to_milli(argstr);
-    PARSER_DEBUG_PRINTF("HNA interval1: %u ms\n", rcfg->hna_params.emission_interval);
+    rcfg->hna_params.emission_interval = olsr_clock_parse_string(argstr);
+    OLSR_INFO_NH(LOG_CONFIG, "HNA interval1: %u ms\n", rcfg->hna_params.emission_interval);
     break;
   case CFG_HNA_VTIME:
-    rcfg->hna_params.validity_time = olsr_txt_to_milli(argstr);
-    PARSER_DEBUG_PRINTF("HNA validity: %u ms\n", rcfg->hna_params.validity_time);
+    rcfg->hna_params.validity_time = olsr_clock_parse_string(argstr);
+    OLSR_INFO_NH(LOG_CONFIG, "HNA validity: %u ms\n", rcfg->hna_params.validity_time);
     break;
   case CFG_MID_HTIME:
-    rcfg->mid_params.emission_interval = olsr_txt_to_milli(argstr);
-    PARSER_DEBUG_PRINTF("MID interval1: %u ms\n", rcfg->mid_params.emission_interval);
+    rcfg->mid_params.emission_interval = olsr_clock_parse_string(argstr);
+    OLSR_INFO_NH(LOG_CONFIG, "MID interval1: %u ms\n", rcfg->mid_params.emission_interval);
     break;
   case CFG_MID_VTIME:
-    rcfg->mid_params.validity_time = olsr_txt_to_milli(argstr);
-    PARSER_DEBUG_PRINTF("MID validity: %u ms\n", rcfg->mid_params.validity_time);
+    rcfg->mid_params.validity_time = olsr_clock_parse_string(argstr);
+    OLSR_INFO_NH(LOG_CONFIG, "MID validity: %u ms\n", rcfg->mid_params.validity_time);
     break;
   case CFG_TC_HTIME:
-    rcfg->tc_params.emission_interval = olsr_txt_to_milli(argstr);
-    PARSER_DEBUG_PRINTF("TC interval1: %u ms\n", rcfg->tc_params.emission_interval);
+    rcfg->tc_params.emission_interval = olsr_clock_parse_string(argstr);
+    OLSR_INFO_NH(LOG_CONFIG, "TC interval1: %u ms\n", rcfg->tc_params.emission_interval);
     break;
   case CFG_TC_VTIME:
-    rcfg->tc_params.validity_time = olsr_txt_to_milli(argstr);
-    PARSER_DEBUG_PRINTF("TC validity: %u ms\n", rcfg->tc_params.validity_time);
+    rcfg->tc_params.validity_time = olsr_clock_parse_string(argstr);
+    OLSR_INFO_NH(LOG_CONFIG, "TC validity: %u ms\n", rcfg->tc_params.validity_time);
     break;
 
   default:
-    sprintf(rmsg, "Unknown arg in line %d.\n", line);
-    return CFG_ERROR;
+    OLSR_ERROR(LOG_CONFIG, "Unknown arg in line %d.\n", line);
+    olsr_exit(1);
   }                             /* switch */
-  return CFG_OK;
 }
 
 /*
@@ -1034,8 +1021,8 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
  * @rcfg: returns a valid config pointer, clean with olsr_free_cfg()
  * @returns a parsing status result code
  */
-olsr_parse_cfg_result
-olsr_parse_cfg(int argc, char *argv[], const char *file, char *rmsg, struct olsr_config ** rcfg)
+void
+olsr_parse_cfg(int argc, char *argv[], const char *file, struct olsr_config ** rcfg)
 {
   int opt;
   int opt_idx = 0;
@@ -1043,7 +1030,6 @@ olsr_parse_cfg(int argc, char *argv[], const char *file, char *rmsg, struct olsr
   int opt_argc = 0;
   char **opt_argv = olsr_malloc(argc * sizeof(opt_argv[0]), "opt_argv");
   int *opt_line = olsr_malloc(argc * sizeof(opt_line[0]), "opt_line");
-  olsr_parse_cfg_result rslt = CFG_OK;
 
   /*
    * Original cmd line params
@@ -1205,76 +1191,71 @@ olsr_parse_cfg(int argc, char *argv[], const char *file, char *rmsg, struct olsr
     opt_argc = 3;
   }
 
-  rmsg[0] = '\0';
   *rcfg = olsr_get_default_cfg();
 
   while (0 <= (opt = getopt_long(opt_argc, opt_argv, opt_str, long_options, &opt_idx))) {
     switch (opt) {
     case 0:
-      sprintf(rmsg, "Ignored deprecated %s\n", long_options[opt_idx].name);
-      rslt = CFG_WARN;
+      OLSR_WARN(LOG_CONFIG, "Ignored deprecated %s\n", long_options[opt_idx].name);
       break;
     case 'f':                  /* config (filename) */
-      PARSER_DEBUG_PRINTF("Read config from %s\n", optarg);
+      OLSR_INFO_NH(LOG_CONFIG, "Read config from %s\n", optarg);
       if (0 > read_cfg(optarg, &opt_argc, &opt_argv, &opt_line)) {
-        sprintf(rmsg, "Could not read specified config file %s!\n%s", optarg, strerror(errno));
-        return CFG_ERROR;
+        OLSR_ERROR(LOG_CONFIG, "Could not read specified config file %s!\n%s", optarg, strerror(errno));
+        olsr_exit(1);
       }
       break;
 #ifdef WIN32
     case 'l':                  /* win32: list ifaces */
       ListInterfaces();
-      rslt = CFG_EXIT;
+      olsr_exit(1);
       break;
 #endif
     case 'v':                  /* version */
       fprintf(stderr,  "*** %s ***\n Build date: %s on %s\n http://www.olsr.org\n\n", olsrd_version, build_date, build_host);
-      rslt = CFG_EXIT;
+      olsr_exit(0);
       break;
     case 'h':                  /* help */
       popt = long_options;
-      printf("Usage: olsrd [OPTIONS]... [interfaces]...\n");
+      fprintf(stderr, "Usage: olsrd [OPTIONS]... [interfaces]...\n");
       while (popt->name) {
         if (popt->val) {
           if (popt->val > 0 && popt->val < 128) {
-            printf("-%c or --%s ", popt->val, popt->name);
+            fprintf(stderr, "-%c or --%s ", popt->val, popt->name);
           } else {
-            printf("      --%s ", popt->name);
+            fprintf(stderr, "      --%s ", popt->name);
           }
           switch (popt->has_arg) {
           case required_argument:
-            printf("arg");
+            fprintf(stderr, "arg");
             break;
           case optional_argument:
-            printf("[arg]");
+            fprintf(stderr, "[arg]");
             break;
           }
-          printf("\n");
+          fprintf(stderr, "\n");
         }
         popt++;
       }
       if (optarg == NULL) {
-        printf("Use '--help=log'for help about the available logging sources\n");
+        fprintf(stderr, "Use '--help=log'for help about the available logging sources\n");
       } else if (strcasecmp(optarg, "log") == 0) {
         int i;
 
-        printf("Log sources for --log_debug, --log_info, --log_warn and --log_error:\n");
+        fprintf(stderr, "Log sources for --log_debug, --log_info, --log_warn and --log_error:\n");
         for (i = 0; i < LOG_SOURCE_COUNT; i++) {
-          printf("\t%s\n", LOG_SOURCE_NAMES[i]);
+          fprintf(stderr, "\t%s\n", LOG_SOURCE_NAMES[i]);
         }
       }
-      rslt = CFG_EXIT;
+      olsr_exit(0);
       break;
     default:
-      rslt = parse_cfg_option(opt, optarg, opt_line[optind], *rcfg, rmsg);
-      if (rslt != CFG_OK) {
-        return rslt;
-      }
+      parse_cfg_option(opt, optarg, opt_line[optind], *rcfg);
     }                           /* switch(opt) */
   }                             /* while getopt_long() */
 
   while (optind < opt_argc) {
-    PARSER_DEBUG_PRINTF("new interface %s\n", opt_argv[optind]);
+    OLSR_INFO_NH(LOG_CONFIG, "new interface %s\n", opt_argv[optind]);
     queue_if(opt_argv[optind++], *rcfg);
   }
 
@@ -1287,31 +1268,28 @@ olsr_parse_cfg(int argc, char *argv[], const char *file, char *rmsg, struct olsr
   free(opt_str);
 
   /* logging option post processing */
-  if (rslt != CFG_ERROR && rslt != CFG_EXIT) {
-    if (!((*rcfg)->log_target_syslog || (*rcfg)->log_target_syslog || (*rcfg)->log_target_file != NULL)) {
-      (*rcfg)->log_target_stderr = true;
-      PARSER_DEBUG_PRINTF("Log: activate default logging target stderr\n");
-    }
-    for (opt = SEVERITY_INFO; opt < LOG_SEVERITY_COUNT; opt++) {
-      if (!cfg_has_log[opt] && cfg_has_log[opt - 1]) {
-        int i;
+  if (!((*rcfg)->log_target_syslog || (*rcfg)->log_target_syslog || (*rcfg)->log_target_file != NULL)) {
+    (*rcfg)->log_target_stderr = true;
+    OLSR_INFO_NH(LOG_CONFIG, "Log: activate default logging target stderr\n");
+  }
+  for (opt = SEVERITY_INFO; opt < LOG_SEVERITY_COUNT; opt++) {
+    if (!cfg_has_log[opt] && cfg_has_log[opt - 1]) {
+      int i;
 
-        PARSER_DEBUG_PRINTF("Log: copy log level %s to %s\n", LOG_SEVERITY_NAMES[opt - 1], LOG_SEVERITY_NAMES[opt]);
+      OLSR_INFO_NH(LOG_CONFIG, "Log: copy log level %s to %s\n", LOG_SEVERITY_NAMES[opt - 1], LOG_SEVERITY_NAMES[opt]);
 
-        /* copy debug to info, info to warning, warning to error (if neccessary) */
-        for (i = 0; i < LOG_SOURCE_COUNT; i++) {
-          (*rcfg)->log_event[opt][i] = (*rcfg)->log_event[opt - 1][i];
-        }
-        cfg_has_log[opt] = true;
+      /* copy debug to info, info to warning, warning to error (if neccessary) */
+      for (i = 0; i < LOG_SOURCE_COUNT; i++) {
+        (*rcfg)->log_event[opt][i] = (*rcfg)->log_event[opt - 1][i];
       }
-    }
-    if (!cfg_has_log[SEVERITY_ERR]) {
-      /* no logging at all defined ? fall back to default */
-      char def[10] = DEF_DEBUGLVL;
-      parse_cfg_debug(def, *rcfg, rmsg);
+      cfg_has_log[opt] = true;
     }
   }
-  return rslt;
+  if (!cfg_has_log[SEVERITY_ERR]) {
+    /* no logging at all defined ? fall back to default */
+    char def[10] = DEF_DEBUGLVL;
+    parse_cfg_debug(def, *rcfg);
+  }
 }
 
 /*
@@ -1368,7 +1346,7 @@ olsr_sanity_check_cfg(struct olsr_config *cfg)
 
   /* NAT threshold value */
   if (cfg->lq_nat_thresh < 100 || cfg->lq_nat_thresh > 1000) {
-    fprintf(stderr, "NAT threshold %s is not allowed\n", olsr_milli_to_txt(&tbuf, cfg->lq_nat_thresh));
+    fprintf(stderr, "NAT threshold %s is not allowed\n", olsr_clock_to_string(&tbuf, cfg->lq_nat_thresh));
     return -1;
   }
 

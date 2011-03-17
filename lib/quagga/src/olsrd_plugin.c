@@ -24,7 +24,8 @@
 
 #include "plugin.h"
 #include "plugin_util.h"
-#include "scheduler.h"
+#include "olsr_timer.h"
+#include "olsr_socket.h"
 #include "defs.h"
 #include "quagga.h"
 #include "net_olsr.h"
@@ -138,9 +139,9 @@ olsrd_plugin_init(void)
     return 1;
   }
 
-  event_timer_info = olsr_alloc_timerinfo("Quagga: Event", &zebra_parse, true);
+  event_timer_info = olsr_timer_add("Quagga: Event", &zebra_parse, true);
 
-  olsr_start_timer(1 * MSEC_PER_SEC, 0, NULL, event_timer_info);
+  olsr_timer_start(1 * MSEC_PER_SEC, 0, NULL, event_timer_info);
 
   return 0;
 }

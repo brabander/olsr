@@ -109,7 +109,6 @@ struct olsr_if_config;
 
 #include "interfaces.h"
 #include "olsr_ip_acl.h"
-#include "olsr_cfg_data.h"
 #include "olsr_logging.h"
 
 enum smart_gw_uplinktype {
@@ -273,14 +272,7 @@ extern struct olsr_config *EXPORT(olsr_cnf);
  * Interface to parser
  */
 
-typedef enum {
-  CFG_ERROR,                           /* Severe parsing error, e.g. file not found, mixed up args */
-  CFG_WARN,                            /* Non-severe error, e.g. use of deprecated option */
-  CFG_EXIT,                            /* Given options will exit() e.g. "--version" or "--help" */
-  CFG_OK                               /* Config is parsed and does not have any errors */
-} olsr_parse_cfg_result;
-
-olsr_parse_cfg_result olsr_parse_cfg(int argc, char *argv[], const char *file, char *rmsg, struct olsr_config **rcfg);
+void olsr_parse_cfg(int argc, char *argv[], const char *file, struct olsr_config **rcfg);
 struct olsr_if_options *olsr_get_default_if_options(void);
 struct olsr_config *olsr_get_default_cfg(void);
 int olsr_sanity_check_cfg(struct olsr_config *cfg);

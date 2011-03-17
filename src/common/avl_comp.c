@@ -37,8 +37,8 @@
  * the copyright holders.
  */
 
-#include <stdint.h>
 #include <string.h>
+#include <strings.h>
 
 #include "common/avl_comp.h"
 
@@ -53,12 +53,13 @@
 int
 avl_comp_uint32(const void *k1, const void *k2, void *ptr __attribute__ ((unused)))
 {
-  const uint32_t *key1 = (const uint32_t *)k1;
-  const uint32_t *key2 = (const uint32_t *)k2;
-  if (*key1 > *key2) {
+  const uint32_t *u1 = k1;
+  const uint32_t *u2 = k2;
+
+  if (*u1 > *u2) {
     return 1;
   }
-  if (*key1 < *key2) {
+  if (*u2 > *u1) {
     return -1;
   }
   return 0;
@@ -75,12 +76,13 @@ avl_comp_uint32(const void *k1, const void *k2, void *ptr __attribute__ ((unused
 int
 avl_comp_uint16(const void *k1, const void *k2, void *ptr __attribute__ ((unused)))
 {
-  const uint16_t *key1 = (const uint16_t *)k1;
-  const uint16_t *key2 = (const uint16_t *)k2;
-  if (*key1 > *key2) {
+  const uint16_t *u1 = k1;
+  const uint16_t *u2 = k2;
+
+  if (*u1 > *u2) {
     return 1;
   }
-  if (*key1 < *key2) {
+  if (*u2 > *u1) {
     return -1;
   }
   return 0;
@@ -89,20 +91,23 @@ avl_comp_uint16(const void *k1, const void *k2, void *ptr __attribute__ ((unused
 /**
  * AVL tree comparator for unsigned 8 bit integers
  * Custom pointer is not used
- * @param p1 pointer to key 1
- * @param p2 pointer to key 2
+ * @param k1 pointer to key 1
+ * @param k2 pointer to key 2
  * @param ptr custom pointer for avl comparater (unused)
  * @return +1 if k1>k2, -1 if k1<k2, 0 if k1==k2
  */
 int
-avl_comp_uint8(const void *p1, const void *p2, void *ptr __attribute__ ((unused)))
+avl_comp_uint8(const void *k1, const void *k2, void *ptr __attribute__ ((unused)))
 {
-  const uint8_t *i1 = p1;
-  const uint8_t *i2 = p2;
-  if (*i1 > *i2)
+  const uint8_t *u1 = k1;
+  const uint8_t *u2 = k2;
+
+  if (*u1 > *u2) {
     return 1;
-  if (*i1 < *i2)
+  }
+  if (*u2 > *u1) {
     return -1;
+  }
   return 0;
 }
 
@@ -120,3 +125,16 @@ avl_comp_mem(const void *k1, const void *k2, void *ptr) {
   return memcmp(k1, k2, length);
 }
 
+/**
+ * AVL tree comparator for case insensitive strings.
+ * Custom pointer is the length of the memory to compare.
+ * @param k1 pointer to string 1
+ * @param k2 pointer to string 2
+ * @param ptr custom pointer for avl comparater (unused)
+ * @return +1 if k1>k2, -1 if k1<k2, 0 if k1==k2
+ */
+int
+avl_comp_strcasecmp(const void *txt1, const void *txt2,
+    void *ptr __attribute__ ((unused))) {
+  return strcasecmp(txt1, txt2);
+}

@@ -40,8 +40,8 @@
  */
 
 
-#ifndef _OLSR_MANTISSA
-#define _OLSR_MANTISSA
+#ifndef _OLSR_CLOCK
+#define _OLSR_CLOCK
 
 #include "defs.h"
 #include "olsr_types.h"
@@ -53,15 +53,40 @@
 #define USEC_PER_MSEC 1000
 
 struct millitxt_buf {
-  char buf[16];
+  char buf[sizeof("4000000.000")];
 };
 
-uint32_t EXPORT(me_to_reltime) (const uint8_t);
-uint8_t EXPORT(reltime_to_me) (const uint32_t);
+/* buffer for displaying absolute timestamps */
+struct timeval_buf {
+  char buf[sizeof("00:00:00.000000")];
+};
 
-char *EXPORT(olsr_milli_to_txt)(struct millitxt_buf *buffer, uint32_t t);
-uint32_t EXPORT(olsr_txt_to_milli)(char *txt);
+void olsr_clock_init(void);
+void olsr_clock_update(void);
 
+int32_t EXPORT(olsr_clock_getRelative) (uint32_t absolute);
+bool EXPORT(olsr_clock_isPast) (uint32_t s);
+uint32_t EXPORT(olsr_clock_getNow)(void);
+
+/**
+ * Returns a timestamp s seconds in the future
+ * @param s milliseconds until timestamp
+ * @return absolute time when event will happen
+ */
+static inline uint32_t
+olsr_clock_getAbsolute(uint32_t relative)
+{
+  return olsr_clock_getNow() + relative;
+}
+
+uint32_t EXPORT(olsr_clock_decode_olsrv1) (const uint8_t);
+uint8_t EXPORT(olsr_clock_encode_olsrv1) (const uint32_t);
+
+char *EXPORT(olsr_clock_to_string)(struct millitxt_buf *buffer, uint32_t t);
+uint32_t EXPORT(olsr_clock_parse_string)(char *txt);
+
+const char *EXPORT(olsr_clock_toClockString)(struct timeval_buf *, uint32_t);
+const char *EXPORT(olsr_clock_getWallclockString)(struct timeval_buf *);
 
 #endif
 

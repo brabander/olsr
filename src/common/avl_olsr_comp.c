@@ -31,10 +31,6 @@ avl_comp_mac(const void *ip1, const void *ip2, void *ptr __attribute__ ((unused)
   return memcmp(ip1, ip2, 6);
 }
 
-int avl_comp_strcasecmp(const void *txt1, const void *txt2, void *ptr __attribute__ ((unused))) {
-  return strcasecmp(txt1, txt2);
-}
-
 int avl_comp_int(const void *p1, const void *p2, void *ptr __attribute__ ((unused))) {
   const int *i1 = p1, *i2 = p2;
 

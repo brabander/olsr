@@ -46,7 +46,8 @@
 #include "common/list.h"
 #include "olsr_protocol.h"
 #include "lq_packet.h"
-#include "scheduler.h"
+#include "olsr_timer.h"
+#include "olsr_socket.h"
 #include "olsr_memcookie.h"
 #include "duplicate_set.h"
 
@@ -79,8 +80,8 @@ struct tc_entry {
   struct avl_tree mid_tree;            /* subtree for MID entries */
   struct avl_tree hna_tree;            /* subtree for HNA entries */
   struct link_entry *next_hop;         /* SPF calculated link to the 1st hop neighbor */
-  struct timer_entry *edge_gc_timer;   /* used for edge garbage collection */
-  struct timer_entry *validity_timer;  /* tc validity time */
+  struct olsr_timer_entry *edge_gc_timer;   /* used for edge garbage collection */
+  struct olsr_timer_entry *validity_timer;  /* tc validity time */
   bool virtual;                        /* true if node is virtual */
   int tc_seq;                          /* sequence number of the tc message */
   int mid_seq;                         /* sequence number of the mid message */

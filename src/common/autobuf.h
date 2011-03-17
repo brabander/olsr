@@ -42,28 +42,45 @@
 #ifndef _COMMON_AUTOBUF_H
 #define _COMMON_AUTOBUF_H
 
-#include "defs.h"
 #include <stdarg.h>
 #include <time.h>
 
-#define AUTOBUFCHUNK	4096
+#include "common/common_types.h"
+
+static const int AUTOBUFCHUNK = 4096;
+
+/**
+ * Auto-sized buffer handler, mostly used for generation of
+ * large string buffers.
+ */
 struct autobuf {
+  /* total number of bytes allocated in the buffer */
   int size;
+
+  /* currently number of used bytes */
   int len;
+
+  /* pointer to allocated memory */
   char *buf;
 };
 
-int EXPORT(abuf_init) (struct autobuf * autobuf, int initial_size);
-void EXPORT(abuf_free) (struct autobuf * autobuf);
+void abuf_set_memory_handler(
+    void *(*custom_malloc)(size_t),
+    void *(*custom_realloc)(void *, size_t),
+    void (*custom_free)(void *));
+
+int EXPORT(abuf_init) (struct autobuf *autobuf, int initial_size);
+void EXPORT(abuf_free) (struct autobuf *autobuf);
 int EXPORT(abuf_vappendf) (struct autobuf *autobuf, const char *fmt, va_list ap) __attribute__ ((format(printf, 2, 0)));
-int EXPORT(abuf_appendf) (struct autobuf * autobuf, const char *fmt, ...) __attribute__ ((format(printf, 2, 3)));
+int EXPORT(abuf_appendf) (struct autobuf *autobuf, const char *fmt, ...) __attribute__ ((format(printf, 2, 3)));
 int EXPORT(abuf_puts) (struct autobuf * autobuf, const char *s);
 int EXPORT(abuf_strftime) (struct autobuf * autobuf, const char *format, const struct tm * tm);
 int EXPORT(abuf_memcpy) (struct autobuf * autobuf, const void *p, const unsigned int len);
 int EXPORT(abuf_memcpy_prefix) (struct autobuf *autobuf, const void *p, const unsigned int len);
-int EXPORT(abuf_pull) (struct autobuf * autobuf, int len);
+void EXPORT(abuf_pull) (struct autobuf * autobuf, int len);
 int EXPORT(abuf_template_init) (const char **keys, size_t length, const char *format, size_t *indexTable, size_t indexLength);
 int EXPORT(abuf_templatef) (struct autobuf *autobuf, const char *format, char **values, size_t *indexTable, size_t indexCount);
+
 #endif
 
 /*

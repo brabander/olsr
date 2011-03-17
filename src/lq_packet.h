@@ -43,7 +43,7 @@
 #define _OLSR_LQ_PACKET_H
 
 #include "olsr_types.h"
-#include "olsr_time.h"
+#include "olsr_clock.h"
 #include "ipcalc.h"
 #include "olsr_protocol.h"
 
@@ -107,7 +107,7 @@ pkt_get_s32(const uint8_t ** p, int32_t * var)
 static INLINE void
 pkt_get_reltime(const uint8_t ** p, uint32_t * var)
 {
-  *var = me_to_reltime(**p);
+  *var = olsr_clock_decode_olsrv1(**p);
   *p += sizeof(uint8_t);
 }
 static INLINE void
@@ -203,7 +203,7 @@ pkt_put_s32(uint8_t ** p, int32_t var)
 static INLINE void
 pkt_put_reltime(uint8_t ** p, uint32_t var)
 {
-  **p = reltime_to_me(var);
+  **p = olsr_clock_encode_olsrv1(var);
   *p += sizeof(uint8_t);
 }
 static INLINE void

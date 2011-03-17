@@ -49,7 +49,8 @@
 #include "olsrd_plugin.h"
 #include "olsr.h"
 #include "defs.h"
-#include "scheduler.h"
+#include "olsr_timer.h"
+#include "olsr_socket.h"
 #include "olsr_memcookie.h"
 #include "olsr_logging.h"
 
@@ -129,11 +130,11 @@ int
 olsrd_plugin_init(void)
 {
   /* create the cookie */
-  watchdog_timer_info = olsr_alloc_timerinfo("Watchdog: write alive-file",
+  watchdog_timer_info = olsr_timer_add("Watchdog: write alive-file",
       &olsr_watchdog_write_alivefile, true);
 
   /* Register the watchdog check */
-  olsr_start_timer(watchdog_interval * MSEC_PER_SEC, 0, NULL, watchdog_timer_info);
+  olsr_timer_start(watchdog_interval * MSEC_PER_SEC, 0, NULL, watchdog_timer_info);
 
   return 1;
 }

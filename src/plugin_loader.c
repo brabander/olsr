@@ -39,20 +39,22 @@
  *
  */
 
+#include <assert.h>
+#include <dlfcn.h>
+#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "common/list.h"
+#include "common/avl.h"
+#include "common/avl_comp.h"
 #include "plugin_loader.h"
 #include "plugin.h"
 #include "plugin_util.h"
 #include "defs.h"
 #include "olsr.h"
 #include "olsr_logging.h"
-#include "common/avl.h"
-#include "common/list.h"
 #include "olsr_memcookie.h"
-
-#include <dlfcn.h>
-#include <errno.h>
-#include <stdlib.h>
-#include <assert.h>
 
 /* Local functions */
 static struct olsr_plugin *olsr_load_legacy_plugin(const char *, void *);
@@ -74,7 +76,7 @@ static int olsr_internal_unload_plugin(struct olsr_plugin *plugin, bool cleanup)
 void
 olsr_hookup_plugin(struct olsr_plugin *pl_def) {
   assert (pl_def->name);
-  fprintf(stdout, "hookup %s\n", pl_def->name);
+  fprintf(stderr, "hookup %s\n", pl_def->name);
   if (!plugin_tree_initialized) {
     avl_init(&plugin_tree, avl_comp_strcasecmp, false, NULL);
     plugin_tree_initialized = true;

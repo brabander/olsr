@@ -329,7 +329,7 @@ olsrd_plugin_init(void)
 
   if (http_socket < 0) {
     OLSR_ERROR(LOG_PLUGINS, "(HTTPINFO) could not initialize HTTP socket\n");
-    olsr_exit(0);
+    olsr_exit(1);
   }
 
   /* always allow localhost */
@@ -344,7 +344,10 @@ olsrd_plugin_init(void)
   }
 
   /* Register socket */
-  add_olsr_socket(http_socket, &parse_http_request, NULL, NULL, SP_PR_READ);
+  if (NULL == olsr_socket_add(http_socket, &parse_http_request, NULL, OLSR_SOCKET_READ)) {
+    OLSR_ERROR(LOG_PLUGINS, "(HTTPINFO) Could not register socket with scheduler\n");
+    olsr_exit(1);
+  }
 
   return 1;
 }
@@ -842,10 +845,10 @@ build_config_body(struct autobuf *abuf)
 
   abuf_puts(abuf, "</tr>\n<tr>\n");
 
-  abuf_appendf(abuf, "<td>Pollrate: %s</td>\n", olsr_milli_to_txt(&tbuf, olsr_cnf->pollrate));
+  abuf_appendf(abuf, "<td>Pollrate: %s</td>\n", olsr_clock_to_string(&tbuf, olsr_cnf->pollrate));
   abuf_appendf(abuf, "<td>TC redundancy: %d</td>\n", olsr_cnf->tc_redundancy);
   abuf_appendf(abuf, "<td>MPR coverage: %d</td>\n", olsr_cnf->mpr_coverage);
-  abuf_appendf(abuf, "<td>NAT threshold: %s</td>\n", olsr_milli_to_txt(&tbuf, olsr_cnf->lq_nat_thresh));
+  abuf_appendf(abuf, "<td>NAT threshold: %s</td>\n", olsr_clock_to_string(&tbuf, olsr_cnf->lq_nat_thresh));
 
   abuf_puts(abuf, "</tr>\n<tr>\n");
 

@@ -39,18 +39,20 @@
  *
  */
 
-#include <unistd.h>
-#include <signal.h>
 #include <sys/stat.h>
 #include <assert.h>
 #include <errno.h>
+#include <stdio.h>
+#include <signal.h>
+#include <unistd.h>
 
 #include "defs.h"
 #include "common/avl.h"
 #include "common/avl_olsr_comp.h"
 #include "olsr.h"
 #include "ipcalc.h"
-#include "scheduler.h"
+#include "olsr_timer.h"
+#include "olsr_socket.h"
 #include "parser.h"
 #include "plugin_loader.h"
 #include "os_apm.h"
@@ -102,9 +104,9 @@ static char copyright_string[] __attribute__ ((unused)) =
 static char pulsedata[] = "\\|/-";
 static uint8_t pulse_state = 0;
 
-static struct timer_entry *hna_gen_timer;
-static struct timer_entry *mid_gen_timer;
-static struct timer_entry *tc_gen_timer;
+static struct olsr_timer_entry *hna_gen_timer;
+static struct olsr_timer_entry *mid_gen_timer;
+static struct olsr_timer_entry *tc_gen_timer;
 
 static void
 generate_stdout_pulse(void *foo __attribute__ ((unused)))
@@ -129,7 +131,6 @@ main(int argc, char *argv[])
   static struct olsr_timer_info *hna_gen_timer_info = NULL;
 
   char conf_file_name[FILENAME_MAX];
-  char parse_msg[FILENAME_MAX + 256];
   int exitcode = 0;
 #if !defined(REMOVE_LOG_INFO) || !defined(REMOVE_LOG_ERROR)
   struct ipaddr_str buf;
@@ -177,27 +178,13 @@ main(int argc, char *argv[])
   strscpy(conf_file_name, OLSRD_GLOBAL_CONF_FILE, sizeof(conf_file_name));
 #endif
 
+  /* initialize logging early */
+  olsr_log_init();
+
   /*
    * set up configuration prior to processing commandline options
    */
-  switch (olsr_parse_cfg(argc, argv, conf_file_name, parse_msg, &olsr_cnf)) {
-  case CFG_ERROR:
-    if (parse_msg[0])
-      fprintf(stderr, "Error: %s\n", parse_msg);
-    os_exit(EXIT_FAILURE);
-    break;
-  case CFG_WARN:
-    if (parse_msg[0])
-      fprintf(stderr, "Warning: %s\n", parse_msg);
-    /* No exit */
-    break;
-  case CFG_EXIT:
-    os_exit(EXIT_SUCCESS);
-    break;
-  case CFG_OK:
-    /* Continue */
-    break;
-  }
+  olsr_parse_cfg(argc, argv, conf_file_name, &olsr_cnf);
 
   /* Set avl tree comparator */
   if (olsr_cnf->ipsize == 4) {
@@ -212,8 +199,8 @@ main(int argc, char *argv[])
     avl_comp_prefix_origin_default = avl_comp_ipv6_prefix_origin;
   }
 
-  /* initialize logging */
-  olsr_log_init();
+  /* initialize logging according to configuration */
+  olsr_log_applyconfig();
 
   OLSR_INFO(LOG_MAIN, "\n *** %s ***\n Build date: %s on %s\n http://www.olsr.org\n\n", olsrd_version, build_date, build_host);
 
@@ -238,20 +225,24 @@ main(int argc, char *argv[])
   }
 #endif
 
+  /* initialize olsr clock */
+  olsr_clock_init();
+
   /* initialize cookie system */
   olsr_memcookie_init();
 
   /* Initialize timers and scheduler part */
-  olsr_init_timers();
+  olsr_timer_init();
+  olsr_socket_init();
 
   /* initialize callback system */
   olsr_callback_init();
 
   /* generate global timers */
-  pulse_timer_info = olsr_alloc_timerinfo("Stdout pulse", &generate_stdout_pulse, true);
-  tc_gen_timer_info = olsr_alloc_timerinfo("TC generation", &olsr_output_lq_tc, true);
-  mid_gen_timer_info = olsr_alloc_timerinfo("MID generation", &generate_mid, true);
-  hna_gen_timer_info = olsr_alloc_timerinfo("HNA generation", &generate_hna, true);
+  pulse_timer_info = olsr_timer_add("Stdout pulse", &generate_stdout_pulse, true);
+  tc_gen_timer_info = olsr_timer_add("TC generation", &olsr_output_lq_tc, true);
+  mid_gen_timer_info = olsr_timer_add("MID generation", &generate_mid, true);
+  hna_gen_timer_info = olsr_timer_add("HNA generation", &generate_hna, true);
 
   /* initialize plugin system */
   olsr_init_pluginsystem();
@@ -282,7 +273,7 @@ main(int argc, char *argv[])
   olsr_plugins_enable(PLUGIN_TYPE_LQ, true);
 
   /* initialize built in server services */
-  olsr_com_init(true);
+  olsr_com_init();
 
   /* Initialize net */
   init_net();
@@ -370,7 +361,7 @@ main(int argc, char *argv[])
 
 #if !defined WINCE
   if (olsr_cnf->log_target_stderr > 0 && isatty(STDOUT_FILENO)) {
-    olsr_start_timer(STDOUT_PULSE_INT, 0, NULL, pulse_timer_info);
+    olsr_timer_start(STDOUT_PULSE_INT, 0, NULL, pulse_timer_info);
   }
 #endif
 
@@ -427,26 +418,44 @@ main(int argc, char *argv[])
   link_changes = false;
 
   tc_gen_timer =
-    olsr_start_timer(olsr_cnf->tc_params.emission_interval, TC_JITTER, NULL, tc_gen_timer_info);
+    olsr_timer_start(olsr_cnf->tc_params.emission_interval, TC_JITTER, NULL, tc_gen_timer_info);
   mid_gen_timer =
-    olsr_start_timer(olsr_cnf->mid_params.emission_interval, MID_JITTER, NULL, mid_gen_timer_info);
+    olsr_timer_start(olsr_cnf->mid_params.emission_interval, MID_JITTER, NULL, mid_gen_timer_info);
   hna_gen_timer =
-    olsr_start_timer(olsr_cnf->hna_params.emission_interval, HNA_JITTER, NULL, hna_gen_timer_info);
+    olsr_timer_start(olsr_cnf->hna_params.emission_interval, HNA_JITTER, NULL, hna_gen_timer_info);
 
   /* enable default plugins */
   olsr_plugins_enable(PLUGIN_TYPE_DEFAULT, true);
 
   /* Starting scheduler */
   app_state = STATE_RUNNING;
-  olsr_scheduler();
+  while (app_state == STATE_RUNNING) {
+    uint32_t next_interval;
 
-  olsr_stop_timer(tc_gen_timer);
+    /*
+     * Update the global timestamp. We are using a non-wallclock timer here
+     * to avoid any undesired side effects if the system clock changes.
+     */
+    olsr_clock_update();
+    next_interval = olsr_clock_getAbsolute(olsr_cnf->pollrate);
+
+    /* Process timers */
+    olsr_timer_walk();
+
+    /* Update */
+    olsr_process_changes();
+
+    /* Read incoming data and handle it immediately */
+    olsr_socket_handle(next_interval);
+  }
+
+  olsr_timer_stop(tc_gen_timer);
   tc_gen_timer = NULL;
 
-  olsr_stop_timer(mid_gen_timer);
+  olsr_timer_stop(mid_gen_timer);
   mid_gen_timer = NULL;
 
-  olsr_stop_timer(hna_gen_timer);
+  olsr_timer_stop(hna_gen_timer);
   hna_gen_timer = NULL;
 
   exitcode = olsr_cnf->exit_value;
@@ -596,10 +605,10 @@ olsr_shutdown(void)
 #endif
 
   /* Close and delete all sockets */
-  olsr_flush_sockets();
+  olsr_socket_cleanup();
 
   /* Stop and delete all timers. */
-  olsr_flush_timers();
+  olsr_timer_cleanup();
 
   /* Remove parser hooks */
   olsr_deinit_parser();

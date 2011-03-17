@@ -40,9 +40,12 @@
 #ifndef CONTAINER_OF_H_
 #define CONTAINER_OF_H_
 
-#include "stddef.h"
+#include <stddef.h>
 
-#ifndef container_of
+/* allow compilation with c99 mode */
+#ifndef typeof
+#define typeof(x) __typeof__(x)
+#endif
 
 /**
  * casts an embedded node of a list/tree into the surrounding struct
@@ -57,7 +60,8 @@
 /**
  * Helper function for NULL safe container_of macro
  */
-static inline void *__container_of_if_notnull(void *ptr, size_t offset) {
+static inline void *
+__container_of_if_notnull(void *ptr, size_t offset) {
   return ptr == NULL ? NULL : (((char *)ptr) - offset);
 }
 
@@ -70,7 +74,5 @@ static inline void *__container_of_if_notnull(void *ptr, size_t offset) {
  * @return pointer to surrounding struct
  */
 #define container_of_if_notnull(ptr, type, member) ((type *)__container_of_if_notnull(ptr, offsetof(type, member)))
-
-#endif
 
 #endif /* CONTAINER_OF_H_ */

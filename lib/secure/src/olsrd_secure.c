@@ -60,7 +60,8 @@
 #include "ipcalc.h"
 #include "olsr.h"
 #include "parser.h"
-#include "scheduler.h"
+#include "olsr_timer.h"
+#include "olsr_socket.h"
 #include "net_olsr.h"
 #include "common/string.h"
 #include "olsr_logging.h"
@@ -204,10 +205,10 @@ secure_plugin_init(void)
   olsr_preprocessor_add_function(&secure_preprocessor);
 
   /* create the cookie */
-  timeout_timestamps_timer_info = olsr_alloc_timerinfo("Secure: Timeout Timestamps", &timeout_timestamps, true);
+  timeout_timestamps_timer_info = olsr_timer_add("Secure: Timeout Timestamps", &timeout_timestamps, true);
 
   /* Register timeout - poll every 2 seconds */
-  olsr_start_timer(2 * MSEC_PER_SEC, 0, NULL, timeout_timestamps_timer_info);
+  olsr_timer_start(2 * MSEC_PER_SEC, 0, NULL, timeout_timestamps_timer_info);
 
   return 1;
 }
@@ -556,7 +557,7 @@ check_timestamp(struct interface *olsr_if_config, const union olsr_ip_addr *orig
 
   /* update validtime */
 
-  entry->valtime = GET_TIMESTAMP(TIMESTAMP_HOLD_TIME * 1000);
+  entry->valtime = olsr_clock_getAbsolute(TIMESTAMP_HOLD_TIME * 1000);
 
   return 1;
 }
@@ -632,7 +633,7 @@ send_challenge(struct interface *olsr_if_config, const union olsr_ip_addr *new_h
   memcpy(&entry->addr, new_host, olsr_cnf->ipsize);
 
   /* update validtime - not validated */
-  entry->conftime = GET_TIMESTAMP(EXCHANGE_HOLD_TIME * 1000);
+  entry->conftime = olsr_clock_getAbsolute(EXCHANGE_HOLD_TIME * 1000);
 
   hash = olsr_ip_hashing(new_host);
 
@@ -729,7 +730,7 @@ parse_cres(struct interface *olsr_if_config, uint8_t *in_msg)
   entry->diff = now.tv_sec - msg->timestamp;
 
   /* update validtime - validated entry */
-  entry->valtime = GET_TIMESTAMP(TIMESTAMP_HOLD_TIME * 1000);
+  entry->valtime = olsr_clock_getAbsolute(TIMESTAMP_HOLD_TIME * 1000);
 
   OLSR_DEBUG(LOG_PLUGINS, "[ENC]%s registered with diff %d!\n",
              olsr_ip_to_string(&buf, (union olsr_ip_addr *)&msg->originator), entry->diff);
@@ -821,7 +822,7 @@ parse_rres(uint8_t *in_msg)
   entry->diff = now.tv_sec - msg->timestamp;
 
   /* update validtime - validated entry */
-  entry->valtime = GET_TIMESTAMP(TIMESTAMP_HOLD_TIME * 1000);
+  entry->valtime = olsr_clock_getAbsolute(TIMESTAMP_HOLD_TIME * 1000);
 
   OLSR_DEBUG(LOG_PLUGINS, "[ENC]%s registered with diff %d!\n",
              olsr_ip_to_string(&buf, (union olsr_ip_addr *)&msg->originator), entry->diff);
@@ -865,7 +866,7 @@ parse_challenge(struct interface *olsr_if_config, uint8_t *in_msg)
     entry->prev = &timestamps[hash];
   } else {
     /* Check configuration timeout */
-    if (!TIMED_OUT(entry->conftime)) {
+    if (!olsr_clock_isPast(entry->conftime)) {
       /* If registered - do not accept! */
       OLSR_DEBUG(LOG_PLUGINS, "[ENC]Challenge from registered node...dropping!\n");
       return 0;
@@ -901,7 +902,7 @@ parse_challenge(struct interface *olsr_if_config, uint8_t *in_msg)
   entry->validated = 0;
 
   /* update validtime - not validated */
-  entry->conftime = GET_TIMESTAMP(EXCHANGE_HOLD_TIME * 1000);
+  entry->conftime = olsr_clock_getAbsolute(EXCHANGE_HOLD_TIME * 1000);
 
   /* Build and send response */
 
@@ -1116,7 +1117,7 @@ timeout_timestamps(void *foo __attribute__ ((unused)))
     /*Traverse MID list */
     while (tmp_list != &timestamps[idx]) {
       /*Check if the entry is timed out */
-      if ((TIMED_OUT(tmp_list->valtime)) && (TIMED_OUT(tmp_list->conftime))) {
+      if ((olsr_clock_isPast(tmp_list->valtime)) && (olsr_clock_isPast(tmp_list->conftime))) {
 #if !defined REMOVE_LOG_DEBUG
         struct ipaddr_str buf;
 #endif

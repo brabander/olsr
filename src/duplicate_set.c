@@ -39,13 +39,15 @@
  *
  */
 
+#include "common/avl.h"
+#include "common/avl_olsr_comp.h"
 #include "duplicate_set.h"
 #include "ipcalc.h"
-#include "common/avl.h"
 #include "olsr.h"
 #include "mid_set.h"
-#include "scheduler.h"
-#include "olsr_time.h"
+#include "olsr_timer.h"
+#include "olsr_socket.h"
+#include "olsr_clock.h"
 #include "olsr_memcookie.h"
 #include "olsr_logging.h"
 
@@ -94,7 +96,7 @@ olsr_delete_duplicate_entry(struct dup_entry *entry)
 {
   avl_delete(entry->tree, &entry->avl);
   entry->tree = NULL;
-  olsr_stop_timer(entry->validity_timer);
+  olsr_timer_stop(entry->validity_timer);
   entry->validity_timer = NULL;
   olsr_memcookie_free(duplicate_mem_cookie, entry);
 }
@@ -119,7 +121,7 @@ olsr_init_duplicate_set(void)
   /*
    * Get some cookies for getting stats to ease troubleshooting.
    */
-  duplicate_timer_info = olsr_alloc_timerinfo("Duplicate Set", &olsr_expire_duplicate_entry, false);
+  duplicate_timer_info = olsr_timer_add("Duplicate Set", &olsr_expire_duplicate_entry, false);
 
   duplicate_mem_cookie = olsr_memcookie_add("dup_entry", sizeof(struct dup_entry));
 }
@@ -147,7 +149,6 @@ olsr_is_duplicate_message(struct olsr_message *m, bool forwarding, enum duplicat
   struct avl_tree *tree;
   struct dup_entry *entry;
   int diff;
-  uint32_t valid_until;
   enum duplicate_status dummy = 0;
 
 #if !defined(REMOVE_LOG_DEBUG)
@@ -160,8 +161,6 @@ olsr_is_duplicate_message(struct olsr_message *m, bool forwarding, enum duplicat
 
   tree = forwarding ? &forward_set : &processing_set;
 
-  valid_until = GET_TIMESTAMP(DUPLICATE_VTIME);
-
   /* Check if entry exists */
   entry = (struct dup_entry *)avl_find(tree, &m->originator);
   if (entry == NULL) {
@@ -169,7 +168,7 @@ olsr_is_duplicate_message(struct olsr_message *m, bool forwarding, enum duplicat
     if (entry != NULL) {
       avl_insert(tree, &entry->avl);
       entry->tree = tree;
-      entry->validity_timer = olsr_start_timer(DUPLICATE_CLEANUP_INTERVAL, DUPLICATE_CLEANUP_JITTER,
+      entry->validity_timer = olsr_timer_start(DUPLICATE_CLEANUP_INTERVAL, DUPLICATE_CLEANUP_JITTER,
                                                entry, duplicate_timer_info);
     }
 
@@ -180,7 +179,7 @@ olsr_is_duplicate_message(struct olsr_message *m, bool forwarding, enum duplicat
   /*
    * Refresh timer.
    */
-  olsr_change_timer(entry->validity_timer, DUPLICATE_CLEANUP_INTERVAL, DUPLICATE_CLEANUP_JITTER);
+  olsr_timer_change(entry->validity_timer, DUPLICATE_CLEANUP_INTERVAL, DUPLICATE_CLEANUP_JITTER);
 
   diff = olsr_seqno_diff(m->seqno, entry->seqnr);
 
@@ -241,29 +240,29 @@ olsr_print_duplicate_table(void)
 {
 #if !defined REMOVE_LOG_INFO
   /* The whole function makes no sense without it. */
+  struct timeval_buf timebuf;
+  struct ipaddr_str addrbuf;
   struct dup_entry *entry, *iterator;
   const int ipwidth = olsr_cnf->ip_version == AF_INET ? 15 : 30;
 
   OLSR_INFO(LOG_DUPLICATE_SET, "\n--- %s ------------------------------------------------- DUPLICATE SET (forwarding)\n\n",
-            olsr_wallclock_string());
+            olsr_clock_getWallclockString(&timebuf));
   OLSR_INFO_NH(LOG_DUPLICATE_SET, "%-*s %8s %s\n", ipwidth, "Node IP", "DupArray", "VTime");
 
   OLSR_FOR_ALL_FORWARD_DUP_ENTRIES(entry, iterator) {
-    struct ipaddr_str addrbuf;
     OLSR_INFO_NH(LOG_DUPLICATE_SET, "%-*s %08x %s\n",
                  ipwidth, olsr_ip_to_string(&addrbuf, entry->avl.key), entry->array,
-                 olsr_clock_string(entry->validity_timer->timer_clock));
+                 olsr_clock_toClockString(&timebuf, entry->validity_timer->timer_clock));
   }
 
-    OLSR_INFO(LOG_DUPLICATE_SET, "\n--- %s ------------------------------------------------- DUPLICATE SET (processing)\n\n",
-              olsr_wallclock_string());
+  OLSR_INFO(LOG_DUPLICATE_SET, "\n--- %s ------------------------------------------------- DUPLICATE SET (processing)\n\n",
+              olsr_clock_getWallclockString(&timebuf));
   OLSR_INFO_NH(LOG_DUPLICATE_SET, "%-*s %8s %s\n", ipwidth, "Node IP", "DupArray", "VTime");
 
   OLSR_FOR_ALL_PROCESS_DUP_ENTRIES(entry, iterator) {
-    struct ipaddr_str addrbuf;
     OLSR_INFO_NH(LOG_DUPLICATE_SET, "%-*s %08x %s\n",
                  ipwidth, olsr_ip_to_string(&addrbuf, entry->avl.key), entry->array,
-                 olsr_clock_string(entry->validity_timer->timer_clock));
+                 olsr_clock_toClockString(&timebuf, entry->validity_timer->timer_clock));
   }
 #endif
 }

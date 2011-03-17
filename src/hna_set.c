@@ -44,7 +44,8 @@
 #include "defs.h"
 #include "parser.h"
 #include "olsr.h"
-#include "scheduler.h"
+#include "olsr_timer.h"
+#include "olsr_socket.h"
 #include "net_olsr.h"
 #include "tc_set.h"
 #include "olsr_ip_prefix_list.h"
@@ -64,7 +65,7 @@ olsr_init_hna_set(void)
 {
   OLSR_INFO(LOG_HNA, "Initialize HNA set...\n");
 
-  hna_net_timer_info = olsr_alloc_timerinfo("HNA Network", &olsr_expire_hna_net_entry, false);
+  hna_net_timer_info = olsr_timer_add("HNA Network", &olsr_expire_hna_net_entry, false);
 
   hna_net_mem_cookie = olsr_memcookie_add("hna_net", sizeof(struct hna_net));
 }
@@ -137,7 +138,7 @@ olsr_delete_hna_net(struct hna_net *hna_net)
   avl_delete(&tc->hna_tree, &hna_net->hna_tc_node);
 
   if (hna_net->hna_net_timer) {
-    olsr_stop_timer(hna_net->hna_net_timer);
+    olsr_timer_stop(hna_net->hna_net_timer);
     hna_net->hna_net_timer = NULL;
   }
   /*
@@ -222,7 +223,7 @@ olsr_update_hna_entry(const union olsr_ip_addr *gw, const struct olsr_ip_prefix 
   /*
    * Start, or refresh the timer, whatever is appropriate.
    */
-  olsr_set_timer(&net_entry->hna_net_timer, vtime,
+  olsr_timer_set(&net_entry->hna_net_timer, vtime,
                  OLSR_HNA_NET_JITTER, net_entry, hna_net_timer_info);
 }
 
@@ -239,9 +240,11 @@ olsr_print_hna_set(void)
   struct tc_entry *tc, *tc_iterator;
   struct ipaddr_str buf;
   struct ipprefix_str prefixstr;
+  struct timeval_buf timebuf;
   struct hna_net *hna_net, *hna_iterator;
 
-  OLSR_INFO(LOG_HNA, "\n--- %s ------------------------------------------------- HNA\n\n", olsr_wallclock_string());
+  OLSR_INFO(LOG_HNA, "\n--- %s ------------------------------------------------- HNA\n\n",
+      olsr_clock_getWallclockString(&timebuf));
 
   OLSR_FOR_ALL_TC_ENTRIES(tc, tc_iterator) {
     OLSR_INFO_NH(LOG_HNA, "HNA-gw %s:\n", olsr_ip_to_string(&buf, &tc->addr));

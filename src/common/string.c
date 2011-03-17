@@ -40,75 +40,96 @@
  *
  */
 
+#include <assert.h>
+#include <ctype.h>
+#include <string.h>
+
 #include "common/string.h"
 
-#include <string.h>
-#include <assert.h>
-
-const char *OLSR_YES = "yes";
-const char *OLSR_NO = "no";
-
-/*
- * A somewhat safe version of strncpy and strncat. Note, that
- * BSD/Solaris strlcpy()/strlcat() differ in implementation, while
- * the BSD compiler prints out a warning if you use plain strcpy().
+/**
+ * A safer version of strncpy that ensures that the
+ * destination string will be null-terminated if its
+ * length is greater than 0.
+ * @param dest target string buffer
+ * @param src source string buffer
+ * @param size size of target buffer
+ * @return pointer to target buffer
  */
 char *
 strscpy(char *dest, const char *src, size_t size)
 {
-  size_t l = 0;
   assert(dest != NULL);
   assert(src != NULL);
-  if (NULL != dest && NULL != src) {
-    /* src does not need to be null terminated */
-    if (0 < size--) {
-      while (l < size && 0 != src[l])
-        l++;
-    }
-    dest[l] = 0;
+
+  /* src does not need to be null terminated */
+  if (size > 0) {
+    strncpy(dest, src, size-1);
+    dest[size-1] = 0;
   }
-  return strncpy(dest, src, l);
+
+  return dest;
 }
 
-/*
- * A somewhat safe version of strncat. Note, that the
- * size parameter denotes the complete size of dest,
- * which is different from the strncat semantics.
+/**
+ * A safer version of strncat that ensures that
+ * the target buffer will be null-terminated if
+ * its size is greater than zero.
+ *
+ * If the target buffer is already full, it will
+ * not be changed.
+ * @param dest target string buffer
+ * @param src source string buffer
+ * @param size size of target buffer
+ * @return pointer to target buffer
  */
 char *
 strscat(char *dest, const char *src, size_t size)
 {
-  const size_t l = strlen(dest);
-  return strscpy(dest + l, src, size > l ? size - l : 0);
+  size_t l;
+
+  assert(dest != NULL);
+  assert(src != NULL);
+
+  l = strlen(dest);
+  if (l < size) {
+    strscpy(dest + l, src, size - l);
+  }
+  return dest;
 }
 
 /**
- * Check if a string starts with a certain word. The function
- * is not case sensitive.
- * @param buffer pointer to string
- * @param word pointer to the word
- * @return pointer to the string behind the word, NULL if no match
+ * Removes leading and trailing whitespaces from a string.
+ * Instead of moving characters around, it will change the
+ * pointer to the beginning of the buffer.
+ * @param ptr pointer to string-pointer
  */
-const char *
-str_hasnextword (const char *buffer, const char *word) {
-  /* skip whitespaces first */
-  while (isblank(*buffer)) {
-    buffer++;
+void
+str_trim (char **ptr) {
+  char *string, *end;
+
+  assert (ptr);
+  assert (*ptr);
+
+  string = *ptr;
+
+  /* skip leading whitespaces */
+  while (isspace(*string)) {
+    string++;
   }
 
-  while (*word != 0 && *buffer != 0 && !isblank(*buffer) && tolower(*word) == tolower(*buffer)) {
-    word++;
-    buffer++;
+  /* get end of string */
+  end = string;
+  while (*end) {
+    end++;
+  }
+  end--;
+
+  /* remove trailing whitespaces */
+  while (end > string && isspace(*end)) {
+    *end-- = 0;
   }
 
-  /* complete match ? */
-  if (*word == 0) {
-    while (isblank(*buffer)) {
-      buffer++;
-    }
-    return buffer;
-  }
-  return NULL;
+  *ptr = string;
 }
 
 /*

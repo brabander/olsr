@@ -40,11 +40,12 @@
  */
 
 #include <assert.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "common/autobuf.h"
 #include "common/avl.h"
-#include "common/avl_olsr_comp.h"
+#include "common/avl_comp.h"
 #include "common/string.h"
 #include "olsr_logging.h"
 #include "olsr_memcookie.h"

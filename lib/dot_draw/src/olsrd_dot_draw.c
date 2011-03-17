@@ -43,16 +43,6 @@
  * Dynamic linked library for the olsr.org olsr daemon
  */
 
-#include "olsr.h"
-#include "ipcalc.h"
-#include "neighbor_table.h"
-#include "tc_set.h"
-#include "hna_set.h"
-#include "link_set.h"
-#include "olsr_ip_prefix_list.h"
-#include "olsr_logging.h"
-#include "os_net.h"
-#include "plugin_util.h"
 
 #ifdef _WRS_KERNEL
 #include <vxWorks.h>
@@ -63,6 +53,18 @@
 #include <errno.h>
 #include <stdarg.h>
 #endif
+#include <stdio.h>
+
+#include "olsr.h"
+#include "ipcalc.h"
+#include "neighbor_table.h"
+#include "tc_set.h"
+#include "hna_set.h"
+#include "link_set.h"
+#include "olsr_ip_prefix_list.h"
+#include "olsr_logging.h"
+#include "os_net.h"
+#include "plugin_util.h"
 
 #define PLUGIN_DESCR    "OLSRD dot draw plugin"
 #define PLUGIN_AUTHOR   "Andreas Tonnesen"
@@ -200,7 +202,7 @@ dotdraw_enable(void) {
 #if defined __FreeBSD__ && defined SO_NOSIGPIPE
   if (setsockopt(ipc_socket, SOL_SOCKET, SO_NOSIGPIPE, (char *)&yes, sizeof(yes)) < 0) {
     OLSR_WARN(LOG_PLUGINS, "SO_REUSEADDR failed %s\n", strerror(errno));
-    CLOSESOCKET(ipc_socket);
+    os_close(ipc_socket);
     return 1;
   }
 #endif
@@ -228,7 +230,11 @@ dotdraw_enable(void) {
   }
 
   /* Register socket with olsrd */
-  add_olsr_socket(ipc_socket, &ipc_action, NULL, NULL, SP_PR_READ);
+  if (NULL == olsr_socket_add(ipc_socket, &ipc_action, NULL, OLSR_SOCKET_READ)) {
+    OLSR_WARN(LOG_PLUGINS, "(DOT DRAW)Could not register socket with scheduler\n");
+    os_close(ipc_socket);
+    return 1;
+  }
 
   return 0;
 }

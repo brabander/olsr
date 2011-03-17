@@ -39,55 +39,78 @@
  *
  */
 
-#include "olsr_cfg_data.h"
+
+#ifndef _OLSR_SCHEDULER
+#define _OLSR_SCHEDULER
+
+#include "common/list.h"
+#include "common/avl.h"
+
+#include "olsr_types.h"
+
+/* flags for socket handler */
+static const unsigned int OLSR_SOCKET_READ = 0x04;
+static const unsigned int OLSR_SOCKET_WRITE = 0x08;
+
+/* prototype for socket handler */
+typedef void (*socket_handler_func) (int fd, void *data, unsigned int flags);
+
+/* This struct represents a single registered socket handler */
+struct olsr_socket_entry {
+  /* list of socket handlers */
+  struct list_entity node;
+
+  /* file descriptor of the socket */
+  int fd;
+
+  /* socket handler */
+  socket_handler_func process;
+
+  /* custom data pointer for sockets */
+  void *data;
+
+  /* flags (OLSR_SOCKET_READ and OLSR_SOCKET_WRITE) */
+  unsigned int flags;
+};
+
+/* deletion safe macro for socket list traversal */
+extern struct list_entity EXPORT(socket_head);
+#define OLSR_FOR_ALL_SOCKETS(socket, iterator) list_for_each_element_safe(&socket_head, socket, node, iterator)
+
+void olsr_socket_init(void);
+void olsr_socket_cleanup(void);
+
+struct olsr_socket_entry *EXPORT(olsr_socket_add) (int fd,
+    socket_handler_func pf_imm, void *data, unsigned int flags);
+void EXPORT(olsr_socket_remove) (struct olsr_socket_entry *);
+
+/**
+ * Enable one or both flags of a socket handler
+ * @param sock pointer to socket entry
+ */
+static inline void
+olsr_socket_enable(struct olsr_socket_entry *entry, unsigned int flags)
+{
+  entry->flags |= flags;
+}
+
+/**
+ * Disable one or both flags of a socket handler
+ * @param sock pointer to socket entry
+ */
+static inline void
+olsr_socket_disable(struct olsr_socket_entry *entry, unsigned int flags)
+{
+  entry->flags &= ~flags;
+}
+
+void olsr_socket_handle(uint32_t until_time);
+
+#endif
 
 /*
- * String constants for olsr_log_* and if_mode as used in olsrd.conf.
- * Keep this in the same order as the log_source and
- * log_severity enums (see olsr_cfg_data.h).
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
  */
-
-const char *LOG_SOURCE_NAMES[] = {
-  "all",
-  "logging",
-  "ipc",
-  "main",
-  "interface",
-  "networking",
-  "packet_creation",
-  "packet_parsing",
-  "routing",
-  "scheduler",
-  "timer",
-  "plugins",
-  "lq-plugins",
-  "ll-plugins",
-  "links",
-  "neighbors",
-  "mpr",
-  "mprset",
-  "2-hop",
-  "tc",
-  "hna",
-  "mid",
-  "duplicate-set",
-  "cookie",
-  "comport",
-  "apm",
-  "rtnetlink",
-  "tunnel",
-  "callback"
-};
-
-const char *LOG_SEVERITY_NAMES[] = {
-  "DEBUG",
-  "INFO",
-  "WARN",
-  "ERROR"
-};
-
-
-const char *INTERFACE_MODE_NAMES[] = {
-  "mesh",
-  "ether"
-};

@@ -43,7 +43,8 @@
 #include "neighbor_table.h"
 #include "link_set.h"
 #include "lq_mpr.h"
-#include "scheduler.h"
+#include "olsr_timer.h"
+#include "olsr_socket.h"
 #include "lq_plugin.h"
 
 void

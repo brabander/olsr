@@ -43,6 +43,13 @@
  * All these functions are global
  */
 
+#include <assert.h>
+#include <errno.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
 #include "defs.h"
 #include "olsr.h"
 #include "link_set.h"
@@ -51,7 +58,8 @@
 #include "mid_set.h"
 #include "lq_mpr.h"
 #include "olsr_spf.h"
-#include "scheduler.h"
+#include "olsr_timer.h"
+#include "olsr_socket.h"
 #include "neighbor_table.h"
 #include "lq_packet.h"
 #include "common/avl.h"
@@ -60,11 +68,6 @@
 #include "olsr_logging.h"
 #include "os_system.h"
 #include "os_apm.h"
-
-#include <assert.h>
-#include <stdarg.h>
-#include <unistd.h>
-#include <stdlib.h>
 
 static void olsr_update_willingness(void *);
 
@@ -190,8 +193,8 @@ olsr_init_willingness(void)
     /* Run it first and then periodic. */
     olsr_update_willingness(NULL);
 
-    willingness_timer_info = olsr_alloc_timerinfo("Update Willingness", &olsr_update_willingness, true);
-    olsr_start_timer(olsr_cnf->will_int, 5, NULL, willingness_timer_info);
+    willingness_timer_info = olsr_timer_add("Update Willingness", &olsr_update_willingness, true);
+    olsr_timer_start(olsr_cnf->will_int, 5, NULL, willingness_timer_info);
   }
 }
 
@@ -238,7 +241,7 @@ olsr_calculate_willingness(void)
     olsr_cnf->willingness = (ainfo.battery_percentage / 26);
   }
   OLSR_INFO(LOG_MAIN, "Willingness set to %d - next update in %s secs\n",
-      olsr_cnf->willingness, olsr_milli_to_txt(&tbuf, olsr_cnf->will_int));
+      olsr_cnf->willingness, olsr_clock_to_string(&tbuf, olsr_cnf->will_int));
 }
 
 /**

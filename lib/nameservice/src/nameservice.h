@@ -58,7 +58,7 @@
 #include "nameservice_msg.h"
 #include "hashing.h"
 #include "mapwrite.h"
-#include "olsr_time.h"
+#include "olsr_clock.h"
 
 #define PLUGIN_NAME	"OLSRD nameservice plugin"
 #define PLUGIN_VERSION	"0.3"
@@ -109,7 +109,7 @@ struct name_entry {
  * */
 struct db_entry {
   union olsr_ip_addr originator;       /* IP address of the node this entry describes */
-  struct timer_entry *db_timer;        /* Validity time */
+  struct olsr_timer_entry *db_timer;        /* Validity time */
   struct name_entry *names;            /* list of names this originator declares */
   struct list_entity db_list;            /* linked list of db entries per hash container */
 };

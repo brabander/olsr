@@ -48,11 +48,14 @@
 #include "olsr.h"
 #include "defs.h"
 #include "ipcalc.h"
-#include "scheduler.h"
+#include "olsr_timer.h"
+#include "olsr_socket.h"
 #include "olsr_memcookie.h"
 #include "olsr_ip_prefix_list.h"
 #include "olsr_logging.h"
 
+#include <errno.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <net/route.h>
 #include <arpa/inet.h>
@@ -223,10 +226,10 @@ olsrd_plugin_init(void)
   pthread_create(&ping_thread, NULL, (void *(*)(void *))looped_checks, NULL);
 
   /* create the cookie */
-  doing_hna_timer_info = olsr_alloc_timerinfo("DynGW: Doing HNS", &olsr_event_doing_hna, true);
+  doing_hna_timer_info = olsr_timer_add("DynGW: Doing HNS", &olsr_event_doing_hna, true);
 
   /* Register the GW check */
-  olsr_start_timer(3 * MSEC_PER_SEC, 0, NULL, doing_hna_timer_info);
+  olsr_timer_start(3 * MSEC_PER_SEC, 0, NULL, doing_hna_timer_info);
 
   return 1;
 }

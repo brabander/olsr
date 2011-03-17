@@ -41,9 +41,9 @@
 #define LIST_H_
 
 #include <stddef.h>
-#include <stdbool.h>
 
-#include "container_of.h"
+#include "common/container_of.h"
+#include "common/common_types.h"
 
 /**
  * this struct is used as list head and list elements.
@@ -67,7 +67,8 @@ struct list_entity {
  * initialize a list-head
  * @param pointer to list-head
  */
-static inline void list_init_head(struct list_entity *head) {
+static inline void
+list_init_head(struct list_entity *head) {
   head->next = head->prev = head;
 }
 
@@ -75,7 +76,8 @@ static inline void list_init_head(struct list_entity *head) {
  * initialize a list-node
  * @param pointer to list-node
  */
-static inline void list_init_node(struct list_entity *entity) {
+static inline void
+list_init_node(struct list_entity *entity) {
   entity->next = entity->prev = NULL;
 }
 
@@ -85,7 +87,8 @@ static inline void list_init_node(struct list_entity *entity) {
  * @param next node after the insertion point
  * @param new node which will be added to the list between 'prev' and 'next'
  */
-static inline void __list_add(struct list_entity *prev, struct list_entity *next, struct list_entity *new) {
+static inline void
+__list_add(struct list_entity *prev, struct list_entity *next, struct list_entity *new) {
   new->next = next;
   new->prev = prev;
   next->prev = new;
@@ -97,7 +100,8 @@ static inline void __list_add(struct list_entity *prev, struct list_entity *next
  * @param head pointer to list head
  * @param new node which will be added to the list
  */
-static inline void list_add_head(struct list_entity *head, struct list_entity *new) {
+static inline void
+list_add_head(struct list_entity *head, struct list_entity *new) {
   __list_add(head, head->next, new);
 }
 
@@ -106,7 +110,8 @@ static inline void list_add_head(struct list_entity *head, struct list_entity *n
  * @param head pointer to list head
  * @param new node which will be added to the list
  */
-static inline void list_add_tail(struct list_entity *head, struct list_entity *new) {
+static inline void
+list_add_tail(struct list_entity *head, struct list_entity *new) {
   __list_add(head->prev, head, new);
 }
 
@@ -115,7 +120,8 @@ static inline void list_add_tail(struct list_entity *head, struct list_entity *n
  * @param before reference node in the list
  * @param new node which will be added to the list
  */
-static inline void list_add_before(struct list_entity *before, struct list_entity *new) {
+static inline void
+list_add_before(struct list_entity *before, struct list_entity *new) {
   __list_add(before->prev, before, new);
 }
 
@@ -124,7 +130,8 @@ static inline void list_add_before(struct list_entity *before, struct list_entit
  * @param before reference node in the list
  * @param new node which will be added to the list
  */
-static inline void list_add_after(struct list_entity *after, struct list_entity *new) {
+static inline void
+list_add_after(struct list_entity *after, struct list_entity *new) {
   __list_add(after, after->next, new);
 }
 
@@ -133,7 +140,8 @@ static inline void list_add_after(struct list_entity *after, struct list_entity 
  * @param prev node before the removed part of the list
  * @param next node after the removed part of the list
  */
-static inline void __list_remove(struct list_entity *prev, struct list_entity *next) {
+static inline void
+__list_remove(struct list_entity *prev, struct list_entity *next) {
   prev->next = next;
   next->prev = prev;
 }
@@ -142,7 +150,8 @@ static inline void __list_remove(struct list_entity *prev, struct list_entity *n
  * removes a node from a list and clears node pointers
  * @param entity node to remove from the list
  */
-static inline void list_remove(struct list_entity *entity) {
+static inline void
+list_remove(struct list_entity *entity) {
   __list_remove(entity->prev, entity->next);
   entity->prev = entity->next = NULL;
 }
@@ -152,7 +161,8 @@ static inline void list_remove(struct list_entity *entity) {
  * @param head pointer to list head
  * @return true if list is empty, false otherwise
  */
-static inline bool list_is_empty(struct list_entity *head) {
+static inline bool
+list_is_empty(struct list_entity *head) {
   return head->next == head && head->prev == head;
 }
 
@@ -162,7 +172,8 @@ static inline bool list_is_empty(struct list_entity *head) {
  * @return true if both pointers of the node are initialized,
  *   false otherwise
  */
-static inline bool list_node_added(struct list_entity *node) {
+static inline bool
+list_node_added(struct list_entity *node) {
   return node->next != NULL && node->prev != NULL;
 }
 
@@ -172,7 +183,8 @@ static inline bool list_node_added(struct list_entity *node) {
  * @param entity pointer to node
  * @return true if node is first element of list, false otherwise
  */
-static inline bool list_is_first(const struct list_entity *head, const struct list_entity *entity) {
+static inline bool
+list_is_first(const struct list_entity *head, const struct list_entity *entity) {
   return head->next == entity;
 }
 
@@ -182,7 +194,8 @@ static inline bool list_is_first(const struct list_entity *head, const struct li
  * @param entity pointer to node
  * @return true if node is last element of list, false otherwise
  */
-static inline bool list_is_last(const struct list_entity *head, const struct list_entity *entity) {
+static inline bool
+list_is_last(const struct list_entity *head, const struct list_entity *entity) {
   return head->prev == entity;
 }
 
@@ -192,7 +205,8 @@ static inline bool list_is_last(const struct list_entity *head, const struct lis
  * @param remove_from head of the list which elements will be added after the elements
  *   of the first one
  */
-static inline void list_merge(struct list_entity *add_to, struct list_entity *remove_from) {
+static inline void
+list_merge(struct list_entity *add_to, struct list_entity *remove_from) {
   if (list_is_empty(remove_from)) {
     return;
   }

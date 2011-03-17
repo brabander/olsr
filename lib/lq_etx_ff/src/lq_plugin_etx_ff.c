@@ -39,19 +39,22 @@
  *
  */
 
+#include <stdio.h>
+
 #include "tc_set.h"
 #include "link_set.h"
 #include "lq_plugin.h"
 #include "olsr_spf.h"
 #include "lq_packet.h"
 #include "olsr.h"
-#include "lq_plugin_etx_ff.h"
 #include "parser.h"
 #include "mid_set.h"
-#include "scheduler.h"
+#include "olsr_timer.h"
+#include "olsr_socket.h"
 #include "olsr_logging.h"
 #include "common/string.h"
 #include "neighbor_table.h"
+#include "lq_plugin_etx_ff.h"
 
 #define PLUGIN_DESCR "Freifunk ETX metric based on the original design of Elektra and Thomas Lopatic"
 #define PLUGIN_AUTHOR "Henning Rogge"
@@ -264,21 +267,21 @@ lq_etxff_timer(void __attribute__ ((unused)) * context)
   }
 }
 
-static struct timer_entry *lq_etxff_timer_struct = NULL;
+static struct olsr_timer_entry *lq_etxff_timer_struct = NULL;
 
 static void
 lq_etxff_initialize(void)
 {
   /* Some cookies for stats keeping */
   olsr_packetparser_add_function(&lq_etxff_packet_parser);
-  default_lq_ff_timer_info = olsr_alloc_timerinfo("Default Freifunk LQ",  &lq_etxff_timer, true);
-  lq_etxff_timer_struct = olsr_start_timer(1000, 0, NULL, default_lq_ff_timer_info);
+  default_lq_ff_timer_info = olsr_timer_add("Default Freifunk LQ",  &lq_etxff_timer, true);
+  lq_etxff_timer_struct = olsr_timer_start(1000, 0, NULL, default_lq_ff_timer_info);
 }
 
 static void
 lq_etxff_deinitialize(void)
 {
-  olsr_stop_timer(lq_etxff_timer_struct);
+  olsr_timer_stop(lq_etxff_timer_struct);
   olsr_packetparser_remove_function(&lq_etxff_packet_parser);
 }
 

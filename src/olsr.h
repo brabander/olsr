@@ -43,9 +43,8 @@
 #ifndef _OLSR_FUNCTIONS
 #define _OLSR_FUNCTIONS
 
+#include "olsr_types.h"
 #include "olsr_protocol.h"
-#include "interfaces.h"
-#include "common/avl_olsr_comp.h"
 
 extern bool changes_topology;
 extern bool changes_neighborhood;

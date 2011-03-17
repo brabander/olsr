@@ -55,6 +55,7 @@
 #include <netinet/ip.h>         /* struct ip */
 #include <netinet/udp.h>        /* struct udphdr */
 #include <unistd.h>             /* close() */
+#include <stdio.h>
 
 #include <netinet/in.h>
 #include <netinet/ip6.h>

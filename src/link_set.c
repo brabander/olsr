@@ -48,7 +48,8 @@
 #include "mid_set.h"
 #include "neighbor_table.h"
 #include "olsr.h"
-#include "scheduler.h"
+#include "olsr_timer.h"
+#include "olsr_socket.h"
 #include "olsr_spf.h"
 #include "net_olsr.h"
 #include "ipcalc.h"
@@ -91,9 +92,9 @@ olsr_init_link_set(void)
   /* Init list head */
   list_init_head(&link_entry_head);
 
-  link_dead_timer_info = olsr_alloc_timerinfo("Link dead", &olsr_expire_link_entry, false);
-  link_loss_timer_info = olsr_alloc_timerinfo("Link loss", &olsr_expire_link_loss_timer, true);
-  link_sym_timer_info = olsr_alloc_timerinfo("Link SYM", &olsr_expire_link_sym_timer, false);
+  link_dead_timer_info = olsr_timer_add("Link dead", &olsr_expire_link_entry, false);
+  link_loss_timer_info = olsr_timer_add("Link loss", &olsr_expire_link_loss_timer, true);
+  link_sym_timer_info = olsr_timer_add("Link SYM", &olsr_expire_link_sym_timer, false);
 
 }
 
@@ -116,7 +117,7 @@ lookup_link_status(const struct link_entry *entry)
     return SYM_LINK;
   }
 
-  if (!TIMED_OUT(entry->ASYM_time)) {
+  if (!olsr_clock_isPast(entry->ASYM_time)) {
     return ASYM_LINK;
   }
 
@@ -231,13 +232,13 @@ olsr_delete_link_entry(struct link_entry *link)
   }
 
   /* Kill running timers */
-  olsr_stop_timer(link->link_timer);
+  olsr_timer_stop(link->link_timer);
   link->link_timer = NULL;
 
-  olsr_stop_timer(link->link_sym_timer);
+  olsr_timer_stop(link->link_sym_timer);
   link->link_sym_timer = NULL;
 
-  olsr_stop_timer(link->link_loss_timer);
+  olsr_timer_stop(link->link_loss_timer);
   link->link_loss_timer = NULL;
 
   list_remove(&link->link_list);
@@ -286,7 +287,7 @@ olsr_expire_link_loss_timer(void *context)
   olsr_lq_hello_handler(link, true);
 
   /* next timeout in 1.0 x htime */
-  olsr_change_timer(link->link_loss_timer, link->loss_helloint, OLSR_LINK_LOSS_JITTER);
+  olsr_timer_change(link->link_loss_timer, link->loss_helloint, OLSR_LINK_LOSS_JITTER);
 }
 
 /**
@@ -343,7 +344,7 @@ olsr_expire_link_entry(void *context)
 static void
 olsr_set_link_timer(struct link_entry *link, unsigned int rel_timer)
 {
-  olsr_set_timer(&link->link_timer, rel_timer, OLSR_LINK_JITTER,
+  olsr_timer_set(&link->link_timer, rel_timer, OLSR_LINK_JITTER,
                  link, link_dead_timer_info);
 }
 
@@ -411,7 +412,7 @@ add_link_entry(const union olsr_ip_addr *local,
 
   link->loss_helloint = htime;
 
-  olsr_set_timer(&link->link_loss_timer, htime + htime / 2,
+  olsr_timer_set(&link->link_loss_timer, htime + htime / 2,
                  OLSR_LINK_LOSS_JITTER, link, link_loss_timer_info);
 
   set_loss_link_multiplier(link);
@@ -527,20 +528,20 @@ update_link_entry(const union olsr_ip_addr *local,
 
   /* Update ASYM_time */
   entry->vtime = message->comm->vtime;
-  entry->ASYM_time = GET_TIMESTAMP(message->comm->vtime);
+  entry->ASYM_time = olsr_clock_getAbsolute(message->comm->vtime);
 
   entry->status = check_link_status(message, in_if);
 
   switch (entry->status) {
   case (LOST_LINK):
-    olsr_stop_timer(entry->link_sym_timer);
+    olsr_timer_stop(entry->link_sym_timer);
     entry->link_sym_timer = NULL;
     break;
   case (SYM_LINK):
   case (ASYM_LINK):
 
     /* L_SYM_time = current time + validity time */
-    olsr_set_timer(&entry->link_sym_timer, message->comm->vtime,
+    olsr_timer_set(&entry->link_sym_timer, message->comm->vtime,
                    OLSR_LINK_SYM_JITTER, entry, link_sym_timer_info);
 
     /* L_time = L_SYM_time + NEIGHB_HOLD_TIME */
@@ -551,7 +552,7 @@ update_link_entry(const union olsr_ip_addr *local,
 
   /* L_time = max(L_time, L_ASYM_time) */
   if (entry->link_timer && (entry->link_timer->timer_clock < entry->ASYM_time)) {
-    olsr_set_link_timer(entry, TIME_DUE(entry->ASYM_time));
+    olsr_set_link_timer(entry, olsr_clock_getRelative(entry->ASYM_time));
   }
 
   /* Update neighbor */
@@ -634,6 +635,7 @@ olsr_print_link_set(void)
   char totaltxt[256] = { 0 };
   const char *txt;
   int addrsize;
+  struct timeval_buf timebuf;
   size_t i, j, length, max, totaltxt_len;
   addrsize = olsr_cnf->ip_version == AF_INET ? INET_ADDRSTRLEN : INET6_ADDRSTRLEN;
 
@@ -664,7 +666,8 @@ olsr_print_link_set(void)
   }
   totaltxt[totaltxt_len] = 0;
 
-  OLSR_INFO(LOG_LINKS, "\n--- %s ---------------------------------------------------- LINKS\n\n", olsr_wallclock_string());
+  OLSR_INFO(LOG_LINKS, "\n--- %s ---------------------------------------------------- LINKS\n\n",
+      olsr_clock_getWallclockString(&timebuf));
   OLSR_INFO_NH(LOG_LINKS, "%-*s  %-6s %s %s\n", addrsize, "IP address", "hyst", totaltxt , olsr_get_linklabel(0));
 
   OLSR_FOR_ALL_LINK_ENTRIES(walker, iterator) {
@@ -720,7 +723,7 @@ olsr_update_packet_loss(struct link_entry *entry)
   olsr_lq_hello_handler(entry, false);
 
   /* timeout for the first lost packet is 1.5 x htime */
-  olsr_set_timer(&entry->link_loss_timer, entry->loss_helloint + entry->loss_helloint / 2,
+  olsr_timer_set(&entry->link_loss_timer, entry->loss_helloint + entry->loss_helloint / 2,
                  OLSR_LINK_LOSS_JITTER, entry, link_loss_timer_info);
 }
 

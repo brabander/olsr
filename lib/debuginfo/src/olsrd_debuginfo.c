@@ -45,6 +45,10 @@
 
 #include <stdlib.h>
 
+#include "common/avl.h"
+#include "common/avl_comp.h"
+#include "common/avl_olsr_comp.h"
+#include "common/string.h"
 #include "olsr.h"
 #include "ipcalc.h"
 #include "neighbor_table.h"
@@ -94,6 +98,8 @@ static uint8_t *olsr_packet_statistics(uint8_t *binary,
     struct interface *interface, union olsr_ip_addr *ip, int *length);
 
 static void update_statistics_ptr(void *data __attribute__ ((unused)));
+
+static const char *str_hasnextword (const char *buffer, const char *word);
 
 /* plugin configuration */
 static struct ip_acl allowed_nets;
@@ -228,8 +234,8 @@ debuginfo_enable(void)
     commands[i].cmd->acl = &allowed_nets;
   }
 
-  statistics_timer = olsr_alloc_timerinfo("debuginfo timer", &update_statistics_ptr, true);
-  olsr_start_timer(traffic_interval * 1000, 0, NULL, statistics_timer);
+  statistics_timer = olsr_timer_add("debuginfo timer", &update_statistics_ptr, true);
+  olsr_timer_start(traffic_interval * 1000, 0, NULL, statistics_timer);
 
   statistics_msg_mem = olsr_memcookie_add("debuginfo msgstat",
       sizeof(struct debug_msgtraffic) + sizeof(struct debug_msgtraffic_count) * traffic_slots);
@@ -735,6 +741,36 @@ olsr_debuginfo_displayhelp(struct comport_connection *con,
   }
   return UNKNOWN;
 }
+
+/**
+ * Check if a string starts with a certain word. The function
+ * is not case sensitive.
+ * @param buffer pointer to string
+ * @param word pointer to the word
+ * @return pointer to the string behind the word, NULL if no match
+ */
+static const char *
+str_hasnextword (const char *buffer, const char *word) {
+  /* skip whitespaces first */
+  while (isblank(*buffer)) {
+    buffer++;
+  }
+
+  while (*word != 0 && *buffer != 0 && !isblank(*buffer) && tolower(*word) == tolower(*buffer)) {
+    word++;
+    buffer++;
+  }
+
+  /* complete match ? */
+  if (*word == 0) {
+    while (isblank(*buffer)) {
+      buffer++;
+    }
+    return buffer;
+  }
+  return NULL;
+}
+
 
 /*
  * Local Variables:

@@ -41,7 +41,8 @@
 #include "cl_roam.h"
 #include "olsr_types.h"
 #include "ipcalc.h"
-#include "scheduler.h"
+#include "olsr_timer.h"
+#include "olsr_socket.h"
 #include "olsr.h"
 #include "olsr_memcookie.h"
 #include "olsr_ip_prefix_list.h"
@@ -102,7 +103,7 @@ struct guest_client {
   pthread_t ping_thread_add;
   struct olsr_memcookie_info *arping_timer_cookie;
   char ping_thread_done;
-  struct timer_entry *arping_timer;
+  struct olsr_timer_entry *arping_timer;
   int remaing_announcements;
   //who is in charge of this client
   union olsr_ip_addr master_ip;
@@ -315,13 +316,13 @@ int olsrd_plugin_init(void) {
   has_inet_gateway = 0;
 
   /* create the cookie */
-  event_timer_info1 = olsr_alloc_timerinfo("cl roam: Event1", &olsr_event1, true);
-  event_timer_info2 = olsr_alloc_timerinfo("cl roam: Event2", &olsr_event2, true);
-  arping_timer_info = olsr_alloc_timerinfo("cl roam: Maybe add something", &check_ping_result, true);
+  event_timer_info1 = olsr_timer_add("cl roam: Event1", &olsr_event1, true);
+  event_timer_info2 = olsr_timer_add("cl roam: Event2", &olsr_event2, true);
+  arping_timer_info = olsr_timer_add("cl roam: Maybe add something", &check_ping_result, true);
 
   /* Register the GW check */
-  olsr_start_timer(1 * MSEC_PER_SEC, 0, NULL, event_timer_info1);
-  olsr_start_timer(20 * MSEC_PER_SEC, 0, NULL, event_timer_info2);
+  olsr_timer_start(1 * MSEC_PER_SEC, 0, NULL, event_timer_info1);
+  olsr_timer_start(20 * MSEC_PER_SEC, 0, NULL, event_timer_info2);
 
   /* register functions with olsrd */
   // somehow my cool new message.....
@@ -382,7 +383,7 @@ static void check_ping_result(void *foo) {
     /* should be same size as (void*) */
     ssize_t ping_res;
 
-    olsr_stop_timer(host->arping_timer);
+    olsr_timer_stop(host->arping_timer);
     pthread_join(host->ping_thread_add, (void*) &ping_res);
     host->arping_timer = NULL;
     host->ping_thread_done = 0;
@@ -423,7 +424,7 @@ static void check_for_route(struct guest_client * host) {
     //printf("maybe add something\n");
     if (host->arping_timer_cookie == NULL)
     //printf("timer started\n");
-    host->arping_timer = olsr_start_timer(250, 5, host, arping_timer_info);
+    host->arping_timer = olsr_timer_start(250, 5, host, arping_timer_info);
     rc = pthread_create(&(host->ping_thread_add), NULL, ping_thread, (void *) host);
   } else if ((host->last_seen > 60.0) && host->is_announced) {
     char route_command[50];
