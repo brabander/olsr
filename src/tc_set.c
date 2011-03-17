@@ -552,6 +552,9 @@ olsr_delete_revoked_tc_edges(struct tc_entry *tc, uint16_t ansn, union olsr_ip_a
     }
 
     if (SEQNO_GREATER_THAN(ansn, tc_edge->ansn)) {
+      tc_edge->cost = LINK_COST_BROKEN;
+      tc_edge->common_cost = LINK_COST_BROKEN;
+      tc_edge->edge_inv->common_cost = LINK_COST_BROKEN;
       olsr_delete_tc_edge_entry(tc_edge);
       retval = 1;
     }
@@ -612,6 +615,9 @@ olsr_tc_update_edge(struct tc_entry *tc, uint16_t ansn, const unsigned char **cu
      * Update the etx.
      */
     tc_edge->cost = olsr_calc_tc_cost(tc_edge);
+    tc_edge->common_cost = tc_edge->cost;
+    tc_edge->edge_inv->common_cost = tc_edge->cost;
+
     edge_change = 1;
     OLSR_DEBUG(LOG_TC, "TC:   chg edge entry %s\n", olsr_tc_edge_to_string(tc_edge));
   }
@@ -654,8 +660,11 @@ olsr_print_tc_table(void)
 
   OLSR_INFO(LOG_TC, "\n--- %s ------------------------------------------------- TOPOLOGY\n\n",
       olsr_clock_getWallclockString(&timebuf));
-  OLSR_INFO_NH(LOG_TC, "%-*s %-*s %-7s      %8s %12s %5s\n", ipwidth,
-               "Source IP addr", ipwidth, "Dest IP addr", "", olsr_get_linklabel(0), "vtime", "ansn");
+  OLSR_INFO_NH(LOG_TC, "%-*s %-*s %-7s      %*s %*s %12s %5s\n", ipwidth,
+               "Source IP addr", ipwidth, "Dest IP addr", "",
+               (int)olsr_get_linklabel_maxlength(0), olsr_get_linklabel(0),
+               (int)olsr_get_linklabel_maxlength(0), "(common)",
+               "vtime", "ansn");
 
   OLSR_FOR_ALL_TC_ENTRIES(tc, tc_iterator) {
     struct tc_edge_entry *tc_edge, *edge_iterator;
@@ -671,11 +680,14 @@ olsr_print_tc_table(void)
       struct ipaddr_str addrbuf, dstaddrbuf;
       char lqbuffer1[LQTEXT_MAXLENGTH];
 
-      OLSR_INFO_NH(LOG_TC, "%-*s %-*s %-7s      %8s %12s %5u\n",
+      OLSR_INFO_NH(LOG_TC, "%-*s %-*s %-7s      %*s %*s %12s %5u\n",
                    ipwidth, olsr_ip_to_string(&addrbuf, &tc->addr),
                    ipwidth, olsr_ip_to_string(&dstaddrbuf,
                                               &tc_edge->T_dest_addr),
                    tc_edge->virtual ? "virtual" : "",
+                   (int)olsr_get_linklabel_maxlength(0),
+                   olsr_get_linkcost_text(tc_edge->common_cost, false, lqbuffer1, sizeof(lqbuffer1)),
+                   (int)olsr_get_linklabel_maxlength(0),
                    olsr_get_linkcost_text(tc_edge->cost, false, lqbuffer1, sizeof(lqbuffer1)),
                    vtime, tc_edge->ansn);
 

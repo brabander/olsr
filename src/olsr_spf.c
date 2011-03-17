@@ -187,12 +187,7 @@ olsr_spf_relax(struct avl_tree *cand_tree, struct tc_entry *tc)
      * total quality of the path through this vertex
      * to the destination of this edge
      */
-    if (tc_edge->virtual) {
-      new_cost = tc->path_cost + tc_edge->edge_inv->cost;
-    }
-    else {
-      new_cost = tc->path_cost + tc_edge->cost;
-    }
+    new_cost = tc->path_cost + tc_edge->edge_inv->common_cost;
 
     OLSR_DEBUG(LOG_ROUTING, "SPF:   exploring edge %s, cost %s\n",
                olsr_ip_to_string(&buf, &tc_edge->T_dest_addr),
