@@ -351,7 +351,7 @@ static void
 parse_cfg_hna(char *argstr, const int ip_version, struct olsr_config *rcfg)
 {
   char **tok;
-#ifdef DEBUG
+#ifndef REMOVE_DEBUG_INFO
   struct ipaddr_str buf;
 #endif
   if ('{' != *argstr) {
@@ -422,7 +422,7 @@ parse_cfg_interface(char *argstr, struct olsr_config *rcfg)
 {
   char **tok;
   const char *nxt;
-#ifdef DEBUG
+#ifndef REMOVE_DEBUG_INFO
   struct ipaddr_str buf;
 #endif
   if (NULL != (tok = parse_tok(argstr, &nxt))) {
@@ -824,7 +824,7 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
     break;
   case 'N':                    /* NatThreshold (f) */
     {
-#ifdef DEBUG
+#ifndef REMOVE_DEBUG_INFO
       struct millitxt_buf tbuf;
 #endif
 

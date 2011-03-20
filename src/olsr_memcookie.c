@@ -324,7 +324,7 @@ olsr_memcookie_add_custom(const char *memcookie_name, const char *name, size_t s
     void (*move)(struct olsr_memcookie_info *, void *, void *)) {
   struct olsr_memcookie_info *ci;
   struct olsr_memcookie_custom *custom_cookie;
-  struct olsr_memcookie_custom *custom, *custom_iterator;
+  struct olsr_memcookie_custom *custom = NULL, *custom_iterator;
   struct olsr_memory_prefix *mem, *mem_iterator;
   size_t old_total_size, new_total_size;
 

@@ -86,7 +86,7 @@ void os_socket_set_olsr_options(struct interface *ifs, int socket, union olsr_so
 int get_ipv6_address(char *, struct sockaddr_in6 *, int);
 
 /* helper function for getting a socket */
-static inline int
+static INLINE int
 os_getsocket46(int family, const char *if_name, uint16_t port, int bufspace, union olsr_sockaddr *bindto) {
   assert (family == AF_INET || family == AF_INET6);
 
