@@ -42,7 +42,7 @@
 #ifndef _OLSR_MEMCOOKIE_H
 #define _OLSR_MEMCOOKIE_H
 
-#include "olsr_types.h"
+#include "common/common_types.h"
 #include "common/list.h"
 #include "common/avl.h"
 

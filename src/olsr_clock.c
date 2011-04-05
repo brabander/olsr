@@ -43,6 +43,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <stdio.h>
+#include <time.h>
 
 #include "os_time.h"
 #include "olsr_logging.h"

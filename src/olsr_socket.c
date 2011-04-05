@@ -46,11 +46,11 @@
 #include <errno.h>
 
 #include "common/avl.h"
-#include "common/avl_olsr_comp.h"
+#include "common/avl_comp.h"
+#include "olsr_clock.h"
 #include "olsr_logging.h"
 #include "olsr_memcookie.h"
 #include "os_net.h"
-#include "olsr_clock.h"
 #include "olsr_socket.h"
 
 /* Head of all OLSR used sockets */
@@ -84,10 +84,16 @@ olsr_socket_cleanup(void)
 {
   struct olsr_socket_entry *entry, *iterator;
 
+  if (socket_head.next == NULL && socket_head.prev == NULL) {
+    /* nothing to do */
+    return;
+  }
   OLSR_FOR_ALL_SOCKETS(entry, iterator) {
     os_close(entry->fd);
     olsr_socket_intfree(entry);
   }
+
+  olsr_memcookie_remove(socket_memcookie);
 }
 
 /**

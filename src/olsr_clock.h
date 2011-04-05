@@ -43,8 +43,8 @@
 #ifndef _OLSR_CLOCK
 #define _OLSR_CLOCK
 
+#include "common/common_types.h"
 #include "defs.h"
-#include "olsr_types.h"
 
 /* Some defs for juggling with timers */
 #define MSEC_PER_SEC 1000

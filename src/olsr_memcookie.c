@@ -42,6 +42,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "common/list.h"
 #include "common/avl.h"
@@ -107,6 +108,11 @@ void
 olsr_memcookie_cleanup(void)
 {
   struct olsr_memcookie_info *info, *iterator;
+
+  if (olsr_cookie_tree.cmp_ptr == NULL) {
+    /* nothing to do */
+    return;
+  }
 
   /*
    * Walk the full index range and kill 'em all.

@@ -43,10 +43,9 @@
 #ifndef _OLSR_SCHEDULER
 #define _OLSR_SCHEDULER
 
+#include "common/common_types.h"
 #include "common/list.h"
 #include "common/avl.h"
-
-#include "olsr_types.h"
 
 /* flags for socket handler */
 static const unsigned int OLSR_SOCKET_READ = 0x04;
