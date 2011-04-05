@@ -109,7 +109,7 @@ olsr_memcookie_cleanup(void)
 {
   struct olsr_memcookie_info *info, *iterator;
 
-  if (olsr_cookie_tree.cmp_ptr == NULL) {
+  if (olsr_cookie_tree.comp == NULL) {
     /* nothing to do */
     return;
   }
