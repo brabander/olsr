@@ -38,74 +38,42 @@
  * the copyright holders.
  *
  */
-#ifndef OLSR_COMPORT_H_
-#define OLSR_COMPORT_H_
+#include "olsr_logging_sources.h"
 
-#include "common/common_types.h"
-#include "common/autobuf.h"
-#include "common/list.h"
+/*
+ * String constants for olsr_log_* and if_mode as used in olsrd.conf.
+ * Keep this in the same order as the log_source and
+ * log_severity enums (see olsr_logging_sources.h).
+ */
 
-#include "defs.h"
-#include "olsr_types.h"
-
-enum http_header_type {
-  PLAIN,
-  HTTP_PLAIN,
-  HTTP_200_OK = 200,
-  HTTP_400_BAD_REQ = 400,
-  HTTP_401_UNAUTHORIZED = 401,
-  HTTP_403_FORBIDDEN = 403,
-  HTTP_404_NOT_FOUND = 404,
-  HTTP_413_REQUEST_TOO_LARGE = 413,
-  HTTP_501_NOT_IMPLEMENTED = 501,
-  HTTP_503_SERVICE_UNAVAILABLE = 503
+const char *LOG_SOURCE_NAMES[] = {
+  "all",
+  "logging",
+  "config",
+  "main",
+  "interface",
+  "networking",
+  "packet_creation",
+  "packet_parsing",
+  "routing",
+  "scheduler",
+  "timer",
+  "plugins",
+  "lq-plugins",
+  "ll-plugins",
+  "links",
+  "neighbors",
+  "mpr",
+  "mprset",
+  "2-hop",
+  "tc",
+  "hna",
+  "mid",
+  "duplicate-set",
+  "cookie",
+  "comport",
+  "apm",
+  "rtnetlink",
+  "tunnel",
+  "callback"
 };
-
-enum connection_state {
-  HTTP_LOGIN, INTERACTIVE, SEND_AND_QUIT, CLEANUP
-};
-
-struct comport_connection;
-typedef void (*olsr_txt_stop_continous) (struct comport_connection *con);
-
-struct comport_connection {
-  /*
-   * public part of the session data
-   *
-   * variables marked RW might be written from txt commands, those with
-   * an "R" mark are read only
-   */
-
-  /* timeout for txt sessions (RW) */
-  uint32_t timeout_value;
-
-  /* ip addr of peer (R) */
-  union olsr_ip_addr addr;
-
-  /* callback and data to stop a continous output txt command (RW) */
-  olsr_txt_stop_continous stop_handler;
-  void *stop_data[4];
-
-  /* output buffer, anything inside will be written to the peer as
-   * soon as possible */
-  struct autobuf out;
-
-  /*
-   * internal part of the server
-   */
-  struct list_entity node;
-  struct olsr_socket_entry *sock;
-  enum connection_state state;
-  enum http_header_type send_as;
-  const char *http_contenttype;
-  struct olsr_timer_entry *timeout;
-  bool is_http, show_echo;
-  struct autobuf in;
-};
-
-void olsr_com_init(void);
-void olsr_com_destroy(void);
-
-void EXPORT(olsr_com_activate_output) (struct comport_connection *con);
-
-#endif /* OLSR_COMPORT_H_ */
