@@ -256,6 +256,7 @@ add_interface(struct olsr_if_config *iface) {
    * Link to config.
    */
   iface->interf = ifp;
+  ifp->if_cfg = iface;
   lock_interface(iface->interf);
 
   /* Queue */
@@ -314,6 +315,8 @@ remove_interface(struct interface *ifp)
   }
 
   OLSR_INFO(LOG_INTERFACE, "Removing interface %s\n", ifp->int_name);
+
+  ifp->if_cfg->interf = NULL;
 
   os_cleanup_interface(ifp);
 

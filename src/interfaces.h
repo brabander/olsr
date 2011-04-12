@@ -145,6 +145,9 @@ struct olsr_netbuf {
 struct interface {
   struct list_entity int_node;         /* List of all interfaces */
 
+  /* backpointer */
+  struct olsr_if_config *if_cfg;
+
   enum interface_mode mode;            /* mode of the interface, default is mesh */
 
   /* sockaddr objects for src and (multicast) destination IP of interface */
