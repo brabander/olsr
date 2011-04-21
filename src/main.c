@@ -161,7 +161,7 @@ static int olsr_create_lock_file(bool noExitOnFail) {
   success = LockFile( lck, 0, 0, 0, 0);
 
   if (!success) {
-      CloseHanle(lck);
+      CloseHandle(lck);
       if (noExitOnFail) {
           return -1;
       }
