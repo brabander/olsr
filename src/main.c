@@ -128,8 +128,19 @@ struct olsr_cookie_info *def_timer_ci = NULL;
  */
 static int olsr_create_lock_file(bool noExitOnFail) {
 #ifdef WIN32
-  HANDLE lck = CreateEvent(NULL, TRUE, FALSE, lock_file_name);
-  if (NULL == lck || ERROR_ALREADY_EXISTS == GetLastError()) {
+    bool success;
+    HANDLE lck, lock;
+
+    lck = CreateFile(lock_file_name,
+            GENERIC_READ | GENERIC_WRITE,
+            FILE_SHARE_READ | FILE_SHARE_WRITE,
+            NULL,
+            OPEN_ALWAYS,
+            FILE_ATTRIBUTE_NORMAL |
+            FILE_FLAG_DELETE_ON_CLOSE,
+            NULL);
+  lock = CreateEvent(NULL, TRUE, FALSE, lock_file_name);
+  if (INVALID_HANDLE_VALUE == lck || ERROR_ALREADY_EXISTS == GetLastError()) {
     if (noExitOnFail) {
       return -1;
     }
@@ -146,6 +157,21 @@ static int olsr_create_lock_file(bool noExitOnFail) {
     }
     olsr_exit("", EXIT_FAILURE);
   }
+
+  success = LockFile( lck, 0, 0, 0, 0);
+
+  if (!success) {
+      CloseHanle(lck);
+      if (noExitOnFail) {
+          return -1;
+      }
+      fprintf(stderr,
+          "Error, cannot aquire OLSR lock '%s'.\n"
+          "Another OLSR instance might be running.\n",
+          lock_file_name);
+    olsr_exit("", EXIT_FAILURE);
+  }
+      
 #else
   struct flock lck;
 
