@@ -46,6 +46,9 @@
 #include <errno.h>
 #include <time.h>
 
+#ifdef WIN32
+#include <winsock2.h>
+#endif
 #include "common/autobuf.h"
 
 /**

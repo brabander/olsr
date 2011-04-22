@@ -226,6 +226,10 @@ static const char *
 unknown_key(void *obj) {
   static char buffer[32];
 
-  snprintf(buffer, sizeof(buffer), "0x%zx", (size_t)obj);
+#ifdef WIN32
+  snprintf(buffer, sizeof(buffer), "0x%Id", (size_t)obj);
+#else
+  snprintf(buffer, sizeof(buffer), "0x%zd", (size_t)obj);
+#endif
   return buffer;
 }

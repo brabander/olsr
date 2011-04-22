@@ -40,6 +40,11 @@
  */
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
+
+#ifdef WIN32
+#include "win32/compat.h"  /* random() */
+#endif
 
 #include "common/avl.h"
 #include "common/avl_olsr_comp.h"
