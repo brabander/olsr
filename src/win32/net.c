@@ -126,9 +126,9 @@ getsocket(int BuffSize, struct interface *ifp __attribute__ ((unused)))
     BuffSize -= 1024;
   }
 
-  if (BuffSize <= 8192)
-    fprintf(stderr, "Cannot set IPv4 socket receive buffer.\n");
-
+  if (BuffSize <= 8192) {
+    OLSR_PRINTF(1, "Cannot set IPv4 socket receive buffer.\n");
+  }
   memset(&Addr, 0, sizeof(Addr));
   Addr.sin_family = AF_INET;
   Addr.sin_port = htons(olsr_cnf->olsrport);
