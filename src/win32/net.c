@@ -402,7 +402,19 @@ olsr_recvfrom(int s, void *buf, size_t len, int flags __attribute__ ((unused)), 
 int
 olsr_select(int nfds, fd_set * readfds, fd_set * writefds, fd_set * exceptfds, struct timeval *timeout)
 {
+#ifdef WIN32
+  if (nfds == 0) {
+    if (timeout) {
+      Sleep(timeout->tv_sec * 1000 + timeout->tv_usec / 1000);
+    }
+    return 0;
+  }
+  else {
+    return select(nfds, readfds, writefds, exceptfds, timeout);
+  }
+#else
   return select(nfds, readfds, writefds, exceptfds, timeout);
+#endif /*WIN32*/
 }
 
 /*
