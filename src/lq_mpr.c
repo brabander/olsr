@@ -147,7 +147,9 @@ olsr_calculate_lq_mpr(void)
         best = LINK_COST_BROKEN;
 
         OLSR_FOR_ALL_NBR2_CON_ENTRIES(nbr2, walker, walker_iterator) {
-          if (walker->nbr->is_sym && !walker->nbr->skip && walker->path_linkcost < best) {
+          if (walker->nbr->is_sym && !walker->nbr->skip
+              && walker->second_hop_linkcost < LINK_COST_BROKEN
+              && walker->path_linkcost < best) {
             neigh = walker->nbr;
             best = walker->path_linkcost;
           }
