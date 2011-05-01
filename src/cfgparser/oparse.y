@@ -1292,7 +1292,7 @@ ssmart_gw_uplink: TOK_SMART_GW_UPLINK TOK_STRING
 	if (strcasecmp($2->string, GW_UPLINK_TXT[GW_UPLINK_NONE]) == 0) {
 		olsr_cnf->smart_gw_type = GW_UPLINK_NONE;
 	}
-	if (strcasecmp($2->string, GW_UPLINK_TXT[GW_UPLINK_IPV4]) == 0) {
+	else if (strcasecmp($2->string, GW_UPLINK_TXT[GW_UPLINK_IPV4]) == 0) {
 		olsr_cnf->smart_gw_type = GW_UPLINK_IPV4;
 	}
 	else if (strcasecmp($2->string, GW_UPLINK_TXT[GW_UPLINK_IPV6]) == 0) {
