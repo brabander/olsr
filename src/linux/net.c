@@ -343,10 +343,12 @@ os_getsocket4(const char *if_name, uint16_t port, int bufspace, union olsr_socka
 
   on = 1;
 #ifdef SO_BROADCAST
-  if (setsockopt(sock, SOL_SOCKET, SO_BROADCAST, &on, sizeof(on)) < 0) {
-    OLSR_ERROR(LOG_NETWORKING, "Cannot set socket for OLSR PDUs to broadcast mode (%s)\n", strerror(errno));
-    close(sock);
-    olsr_exit(EXIT_FAILURE);
+  if (bindto) {
+    if (setsockopt(sock, SOL_SOCKET, SO_BROADCAST, &on, sizeof(on)) < 0) {
+      OLSR_ERROR(LOG_NETWORKING, "Cannot set socket for OLSR PDUs to broadcast mode (%s)\n", strerror(errno));
+      close(sock);
+      olsr_exit(EXIT_FAILURE);
+    }
   }
 #endif
 

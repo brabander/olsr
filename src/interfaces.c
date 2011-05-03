@@ -204,10 +204,11 @@ add_interface(struct olsr_if_config *iface) {
 
   /* Register sockets */
   ifp->olsr_socket = olsr_socket_add(sock_rcv, &olsr_input, NULL, OLSR_SOCKET_READ);
-  ifp->send_socket = olsr_socket_add(sock_send, &olsr_input, NULL, OLSR_SOCKET_READ);
+  // ifp->send_socket = olsr_socket_add(sock_send, &olsr_input, NULL, OLSR_SOCKET_READ);
+  ifp->send_socket_fd = sock_send;
 
   os_socket_set_olsr_options(ifp, ifp->olsr_socket->fd, &ifp->int_multicast);
-  os_socket_set_olsr_options(ifp, ifp->send_socket->fd, &ifp->int_multicast);
+  os_socket_set_olsr_options(ifp, sock_send, NULL);
 
   /*
    *Initialize packet sequencenumber as a random 16bit value
@@ -357,10 +358,10 @@ remove_interface(struct interface *ifp)
 
   /* Close olsr socket */
   os_close(ifp->olsr_socket->fd);
-  os_close(ifp->send_socket->fd);
+  os_close(ifp->send_socket_fd);
 
   olsr_socket_remove(ifp->olsr_socket);
-  olsr_socket_remove(ifp->send_socket);
+  //olsr_socket_remove(ifp->send_socket);
 
   ifp->int_name = NULL;
   unlock_interface(ifp);
@@ -419,7 +420,7 @@ if_ifwithsock(int fd)
     if (ifp->olsr_socket->fd == fd) {
       return ifp;
     }
-    if (ifp->send_socket->fd == fd) {
+    if (ifp->send_socket_fd == fd) {
       return ifp;
     }
   }

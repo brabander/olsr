@@ -161,7 +161,8 @@ struct interface {
   struct olsr_socket_entry *olsr_socket;
 
   /* The send socket for this interface */
-  struct olsr_socket_entry *send_socket;
+  struct olsr_socket_entry *send_socket_;
+  int send_socket_fd;
 
   /* interface data */
   int int_mtu;                         /* MTU of interface */
