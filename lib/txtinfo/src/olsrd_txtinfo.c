@@ -78,6 +78,8 @@ static int txtinfo_exit(void);
 
 static enum olsr_txtcommand_result txtinfo_neigh(struct comport_connection *con,
     const char *cmd, const char *param);
+static enum olsr_txtcommand_result txtinfo_neigh2(struct comport_connection *con,
+    const char *cmd, const char *param);
 static enum olsr_txtcommand_result txtinfo_link(struct comport_connection *con,
     const char *cmd, const char *param);
 static enum olsr_txtcommand_result txtinfo_routes(struct comport_connection *con,
@@ -116,6 +118,7 @@ OLSR_PLUGIN6(plugin_parameters) {
 static struct txtinfo_cmd commands[] = {
     {"link", &txtinfo_link, NULL},
     {"neigh", &txtinfo_neigh, NULL},
+    {"neigh2", &txtinfo_neigh2, NULL},
     {"topology", &txtinfo_topology, NULL},
     {"hna", &txtinfo_hna, NULL},
     {"mid", &txtinfo_mid, NULL},
@@ -123,22 +126,22 @@ static struct txtinfo_cmd commands[] = {
     {"interfaces", &txtinfo_interfaces, NULL},
 };
 
-/* base path for http access (should end with a '/') */
-static const char TXTINFO_HTTP_PATH[] = "/txtinfo/";
-
 /* constants and static storage for template engine */
 static const char KEY_LOCALIP[] = "localip";
 static const char KEY_NEIGHIP[] = "neighip";
 static const char KEY_ALIASIP[] = "aliasip";
+static const char KEY_2HOPIP[] = "2hopip";
 static const char KEY_DESTPREFIX[] = "destprefix";
 static const char KEY_SYM[] = "issym";
 static const char KEY_MPR[] = "ismpr";
 static const char KEY_MPRS[] = "ismprs";
 static const char KEY_VIRTUAL[] = "isvirtual";
 static const char KEY_WILLINGNESS[] = "will";
-static const char KEY_2HOP[] = "2hop";
+static const char KEY_2HOP_CNT[] = "2hop";
 static const char KEY_LINKCOST[] = "linkcost";
 static const char KEY_RAWLINKCOST[] = "rawlinkcost";
+static const char KEY_LINKCOST2[] = "linkcost2";
+static const char KEY_RAWLINKCOST2[] = "rawlinkcost2";
 static const char KEY_HOPCOUNT[] = "hopcount";
 static const char KEY_FAILCOUNT[] = "failcount";
 static const char KEY_INTERFACE[] = "interface";
@@ -148,13 +151,13 @@ static const char KEY_MTU[] = "mtu";
 static const char KEY_SRCIP[] = "srcip";
 static const char KEY_DSTIP[] = "dstip";
 
-static struct ipaddr_str buf_localip, buf_neighip, buf_aliasip, buf_srcip, buf_dstip;
+static struct ipaddr_str buf_localip, buf_neighip, buf_aliasip, buf_2hopip, buf_srcip, buf_dstip;
 struct ipprefix_str buf_destprefix;
 static char buf_sym[6], buf_mrp[4], buf_mprs[4], buf_virtual[4];
 static char buf_willingness[7];
-static char buf_2hop[6];
-static char buf_rawlinkcost[11];
-static char buf_linkcost[LQTEXT_MAXLENGTH];
+static char buf_2hop_cnt[6];
+static char buf_rawlinkcost[11], buf_rawlinkcost2[11];
+static char buf_linkcost[LQTEXT_MAXLENGTH], buf_linkcost2[LQTEXT_MAXLENGTH];
 static char buf_hopcount[4];
 static char buf_failcount[8];
 static char buf_state[5];
@@ -180,10 +183,18 @@ static size_t link_keys_static = 0, link_keys_count = 0, link_value_size = 0;
 
 static const char *tmpl_neigh = "%neighip%\t%issym%\t%ismpr%\t%ismprs%\t%will%\t%2hop%\n";
 static const char *keys_neigh[] = {
-  KEY_NEIGHIP, KEY_SYM, KEY_MPR, KEY_MPRS, KEY_WILLINGNESS, KEY_2HOP
+  KEY_NEIGHIP, KEY_SYM, KEY_MPR, KEY_MPRS, KEY_WILLINGNESS, KEY_2HOP_CNT
 };
 static char *values_neigh[] = {
-  buf_neighip.buf, buf_sym, buf_mprs, buf_mprs, buf_willingness, buf_2hop
+  buf_neighip.buf, buf_sym, buf_mprs, buf_mprs, buf_willingness, buf_2hop_cnt
+};
+
+static const char *tmpl_neigh2 = "%neighip%\t%linkcost%\t%2hopip%\t%linkcost2%\n";
+static const char *keys_neigh2[] = {
+  KEY_NEIGHIP, KEY_LINKCOST, KEY_RAWLINKCOST, KEY_2HOPIP, KEY_LINKCOST2, KEY_RAWLINKCOST2
+};
+static char *values_neigh2[] = {
+  buf_neighip.buf, buf_linkcost, buf_rawlinkcost, buf_2hopip.buf, buf_linkcost2, buf_rawlinkcost2
 };
 
 static const char *tmpl_routes = "%destprefix%\t%neighip%\t%hopcount%\t%linkcost%\t%interface%\t%failcount%\n";
@@ -399,10 +410,62 @@ txtinfo_neigh(struct comport_connection *con,
     strscpy(buf_mprs, neigh->mprs_count>0 ? OLSR_YES : OLSR_NO, sizeof(buf_mprs));
 
     snprintf(buf_willingness, sizeof(buf_willingness), "%d", neigh->willingness);
-    snprintf(buf_2hop, sizeof(buf_2hop), "%d", neigh->con_tree.count);
+    snprintf(buf_2hop_cnt, sizeof(buf_2hop_cnt), "%d", neigh->con_tree.count);
 
     if (abuf_templatef(&con->out, template, values_neigh, tmpl_indices, indexLength) < 0) {
         return ABUF_ERROR;
+    }
+  }
+
+  return CONTINUE;
+}
+
+/**
+ * Callback for neigh2 command
+ */
+static enum olsr_txtcommand_result
+txtinfo_neigh2(struct comport_connection *con,
+    const char *cmd __attribute__ ((unused)), const char *param)
+{
+  struct nbr_entry *neigh, *iterator;
+  struct link_entry *lnk;
+  struct nbr_con *nbr_con, *con_it;
+  const char *template;
+  int indexLength;
+
+  template = param != NULL ? parse_user_template(param) : tmpl_neigh2;
+  if (param == NULL &&
+      abuf_puts(&con->out, "Table: 2-Hop Neighbors\nIP address\tCost\t2-Hop IP\tCost\n") < 0) {
+    return ABUF_ERROR;
+  }
+
+  if ((indexLength = abuf_template_init(keys_neigh2, ARRAYSIZE(keys_neigh2), template, tmpl_indices, ARRAYSIZE(tmpl_indices))) < 0) {
+    return ABUF_ERROR;
+  }
+
+  /* Neighbors */
+  OLSR_FOR_ALL_NBR_ENTRIES(neigh, iterator) {
+    olsr_linkcost cost = LINK_COST_BROKEN;
+
+    lnk = get_best_link_to_neighbor(neigh);
+    if (lnk) {
+      cost = lnk->linkcost;
+    }
+
+    olsr_ip_to_string(&buf_neighip, &neigh->nbr_addr);
+
+    snprintf(buf_rawlinkcost, sizeof(buf_rawlinkcost), "%ud", cost);
+    olsr_get_linkcost_text(cost, false, buf_linkcost, sizeof(buf_linkcost));
+
+    OLSR_FOR_ALL_NBR_CON_ENTRIES(neigh, nbr_con, con_it) {
+      olsr_ip_to_string(&buf_2hopip, &nbr_con->nbr2->nbr2_addr);
+
+      snprintf(buf_rawlinkcost2, sizeof(buf_rawlinkcost2), "%ud", nbr_con->second_hop_linkcost);
+      olsr_get_linkcost_text(nbr_con->second_hop_linkcost, false, buf_linkcost2, sizeof(buf_linkcost2));
+
+      if (abuf_templatef(&con->out, template, values_neigh2, tmpl_indices, indexLength) < 0) {
+          return ABUF_ERROR;
+      }
     }
   }
 
