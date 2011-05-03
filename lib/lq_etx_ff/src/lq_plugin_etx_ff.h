@@ -73,7 +73,7 @@ struct lq_etxff_link_entry {
   uint8_t windowSize, activePtr;
   uint16_t last_seq_nr;
   uint16_t missed_seconds;
-  uint16_t received[LQ_FF_WINDOW], lost[LQ_FF_WINDOW];
+  uint16_t received[LQ_FF_WINDOW], total[LQ_FF_WINDOW];
 };
 
 extern struct lq_handler lq_etxff_handler;

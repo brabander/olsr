@@ -161,6 +161,9 @@ lq_etxff_packet_parser(struct olsr_packet *pkt, uint8_t *binary __attribute__ ((
   const union olsr_ip_addr *main_addr;
   struct lq_etxff_link_entry *lnk;
   uint32_t seq_diff;
+#if !defined(REMOVE_LOG_WARN) || !defined(REMOVE_LOG_DEBUG)
+    struct ipaddr_str buf;
+#endif
 
   /* Find main address */
   main_addr = olsr_lookup_main_addr_by_alias(from_addr);
@@ -172,9 +175,6 @@ lq_etxff_packet_parser(struct olsr_packet *pkt, uint8_t *binary __attribute__ ((
   }
 
   if (lnk->last_seq_nr == pkt->seqno) {
-#ifndef REMOVE_LOG_WARN
-    struct ipaddr_str buf;
-#endif
     OLSR_WARN(LOG_LQ_PLUGINS, "Got package with same sequence number from %s, if=%s, seq=0x%04x\n",
         olsr_ip_to_string(&buf, from_addr), in_if->int_name, pkt->seqno);
     return;
@@ -185,13 +185,16 @@ lq_etxff_packet_parser(struct olsr_packet *pkt, uint8_t *binary __attribute__ ((
     seq_diff = pkt->seqno - lnk->last_seq_nr;
   }
 
+  OLSR_DEBUG(LOG_LQ_PLUGINS, "Got package from %s, if=%s, seq=0x%04x, diff=0x%04x\n",
+      olsr_ip_to_string(&buf, from_addr), in_if->int_name, pkt->seqno, seq_diff);
+
   /* Jump in sequence numbers ? */
   if (seq_diff > 256) {
     seq_diff = 1;
   }
 
   lnk->received[lnk->activePtr]++;
-  lnk->lost[lnk->activePtr] += (seq_diff - 1);
+  lnk->total[lnk->activePtr] += seq_diff;
 
   lnk->last_seq_nr = pkt->seqno;
   lnk->missed_seconds = 0;
@@ -206,7 +209,7 @@ lq_etxff_timer(void __attribute__ ((unused)) * context)
   OLSR_FOR_ALL_LINK_ENTRIES(link, link_iterator) {
     struct lq_etxff_link_entry *lq_link;
     uint32_t ratio;
-    uint16_t i, received, lost;
+    uint16_t i, received, total;
 
 #ifndef REMOVE_LOG_DEBUG
     struct ipaddr_str buf;
@@ -214,12 +217,12 @@ lq_etxff_timer(void __attribute__ ((unused)) * context)
 #endif
     lq_link = (struct lq_etxff_link_entry *)link;
 
-    OLSR_DEBUG(LOG_LQ_PLUGINS, "LQ-FF new entry for %s: rec: %d lost: %d",
+    OLSR_DEBUG(LOG_LQ_PLUGINS, "LQ-FF new entry for %s: rec: %d total: %d",
                olsr_ip_to_string(&buf, &link->neighbor_iface_addr),
-               lq_link->received[lq_link->activePtr], lq_link->lost[lq_link->activePtr]);
+               lq_link->received[lq_link->activePtr], lq_link->total[lq_link->activePtr]);
 
     received = 0;
-    lost = 0;
+    total = 0;
 
     /* enlarge window if still in quickstart phase */
     if (lq_link->windowSize < LQ_FF_WINDOW) {
@@ -227,26 +230,26 @@ lq_etxff_timer(void __attribute__ ((unused)) * context)
     }
     for (i = 0; i < lq_link->windowSize; i++) {
       received += lq_link->received[i];
-      lost += lq_link->lost[i];
+      total += lq_link->total[i];
     }
 
-    OLSR_DEBUG(LOG_LQ_PLUGINS, " total-rec: %d total-lost: %d", received, lost);
+    OLSR_DEBUG(LOG_LQ_PLUGINS, " total-rec: %d total: %d", received, total);
 
     /* calculate link quality */
-    if (received + lost == 0) {
+    if (total == 0) {
       lq_link->lq.valueLq = 0;
     } else {
 
       /* keep missed hello periods in mind (round up hello interval to seconds) */
       uint32_t missed_hello_cost = lq_link->missed_seconds / ((lq_link->core.link_loss_timer->timer_period + 999) / 1000);
-      lost += missed_hello_cost * missed_hello_cost;
+      total += missed_hello_cost * missed_hello_cost;
 
       // start with link-loss-factor
       ratio = link->loss_link_multiplier;
 
       // calculate received/(received + loss) factor
       ratio = ratio * received;
-      ratio = ratio / (received + lost);
+      ratio = ratio / total;
       ratio = (ratio * 255) >> 16;
 
       lq_link->lq.valueLq = (uint8_t) (ratio);
@@ -254,7 +257,7 @@ lq_etxff_timer(void __attribute__ ((unused)) * context)
 
     // shift buffer
     lq_link->activePtr = (lq_link->activePtr + 1) % LQ_FF_WINDOW;
-    lq_link->lost[lq_link->activePtr] = 0;
+    lq_link->total[lq_link->activePtr] = 0;
     lq_link->received[lq_link->activePtr] = 0;
     lq_link->missed_seconds++;
 
@@ -363,7 +366,7 @@ lq_etxff_clear_link_entry(struct link_entry *link)
 
   lq_link->windowSize = LQ_FF_QUICKSTART_INIT;
   for (i = 0; i < LQ_FF_WINDOW; i++) {
-    lq_link->lost[i] = 3;
+    lq_link->total[i] = 3;
   }
 }
 
