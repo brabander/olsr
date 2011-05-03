@@ -68,15 +68,22 @@ static void
 process_message_neighbors(struct nbr_entry *neighbor, const struct lq_hello_message *message)
 {
   struct lq_hello_neighbor *message_neighbors;
-  olsr_linkcost first_hop_pathcost;
   struct link_entry *lnk;
   union olsr_ip_addr *neigh_addr;
   struct nbr_con *connector;
+
+  lnk = get_best_link_to_neighbor(neighbor);
 
   /*
    * Walk our 2-hop neighbors.
    */
   for (message_neighbors = message->neigh; message_neighbors; message_neighbors = message_neighbors->next) {
+    /*
+     * We are only interested in symmetrical or MPR neighbors.
+     */
+    if (message_neighbors->neigh_type != SYM_NEIGH && message_neighbors->neigh_type != MPR_NEIGH) {
+      continue;
+    }
 
     /*
      * Check all interfaces such that we don't add ourselves to the 2 hop list.
@@ -88,63 +95,19 @@ process_message_neighbors(struct nbr_entry *neighbor, const struct lq_hello_mess
 
     /* Get the main address */
     neigh_addr = olsr_lookup_main_addr_by_alias(&message_neighbors->addr);
-    if (neigh_addr != NULL) {
-      message_neighbors->addr = *neigh_addr;
+    if (neigh_addr == NULL) {
+      neigh_addr = &message_neighbors->addr;
     }
 
-    /*
-     * We are only interested in symmetrical or MPR neighbors.
-     */
-    if (message_neighbors->neigh_type != SYM_NEIGH && message_neighbors->neigh_type != MPR_NEIGH) {
-      continue;
-    }
+    olsr_link_nbr_nbr2(neighbor, neigh_addr, message->comm->vtime);
 
-    olsr_link_nbr_nbr2(neighbor, &message_neighbors->addr, message->comm->vtime);
-  }
+    if (lnk) {
+      connector = olsr_lookup_nbr_con_entry(neighbor, neigh_addr);
 
-  /* Second pass */
-  lnk = get_best_link_to_neighbor_ip(&neighbor->nbr_addr);
+      connector->second_hop_linkcost = message_neighbors->cost;
+      connector->path_linkcost = lnk->linkcost + message_neighbors->cost;
 
-  if (!lnk) {
-    return;
-  }
-  /* calculate first hop path quality */
-  first_hop_pathcost = lnk->linkcost;
-  /*
-   *  Second pass : calculate the best 2-hop
-   * path costs to all the 2-hop neighbors indicated in the
-   * HELLO message. Since the same 2-hop neighbor may be listed
-   * more than once in the same HELLO message (each at a possibly
-   * different quality) we want to select only the best one, not just
-   * the last one listed in the HELLO message.
-   */
-  for (message_neighbors = message->neigh; message_neighbors != NULL; message_neighbors = message_neighbors->next) {
-    if (if_ifwithaddr(&message_neighbors->addr) != NULL) {
-      continue;
-    }
-    if (message_neighbors->neigh_type == SYM_NEIGH || message_neighbors->neigh_type == MPR_NEIGH) {
-      olsr_linkcost new_second_hop_linkcost;
-      olsr_linkcost new_path_linkcost;
-      connector = olsr_lookup_nbr_con_entry(neighbor, &message_neighbors->addr);
-
-      if (!connector) {
-        continue;
-      }
-
-      new_second_hop_linkcost = message_neighbors->cost;
-
-      // the total cost for the route
-      // "us --- 1-hop --- 2-hop"
-      new_path_linkcost = first_hop_pathcost + new_second_hop_linkcost;
-
-      // Only copy the link quality if it is better than what we have
-      // for this 2-hop neighbor
-      if (new_path_linkcost < connector->path_linkcost) {
-        connector->second_hop_linkcost = new_second_hop_linkcost;
-        connector->path_linkcost = new_path_linkcost;
-
-        changes_neighborhood = true;
-      }
+      changes_neighborhood = true;
     }
   }
 }
