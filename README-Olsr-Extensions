@@ -242,7 +242,7 @@ switched on/off by the following parameter:
 SmartGateway <yes/no>
 
 All other parameters will be ignored if SmartGateway is set to "no"
-(the default is "yes").
+(the default is "no").
 
 On the client side there is a single additional parameter which
 controls if you want to allow the selection of an outgoing ipv4
