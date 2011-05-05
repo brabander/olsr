@@ -46,6 +46,7 @@
 #define DEF_POLLRATE           50
 #define DEF_NICCHGPOLLRT       2500
 #define DEF_WILL_AUTO          false
+#define DEF_WILL               3
 #define DEF_ALLOW_NO_INTS      true
 #define DEF_TOS                16
 #define DEF_DEBUGLVL           "1"

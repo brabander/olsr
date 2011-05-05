@@ -1504,6 +1504,7 @@ olsr_get_default_cfg(void)
   assert(cfg->no_fork == false);
   cfg->allow_no_interfaces = DEF_ALLOW_NO_INTS;
   cfg->willingness_auto = DEF_WILL_AUTO;
+  cfg->willingness = DEF_WILL;
   cfg->clear_screen = DEF_CLEAR_SCREEN;
 
   cfg->tos = DEF_TOS;
@@ -1532,7 +1533,6 @@ olsr_get_default_cfg(void)
   cfg->tc_redundancy = TC_REDUNDANCY;
   cfg->mpr_coverage = MPR_COVERAGE;
   cfg->lq_fish = DEF_LQ_FISH;
-  assert(cfg->willingness == 0);
 
   cfg->olsr_port = OLSRPORT;
   assert(cfg->dlPath == NULL);
