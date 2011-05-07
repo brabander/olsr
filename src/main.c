@@ -718,7 +718,7 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
   olsr_win32_end_request = TRUE;
 
   while (!olsr_win32_end_flag)
-  Sleep(100);
+  sleep(1);
 
   OLSR_PRINTF(1, "Scheduler stopped.\n");
 #endif

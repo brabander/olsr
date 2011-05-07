@@ -494,7 +494,6 @@ olsr_scheduler(void)
 #ifdef WIN32
     if (olsr_win32_end_request) {
       olsr_win32_end_flag = true;
-      break;
     }
 #endif
   }
