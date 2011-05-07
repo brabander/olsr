@@ -19,7 +19,7 @@ INSTALL_LIB =	install -D -m 755 $(PLUGIN_FULLNAME) $(LIBDIR)/$(PLUGIN_FULLNAME);
 ifdef OLSRD_PLUGIN
 GENERATE_PIC = true
 endif
-ifeq ($(filter-out alpha x86_64 parisc64 ia64, $(ARCH)),)
+ifeq ($(filter-out mips mips64 alpha x86_64 parisc64 ia64, $(ARCH)),)
 GENERATE_PIC = true
 endif
 
