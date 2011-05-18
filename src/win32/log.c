@@ -40,6 +40,7 @@
  */
 
 #include "os_system.h"
+#include <winsock2.h>
 
 void
 os_printline(int Level __attribute__ ((unused)), const char *line __attribute__ ((unused)))

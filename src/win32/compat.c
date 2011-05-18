@@ -62,6 +62,7 @@
 #include <dlfcn.h>
 #include <io.h>
 #include <arpa/inet.h>
+#include <stdio.h>
 
 #include "defs.h"
 #include "common/string.h"

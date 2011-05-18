@@ -56,6 +56,7 @@
 
 #include "defs.h"
 #include "os_net.h"
+#include "os_system.h"
 #include "net_olsr.h"
 #include "ipcalc.h"
 #include "olsr_logging.h"
@@ -222,13 +223,13 @@ os_getsocket6(const char *if_name __attribute__ ((unused)), uint16_t port, int b
 }
 
 static int
-join_mcast(struct interface *Nic, int Sock)
+join_mcast(struct interface *Nic, int Sock, union olsr_sockaddr *mcast)
 {
   /* See linux/in6.h */
   struct ipaddr_str buf;
   struct ipv6_mreq McastReq;
 
-  McastReq.ipv6mr_multiaddr = Nic->int_multicast.v6.sin6_addr;
+  McastReq.ipv6mr_multiaddr = mcast->v6.sin6_addr;
   McastReq.ipv6mr_interface = Nic->if_index;
 
   OLSR_DEBUG(LOG_NETWORKING, "Interface %s joining multicast %s...", Nic->int_name,
@@ -266,8 +267,9 @@ join_mcast(struct interface *Nic, int Sock)
 }
 
 void
-os_socket_set_olsr_options(struct interface *ifp, int sock) {
-  join_mcast(ifp, sock);
+os_socket_set_olsr_options(struct interface *ifs,
+    int sock, union olsr_sockaddr *mcast) {
+  join_mcast(ifs, sock, mcast);
 }
 
 static int
