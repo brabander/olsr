@@ -581,13 +581,14 @@ static int olsr_os_process_rt_entry(int af_family, const struct rt_entry *rt, bo
     OLSR_ERROR(LOG_ROUTING, ". %s (%d)", err == 0 ? "successful" : "failed", err);
   }
 
-  /* report success on "No such process" (3) */
+  /* report success on "No such process" (3) while deleting routes */
   else if (!set && err == 3) {
     /* another similar (but slightly different) route may be present at this point,
      * if so this will get solved when adding new route to this destination */
     OLSR_ERROR(LOG_ROUTING, ". ignoring 'No such process' (3) while deleting route!");
     err = 0;
   }
+#ifdef OBSOLETE_AUTOGEN /*obsolete due to onlink flag*/
   /* insert route to gateway on the fly if "Network unreachable" (128) on 2.4 kernels
    * or on 2.6 kernel No such process (3) or Network unreachable (101) is reported in rtnetlink response
    * do this only with flat metric, as using metric values inherited from
@@ -621,6 +622,7 @@ static int olsr_os_process_rt_entry(int af_family, const struct rt_entry *rt, bo
     }
     OLSR_ERROR(LOG_ROUTING, ". %s (%d)", err == 0 ? "successful" : "failed", err);
   }
+#endif /*OBSOLETE*/
 
   return err;
 }
