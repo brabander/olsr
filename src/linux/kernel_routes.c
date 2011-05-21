@@ -386,6 +386,7 @@ static int olsr_new_netlink_route(int family, int rttable, int if_index, int met
   req.n.nlmsg_type = set ? RTM_NEWROUTE : RTM_DELROUTE;
   req.r.rtm_family = family;
   req.r.rtm_table = rttable;
+  req.r.rtm_flags |= RTNH_F_ONLINK;
 
   /* RTN_UNSPEC would be the wildcard, but blackhole broadcast or nat roules should usually not conflict */
   /* -> olsr only adds deletes unicast routes */
