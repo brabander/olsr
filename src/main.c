@@ -464,10 +464,8 @@ int main(int argc, char *argv[]) {
   set_empty_tc_timer(GET_TIMESTAMP(0));
 
   /* enable ip forwarding on host */
-  /* Disable redirects globally */
-#ifndef WIN32
+  /* Disable redirects globally (not for WIN32) */
   net_os_set_global_ifoptions();
-#endif
 
   /* Initialize parser */
   olsr_init_parser();
