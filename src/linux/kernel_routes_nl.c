@@ -369,15 +369,19 @@ static int olsr_new_netlink_route(int family, int rttable, int if_index, int met
 
   memset(&req, 0, sizeof(req));
 
-  req.n.nlmsg_len = NLMSG_LENGTH(sizeof(struct rtmsg));
-  req.n.nlmsg_flags = NLM_F_REQUEST | NLM_F_ACK;
-  if (set) {
-    req.n.nlmsg_flags |= NLM_F_CREATE | NLM_F_REPLACE;
-  }
-
-  req.n.nlmsg_type = set ? RTM_NEWROUTE : RTM_DELROUTE;
+  req.r.rtm_flags = RTNH_F_ONLINK;
   req.r.rtm_family = family;
   req.r.rtm_table = rttable;
+  
+  req.n.nlmsg_len = NLMSG_LENGTH(sizeof(struct rtmsg));
+  req.n.nlmsg_flags = NLM_F_REQUEST | NLM_F_ACK;
+
+  if (set) {
+    req.n.nlmsg_flags |= NLM_F_CREATE | NLM_F_REPLACE;
+    req.n.nlmsg_type = RTM_NEWROUTE;
+  } else {
+    req.n.nlmsg_type = RTM_DELROUTE;
+  }
 
   /* RTN_UNSPEC would be the wildcard, but blackhole broadcast or nat roules should usually not conflict */
   /* -> olsr only adds deletes unicast routes */
@@ -423,8 +427,12 @@ static int olsr_new_netlink_route(int family, int rttable, int if_index, int met
     /* add gateway */
     olsr_netlink_addreq(&req.n, sizeof(req), RTA_GATEWAY, gw, family_size);
   }
+  else {
+    /* use destination as gateway, to 'force' linux kernel to do proper source address selection */
+    olsr_netlink_addreq(&req.n, sizeof(req), RTA_GATEWAY, &dst->prefix, family_size);  
+  }
 
-  /* add destination */
+   /* add destination */
   olsr_netlink_addreq(&req.n, sizeof(req), RTA_DST, &dst->prefix, family_size);
 
   err = olsr_netlink_send(&req.n);
