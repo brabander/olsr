@@ -423,10 +423,6 @@ static int olsr_new_netlink_route(int family, int rttable, int if_index, int met
     /* add gateway */
     olsr_netlink_addreq(&req.n, sizeof(req), RTA_GATEWAY, gw, family_size);
   }
-  else {
-    /* use destination as gateway, to 'force' linux kernel to do proper source address selection */
-    olsr_netlink_addreq(&req.n, sizeof(req), RTA_GATEWAY, &dst->prefix, family_size);
-  }
 
   /* add destination */
   olsr_netlink_addreq(&req.n, sizeof(req), RTA_DST, &dst->prefix, family_size);
