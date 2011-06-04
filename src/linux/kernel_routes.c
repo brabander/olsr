@@ -404,13 +404,9 @@ static int olsr_new_netlink_route(int family, int rttable, int if_index, int met
     /* as wildcard for fuzzy deletion */
     req.r.rtm_scope = RT_SCOPE_NOWHERE;
   }
-  else if (gw) {
-    /* for multihop routes */
-    req.r.rtm_scope = RT_SCOPE_UNIVERSE;
-  }
   else {
-    /* for link neighbor routes */
-    req.r.rtm_scope = RT_SCOPE_LINK;
+    /* for all routes */
+    req.r.rtm_scope = RT_SCOPE_UNIVERSE;
   }
 
   if (set || !del_similar) {
@@ -453,10 +449,10 @@ static int olsr_new_netlink_route(int family, int rttable, int if_index, int met
           if_ifwithindex_name(if_index), strerror(errno), errno);
     }
     else {
-      OLSR_ERROR(LOG_ROUTING, ". error: %s route to %s dev %s (%s %d)",
+      OLSR_ERROR(LOG_ROUTING, ". error: %s route to %s via %s dev %s onlink (%s %d)",
           set ? "add" : "del",
-          olsr_ip_prefix_to_string(&bufp, dst), if_ifwithindex_name(if_index),
-          strerror(errno), errno);
+          olsr_ip_prefix_to_string(&bufp, dst), olsr_ip_to_string(&buf, gw), 
+          if_ifwithindex_name(if_index), strerror(errno), errno);
     }
   }
 
