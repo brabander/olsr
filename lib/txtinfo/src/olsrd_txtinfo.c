@@ -447,13 +447,10 @@ ipc_print_topology(struct autobuf *abuf)
 static void
 ipc_print_hna(struct autobuf *abuf)
 {
-  int size;
   struct ip_prefix_list *hna;
   struct hna_entry *tmp_hna;
   struct hna_net *tmp_net;
   struct ipaddr_str buf, mainaddrbuf;
-
-  size = 0;
 
 #ifdef ACTIVATE_VTIME_TXTINFO
   abuf_puts(abuf, "Table: HNA\nDestination\tGateway\tVTime\n");
