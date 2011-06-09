@@ -410,11 +410,11 @@ CreateNonOlsrNetworkInterfaces(struct interface *skipThisIntf)
 void
 AddInterface(struct interface *newIntf)
 {
-  int nOpened;
+  /* int nOpened; */
 
   assert(newIntf != NULL);
 
-  nOpened = CreateInterface(newIntf->int_name, newIntf);
+  /* nOpened = */ (void)CreateInterface(newIntf->int_name, newIntf);
 
   //OLSR_PRINTF(1, "%s: opened %d sockets\n", PLUGIN_NAME, nOpened);
 }                               /* AddInterface */
