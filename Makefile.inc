@@ -64,7 +64,7 @@ CFGFILE ?= $(ETCDIR)/$(CFGNAME)
 CPPFLAGS =	$(filter-out -I./src,-Isrc -I$(TOPDIR)/src)
 CPPFLAGS +=	-DOLSRD_CONF_FILE_NAME='"$(CFGNAME)"'
 CPPFLAGS +=	-DOLSRD_GLOBAL_CONF_FILE='"$(CFGFILE)"'
-
+CPPFLAGS += -D_XOPEN_SOURCE=700 -D_BSD_SOURCE
 #############
 # handle debugging and logging options
 #############
