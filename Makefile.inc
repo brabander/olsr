@@ -86,7 +86,6 @@ WARNINGS +=	-Wcast-qual
 WARNINGS +=	-Wshadow
 WARNINGS +=	-Wformat
 WARNINGS +=	-Wsequence-point
-WARNINGS +=	-Wpointer-arith
 WARNINGS +=	-Wcast-align
 # the following 2 do not work yet and need more work on it
 #WARNINGS +=	-Wconversion
