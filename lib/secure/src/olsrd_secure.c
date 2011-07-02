@@ -677,10 +677,9 @@ parse_cres(struct interface *olsr_if, char *in_msg)
 
     /* First the challenge received */
     /* But we have to calculate our hash with the challenge in
-     * network order just like the remote host did!  6-Jun-2011 AE5AE */
+     * network order just like the remote host did!  06/06/2011 AE5AE */
     netorder_challenge = htonl(entry->challenge);
     memcpy(checksum_cache, &netorder_challenge, sizeof(uint32_t));
-/*     memcpy(checksum_cache, &entry->challenge, 4); */
     /* Then the local IP */
     memcpy(&checksum_cache[sizeof(uint32_t)], &msg->originator, olsr_cnf->ipsize);
 
@@ -701,7 +700,7 @@ parse_cres(struct interface *olsr_if, char *in_msg)
   entry->challenge = 0;
   entry->validated = 1;
 
-  /* Bring timestamp to host order before arith. 2011/05/31 AE5AE */
+  /* Bring timestamp to host order before arith. 05/31/2011  AE5AE */
   entry->diff = now.tv_sec - ntohl(msg->timestamp);
 
   /* update validtime - validated entry */
@@ -713,7 +712,6 @@ parse_cres(struct interface *olsr_if, char *in_msg)
   /* Send response-response */
   send_rres(olsr_if, (union olsr_ip_addr *)&msg->originator,
 	    (union olsr_ip_addr *)&msg->destination, msg->challenge);
-/* 	    (union olsr_ip_addr *)&msg->destination, ntohl(msg->challenge)); */
 /* Don't give send_rres() the challenge in host order, the checksum needs to
  * be calculated in network order.  06/06/2011  AE5AE */
 
@@ -777,7 +775,6 @@ parse_rres(char *in_msg)
     /* But we have to calculate our hash with the challenge in network order! 06/06/2011  AE5AE */
     netorder_challenge = htonl(entry->challenge);
     memcpy(checksum_cache, &netorder_challenge, sizeof(uint32_t));
-/*     memcpy(checksum_cache, &entry->challenge, 4); */
 
     /* Then the local IP */
     memcpy(&checksum_cache[sizeof(uint32_t)], &msg->originator, olsr_cnf->ipsize);
@@ -885,7 +882,6 @@ parse_challenge(struct interface *olsr_if, char *in_msg)
 
   send_cres(olsr_if, (union olsr_ip_addr *)&msg->originator,
 	    (union olsr_ip_addr *)&msg->destination, msg->challenge, entry);
-/* 	    (union olsr_ip_addr *)&msg->destination, ntohl(msg->challenge), entry); */
 /* Don't give send_cres() the challenge in host order, as the checksum needs to
  * be calculated with network order.   06/06/2011  AE5AE */
 
@@ -927,7 +923,6 @@ send_cres(struct interface *olsr_if, union olsr_ip_addr *to, union olsr_ip_addr 
   crmsg.timestamp = htonl(now.tv_sec);
 #ifndef WIN32
   /* Don't print htonl()'d time, use original now.tv_sec.  05/31/2011  AE5AE */
-/*   olsr_printf(3, "[ENC]Timestamp %lld\n", (long long)crmsg.timestamp); */
   olsr_printf(3, "[ENC]Timestamp %lld\n", (long long)now.tv_sec);
 #endif
 
@@ -1000,7 +995,6 @@ send_rres(struct interface *olsr_if, union olsr_ip_addr *to, union olsr_ip_addr 
   rrmsg.timestamp = htonl(now.tv_sec);
 
 #ifndef WIN32
-  /* olsr_printf(3, "[ENC]Timestamp %lld\n", (long long)rrmsg.timestamp); */
   /* don't print htonl()'d time, use original now.tv_sec.  05/31/2011  AE5AE */
   olsr_printf(3, "[ENC]Timestamp %lld\n", (long long)now.tv_sec);
 #endif
