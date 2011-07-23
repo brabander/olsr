@@ -233,7 +233,8 @@ relay_spread_host(union olsr_ip_addr host_ip, union olsr_ip_addr master_ip, uint
 }
 #endif
 
-void olsr_parser(struct olsr_message *msg, struct interface *in_if __attribute__ ((unused)), union olsr_ip_addr *ipaddr,
+void olsr_parser(struct olsr_message *msg, struct interface *in_if __attribute__ ((unused)),
+    union olsr_ip_addr *ipaddr __attribute__ ((unused)),
     enum duplicate_status status __attribute__ ((unused))) {
   const uint8_t *curr;
   union olsr_ip_addr ip, master_ip;
@@ -291,7 +292,9 @@ void olsr_parser(struct olsr_message *msg, struct interface *in_if __attribute__
       OLSR_INFO(LOG_PLUGINS, "Updating Routes because %s changed\n", inet_ntoa(guest->ip.v4));
       update_routes_now();
     } else {
+#ifndef REMOVE_LOG_DEBUG
       struct ipaddr_str buf1, buf2;
+#endif
       OLSR_DEBUG(LOG_PLUGINS, "Not updating, because %s stayed at %s\n",
           olsr_ip_to_string(&buf1, &guest->ip), olsr_ip_to_string(&buf2, &master_ip));
     }
