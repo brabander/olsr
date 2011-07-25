@@ -183,6 +183,9 @@ tas:
 tas_install:
 		$(MAKECMD) -C lib/tas DESTDIR=$(DESTDIR) install
 
+tas_uninstall:
+		$(MAKECMD) -C lib/tas DESTDIR=$(DESTDIR) uninstall
+
 dot_draw:
 		$(MAKECMD) -C lib/dot_draw clean
 		$(MAKECMD) -C lib/dot_draw
