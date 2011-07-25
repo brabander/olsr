@@ -204,6 +204,9 @@ dyn_gw:
 dyn_gw_install:
 		$(MAKECMD) -C lib/dyn_gw DESTDIR=$(DESTDIR) install
 
+dyn_gw_uninstall:
+		$(MAKECMD) -C lib/dyn_gw DESTDIR=$(DESTDIR) uninstall
+
 dyn_gw_plain:
 		$(MAKECMD) -C lib/dyn_gw_plain clean
 		$(MAKECMD) -C lib/dyn_gw_plain
