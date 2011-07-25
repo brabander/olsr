@@ -276,6 +276,13 @@ mdns_install:
 mdns_uninstall:
 		$(MAKECMD) -C lib/mdns DESTDIR=$(DESTDIR) uninstall
 
+p2pd:
+		$(MAKECMD) -C lib/p2pd clean
+		$(MAKECMD) -C lib/p2pd
+
+p2pd_install:
+		$(MAKECMD) -C lib/p2pd DESTDIR=$(DESTDIR) install
+
 txtinfo:
 		$(MAKECMD) -C lib/txtinfo clean
 		$(MAKECMD) -C lib/txtinfo 
