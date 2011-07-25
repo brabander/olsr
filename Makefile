@@ -214,6 +214,9 @@ dyn_gw_plain:
 dyn_gw_plain_install:
 		$(MAKECMD) -C lib/dyn_gw_plain DESTDIR=$(DESTDIR) install
 
+dyn_gw_plain_uninstall:
+		$(MAKECMD) -C lib/dyn_gw_plain DESTDIR=$(DESTDIR) uninstall
+
 secure:
 		$(MAKECMD) -C lib/secure clean
 		$(MAKECMD) -C lib/secure
