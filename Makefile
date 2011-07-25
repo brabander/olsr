@@ -186,25 +186,29 @@ libs_uninstall uninstall_libs:
 		set -e;for dir in $(SUBDIRS);do $(MAKECMD) -C lib/$$dir LIBDIR=$(LIBDIR) uninstall;done
 		rmdir -p --ignore-fail-on-non-empty $(LIBDIR)
 
-httpinfo:
-		$(MAKECMD) -C lib/httpinfo clean
-		$(MAKECMD) -C lib/httpinfo 
+#
+# PLUGINS
+#
 
-httpinfo_install:
-		$(MAKECMD) -C lib/httpinfo DESTDIR=$(DESTDIR) install 
+arprefresh:
+		$(MAKECMD) -C lib/arprefresh clean
+		$(MAKECMD) -C lib/arprefresh
 
-httpinfo_uninstall:
-		$(MAKECMD) -C lib/httpinfo DESTDIR=$(DESTDIR) uninstall
+arprefresh_install:
+		$(MAKECMD) -C lib/arprefresh DESTDIR=$(DESTDIR) install
 
-tas:
-		$(MAKECMD) -C lib/tas clean
-		$(MAKECMD) -C lib/tas
+arprefresh_uninstall:
+		$(MAKECMD) -C lib/arprefresh DESTDIR=$(DESTDIR) uninstall
 
-tas_install:
-		$(MAKECMD) -C lib/tas DESTDIR=$(DESTDIR) install
+bmf:
+		$(MAKECMD) -C lib/bmf clean
+		$(MAKECMD) -C lib/bmf
 
-tas_uninstall:
-		$(MAKECMD) -C lib/tas DESTDIR=$(DESTDIR) uninstall
+bmf_install:
+		$(MAKECMD) -C lib/bmf DESTDIR=$(DESTDIR) install
+
+bmf_uninstall:
+		$(MAKECMD) -C lib/bmf DESTDIR=$(DESTDIR) uninstall
 
 dot_draw:
 		$(MAKECMD) -C lib/dot_draw clean
@@ -215,16 +219,6 @@ dot_draw_install:
 
 dot_draw_uninstall:
 		$(MAKECMD) -C lib/dot_draw DESTDIR=$(DESTDIR) uninstall
-
-nameservice:
-		$(MAKECMD) -C lib/nameservice clean
-		$(MAKECMD) -C lib/nameservice
-
-nameservice_install:
-		$(MAKECMD) -C lib/nameservice DESTDIR=$(DESTDIR) install
-
-nameservice_uninstall:
-		$(MAKECMD) -C lib/nameservice DESTDIR=$(DESTDIR) uninstall
 
 dyn_gw:
 		$(MAKECMD) -C lib/dyn_gw clean
@@ -246,55 +240,39 @@ dyn_gw_plain_install:
 dyn_gw_plain_uninstall:
 		$(MAKECMD) -C lib/dyn_gw_plain DESTDIR=$(DESTDIR) uninstall
 
-secure:
-		$(MAKECMD) -C lib/secure clean
-		$(MAKECMD) -C lib/secure
+httpinfo:
+		$(MAKECMD) -C lib/httpinfo clean
+		$(MAKECMD) -C lib/httpinfo
 
-secure_install:
-		$(MAKECMD) -C lib/secure DESTDIR=$(DESTDIR) install
+httpinfo_install:
+		$(MAKECMD) -C lib/httpinfo DESTDIR=$(DESTDIR) install
 
-secure_uninstall:
-		$(MAKECMD) -C lib/secure DESTDIR=$(DESTDIR) uninstall
-
-pgraph:
-		$(MAKECMD) -C lib/pgraph clean
-		$(MAKECMD) -C lib/pgraph 
-
-pgraph_install:
-		$(MAKECMD) -C lib/pgraph DESTDIR=$(DESTDIR) install 
-
-pgraph_uninstall:
-		$(MAKECMD) -C lib/pgraph DESTDIR=$(DESTDIR) uninstall
-
-bmf:
-		$(MAKECMD) -C lib/bmf clean
-		$(MAKECMD) -C lib/bmf 
-
-bmf_install:
-		$(MAKECMD) -C lib/bmf DESTDIR=$(DESTDIR) install 
-
-bmf_uninstall:
-		$(MAKECMD) -C lib/bmf DESTDIR=$(DESTDIR) uninstall
-
-quagga:
-		$(MAKECMD) -C lib/quagga clean
-		$(MAKECMD) -C lib/quagga 
-
-quagga_install:
-		$(MAKECMD) -C lib/quagga DESTDIR=$(DESTDIR) install 
-
-quagga_uninstall:
-		$(MAKECMD) -C lib/quagga DESTDIR=$(DESTDIR) uninstall
+httpinfo_uninstall:
+		$(MAKECMD) -C lib/httpinfo DESTDIR=$(DESTDIR) uninstall
 
 mdns:
 		$(MAKECMD) -C lib/mdns clean
-		$(MAKECMD) -C lib/mdns 
+		$(MAKECMD) -C lib/mdns
 
 mdns_install:
-		$(MAKECMD) -C lib/mdns DESTDIR=$(DESTDIR) install 
+		$(MAKECMD) -C lib/mdns DESTDIR=$(DESTDIR) install
 
 mdns_uninstall:
 		$(MAKECMD) -C lib/mdns DESTDIR=$(DESTDIR) uninstall
+
+#
+# no targets for mini: it's an example plugin
+#
+
+nameservice:
+		$(MAKECMD) -C lib/nameservice clean
+		$(MAKECMD) -C lib/nameservice
+
+nameservice_install:
+		$(MAKECMD) -C lib/nameservice DESTDIR=$(DESTDIR) install
+
+nameservice_uninstall:
+		$(MAKECMD) -C lib/nameservice DESTDIR=$(DESTDIR) uninstall
 
 p2pd:
 		$(MAKECMD) -C lib/p2pd clean
@@ -306,6 +284,46 @@ p2pd_install:
 p2pd_uninstall:
 		$(MAKECMD) -C lib/p2pd DESTDIR=$(DESTDIR) uninstall
 
+pgraph:
+		$(MAKECMD) -C lib/pgraph clean
+		$(MAKECMD) -C lib/pgraph 
+
+pgraph_install:
+		$(MAKECMD) -C lib/pgraph DESTDIR=$(DESTDIR) install 
+
+pgraph_uninstall:
+		$(MAKECMD) -C lib/pgraph DESTDIR=$(DESTDIR) uninstall
+
+quagga:
+		$(MAKECMD) -C lib/quagga clean
+		$(MAKECMD) -C lib/quagga 
+
+quagga_install:
+		$(MAKECMD) -C lib/quagga DESTDIR=$(DESTDIR) install 
+
+quagga_uninstall:
+		$(MAKECMD) -C lib/quagga DESTDIR=$(DESTDIR) uninstall
+
+secure:
+		$(MAKECMD) -C lib/secure clean
+		$(MAKECMD) -C lib/secure
+
+secure_install:
+		$(MAKECMD) -C lib/secure DESTDIR=$(DESTDIR) install
+
+secure_uninstall:
+		$(MAKECMD) -C lib/secure DESTDIR=$(DESTDIR) uninstall
+
+tas:
+		$(MAKECMD) -C lib/tas clean
+		$(MAKECMD) -C lib/tas
+
+tas_install:
+		$(MAKECMD) -C lib/tas DESTDIR=$(DESTDIR) install
+
+tas_uninstall:
+		$(MAKECMD) -C lib/tas DESTDIR=$(DESTDIR) uninstall
+
 txtinfo:
 		$(MAKECMD) -C lib/txtinfo clean
 		$(MAKECMD) -C lib/txtinfo 
@@ -315,16 +333,6 @@ txtinfo_install:
 
 txtinfo_uninstall:
 		$(MAKECMD) -C lib/txtinfo DESTDIR=$(DESTDIR) uninstall
-
-arprefresh:
-		$(MAKECMD) -C lib/arprefresh clean
-		$(MAKECMD) -C lib/arprefresh
-
-arprefresh_install:
-		$(MAKECMD) -C lib/arprefresh DESTDIR=$(DESTDIR) install
-
-arprefresh_uninstall:
-		$(MAKECMD) -C lib/arprefresh DESTDIR=$(DESTDIR) uninstall
 
 watchdog:
 		$(MAKECMD) -C lib/watchdog clean
@@ -336,6 +344,7 @@ watchdog_install:
 
 watchdog_uninstall:
 		$(MAKECMD) -C lib/watchdog DESTDIR=$(DESTDIR) uninstall
+
 
 build_all:	all switch libs
 install_all:	install install_libs
