@@ -230,6 +230,9 @@ secure:
 secure_install:
 		$(MAKECMD) -C lib/secure DESTDIR=$(DESTDIR) install
 
+secure_uninstall:
+		$(MAKECMD) -C lib/secure DESTDIR=$(DESTDIR) uninstall
+
 pgraph:
 		$(MAKECMD) -C lib/pgraph clean
 		$(MAKECMD) -C lib/pgraph 
