@@ -257,6 +257,9 @@ quagga:
 quagga_install:
 		$(MAKECMD) -C lib/quagga DESTDIR=$(DESTDIR) install 
 
+quagga_uninstall:
+		$(MAKECMD) -C lib/quagga DESTDIR=$(DESTDIR) uninstall
+
 mdns:
 		$(MAKECMD) -C lib/mdns clean
 		$(MAKECMD) -C lib/mdns 
