@@ -200,6 +200,9 @@ nameservice:
 nameservice_install:
 		$(MAKECMD) -C lib/nameservice DESTDIR=$(DESTDIR) install
 
+nameservice_uninstall:
+		$(MAKECMD) -C lib/nameservice DESTDIR=$(DESTDIR) uninstall
+
 dyn_gw:
 		$(MAKECMD) -C lib/dyn_gw clean
 		$(MAKECMD) -C lib/dyn_gw
