@@ -258,6 +258,9 @@ mdns:
 mdns_install:
 		$(MAKECMD) -C lib/mdns DESTDIR=$(DESTDIR) install 
 
+mdns_uninstall:
+		$(MAKECMD) -C lib/mdns DESTDIR=$(DESTDIR) uninstall
+
 txtinfo:
 		$(MAKECMD) -C lib/txtinfo clean
 		$(MAKECMD) -C lib/txtinfo 
