@@ -283,6 +283,9 @@ p2pd:
 p2pd_install:
 		$(MAKECMD) -C lib/p2pd DESTDIR=$(DESTDIR) install
 
+p2pd_uninstall:
+		$(MAKECMD) -C lib/p2pd DESTDIR=$(DESTDIR) uninstall
+
 txtinfo:
 		$(MAKECMD) -C lib/txtinfo clean
 		$(MAKECMD) -C lib/txtinfo 
