@@ -257,6 +257,9 @@ arprefresh:
 arprefresh_install:
 		$(MAKECMD) -C lib/arprefresh DESTDIR=$(DESTDIR) install
 
+arprefresh_uninstall:
+		$(MAKECMD) -C lib/arprefresh DESTDIR=$(DESTDIR) uninstall
+
 watchdog:
 		$(MAKECMD) -C lib/watchdog clean
 		$(MAKECMD) -C lib/watchdog
