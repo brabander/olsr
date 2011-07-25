@@ -187,6 +187,9 @@ dot_draw:
 dot_draw_install:
 		$(MAKECMD) -C lib/dot_draw DESTDIR=$(DESTDIR) install
 
+dot_draw_uninstall:
+		$(MAKECMD) -C lib/dot_draw DESTDIR=$(DESTDIR) uninstall
+
 nameservice:
 		$(MAKECMD) -C lib/nameservice clean
 		$(MAKECMD) -C lib/nameservice
