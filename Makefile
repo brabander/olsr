@@ -237,6 +237,9 @@ pgraph:
 pgraph_install:
 		$(MAKECMD) -C lib/pgraph DESTDIR=$(DESTDIR) install 
 
+pgraph_uninstall:
+		$(MAKECMD) -C lib/pgraph DESTDIR=$(DESTDIR) uninstall
+
 bmf:
 		$(MAKECMD) -C lib/bmf clean
 		$(MAKECMD) -C lib/bmf 
