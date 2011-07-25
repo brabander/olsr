@@ -17,6 +17,7 @@ LIBS +=
 
 PLUGIN_FULLNAME ?= $(PLUGIN_NAME).so.$(PLUGIN_VER)
 INSTALL_LIB =	install -m 755 $(PLUGIN_FULLNAME) $(LIBDIR)/$(PLUGIN_FULLNAME)
+UNINSTALL_LIB =	rm -f $(LIBDIR)/$(PLUGIN_FULLNAME)
 
 ifdef OLSRD_PLUGIN
 LDFLAGS = -bundle -flat_namespace -undefined suppress
