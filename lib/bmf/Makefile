@@ -52,6 +52,9 @@ install:	$(PLUGIN_FULLNAME)
 		$(STRIP) $(PLUGIN_FULLNAME)
 		$(INSTALL_LIB)
 
+uninstall:
+		$(UNINSTALL_LIB)
+
 clean:
 		rm -f $(OBJS) $(SRCS:%.c=%.d) $(PLUGIN_FULLNAME)
 

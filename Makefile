@@ -229,6 +229,9 @@ bmf:
 bmf_install:
 		$(MAKECMD) -C lib/bmf DESTDIR=$(DESTDIR) install 
 
+bmf_uninstall:
+		$(MAKECMD) -C lib/bmf DESTDIR=$(DESTDIR) uninstall
+
 quagga:
 		$(MAKECMD) -C lib/quagga clean
 		$(MAKECMD) -C lib/quagga 
