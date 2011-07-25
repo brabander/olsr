@@ -81,7 +81,7 @@ src/builddata.c:
 	@echo "const char build_host[] = \"$(shell hostname)\";" >> "$@" 
 
 
-.PHONY: help libs clean_libs libs_clean clean uberclean install_libs libs_install install_bin install_olsrd install build_all install_all clean_all 
+.PHONY: help libs clean_libs libs_clean clean uberclean install_libs uninstall_libs libs_install libs_uninstall install_bin uninstall_bin install_olsrd uninstall_olsrd install uninstall build_all install_all uninstall_all clean_all 
 
 clean:
 	-rm -f $(OBJS) $(SRCS:%.c=%.d) $(EXENAME) $(EXENAME).exe src/builddata.c $(TMPFILES)
@@ -101,10 +101,16 @@ uberclean:	clean clean_libs
 
 install: install_olsrd
 
+uninstall: uninstall_olsrd
+
 install_bin:
 		mkdir -p $(SBINDIR)
 		install -m 755 $(EXENAME) $(SBINDIR)
 		$(STRIP) $(SBINDIR)/$(EXENAME)
+
+uninstall_bin:
+		rm -f $(SBINDIR)/$(EXENAME)
+		rmdir -p --ignore-fail-on-non-empty $(SBINDIR)
 
 install_olsrd:	install_bin
 		@echo ========= C O N F I G U R A T I O N - F I L E ============
@@ -128,6 +134,16 @@ ifneq ($(MANDIR),)
 		mkdir -p $(MANDIR)/man5/
 		cp files/olsrd.conf.5.gz $(MANDIR)/man5/$(CFGNAME).5.gz
 endif
+
+uninstall_olsrd:	uninstall_bin
+ifneq ($(MANDIR),)
+		rm -f $(MANDIR)/man5/$(CFGNAME).5.gz
+		rmdir -p --ignore-fail-on-non-empty $(MANDIR)/man5/
+		rm -f $(MANDIR)/man8/$(EXENAME).8.gz
+		rmdir -p --ignore-fail-on-non-empty $(MANDIR)/man8/
+endif
+		rm -f $(CFGFILE)
+		rmdir -p --ignore-fail-on-non-empty $(ETCDIR)
 
 tags:
 		$(TAGCMD) -o $(TAGFILE) $(TAG_SRCS)
@@ -165,6 +181,10 @@ libs_clean clean_libs:
 
 libs_install install_libs:
 		set -e;for dir in $(SUBDIRS);do $(MAKECMD) -C lib/$$dir LIBDIR=$(LIBDIR) install;done
+
+libs_uninstall uninstall_libs:
+		set -e;for dir in $(SUBDIRS);do $(MAKECMD) -C lib/$$dir LIBDIR=$(LIBDIR) uninstall;done
+		rmdir -p --ignore-fail-on-non-empty $(LIBDIR)
 
 httpinfo:
 		$(MAKECMD) -C lib/httpinfo clean
@@ -319,4 +339,5 @@ watchdog_uninstall:
 
 build_all:	all switch libs
 install_all:	install install_libs
+uninstall_all:	uninstall uninstall_libs
 clean_all:	uberclean clean_libs

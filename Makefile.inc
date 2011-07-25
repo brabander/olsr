@@ -47,15 +47,17 @@ FLEX ?=		flex
 TAGCMD ?=	etags
 
 # target directories and names
-DESTDIR ?=
-SBINDIR ?= $(DESTDIR)/usr/sbin
-ETCDIR  ?= $(DESTDIR)/etc
-LIBDIR  ?= $(DESTDIR)/usr/lib
-DOCDIR  ?= $(DESTDIR)/usr/share/doc
-MANDIR  ?= $(DESTDIR)/usr/share/man
-EXENAME ?= olsrd
-CFGNAME ?= $(EXENAME).conf
-CFGFILE ?= $(ETCDIR)/$(CFGNAME)
+DESTDIR  ?=
+ETCDIR   ?= $(DESTDIR)/etc
+USRDIR   ?= $(DESTDIR)/usr
+LIBDIR   ?= $(USRDIR)/lib
+SBINDIR  ?= $(USRDIR)/sbin
+SHAREDIR ?= $(USRDIR)/share
+DOCDIR   ?= $(SHAREDIR)/doc
+MANDIR   ?= $(SHAREDIR)/man
+EXENAME  ?= olsrd
+CFGNAME  ?= $(EXENAME).conf
+CFGFILE  ?= $(ETCDIR)/$(CFGNAME)
 
 CPPFLAGS =	-Isrc
 ifneq ($(TOPDIR),.)
