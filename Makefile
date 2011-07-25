@@ -304,6 +304,9 @@ watchdog:
 watchdog_install:
 		$(MAKECMD) -C lib/watchdog DESTDIR=$(DESTDIR) install
 
+watchdog_uninstall:
+		$(MAKECMD) -C lib/watchdog DESTDIR=$(DESTDIR) uninstall
+
 build_all:	all switch libs
 install_all:	install install_libs
 clean_all:	uberclean clean_libs
