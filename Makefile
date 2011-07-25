@@ -173,6 +173,9 @@ httpinfo:
 httpinfo_install:
 		$(MAKECMD) -C lib/httpinfo DESTDIR=$(DESTDIR) install 
 
+httpinfo_uninstall:
+		$(MAKECMD) -C lib/httpinfo DESTDIR=$(DESTDIR) uninstall
+
 tas:
 		$(MAKECMD) -C lib/tas clean
 		$(MAKECMD) -C lib/tas
