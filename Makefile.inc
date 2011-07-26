@@ -205,6 +205,10 @@ quote = $(subst .,\.,$(subst /,\/,$1))
 %.d: %.c
 	@$(filter-out $(CCACHE),$(CC)) -M $(strip $(CPPFLAGS)) "$<" | sed -e '1s/\($(call quote,$(*F))\.o\)[ :]*/$(call quote,$(*D)/\1 $@: Makefile $(TOPDIR)$(if $(TOPDIR),/)Makefile.inc) /g' >"$@"
 
+%.o: %.c
+	@echo "[CC] $<"
+	@$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
+
 # we always need the includes and defines
 # for legacy since now
 CPPFLAGS += $(INCLUDES) $(DEFINES)

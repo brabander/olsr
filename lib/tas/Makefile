@@ -60,7 +60,8 @@ else
 default_target: $(PLUGIN_FULLNAME)
 
 $(PLUGIN_FULLNAME): $(OBJS) version-script.txt
-		$(CC) $(LDFLAGS) -o $(PLUGIN_FULLNAME) $(OBJS) $(LIBS)
+		@echo "[LD] $@"
+		@$(CC) $(LDFLAGS) -o $(PLUGIN_FULLNAME) $(OBJS) $(LIBS)
 
 # this is not nice but there is no nicer solution
 src/lua/lapi.o src/lua/ltable.o:  CFLAGS += -Wno-cast-qual

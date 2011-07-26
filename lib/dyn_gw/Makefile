@@ -48,7 +48,8 @@ LIBS +=		$(OS_LIB_PTHREAD)
 default_target: $(PLUGIN_FULLNAME)
 
 $(PLUGIN_FULLNAME): $(OBJS) version-script.txt
-		$(CC) $(LDFLAGS) -o $(PLUGIN_FULLNAME) $(OBJS) $(LIBS)
+		@echo "[LD] $@"
+		@$(CC) $(LDFLAGS) -o $(PLUGIN_FULLNAME) $(OBJS) $(LIBS)
 
 install:	$(PLUGIN_FULLNAME)
 		$(STRIP) $(PLUGIN_FULLNAME)
