@@ -331,7 +331,11 @@ olsr_update_rib_routes(void)
 
       /* oops, all routes are gone - flush the route head */
   
-      if (olsr_delete_kernel_route(rt) == 0) avl_delete(&routingtree, &rt->rt_tree_node); /*only remove if deletion was successful*/
+      if (olsr_delete_kernel_route(rt) == 0) {
+        /*only remove if deletion was successful*/
+        avl_delete(&routingtree, &rt->rt_tree_node);
+        olsr_cookie_free(rt_mem_cookie, rt);
+      }
 
       continue;
     }
