@@ -137,7 +137,7 @@ ifeq ($(OS),win32)
   LDFLAGS +=	-Wl,-export-all-symbols,--enable-auto-import
 endif
 LDFLAGS +=	-shared
-LDFLAGS +=	-Wl,-soname,$(PLUGIN_NAME)
+LDFLAGS +=	-Wl,-soname,$(PLUGIN_SONAME)
 LDFLAGS +=	-Wl,--version-script=version-script.txt 
 else
 # c and ld flags for main
