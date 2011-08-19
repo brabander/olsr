@@ -563,7 +563,7 @@ int main(int argc, char *argv[]) {
   OLSR_PRINTF(1, "Main address: %s\n\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
 
 #ifdef LINUX_NETLINK_ROUTING
-  /* create policy routing priorities if necessary */
+  /* create policy routing rules with priorities if necessary */
   if (DEF_RT_NONE != olsr_cnf->rt_table_pri) {
     olsr_os_policy_rule(olsr_cnf->ip_version,
         olsr_cnf->rt_table, olsr_cnf->rt_table_pri, NULL, true);
@@ -577,11 +577,11 @@ int main(int argc, char *argv[]) {
         olsr_cnf->rt_table_default, olsr_cnf->rt_table_default_pri, NULL, true);
   }
 
-  /* OLSR sockets */
+  /* rule to default table on all olsrd interfaces */
   if (DEF_RT_NONE != olsr_cnf->rt_table_defaultolsr_pri) {
     for (ifn = ifnet; ifn; ifn = ifn->int_next) {
-      olsr_os_policy_rule(olsr_cnf->ip_version, olsr_cnf->rt_table_default,
-          olsr_cnf->rt_table_defaultolsr_pri, ifn->int_name, true);
+      olsr_os_policy_rule(olsr_cnf->ip_version,
+          olsr_cnf->rt_table_default, olsr_cnf->rt_table_defaultolsr_pri, ifn->int_name, true);
     }
   }
 
