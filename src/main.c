@@ -1,4 +1,3 @@
-
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -296,12 +295,6 @@ main(int argc, char *argv[])
     olsr_exit(EXIT_FAILURE);
   }
   os_socket_set_nonblocking(olsr_cnf->rtnl_s);
-
-  /* Create rule for RtTable to resolve route insertion problems*/
-  if ( ( olsr_cnf->rt_table < 253) & ( olsr_cnf->rt_table > 0 ) ) {
-    OLSR_WARN(LOG_NETWORKING,"make sure to have correct policy routing rules (destination based rules are required, or a dummy rule with prio like 65535)");
-    /*olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rt_table, RTM_NEWRULE);*/
-  }
 #endif
 
 /*
@@ -592,10 +585,6 @@ olsr_shutdown(void)
   os_close(olsr_cnf->ioctl_s);
 
 #if defined linux
-  /*if ((olsr_cnf->rttable < 253) & (olsr_cnf->rttable > 0)) {
-    olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable, RTM_DELRULE);
-  }*/
-
   os_close(olsr_cnf->rtnl_s);
 #endif
 
