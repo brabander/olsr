@@ -308,7 +308,7 @@ int olsr_os_policy_rule(int family, int rttable, uint32_t priority, const char *
 
   err = olsr_netlink_send(&req.n);
   if (err) {
-    OLSR_ERROR(LOG_ROUTING,"Error on %s policy rule ponting to RtTable %u!",
+    OLSR_ERROR(LOG_ROUTING,"Error on %s policy rule pointing to RtTable %u!",
         set ? "inserting" : "deleting", rttable);
   }
 
