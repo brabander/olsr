@@ -97,7 +97,7 @@
 #define MIN_NICCHGPOLLRT     1.0
 #define MAX_DEBUGLVL         9
 #define MIN_DEBUGLVL         0
-#define MAX_TOS              16
+#define MAX_TOS              31
 #define MIN_TOS              0
 #define MAX_WILLINGNESS      7
 #define MIN_WILLINGNESS      0
