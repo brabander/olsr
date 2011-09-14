@@ -425,9 +425,15 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
     return -1;
   }
 
-  /* TOS */
+  /* TOS range */
   if (cnf->tos > MAX_TOS) {
     fprintf(stderr, "TOS %d is not allowed\n", cnf->tos);
+    return -1;
+  }
+
+  /* TOS ECN */
+  if (cnf->tos & 0x03) {
+    fprintf(stderr, "TOS %d has set ECN bits, not allowed\n", cnf->tos);
     return -1;
   }
 

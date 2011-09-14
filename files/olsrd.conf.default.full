@@ -62,10 +62,11 @@
 
 # NicChgsPollInt  2.5
 
-# TOS(type of service) value for the IP header of control traffic.
-# (Default is 16)
+# TOS(type of service) byte value for the IP header of control traffic.
+# Must be multiple of 4, because OLSR doesn't use ECN
+# (Default is 32)
 
-# TosValue 16
+# TosValue 32
 
 # FIBMetric controls the metric value of the host-routes OLSRd sets.
 # - "flat" means that the metric value is always 2. This is the preferred value

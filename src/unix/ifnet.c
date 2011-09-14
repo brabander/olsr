@@ -562,7 +562,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__ ((unused)))
   size_t name_size;
 #ifdef linux
   int precedence = IPTOS_PREC(olsr_cnf->tos);
-  int tos_bits = IPTOS_TOS(olsr_cnf->tos);
+  int tos_bits = olsr_cnf->tos;
 #endif
 
   if (iface->host_emul)
