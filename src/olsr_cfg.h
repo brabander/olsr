@@ -60,7 +60,7 @@
 #define DEF_WILL_AUTO        false
 #define DEF_WILLINGNESS      3
 #define DEF_ALLOW_NO_INTS    true
-#define DEF_TOS              32
+#define DEF_TOS              192
 #define DEF_DEBUGLVL         1
 #define DEF_IPC_CONNECTIONS  0
 #define DEF_USE_HYST         false
