@@ -372,7 +372,7 @@ static int olsr_new_netlink_route(int family, int rttable, int if_index, int met
   req.r.rtm_flags = RTNH_F_ONLINK;
   req.r.rtm_family = family;
   req.r.rtm_table = rttable;
-  
+
   req.n.nlmsg_len = NLMSG_LENGTH(sizeof(struct rtmsg));
   req.n.nlmsg_flags = NLM_F_REQUEST | NLM_F_ACK;
 
@@ -424,8 +424,14 @@ static int olsr_new_netlink_route(int family, int rttable, int if_index, int met
     olsr_netlink_addreq(&req.n, sizeof(req), RTA_GATEWAY, gw, family_size);
   }
   else {
-    /* use destination as gateway, to 'force' linux kernel to do proper source address selection */
-    olsr_netlink_addreq(&req.n, sizeof(req), RTA_GATEWAY, &dst->prefix, family_size);  
+    if ( dst->prefix_len == 32 ) {
+      /* use destination as gateway, to 'force' linux kernel to do proper source address selection */
+      olsr_netlink_addreq(&req.n, sizeof(req), RTA_GATEWAY, &dst->prefix, family_size);
+    }
+    else {
+      /*do not use onlink on such routes(no gateway, but no hostroute aswell) -  e.g. smartgateway default route over an ptp tunnel interface*/
+      req.r.rtm_flags &= (~RTNH_F_ONLINK);
+    }
   }
 
    /* add destination */
