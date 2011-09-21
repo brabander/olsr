@@ -261,7 +261,7 @@ static int olsrd_sanity_check_rtpolicy(struct olsrd_config *cnf) {
     }
     else if (cnf->rt_table_pri == DEF_RT_AUTO) {
       /* choose default */
-      olsr_cnf->rt_table_pri = 0;
+      olsr_cnf->rt_table_pri = DEF_RT_NONE;
       fprintf(stderr, "No policy rule for rt_table_pri\n");
     }
 
