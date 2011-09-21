@@ -284,14 +284,8 @@ int olsr_os_policy_rule(int family, int rttable, uint32_t priority, const char *
   req.r.rtm_family = family;
   req.r.rtm_table = rttable;
 
-  /* RTN_UNSPEC would be the wildcard, but blackhole broadcast or nat roules should usually not conflict */
-  /* -> olsr only adds deletes unicast routes */
+  /* probably unneeded */
   req.r.rtm_type = RTN_UNICAST;
-
-  /* wildcard to delete routes of all protos if no simlar-delete correct proto will get set below */
-  req.r.rtm_protocol = RTPROT_UNSPEC;
-
-  req.r.rtm_scope = RT_SCOPE_UNIVERSE;
 
   olsr_netlink_addreq(&req.n, sizeof(req), RTA_PRIORITY, &priority, sizeof(priority));
 
