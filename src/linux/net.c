@@ -156,7 +156,10 @@ static bool is_at_least_linuxkernel_2_6_31(void) {
     return false;
   }
 
-  if (strncmp(uts.release, "2.6.",4) != 0) {
+  if (strncmp(uts.release, "3", 1) >= 0) {
+    return true;
+  }
+  if (strncmp(uts.release, "2.6.", 4) != 0) {
     return false;
   }
   return atoi(&uts.release[4]) >= 31;
