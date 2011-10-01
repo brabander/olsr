@@ -40,8 +40,10 @@
  */
 
 /*
- * Linux spesific code
+ * Linux specific code
  */
+
+#define __BSD_SOURCE 1
 
 #include "../net_os.h"
 #include "../ipcalc.h"
@@ -163,6 +165,8 @@ static int writeToProc(const char *file, char *old, char value) {
 
 static bool is_at_least_linuxkernel_2_6_31(void) {
   struct utsname uts;
+  char *next;
+  int first = 0, second = 0, third = 0;
 
   memset(&uts, 0, sizeof(uts));
   if (uname(&uts)) {
@@ -170,13 +174,29 @@ static bool is_at_least_linuxkernel_2_6_31(void) {
     return false;
   }
 
-  if (strncmp(uts.release, "3", 1) >= 0) {
+  first = strtol(uts.release, &next, 10);
+  /* check for linux 3.x */
+  if (first >= 3) {
     return true;
   }
-  if (strncmp(uts.release, "2.6.", 4) != 0) {
-    return false;
+
+  if (*next != '.') {
+    goto kernel_parse_error;
   }
-  return atoi(&uts.release[4]) >= 31;
+
+  second = strtol(next+1, &next, 10);
+  if (*next != '.') {
+    goto kernel_parse_error;
+  }
+
+  third = strtol(next+1, NULL, 10);
+
+  /* better or equal than linux 2.6.31 ? */
+  return first == 2 && second == 6 && third >= 31;
+
+kernel_parse_error:
+  OLSR_PRINTF(1, "Error, cannot parse kernel version: %s\n", uts.release);
+  return false;
 }
 
 /**
