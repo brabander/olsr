@@ -473,7 +473,7 @@ join_mcast(struct interface *ifs, int sock)
 
     /* rfc 3493 */
 #ifdef IPV6_JOIN_GROUP
-    /* Join reciever group */
+    /* Join receiver group */
     if (setsockopt(sock, IPPROTO_IPV6, IPV6_JOIN_GROUP, (char *)&mcastreq, sizeof(struct ipv6_mreq)) < 0)
 #else /* rfc 2133, obsoleted */
     /* Join receiver group */

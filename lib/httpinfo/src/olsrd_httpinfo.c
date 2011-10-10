@@ -376,7 +376,7 @@ parse_http_request(int fd, void *data __attribute__ ((unused)), unsigned int fla
   }
 
   if (r < 0) {
-    olsr_printf(1, "(HTTPINFO) Failed to recieve data from client!\n");
+    olsr_printf(1, "(HTTPINFO) Failed to receive data from client!\n");
     stats.err_hits++;
     goto close_connection;
   }

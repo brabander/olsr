@@ -602,10 +602,10 @@ join_mcast(struct interface *ifs, int sock)
 
   /* Old libc fix */
 #ifdef IPV6_JOIN_GROUP
-  /* Join reciever group */
+  /* Join receiver group */
   if (setsockopt(sock, IPPROTO_IPV6, IPV6_JOIN_GROUP, (char *)&mcastreq, sizeof(struct ipv6_mreq)) < 0)
 #else
-  /* Join reciever group */
+  /* Join receiver group */
   if (setsockopt(sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char *)&mcastreq, sizeof(struct ipv6_mreq)) < 0)
 #endif
   {
