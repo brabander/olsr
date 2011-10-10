@@ -216,7 +216,7 @@ olsr_chg_kernel_routes(struct list_entity *head_node)
    */
   OLSR_FOR_ALL_RTLIST_ENTRIES(head_node, rt, iterator) {
 
-    /*if netlink and NLFM_REPLACE is available (ipv4 only?) and used in linux/kernel_*.c no delete would be necesarry here */
+    /*if netlink and NLFM_REPLACE is available (ipv4 only?) and applicable (fib_metric FLAT only) and used in linux/kernel_*.c no delete would be necesarry here */
     if (rt->rt_nexthop.interface) olsr_del_route(rt); // fresh routes do not have an interface pointer
 
     olsr_add_route(rt);
