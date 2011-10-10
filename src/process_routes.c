@@ -253,8 +253,8 @@ olsr_chg_kernel_routes(struct list_node *head_node)
 
 /*deleting routes should not be required anymore as we use (NLM_F_CREATE | NLM_F_REPLACE) in linux rtnetlink*/
 #ifdef LINUX_NETLINK_ROUTING
-    /*delete routes with ipv6 only as it still doesn`t support NLM_F_REPLACE*/
-    if (((olsr_cnf->ip_version != AF_INET )
+    /*delete routes with ipv6 only as it still doesn`t support NLM_F_REPLACE or with any fib_metric != flat*/
+    if (((olsr_cnf->ip_version != AF_INET ) || (olsr_cnf->fib_metric != FIBM_FLAT)
          || (olsr_addroute_function != olsr_ioctl_add_route) || (olsr_addroute6_function != olsr_ioctl_add_route6)
          || (olsr_delroute_function != olsr_ioctl_del_route) || (olsr_delroute6_function != olsr_ioctl_del_route6))
         && (rt->rt_nexthop.iif_index > -1)) {
