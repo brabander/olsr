@@ -251,9 +251,14 @@ olsr_chg_kernel_routes(struct list_node *head_node)
   while (!list_is_empty(head_node)) {
     rt = changelist2rt(head_node->next);
 
-/*deleting routes should not be required anymore as we use (NLM_F_CREATE | NLM_F_REPLACE) in linux rtnetlink*/
 #ifdef LINUX_NETLINK_ROUTING
-    /*delete routes with ipv6 only as it still doesn`t support NLM_F_REPLACE or with any fib_metric != flat*/
+    /*
+    *   actively deleting routes is not necesarry as we use (NLM_F_CREATE | NLM_F_REPLACE) with LINUX_NETLINK_ROUTING
+    *        (i.e. new routes simply overwrite the old ones in kernel)
+    *   BUT: We still have to actively delete routes if fib_metric != FLAT or we run on ipv6.
+    *        As NLM_F_REPLACE is not supported with IPv6, or simply of no use with varying route metrics.
+    *        We also actively delete routes if custom route functions are in place. (e.g. quagga plugin)
+    */
     if (((olsr_cnf->ip_version != AF_INET ) || (olsr_cnf->fib_metric != FIBM_FLAT)
          || (olsr_addroute_function != olsr_ioctl_add_route) || (olsr_addroute6_function != olsr_ioctl_add_route6)
          || (olsr_delroute_function != olsr_ioctl_del_route) || (olsr_delroute6_function != olsr_ioctl_del_route6))
