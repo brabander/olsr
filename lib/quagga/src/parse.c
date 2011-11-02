@@ -103,11 +103,11 @@ static struct zroute
 
 // Quagga v0.98.6 BUG workaround: metric is always sent by zebra
 // even without ZAPI_MESSAGE_METRIC message.
-//  if (r.message & ZAPI_MESSAGE_METRIC) {
+  if ((r->message & ZAPI_MESSAGE_METRIC) || !zebra.version) {
     memcpy(&r->metric, pnt, sizeof r->metric);
     r->metric = ntohl(r->metric);
     pnt += sizeof r->metric;
-//  }
+  }
 
   if (pnt - opt != length) {
     olsr_exit("(QUAGGA) Length does not match!", EXIT_FAILURE);
