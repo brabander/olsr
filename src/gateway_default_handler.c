@@ -84,7 +84,7 @@ static void gw_default_choose_gateway(void) {
   }
 }
 
-/* timer for laze gateway selection */
+/* timer for lazy gateway selection */
 static void gw_default_timer(void *unused __attribute__ ((unused))) {
   /* accept a 10% increase without trigger a stablecount reset */
   if (tc_tree.count * 10 <= gw_def_nodecount * 11) {
