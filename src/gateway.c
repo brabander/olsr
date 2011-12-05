@@ -82,24 +82,7 @@ serialize_gw_speed(uint32_t speed) {
  */
 static void smartgw_tunnel_monitor (int if_index,
     struct interface *ifh __attribute__ ((unused)), enum olsr_ifchg_flag flag) {
-  if (current_ipv4_gw != NULL && if_index == v4gw_tunnel->if_index && flag == IFCHG_IF_ADD) {
-	/* v4 tunnel up again, set route */
-    /* no need to setup tunnel route, already setup by olsr_set_inet_gateway.
-	olsr_os_inetgw_tunnel_route(v4gw_tunnel->if_index, true, true); */
-
-    /* and ip */
-	/* no need to setup ip, already setup by olsr_os_add_ipip_tunnel.
-    olsr_os_ifip(v4gw_tunnel->if_index, &olsr_cnf->main_addr, true); */
-  }
-  if (current_ipv6_gw != NULL && if_index == v6gw_tunnel->if_index && flag == IFCHG_IF_ADD) {
-	/* v6 status changed, set route */
-    /* no need to setup tunnel route, already setup by olsr_set_inet_gateway.
-	olsr_os_inetgw_tunnel_route(v6gw_tunnel->if_index, false, true); */
-
-    /* and ip */
-	/* no need to setup ip, already setup by olsr_os_add_ipip_tunnel.
-    olsr_os_ifip(v6gw_tunnel->if_index, &olsr_cnf->main_addr, true); */
-  }
+  return;
 }
 
 /**
