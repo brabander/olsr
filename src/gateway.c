@@ -80,8 +80,9 @@ serialize_gw_speed(uint32_t speed) {
  * @param ifh
  * @param flag
  */
-static void smartgw_tunnel_monitor (int if_index,
-    struct interface *ifh __attribute__ ((unused)), enum olsr_ifchg_flag flag) {
+static void smartgw_tunnel_monitor (int if_index __attribute__ ((unused)),
+    struct interface *ifh __attribute__ ((unused)),
+    enum olsr_ifchg_flag flag __attribute__ ((unused))) {
   return;
 }
 
