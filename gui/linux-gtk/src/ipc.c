@@ -586,7 +586,7 @@ ip_to_string(union olsr_ip_addr *addr)
   struct in_addr in;
 
   if (ipversion == AF_INET) {
-    in.s_addr = addr->v4;
+    in = addr->v4;
     ret = inet_ntoa(in);
   } else {
     /* IPv6 */
