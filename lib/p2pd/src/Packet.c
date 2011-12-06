@@ -111,13 +111,10 @@ int IsIpv4Fragment(struct ip* hdr)
 
 int IsMulticastv4(struct ip* hdr)
 {
-  uint32_t addr;
-
   assert(hdr != NULL);
 
-  memcpy(&addr, &hdr->ip_dst.s_addr, sizeof(addr));
-  if ((addr & 0xE0000000) == 0xE0000000)
-    return 1;
+  if (IN_MULTICAST(ntohl(hdr->ip_dst.s_addr)))
+	  return 1;
   
   return 0;
 }
