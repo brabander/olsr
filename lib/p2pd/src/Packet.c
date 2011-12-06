@@ -119,18 +119,6 @@ int IsMulticastv4(struct ip* hdr)
   return 0;
 }
 
-int IsBroadcast(struct ip* hdr)
-{
-  uint32_t addr;
-
-  assert(hdr != NULL);
-
-  memcpy(&addr, &hdr->ip_dst.s_addr, sizeof(addr));
-  if (addr == 0xFFFFFFFF)
-    return 1;
-    
-  return 0;
-}
 
 /* -------------------------------------------------------------------------
  * Function   : IsIpv6Fragment
