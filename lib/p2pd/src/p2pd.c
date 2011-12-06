@@ -173,13 +173,16 @@ PacketReceivedFromOLSR(unsigned char *encapsulationUdpData, int len)
          */
 
         if (IsMulticastv4(ipHeader)) {
+          in_addr_t addr = ntohl(ipHeader->ip_dst.s_addr);
+
           dest.sll_addr[0] = 0x01;
           dest.sll_addr[1] = 0x00;
           dest.sll_addr[2] = 0x5E;
-          dest.sll_addr[3] = (ipHeader->ip_dst.s_addr >> 16) & 0x7F;
-          dest.sll_addr[4] = (ipHeader->ip_dst.s_addr >> 8) & 0xFF;
-          dest.sll_addr[5] = ipHeader->ip_dst.s_addr & 0xFF;
-        } else /* if (IsBroadcast(ipHeader)) */ {
+          dest.sll_addr[3] = (addr >> 16) & 0x7F;
+          dest.sll_addr[4] = (addr >>  8) & 0xFF;
+          dest.sll_addr[5] = addr & 0xFF;
+        } else {
+          /* broadcast or whatever */
           memset(dest.sll_addr, 0xFF, IFHWADDRLEN);
         }
       } else /*(olsr_cnf->ip_version == AF_INET6) */ {
