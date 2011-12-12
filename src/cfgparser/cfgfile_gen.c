@@ -446,6 +446,16 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
       cnf->smart_gw_allow_nat ? "yes" : "no");
   abuf_puts(out,
     "\n"
+    "# When another gateway than the current one has a cost of less than the cost\n"
+    "# of the current gateway multiplied by SmartGatewayThreshold then the smart\n"
+    "# gateway is switched to the other gateway. The unit is percentage.\n"
+    "# (defaults to 0)\n"
+    "\n");
+  abuf_appendf(out, "%sSmartGatewayThreshold  %d\n",
+      cnf->smart_gw_thresh == DEF_GW_THRESH ? "# " : "",
+      cnf->smart_gw_thresh);
+  abuf_puts(out,
+    "\n"
     "# Defines what kind of Uplink this node will publish as a\n"
     "# smartgateway. The existence of the uplink is detected by\n"
     "# a route to 0.0.0.0/0, ::ffff:0:0/96 and/or 2000::/3.\n"

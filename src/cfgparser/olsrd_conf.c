@@ -549,6 +549,11 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
 	  fprintf(stderr, "Warning, you are using the min_tc_vtime hack. We hope you know what you are doing... contact olsr.org otherwise.\n");
   }
 
+  if (((cnf->smart_gw_thresh < 10) || (cnf->smart_gw_thresh > 100)) && (cnf->smart_gw_thresh != 0)) {
+    fprintf(stderr, "Smart gateway threshold %d is not allowed\n", cnf->smart_gw_thresh);
+    return -1;
+  }
+
   if (cnf->smart_gw_type >= GW_UPLINK_CNT) {
     fprintf(stderr, "Error, illegal gateway uplink type: %d\n", cnf->smart_gw_type);
     return -1;
@@ -758,6 +763,7 @@ set_default_cnf(struct olsrd_config *cnf)
 
   cnf->smart_gw_active = DEF_SMART_GW;
   cnf->smart_gw_allow_nat = DEF_GW_ALLOW_NAT;
+  cnf->smart_gw_thresh = DEF_GW_THRESH;
   cnf->smart_gw_type = DEF_GW_TYPE;
   cnf->smart_gw_uplink = DEF_UPLINK_SPEED;
   cnf->smart_gw_uplink_nat = DEF_GW_UPLINK_NAT;
@@ -874,6 +880,8 @@ olsrd_print_cnf(struct olsrd_config *cnf)
   printf("Smart Gateway    : %s\n", cnf->smart_gw_active ? "yes" : "no");
 
   printf("SmGw. Allow NAT  : %s\n", cnf->smart_gw_allow_nat ? "yes" : "no");
+
+  printf("SmGw. threshold  : %d%%\n", cnf->smart_gw_thresh);
 
   printf("Smart Gw. Uplink : %s\n", GW_UPLINK_TXT[cnf->smart_gw_type]);
 

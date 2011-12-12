@@ -79,6 +79,7 @@
 #define DEF_USE_NIIT         true
 #define DEF_SMART_GW         false
 #define DEF_GW_ALLOW_NAT     true
+#define DEF_GW_THRESH        0
 #define DEF_GW_TYPE          GW_UPLINK_IPV46
 #define DEF_GW_UPLINK_NAT    true
 #define DEF_UPLINK_SPEED     128
@@ -255,6 +256,7 @@ struct olsrd_config {
   bool use_niit;
 
   bool smart_gw_active, smart_gw_allow_nat, smart_gw_uplink_nat;
+  uint8_t smart_gw_thresh;
   enum smart_gw_uplinktype smart_gw_type;
   uint32_t smart_gw_uplink, smart_gw_downlink;
   struct olsr_ip_prefix smart_gw_prefix;

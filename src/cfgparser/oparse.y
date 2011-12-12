@@ -216,6 +216,7 @@ static int add_ipv6_addr(YYSTYPE ipaddr_arg, YYSTYPE prefixlen_arg)
 %token TOK_USE_NIIT
 %token TOK_SMART_GW
 %token TOK_SMART_GW_ALLOW_NAT
+%token TOK_SMART_GW_THRESH
 %token TOK_SMART_GW_UPLINK
 %token TOK_SMART_GW_UPLINK_NAT
 %token TOK_SMART_GW_SPEED
@@ -295,6 +296,7 @@ stmt:       idebug
           | suse_niit
           | bsmart_gw
           | bsmart_gw_allow_nat
+          | asmart_gw_thresh
           | ssmart_gw_uplink
           | bsmart_gw_uplink_nat
           | ismart_gw_speed
@@ -1283,6 +1285,14 @@ bsmart_gw_allow_nat: TOK_SMART_GW_ALLOW_NAT TOK_BOOLEAN
 	PARSER_DEBUG_PRINTF("Smart gateway allow client nat: %s\n", $2->boolean ? "yes" : "no");
 	olsr_cnf->smart_gw_allow_nat = $2->boolean;
 	free($2);
+}
+;
+
+asmart_gw_thresh: TOK_SMART_GW_THRESH TOK_INTEGER
+{
+  PARSER_DEBUG_PRINTF("Smart gateway threshold: %d\n", $2->integer);
+  olsr_cnf->smart_gw_thresh = $2->integer;
+  free($2);
 }
 ;
 

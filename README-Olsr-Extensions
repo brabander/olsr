@@ -268,6 +268,7 @@ set up the type of the uplink:
    translation. The maximum prefix length is 64 bits,
    the default is ::/0 (no prefix).
 
+SmartGatewayThreshold <threshold>
 SmartGatewayUplink <none/ipv4/ipv6/both>
 SmartGatewayUplinkNAT <yes/no>
 SmartGatewaySpeed <uplink> <downlink>

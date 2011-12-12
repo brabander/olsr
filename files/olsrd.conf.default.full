@@ -149,6 +149,13 @@
 
 # SmartGatewayAllowNAT yes
 
+# When another gateway than the current one has a cost of less than the cost
+# of the current gateway multiplied by SmartGatewayThreshold then the smart
+# gateway is switched to the other gateway. The unit is percentage.
+# (defaults to 0)
+
+# SmartGatewayThreshold 0
+
 # Defines what kind of Uplink this node will publish as a
 # smartgateway. The existence of the uplink is detected by
 # a route to 0.0.0.0/0, ::ffff:0:0/96 and/or 2000::/3.

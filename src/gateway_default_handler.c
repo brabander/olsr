@@ -43,6 +43,7 @@ static void gw_default_choose_gateway(void) {
   olsr_linkcost cost_ipv4, cost_ipv6;
   struct gateway_entry *gw;
   bool dual;
+  olsr_linkcost path_cost_times_threshold;
 
   cost_ipv4 = ROUTE_COST_BROKEN;
   cost_ipv6 = ROUTE_COST_BROKEN;
@@ -56,13 +57,18 @@ static void gw_default_choose_gateway(void) {
       continue;
     }
 
-    if (!gw_def_finished_ipv4 && gw->ipv4 && gw->ipv4nat == olsr_cnf->smart_gw_allow_nat && tc->path_cost < cost_ipv4) {
-      inet_ipv4 = gw;
-      cost_ipv4 = tc->path_cost;
+    if (olsr_cnf->smart_gw_thresh == 0) {
+      path_cost_times_threshold = tc->path_cost;
+    } else {
+      path_cost_times_threshold = ((long long)tc->path_cost * (long long)olsr_cnf->smart_gw_thresh + 50LL) / 100LL;
     }
-    if (!gw_def_finished_ipv6 && gw->ipv6 && tc->path_cost < cost_ipv6) {
+    if (!gw_def_finished_ipv4 && gw->ipv4 && gw->ipv4nat == olsr_cnf->smart_gw_allow_nat && path_cost_times_threshold < cost_ipv4) {
+      inet_ipv4 = gw;
+      cost_ipv4 = path_cost_times_threshold;
+    }
+    if (!gw_def_finished_ipv6 && gw->ipv6 && path_cost_times_threshold < cost_ipv6) {
       inet_ipv6 = gw;
-      cost_ipv6 = tc->path_cost;
+      cost_ipv6 = path_cost_times_threshold;
     }
   } OLSR_FOR_ALL_GATEWAY_ENTRIES_END(gw)
 
@@ -78,7 +84,7 @@ static void gw_default_choose_gateway(void) {
   }
 
   /* finished ? */
-  if (gw_def_finished_ipv4 && gw_def_finished_ipv6) {
+  if ((olsr_cnf->smart_gw_thresh == 0) && gw_def_finished_ipv4 && gw_def_finished_ipv6) {
     olsr_stop_timer(gw_def_timer);
     gw_def_timer = NULL;
   }
