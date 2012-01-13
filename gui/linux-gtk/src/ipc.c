@@ -396,7 +396,8 @@ process_hello(int size, olsr_u8_t vtime, union olsr_ip_addr *originator, union h
   struct hellinfo6 *neigh6;
   int i;
   int nsize;
-  int type, link;
+  int type;
+  //int link;
 
   printf("Processing HELLO from %s size = %d\n", ip_to_string(originator), size);
 
@@ -421,12 +422,12 @@ process_hello(int size, olsr_u8_t vtime, union olsr_ip_addr *originator, union h
     if (ipversion == AF_INET) {
       nsize = ntohs(neigh->size);
       type = EXTRACT_STATUS(ntohs(neigh->link_code));
-      link = EXTRACT_LINK(ntohs(neigh->link_code));
+      //link = EXTRACT_LINK(ntohs(neigh->link_code));
       //printf("TYPE: %d\n", neigh->link_code);
     } else {
       nsize = ntohs(neigh6->size);
       type = EXTRACT_STATUS(ntohs(neigh6->link_code));
-      link = EXTRACT_LINK(ntohs(neigh6->link_code));
+      //link = EXTRACT_LINK(ntohs(neigh6->link_code));
     }
 
     size -= nsize;
