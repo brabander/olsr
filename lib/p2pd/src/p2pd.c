@@ -100,7 +100,9 @@ bool is_broadcast(const struct sockaddr_in addr);
 bool is_multicast(const struct sockaddr_in addr);
 char * get_ipv4_str(uint32_t address, char *s, size_t maxlen);
 char * get_ipv6_str(unsigned char* address, char *s, size_t maxlen);
+#ifdef INCLUDE_DEBUG_OUTPUT
 void dump_packet(unsigned char* packet, int length);
+#endif
 bool check_and_mark_recent_packet(unsigned char *data, int len);
 
 /* -------------------------------------------------------------------------
