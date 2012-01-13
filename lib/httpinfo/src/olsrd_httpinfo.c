@@ -240,12 +240,12 @@ static const struct static_txt_file_entry static_txt_files[] = {
   {NULL, NULL}
 };
 
-static const struct dynamic_file_entry dynamic_files[] = {
 #ifdef ADMIN_INTERFACE
+static const struct dynamic_file_entry dynamic_files[] = {
   {"set_values", process_set_values},
-#endif
   {NULL, NULL}
 };
+#endif
 
 static int
 get_http_socket(int port)
