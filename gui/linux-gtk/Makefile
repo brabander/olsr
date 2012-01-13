@@ -12,7 +12,7 @@ olsrd-gui:	$(OBJS)
 	$(CC) $(LFLAGS) -o $@ $(OBJS)
 
 clean:
-	rm -f $(OBJS)
+	rm -f $(OBJS) olsrd-gui
 
 install:
 	mkdir -p ${DESTDIR}/usr/bin
