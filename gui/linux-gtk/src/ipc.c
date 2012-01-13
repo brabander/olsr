@@ -291,7 +291,7 @@ ipc_evaluate_message(union olsr_message *olsr_in)
       packet_list_add(unk_label, ip_to_string(originator), itoa_buf);
     }
     printf("Unknown packet type %d\n", type);
-
+    break;
   }
 
   if (!freeze_packets && !ipc_pack) {
