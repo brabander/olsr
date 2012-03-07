@@ -69,7 +69,7 @@ static struct list_node chg_kernel_list;
  *
  */
 uint8_t
-olsr_rt_flags(const struct rt_entry *rt)
+olsr_rt_flags(const struct rt_entry *rt, int add)
 {
   const struct rt_nexthop *nh;
   uint8_t flags = RTF_UP;
