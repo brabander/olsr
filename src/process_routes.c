@@ -79,7 +79,8 @@ olsr_rt_flags(const struct rt_entry *rt)
     flags |= RTF_HOST;
   }
 
-  nh = olsr_get_nh(rt);
+  if (add) nh = olsr_get_nh(rt);
+  else nh = &rt->rt_nexthop;
 
   if (!ipequal(&rt->rt_dst.prefix, &nh->gateway)) {
     flags |= RTF_GATEWAY;
