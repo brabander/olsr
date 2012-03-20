@@ -53,6 +53,10 @@
 #include "lq_plugin_default_ff.h"
 #include "lq_plugin_default_ffeth.h"
 
+#ifdef LINUX_NL80211
+#include "linux/lq_plugin_ffeth_nl80211.h"
+#endif
+
 #include <assert.h>
 
 struct avl_tree lq_handler_tree;
@@ -101,6 +105,9 @@ init_lq_handler_tree(void)
   register_lq_handler(&lq_etx_fpm_handler, LQ_ALGORITHM_ETX_FPM_NAME);
   register_lq_handler(&lq_etx_ff_handler, LQ_ALGORITHM_ETX_FF_NAME);
   register_lq_handler(&lq_etx_ffeth_handler, LQ_ALGORITHM_ETX_FFETH_NAME);
+#ifdef LINUX_NL80211
+  register_lq_handler(&lq_etx_ffeth_nl80211_handler, LQ_ALGORITHM_ETX_FFETH_NL80211_NAME);
+#endif
 
   if (olsr_cnf->lq_algorithm == NULL) {
     activate_lq_handler(DEF_LQ_ALGORITHM);
